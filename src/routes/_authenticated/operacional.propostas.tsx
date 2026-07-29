@@ -9,6 +9,7 @@ import {
   listarPropostas,
   excluirProposta,
   restaurarProposta,
+  sincronizarPropostasAtivas,
 } from "@/lib/propostas/propostas.functions";
 import { Button } from "@/components/ui/button";
 import { listarColegas } from "@/lib/operacional/shared.functions";
