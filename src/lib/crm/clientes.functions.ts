@@ -92,6 +92,7 @@ export const listarClientes = createServerFn({ method: "GET" })
             : "id, numero_cliente, nome, documento, telefone_celular, email, ativo, portal_acesso_ativo, responsavel:profiles!clientes_responsavel_id_fkey(nome), cliente_pipeline(ultima_atualizacao_em, pipeline_stages(codigo, nome))",
           { count: "exact" },
         )
+        .is("deleted_at", null)
         .order("created_at", { ascending: false });
 
       // Filtro de etapa aplicado na própria query (antes da paginação),
