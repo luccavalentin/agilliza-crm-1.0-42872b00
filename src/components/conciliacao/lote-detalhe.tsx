@@ -220,6 +220,24 @@ export function LoteDetalhe({ lote }: { lote: ConciliacaoLote }) {
             <Download className="h-3.5 w-3.5" />
             Planilha consolidada
           </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => exportarPdf("download")}
+            disabled={!itens.length}
+          >
+            <FileText className="h-3.5 w-3.5" />
+            PDF
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => exportarPdf("print")}
+            disabled={!itens.length}
+          >
+            <Printer className="h-3.5 w-3.5" />
+            Imprimir
+          </Button>
         </div>
       </div>
 
