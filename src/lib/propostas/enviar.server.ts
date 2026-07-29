@@ -1215,9 +1215,19 @@ export async function sincronizarPropostaImpl({
       novoStatus = "credito_recusado";
     }
     // Falha de integração sem outro desfecho positivo: força erro_envio para
-    // habilitar reenvio (não é recusa de crédito real).
+    // habilitar reenvio (não é recusa de crédito real). NUNCA regride uma
+    // proposta que já foi confirmada como enviada ao banco — nesse caso o
+    // "falha" no polling é leitura transitória e o próximo tick reconcilia.
+    const jaEnviadaAoBanco =
+      prop.status === "enviada_banco" ||
+      prop.status === "em_analise_credito" ||
+      prop.status === "credito_aprovado" ||
+      prop.status === "aguardando_documentos" ||
+      prop.status === "engenharia_vistoria" ||
+      prop.status === "analise_juridica";
     if (
       algumFalhaIntegracao &&
+      !jaEnviadaAoBanco &&
       !algumAprovado &&
       !algumEmAnalise &&
       !algumRecusado &&
