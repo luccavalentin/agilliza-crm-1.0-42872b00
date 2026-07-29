@@ -522,8 +522,8 @@ function Pagina() {
         </Secao>
       </form>
 
-      <div className="fixed inset-x-0 bottom-0 z-20 border-t border-border/60 bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/70">
-        <div className="mx-auto flex max-w-4xl items-center justify-between gap-3 px-4 py-3 md:px-6">
+      <div className="sticky bottom-0 -mx-4 mt-6 border-t border-border/60 bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/70 md:-mx-6">
+        <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 md:px-6">
           <span className="flex items-center gap-2 text-xs text-muted-foreground">
             <span
               className={`size-2 rounded-full ${alterado ? "bg-amber-500" : "bg-emerald-500"}`}
