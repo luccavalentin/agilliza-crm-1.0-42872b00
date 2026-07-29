@@ -1670,6 +1670,145 @@ export const getPanelDrilldown = createServerFn({ method: "POST" })
       };
     }
 
+    // Aliases vindos de gráficos/funil
+    if (chave === "aprovacoes" || chave === "aprovacoes de credito" || chave === "credito aprovado") {
+      const rows = (await propostasNoPeriodo()).filter(
+        (p) => dentroPeriodo(p.created_at) && foiAprovada(p.status),
+      );
+      return {
+        titulo: "Aprovações de crédito",
+        subtitulo: "Propostas aprovadas pelo banco no período",
+        valor: int(rows.length),
+        itens: rows.map(itemProposta),
+        linkAbrir: "/operacional/propostas",
+      };
+    }
+
+    // Evolução do período: propostas enviadas + contratos emitidos
+    if (chave === "evolucao do periodo" || chave === "evolucao") {
+      const [props, contratos] = await Promise.all([
+        propostasNoPeriodo(),
+        contratosDetalhados(),
+      ]);
+      const enviadas = props.filter(
+        (p) => dentroPeriodo(p.created_at) && p.status !== "rascunho",
+      );
+      const itensProp = enviadas.map(itemProposta);
+      const itensCon: PanelDrilldownItem[] = contratos.map(({ cliente, prop }) => {
+        const valorNum =
+          Number(
+            cliente.imovel_valor ?? prop.valor_financiamento_aprovado ?? prop.valor_financiamento ?? 0,
+          ) || 0;
+        return {
+          label: cliente.nome ?? "Cliente",
+          sub: [prop.numero_proposta && `Nº ${prop.numero_proposta}`, "Contrato emitido"]
+            .filter(Boolean)
+            .join(" · "),
+          banco: prop.nome_banco ?? undefined,
+          valor: valorNum ? brlCompacto(valorNum) : undefined,
+          data: fmtData(cliente.contrato_emitido_em),
+          to: `/operacional/propostas/${prop.id}`,
+          tone: "success",
+        };
+      });
+      return {
+        titulo: "Evolução do período",
+        subtitulo: "Propostas enviadas e contratos emitidos",
+        valor: `${int(enviadas.length)} · ${int(contratos.length)}`,
+        formula: [
+          { label: "Propostas enviadas", valor: int(enviadas.length), tone: "brand" },
+          { label: "Contratos emitidos", valor: int(contratos.length), tone: "success" },
+        ],
+        itens: [...itensCon, ...itensProp],
+        linkAbrir: "/operacional/propostas",
+      };
+    }
+
+    // Funil de conversão: resumo das etapas
+    if (chave === "funil de conversao" || chave === "funil") {
+      const [sims, props, contratos] = await Promise.all([
+        simulacoesNoPeriodo(),
+        propostasNoPeriodo(),
+        contratosDetalhados(),
+      ]);
+      const enviadas = props.filter(
+        (p) => dentroPeriodo(p.created_at) && p.status !== "rascunho",
+      );
+      const aprovadas = props.filter(
+        (p) => dentroPeriodo(p.created_at) && foiAprovada(p.status),
+      );
+      return {
+        titulo: "Funil de conversão",
+        subtitulo: "Da simulação ao contrato",
+        valor: `${int(sims.length)} → ${int(contratos.length)}`,
+        formula: [
+          { label: "Simulações", valor: int(sims.length), tone: "brand" },
+          { label: "Propostas enviadas", valor: int(enviadas.length), tone: "brand" },
+          { label: "Aprovações", valor: int(aprovadas.length), tone: "success" },
+          { label: "Contratos emitidos", valor: int(contratos.length), tone: "success" },
+        ],
+        itens: enviadas.map(itemProposta),
+        linkAbrir: "/operacional/propostas",
+      };
+    }
+
+    // Ranking de bancos (visão geral): agrega propostas por banco
+    if (
+      chave === "ranking de bancos" ||
+      chave === "simulacoes por status" ||
+      chave === "propostas por status"
+    ) {
+      const rows = (await propostasNoPeriodo()).filter(
+        (p) => dentroPeriodo(p.created_at) && p.status !== "rascunho",
+      );
+      const porBanco = new Map<string, any[]>();
+      for (const p of rows) {
+        const b = (p.nome_banco as string) || "Sem banco";
+        if (!porBanco.has(b)) porBanco.set(b, []);
+        porBanco.get(b)!.push(p);
+      }
+      const formula = Array.from(porBanco.entries())
+        .sort((a, b) => b[1].length - a[1].length)
+        .map(([banco, list]) => ({
+          label: banco,
+          valor: int(list.length),
+          tone: "brand" as const,
+        }));
+      return {
+        titulo: "Ranking de bancos",
+        subtitulo: "Propostas enviadas por banco no período",
+        valor: int(rows.length),
+        formula,
+        itens: rows.map(itemProposta),
+        linkAbrir: "/operacional/propostas",
+      };
+    }
+
+    // Clique em um banco específico do ranking → filtra propostas daquele banco
+    {
+      const props = await propostasNoPeriodo();
+      const enviadas = props.filter(
+        (p) => dentroPeriodo(p.created_at) && p.status !== "rascunho",
+      );
+      const norm = (s: any) => normLabel(String(s ?? ""));
+      const doBanco = enviadas.filter((p) => norm(p.nome_banco) === chave);
+      if (doBanco.length) {
+        const soma = doBanco.reduce(
+          (s, p) => s + (Number(p.valor_financiamento_aprovado ?? p.valor_financiamento) || 0),
+          0,
+        );
+        return {
+          titulo: `${data.metrica} — propostas enviadas`,
+          subtitulo: "Propostas enviadas para este banco no período",
+          valor: int(doBanco.length),
+          descricao: `Volume total: ${brlCompacto(soma)}.`,
+          itens: doBanco.map(itemProposta),
+          total: brlCompacto(soma),
+          linkAbrir: "/operacional/propostas",
+        };
+      }
+    }
+
     return {
       titulo: data.metrica,
       subtitulo: "Detalhamento não disponível para este indicador",
