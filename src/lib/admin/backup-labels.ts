@@ -38,7 +38,11 @@ function colunaTecnica(col: string): boolean {
 const ROTULOS: Record<string, string> = {
   numero_cliente: "Nº do Cliente",
   numero_proposta: "Nº da Proposta",
+  numero_proposta_banco: "Nº da Proposta no Banco",
   numero_simulacao: "Nº da Simulação",
+  numero_simulacao_banco: "Nº da Simulação no Banco",
+  codigo_oportunidade_banco: "Nº da Proposta no Banco",
+  protocolo_banco: "Protocolo no Banco",
   tipo_pessoa: "Tipo de Pessoa",
   nome: "Nome",
   nome_completo: "Nome Completo",
