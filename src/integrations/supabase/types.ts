@@ -6872,6 +6872,14 @@ export type Database = {
         Returns: boolean
       }
       correspondente_do_usuario: { Args: { _user_id: string }; Returns: string }
+      crm_transferir_atendimento: {
+        Args: {
+          _cliente_id: string
+          _novo_responsavel: string
+          _observacao?: string
+        }
+        Returns: Json
+      }
       demanda_escalar_vencidas: { Args: { _corr: string }; Returns: number }
       dm_e_participante: {
         Args: { _conv: string; _user: string }
