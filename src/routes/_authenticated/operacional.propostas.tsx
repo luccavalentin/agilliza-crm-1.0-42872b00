@@ -45,6 +45,7 @@ function Pagina() {
   const queryClient = useQueryClient();
   const excluir = useServerFn(excluirProposta);
   const restaurar = useServerFn(restaurarProposta);
+  const sincronizarLoteFn = useServerFn(sincronizarPropostasAtivas);
   const padrao = useMemo(() => intervaloMesAtual(), []);
   const [escopo, setEscopo] = useState<Escopo>("minhas");
   const [grupo, setGrupo] = useState<GrupoProposta | null>(null);
