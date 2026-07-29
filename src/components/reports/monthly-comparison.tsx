@@ -147,59 +147,95 @@ export function MonthlyComparison({ dados }: { dados: ComparativoMensal }) {
         </Card>
       </div>
 
-      <div className="overflow-x-auto rounded-lg border border-border">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-border bg-muted/40">
-              <th className="px-3 py-2 text-left text-[11px] font-medium uppercase tracking-[0.1em] text-muted-foreground">
-                Banco
-              </th>
-              {meses.map((m, i) => (
-                <th
-                  key={m}
-                  onClick={() => setMesAberto(i)}
-                  className="cursor-pointer px-3 py-2 text-right text-[11px] font-medium uppercase tracking-[0.1em] text-muted-foreground hover:text-foreground"
-                >
-                  {m}
+      <div className="overflow-hidden rounded-xl border border-border bg-card shadow-[var(--shadow-card)]">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border bg-muted/40">
+                <th className="sticky left-0 z-10 bg-muted/40 px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                  Banco
                 </th>
-              ))}
-              <th className="px-3 py-2 text-right text-[11px] font-medium uppercase tracking-[0.1em] text-muted-foreground">
-                Var.
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {bancos.map((b, ri) => (
-              <tr key={b.nome} className={ri % 2 ? "bg-muted/25" : ""}>
-                <td className="px-3 py-2 text-foreground">{b.nome}</td>
-                {b.valores.map((v, i) => (
-                  <td key={i} className="px-3 py-2 text-right tabular-nums text-foreground">
-                    {intFmt(v)}
+                {meses.map((m, i) => (
+                  <th
+                    key={m}
+                    onClick={() => setMesAberto(i)}
+                    title="Ver detalhes do mês"
+                    className={`cursor-pointer px-4 py-2.5 text-right text-[11px] font-semibold uppercase tracking-[0.12em] transition-colors hover:text-foreground ${
+                      i === meses.length - 1 ? "text-foreground" : "text-muted-foreground"
+                    }`}
+                  >
+                    {m}
+                  </th>
+                ))}
+                <th className="px-4 py-2.5 text-right text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                  Var.
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {bancos.map((b) => {
+                const cor = corDoBanco(b.nome);
+                const total = b.valores.reduce((s, v) => s + v, 0);
+                return (
+                  <tr
+                    key={b.nome}
+                    className="group border-b border-border/60 transition-colors last:border-0 hover:bg-muted/40"
+                  >
+                    <td className="sticky left-0 z-10 bg-card px-4 py-2.5 transition-colors group-hover:bg-muted/40">
+                      <div className="flex items-center gap-2.5">
+                        <span
+                          className="h-7 w-1 shrink-0 rounded-full"
+                          style={{ backgroundColor: cor }}
+                          aria-hidden
+                        />
+                        <BancoLogo nome={b.nome} size="sm" />
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-medium text-foreground">{b.nome}</p>
+                          <p className="text-[11px] text-muted-foreground">
+                            {intFmt(total)} no período
+                          </p>
+                        </div>
+                      </div>
+                    </td>
+                    {b.valores.map((v, i) => (
+                      <td
+                        key={i}
+                        onClick={() => setMesAberto(i)}
+                        className="cursor-pointer px-4 py-2.5 text-right tabular-nums"
+                      >
+                        {v > 0 ? (
+                          <span className="font-medium text-foreground">{intFmt(v)}</span>
+                        ) : (
+                          <span className="text-muted-foreground/50">—</span>
+                        )}
+                      </td>
+                    ))}
+                    <td className="px-4 py-2.5 text-right">
+                      <VarChip serie={b.valores} />
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+            <tfoot>
+              <tr className="border-t border-border bg-muted/50 font-semibold">
+                <td className="sticky left-0 z-10 bg-muted/50 px-4 py-2.5 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+                  Totais
+                </td>
+                {totalPorMes.map((t, i) => (
+                  <td key={i} className="px-4 py-2.5 text-right tabular-nums text-foreground">
+                    {t > 0 ? intFmt(t) : <span className="text-muted-foreground/50">—</span>}
                   </td>
                 ))}
-                <td className="px-3 py-2 text-right">
-                  <VarChip serie={b.valores} />
+                <td className="px-4 py-2.5 text-right">
+                  <VarChip serie={totalPorMes} />
                 </td>
               </tr>
-            ))}
-          </tbody>
-          <tfoot>
-            <tr className="border-t-2 border-border bg-muted/60 font-semibold">
-              <td className="px-3 py-2 text-[11px] uppercase tracking-[0.1em] text-muted-foreground">
-                Totais
-              </td>
-              {totalPorMes.map((t, i) => (
-                <td key={i} className="px-3 py-2 text-right tabular-nums text-foreground">
-                  {intFmt(t)}
-                </td>
-              ))}
-              <td className="px-3 py-2 text-right">
-                <VarChip serie={totalPorMes} />
-              </td>
-            </tr>
-          </tfoot>
-        </table>
+            </tfoot>
+          </table>
+        </div>
       </div>
+
 
       <Dialog open={mesAberto !== null} onOpenChange={(o) => !o && setMesAberto(null)}>
         <DialogContent className="max-h-[85vh] max-w-lg overflow-y-auto">
