@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import {
   Building2,
@@ -62,50 +63,83 @@ export function DialogClientesEtapa({
   onOpenChange: (open: boolean) => void;
   onAbrirCliente: (id: string) => void;
 }) {
+  const [busca, setBusca] = useState("");
+  useEffect(() => {
+    if (!open) setBusca("");
+  }, [open]);
+  const termo = busca.trim().toLowerCase();
+  const filtrados = termo
+    ? clientes.filter((c) =>
+        [c.nome, c.numero_cliente, c.etapaNome, c.responsavel_nome, c.numero_proposta]
+          .filter(Boolean)
+          .some((v) => String(v).toLowerCase().includes(termo)),
+      )
+    : clientes;
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Users className="size-4 text-primary" />
-            {titulo}
-          </DialogTitle>
-          <DialogDescription>
-            {clientes.length} cliente(s). Clique para abrir o cadastro.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="max-h-[60vh] space-y-2 overflow-y-auto pr-1">
-          {clientes.map((c) => (
-            <button
-              key={c.id}
-              type="button"
-              onClick={() => onAbrirCliente(c.id)}
-              className="group flex w-full items-center gap-2.5 rounded-lg border border-border bg-background p-2.5 text-left transition-all hover:border-primary/50 hover:bg-primary/5 hover:shadow-sm"
-            >
-              <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary transition-all group-hover:bg-primary group-hover:text-primary-foreground">
-                {c.nome.trim().charAt(0).toUpperCase()}
+      <DialogContent className="max-w-2xl overflow-hidden rounded-2xl border border-border/60 bg-gradient-to-b from-card to-card/95 p-0 shadow-2xl">
+        <div className="relative border-b border-border/50 bg-gradient-to-r from-primary/5 via-transparent to-primary/5 px-6 py-4">
+          <DialogHeader className="relative">
+            <DialogTitle className="flex items-center gap-2 text-base font-semibold tracking-tight">
+              <Users className="size-4 text-primary" />
+              {titulo}
+              <span className="ml-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+                {clientes.length} cliente{clientes.length === 1 ? "" : "s"}
               </span>
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-sm font-medium text-foreground transition-colors group-hover:text-primary">
-                  {c.nome}
+            </DialogTitle>
+            <DialogDescription>Pesquise e clique para abrir o cadastro.</DialogDescription>
+          </DialogHeader>
+        </div>
+        <div className="space-y-4 px-6 pb-6 pt-4">
+          <div className="group relative">
+            <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary" />
+            <Input
+              autoFocus
+              placeholder="Buscar por nome, nº do cliente ou proposta"
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+              className="h-11 rounded-xl border-border/70 bg-background pl-11 pr-4 text-sm shadow-sm"
+            />
+          </div>
+          <div className="grid max-h-[62vh] grid-cols-1 gap-2 overflow-y-auto pr-1 sm:grid-cols-2 [scrollbar-gutter:stable]">
+            {filtrados.map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => onAbrirCliente(c.id)}
+                className="group flex w-full items-center gap-2.5 rounded-lg border border-border bg-background p-2.5 text-left transition-all hover:border-primary/50 hover:bg-primary/5 hover:shadow-sm"
+              >
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary transition-all group-hover:bg-primary group-hover:text-primary-foreground">
+                  {c.nome.trim().charAt(0).toUpperCase()}
                 </span>
-                <span className="flex items-center gap-1.5 font-mono text-[11px] text-muted-foreground">
-                  {c.numero_cliente}
-                  {verTodos && (
-                    <span className="truncate rounded-full bg-muted px-1.5 py-0.5 font-sans text-[10px] font-medium text-muted-foreground">
-                      {c.etapaNome}
-                    </span>
-                  )}
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-medium text-foreground transition-colors group-hover:text-primary">
+                    {c.nome}
+                  </span>
+                  <span className="flex items-center gap-1.5 font-mono text-[11px] text-muted-foreground">
+                    {c.numero_cliente}
+                    {verTodos && (
+                      <span className="truncate rounded-full bg-muted px-1.5 py-0.5 font-sans text-[10px] font-medium text-muted-foreground">
+                        {c.etapaNome}
+                      </span>
+                    )}
+                  </span>
                 </span>
-              </span>
-              <ChevronRight className="size-4 shrink-0 text-primary opacity-0 transition-opacity group-hover:opacity-100" />
-            </button>
-          ))}
+                <ChevronRight className="size-4 shrink-0 text-primary opacity-0 transition-opacity group-hover:opacity-100" />
+              </button>
+            ))}
+            {filtrados.length === 0 && (
+              <p className="col-span-full py-10 text-center text-sm text-muted-foreground">
+                Nenhum cliente encontrado.
+              </p>
+            )}
+          </div>
         </div>
       </DialogContent>
     </Dialog>
   );
 }
+
 
 interface DialogArquivoProps {
   open: boolean;

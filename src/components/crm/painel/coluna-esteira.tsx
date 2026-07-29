@@ -1,4 +1,7 @@
-import { FolderClosed, Lock, Plus, Users } from "lucide-react";
+import { FolderClosed, FolderOpen, Lock, Plus, Search, Users } from "lucide-react";
+
+/** Máximo de cards visíveis antes de "empilhar" o restante numa pasta com busca. */
+const MAX_VISIVEIS_POR_COLUNA = 4;
 import type { PainelStage } from "@/lib/crm/clientes.functions";
 import { ICONES_ETAPA, type PainelClienteItem } from "./utils";
 
@@ -107,9 +110,27 @@ export function ColunaEsteira({
             </span>
           </div>
         ) : (
-          stage.clientes.map((c) => renderCard(c))
+          <>
+            {stage.clientes.length > MAX_VISIVEIS_POR_COLUNA && (
+              <button
+                type="button"
+                onClick={onAbrirEtapa}
+                className="group/vm flex shrink-0 items-center justify-between gap-2 rounded-xl border border-dashed border-border bg-background/60 px-3 py-2.5 text-xs font-medium text-muted-foreground shadow-sm transition hover:border-primary/40 hover:bg-primary/5 hover:text-foreground"
+              >
+                <span className="flex items-center gap-2">
+                  <FolderOpen className="h-4 w-4 text-primary" />
+                  Ver mais {stage.clientes.length - MAX_VISIVEIS_POR_COLUNA}{" "}
+                  {stage.clientes.length - MAX_VISIVEIS_POR_COLUNA === 1 ? "cliente" : "clientes"}
+                </span>
+                <Search className="h-3.5 w-3.5 opacity-70 group-hover/vm:opacity-100" />
+              </button>
+            )}
+            {stage.clientes.slice(0, MAX_VISIVEIS_POR_COLUNA).map((c) => renderCard(c))}
+          </>
         )}
       </div>
+
+
 
       {!readOnly && (
         <button
