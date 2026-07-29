@@ -206,7 +206,7 @@ async function renovarSimulacaoSeConsumida({
   // indicam uma simulação bancária contaminada por tentativa anterior. Reusar esse
   // id mantém o erro preso (ex.: Itaú com spouse=false mesmo após atualizar o
   // participante para solteiro). Nesses casos criamos uma simulação nova.
-  const simConsumida = tipo === "R" || tipo === "A" || tipo === "P" || tipo === "E" || Boolean(erroSimulacaoAtual);
+  const simConsumida = !sim || tipo === "R" || tipo === "A" || tipo === "P" || tipo === "E" || Boolean(erroSimulacaoAtual);
   const idBanco = sim?.banco?.idBanco ?? sim?.idBanco ?? pb.homefin_id_banco;
   const valorImovel = num(prop.valor_imovel ?? simLocal?.valor_imovel ?? sim?.valorImovel);
   const valorFinanciamento = num(
