@@ -1674,11 +1674,66 @@ export const definirAcessoPortal = createServerFn({ method: "POST" })
     z.object({ cliente_id: z.string().uuid(), ativo: z.boolean() }).parse(d),
   )
   .handler(async ({ data, context }): Promise<{ ok: true; ativo: boolean }> => {
+    // 1) Flag no cadastro
     const { error } = await context.supabase
       .from("clientes")
       .update({ portal_acesso_ativo: data.ativo })
       .eq("id", data.cliente_id);
     if (error) throw error;
+
+    // 2) Sincroniza cliente_portal_acessos (o login lê daqui).
+    //    Sem esta linha o toggle "habilitado" fica só cosmético e o cliente
+    //    nunca consegue acessar /portal.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: cli, error: e1 } = await supabaseAdmin
+      .from("clientes")
+      .select("documento, tipo_pessoa, data_nascimento")
+      .eq("id", data.cliente_id)
+      .maybeSingle();
+    if (e1) throw e1;
+
+    if (data.ativo) {
+      const doc = String(cli?.documento ?? "").replace(/\D/g, "");
+      if (!doc) {
+        throw new Error(
+          "Cadastre o CPF/CNPJ do cliente antes de habilitar o acesso ao portal.",
+        );
+      }
+      if (cli?.tipo_pessoa === "PF" && !cli?.data_nascimento) {
+        throw new Error(
+          "Informe a data de nascimento do cliente antes de habilitar o portal.",
+        );
+      }
+      const { createHash } = await import("node:crypto");
+      const documento_hash = createHash("sha256").update(doc).digest("hex");
+
+      const { error: e2 } = await supabaseAdmin.from("cliente_portal_acessos").upsert(
+        {
+          cliente_id: data.cliente_id,
+          tipo_pessoa: cli?.tipo_pessoa ?? "PF",
+          documento_hash,
+          data_referencia: cli?.data_nascimento ?? null,
+          ativo: true,
+          habilitado_por: context.userId,
+          habilitado_em: new Date().toISOString(),
+          revogado_por: null,
+          revogado_em: null,
+        },
+        { onConflict: "cliente_id" },
+      );
+      if (e2) throw e2;
+    } else {
+      const { error: e2 } = await supabaseAdmin
+        .from("cliente_portal_acessos")
+        .update({
+          ativo: false,
+          revogado_por: context.userId,
+          revogado_em: new Date().toISOString(),
+        })
+        .eq("cliente_id", data.cliente_id);
+      if (e2) throw e2;
+    }
+
     return { ok: true, ativo: data.ativo };
   });
 
