@@ -29,6 +29,7 @@ export function useChatConversas() {
   const buscarApp = useServerFn(buscarClientesApp);
   const getOverview = useServerFn(overviewGestaoChat);
   const listarEtiq = useServerFn(listarEtiquetasChat);
+  const listarEstado = useServerFn(listarEstadoChatDoUsuario);
 
   const [busca, setBusca] = useState("");
   const [filtro, setFiltro] = useState<FiltroChat>("todas");
