@@ -26,7 +26,7 @@ function limitesDoPeriodo(periodo: string): { inicio: string; fim: string } {
 }
 
 /** Carrega propostas + bancos visíveis ao usuário (RLS aplica o escopo). */
-async function carregarSistema(supabase: any): Promise<RegistroSistema[]> {
+export async function carregarSistema(supabase: any): Promise<RegistroSistema[]> {
   const out: RegistroSistema[] = [];
   const passo = 1000;
   for (let inicio = 0; inicio < 20000; inicio += passo) {
