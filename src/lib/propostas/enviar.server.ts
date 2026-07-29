@@ -1076,7 +1076,24 @@ export async function sincronizarPropostaImpl({
     // Falha/erro de integração: a API define `P` como erro ao enviar proposta
     // e alguns bancos usam `E` para erro técnico/validação. Não converter esses
     // retornos em sucesso apenas por haver código externo no payload.
-    const falhaIntegracao = ehFalhaIntegracaoBanco(sim);
+    // IMPORTANTE: se localmente o banco já foi confirmado como enviado
+    // (status_banco em enviada/em_analise/aprovada/condicionada/recusada, ou
+    // já há protocolo do banco gravado), P/E no polling é apenas leitura
+    // transitória do Homefin (a inclusão acabou de acontecer e o snapshot da
+    // simulação ainda não propagou). Ignoramos o "falha" para não regredir o
+    // status para erro no meio do fluxo — o próximo polling reconcilia.
+    const STATUS_BANCO_CONFIRMADO = new Set([
+      "enviada",
+      "em_analise",
+      "aprovada",
+      "condicionada",
+      "recusada",
+      "recusado",
+    ]);
+    const jaConfirmadoLocal =
+      STATUS_BANCO_CONFIRMADO.has(String(pb.status_banco ?? "")) ||
+      Boolean(pb.numero_proposta_banco);
+    const falhaIntegracao = ehFalhaIntegracaoBanco(sim) && !jaConfirmadoLocal;
     if (falhaIntegracao) {
       erroMsg = MSG_FALHA_INTEGRACAO;
       algumFalhaIntegracao = true;
@@ -1095,9 +1112,16 @@ export async function sincronizarPropostaImpl({
     }
     if (sim.bancoEscolhido === "S" || mapa.proposta === "credito_aprovado") simEscolhida = sim;
 
+    // Nunca regride um banco já confirmado localmente para "erro" por leitura
+    // transitória do Homefin: preserva o status anterior se o polling voltou
+    // vazio/P sem novo desfecho.
+    const statusBancoFinal =
+      jaConfirmadoLocal && (mapa.banco === "erro" || !mapa.banco)
+        ? String(pb.status_banco)
+        : mapa.banco;
     const patchBanco: Record<string, unknown> = {
       id: pb.id,
-      status_banco: mapa.banco,
+      status_banco: statusBancoFinal,
       situacao_banco: situacaoBancoDeTipo(
         sim.tipoSituacao,
         sim.codigoSituacaoBanco,
