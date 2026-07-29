@@ -67,6 +67,30 @@ export function useChatConversas() {
     queryFn: () => listarEtiq(),
   });
 
+  const { data: estadosUsuario } = useQuery({
+    queryKey: ["chat-estado-usuario"],
+    queryFn: () => listarEstado(),
+  });
+
+  const estadoPorCliente = useMemo(() => {
+    const m = new Map<string, { fixado: boolean; apelido: string | null }>();
+    for (const e of estadosUsuario ?? []) {
+      if (e.chat_tipo !== "cliente") continue;
+      m.set(e.chat_id, {
+        fixado: !!e.pinado_em,
+        apelido: e.apelido ?? null,
+      });
+    }
+    return m;
+  }, [estadosUsuario]);
+
+  function fixadoCliente(clienteId: string) {
+    return estadoPorCliente.get(clienteId)?.fixado ?? false;
+  }
+  function apelidoCliente(clienteId: string) {
+    return estadoPorCliente.get(clienteId)?.apelido ?? null;
+  }
+
   const idsConversa = useMemo(
     () => (conversas ?? []).map((c) => c.cliente_id),
     [conversas],
