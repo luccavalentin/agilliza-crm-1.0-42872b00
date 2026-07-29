@@ -222,9 +222,15 @@ export function useChatConversas() {
       );
     if (filtro === "lembrete")
       lista = lista.filter((c) => lembreteDevido(c.cliente_id));
+    // Fixadas primeiro (mantém a ordem original dentro de cada grupo).
+    lista = [...lista].sort((a, b) => {
+      const fa = fixadoCliente(a.cliente_id) ? 1 : 0;
+      const fb = fixadoCliente(b.cliente_id) ? 1 : 0;
+      return fb - fa;
+    });
     return lista;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [conversas, busca, etiquetaFiltro, filtro, etiquetasCliente, metasCliente, tickMinuto]);
+  }, [conversas, busca, etiquetaFiltro, filtro, etiquetasCliente, metasCliente, estadoPorCliente, tickMinuto]);
 
   const novosClientes = useMemo(() => {
     if (termoBusca.length < 2) return [];
