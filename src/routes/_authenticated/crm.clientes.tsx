@@ -106,8 +106,10 @@ function Pagina() {
       toast.success("Cliente excluído.");
       queryClient.invalidateQueries({ queryKey: ["clientes"] });
       queryClient.invalidateQueries({ queryKey: ["clientes-stats"] });
-    } catch {
-      toast.error("Não foi possível excluir o cliente.");
+    } catch (err: any) {
+      const msg = err?.message || err?.body?.message || String(err);
+      toast.error(`Não foi possível excluir o cliente: ${msg}`);
+      console.error("[excluirCliente]", err);
     }
   }
 
