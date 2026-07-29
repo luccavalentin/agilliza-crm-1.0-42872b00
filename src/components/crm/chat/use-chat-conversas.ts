@@ -12,6 +12,7 @@ import {
   overviewGestaoChat,
   type ChatEtiqueta,
 } from "@/lib/crm/chat-gestao.functions";
+import { listarEstadoChatDoUsuario } from "@/lib/chats/gestao.functions";
 import type { FiltroChat } from "./helpers";
 
 /**
@@ -28,6 +29,7 @@ export function useChatConversas() {
   const buscarApp = useServerFn(buscarClientesApp);
   const getOverview = useServerFn(overviewGestaoChat);
   const listarEtiq = useServerFn(listarEtiquetasChat);
+  const listarEstado = useServerFn(listarEstadoChatDoUsuario);
 
   const [busca, setBusca] = useState("");
   const [filtro, setFiltro] = useState<FiltroChat>("todas");
@@ -64,6 +66,30 @@ export function useChatConversas() {
     queryKey: ["chat-etiquetas"],
     queryFn: () => listarEtiq(),
   });
+
+  const { data: estadosUsuario } = useQuery({
+    queryKey: ["chat-estado-usuario"],
+    queryFn: () => listarEstado(),
+  });
+
+  const estadoPorCliente = useMemo(() => {
+    const m = new Map<string, { fixado: boolean; apelido: string | null }>();
+    for (const e of estadosUsuario ?? []) {
+      if (e.chat_tipo !== "cliente") continue;
+      m.set(e.chat_id, {
+        fixado: !!e.pinado_em,
+        apelido: e.apelido ?? null,
+      });
+    }
+    return m;
+  }, [estadosUsuario]);
+
+  function fixadoCliente(clienteId: string) {
+    return estadoPorCliente.get(clienteId)?.fixado ?? false;
+  }
+  function apelidoCliente(clienteId: string) {
+    return estadoPorCliente.get(clienteId)?.apelido ?? null;
+  }
 
   const idsConversa = useMemo(
     () => (conversas ?? []).map((c) => c.cliente_id),
@@ -196,9 +222,15 @@ export function useChatConversas() {
       );
     if (filtro === "lembrete")
       lista = lista.filter((c) => lembreteDevido(c.cliente_id));
+    // Fixadas primeiro (mantém a ordem original dentro de cada grupo).
+    lista = [...lista].sort((a, b) => {
+      const fa = fixadoCliente(a.cliente_id) ? 1 : 0;
+      const fb = fixadoCliente(b.cliente_id) ? 1 : 0;
+      return fb - fa;
+    });
     return lista;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [conversas, busca, etiquetaFiltro, filtro, etiquetasCliente, metasCliente, tickMinuto]);
+  }, [conversas, busca, etiquetaFiltro, filtro, etiquetasCliente, metasCliente, estadoPorCliente, tickMinuto]);
 
   const novosClientes = useMemo(() => {
     if (termoBusca.length < 2) return [];
@@ -280,6 +312,8 @@ export function useChatConversas() {
     slaEstourado,
     lembreteDevido,
     arquivada,
+    fixado: fixadoCliente,
+    apelido: apelidoCliente,
   };
 }
 

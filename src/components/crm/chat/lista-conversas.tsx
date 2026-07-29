@@ -264,8 +264,8 @@ export function ListaConversas({ hook }: Props) {
                         clienteId={c.cliente_id}
                         nome={c.nome}
                         arquivado={hook.arquivada(c.cliente_id)}
-                        fixado={false}
-                        apelidoAtual={null}
+                        fixado={hook.fixado(c.cliente_id)}
+                        apelidoAtual={hook.apelido(c.cliente_id)}
                       />
                     </div>
                   </div>,
