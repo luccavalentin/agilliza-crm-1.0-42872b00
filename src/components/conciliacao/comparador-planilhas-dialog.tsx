@@ -319,9 +319,8 @@ export function ComparadorPlanilhasDialog({
         { key: "proposta", label: "Nº proposta" },
         { key: "cliente", label: "Cliente" },
         { key: "cpf", label: "CPF" },
-        { key: "statusControle", label: "Status (meu controle)" },
+        { key: "status", label: "Status" },
         { key: "valorControle", label: "Valor (controle)", format: "brl", footer: "sum" },
-        { key: "statusBanco", label: "Status (banco)" },
         { key: "valorBanco", label: "Valor (banco)", format: "brl", footer: "sum" },
         { key: "statusSistema", label: "Status (sistema)" },
         { key: "divergencias", label: "Divergências" },
@@ -331,9 +330,16 @@ export function ComparadorPlanilhasDialog({
         proposta: i.numeroProposta,
         cliente: i.nome,
         cpf: i.cpf,
-        statusControle: i.controle?.status ?? null,
+        status:
+          i.controle?.status === i.banco?.status
+            ? (i.banco?.status ?? i.controle?.status ?? null)
+            : [
+                i.controle?.status ? `Controle: ${i.controle.status}` : "",
+                i.banco?.status ? `Banco: ${i.banco.status}` : "",
+              ]
+                .filter(Boolean)
+                .join(" / ") || null,
         valorControle: i.controle?.valor ?? null,
-        statusBanco: i.banco?.status ?? null,
         valorBanco: i.banco?.valor ?? null,
         statusSistema: i.sistema?.situacao
           ? (SITUACAO_LABEL[i.sistema.situacao] ?? i.sistema.situacao)
@@ -445,8 +451,9 @@ export function ComparadorPlanilhasDialog({
                     <TableHead className="w-[170px]">Resultado</TableHead>
                     <TableHead>Proposta</TableHead>
                     <TableHead>Cliente</TableHead>
-                    <TableHead>Meu controle</TableHead>
-                    <TableHead>Banco</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Valor controle</TableHead>
+                    <TableHead className="text-right">Valor banco</TableHead>
                     <TableHead>Sistema</TableHead>
                     <TableHead>Divergências</TableHead>
                   </TableRow>
@@ -455,7 +462,7 @@ export function ComparadorPlanilhasDialog({
                   {filtrados.length === 0 ? (
                     <TableRow>
                       <TableCell
-                        colSpan={7}
+                        colSpan={8}
                         className="py-10 text-center text-sm text-muted-foreground"
                       >
                         Nenhum registro nesta visão.
@@ -479,16 +486,31 @@ export function ComparadorPlanilhasDialog({
                           </div>
                         </TableCell>
                         <TableCell className="text-xs">
-                          <div>{i.controle?.status ?? "—"}</div>
-                          <div className="font-mono text-muted-foreground">
-                            {fmtValor(i.controle?.valor ?? null)}
-                          </div>
+                          {i.controle?.status === i.banco?.status ? (
+                            <div>{i.banco?.status ?? i.controle?.status ?? "—"}</div>
+                          ) : (
+                            <div className="space-y-1">
+                              {i.controle?.status && (
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-[10px] uppercase text-muted-foreground">Controle</span>
+                                  <span>{i.controle.status}</span>
+                                </div>
+                              )}
+                              {i.banco?.status && (
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-[10px] uppercase text-muted-foreground">Banco</span>
+                                  <span>{i.banco.status}</span>
+                                </div>
+                              )}
+                              {!i.controle?.status && !i.banco?.status && "—"}
+                            </div>
+                          )}
                         </TableCell>
-                        <TableCell className="text-xs">
-                          <div>{i.banco?.status ?? "—"}</div>
-                          <div className="font-mono text-muted-foreground">
-                            {fmtValor(i.banco?.valor ?? null)}
-                          </div>
+                        <TableCell className="text-right font-mono text-xs tabular-nums">
+                          {fmtValor(i.controle?.valor ?? null)}
+                        </TableCell>
+                        <TableCell className="text-right font-mono text-xs tabular-nums">
+                          {fmtValor(i.banco?.valor ?? null)}
                         </TableCell>
                         <TableCell className="text-xs">
                           {i.sistema ? (
