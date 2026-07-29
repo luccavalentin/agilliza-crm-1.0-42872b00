@@ -312,6 +312,8 @@ export function useChatConversas() {
     slaEstourado,
     lembreteDevido,
     arquivada,
+    fixado: fixadoCliente,
+    apelido: apelidoCliente,
   };
 }
 
