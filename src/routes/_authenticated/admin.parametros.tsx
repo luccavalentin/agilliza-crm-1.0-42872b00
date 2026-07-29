@@ -307,7 +307,7 @@ function Pagina() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6 p-4 pb-28 md:p-6">
+    <div className="mx-auto max-w-4xl space-y-6 p-4 md:p-6">
       <AdminHero
         icon={<Building2 className="h-5 w-5" />}
         titulo="Cadastro da Empresa"
