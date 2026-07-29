@@ -384,10 +384,28 @@ export const navInterno: NavGroup[] = [
             to: "/relatorios/financeiros",
             perm: { modulo: "relatorios.geral" },
           },
+          {
+            label: "Dashboards comparativos",
+            icon: BarChart3,
+            to: "/relatorios/comparativos",
+            perm: { modulo: "relatorios.geral" },
+          },
         ],
       },
     ],
   },
+  {
+    id: "servidor-email",
+    label: "Servidor de Email",
+    items: [
+      {
+        label: "Servidor de Email",
+        icon: Inbox,
+        to: "/servidor-email",
+      },
+    ],
+  },
+
   {
     id: "administracao",
     label: "Administração",

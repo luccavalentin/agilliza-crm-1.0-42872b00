@@ -27,6 +27,7 @@ import { Route as ClientePerfilRouteImport } from './routes/cliente.perfil'
 import { Route as ClienteLogoutRouteImport } from './routes/cliente.logout'
 import { Route as ClienteChatRouteImport } from './routes/cliente.chat'
 import { Route as ClienteAcompanharMinhaPropostaRouteImport } from './routes/cliente.acompanhar-minha-proposta'
+import { Route as AuthenticatedServidorEmailRouteImport } from './routes/_authenticated/servidor-email'
 import { Route as AuthenticatedRelatoriosRouteImport } from './routes/_authenticated/relatorios'
 import { Route as AuthenticatedParceiroInicioRouteImport } from './routes/_authenticated/parceiro-inicio'
 import { Route as AuthenticatedMatriculasRouteImport } from './routes/_authenticated/matriculas'
@@ -65,6 +66,7 @@ import { Route as AuthenticatedRelatoriosExportacoesRouteImport } from './routes
 import { Route as AuthenticatedRelatoriosDemandasRouteImport } from './routes/_authenticated/relatorios.demandas'
 import { Route as AuthenticatedRelatoriosCrmRouteImport } from './routes/_authenticated/relatorios.crm'
 import { Route as AuthenticatedRelatoriosConsolidadoRouteImport } from './routes/_authenticated/relatorios.consolidado'
+import { Route as AuthenticatedRelatoriosComparativosRouteImport } from './routes/_authenticated/relatorios.comparativos'
 import { Route as AuthenticatedRelatoriosComissoesRouteImport } from './routes/_authenticated/relatorios.comissoes'
 import { Route as AuthenticatedRelatoriosComerciaisRouteImport } from './routes/_authenticated/relatorios.comerciais'
 import { Route as AuthenticatedRelatoriosClientesRouteImport } from './routes/_authenticated/relatorios.clientes'
@@ -210,6 +212,12 @@ const ClienteAcompanharMinhaPropostaRoute =
     id: '/acompanhar-minha-proposta',
     path: '/acompanhar-minha-proposta',
     getParentRoute: () => ClienteRoute,
+  } as any)
+const AuthenticatedServidorEmailRoute =
+  AuthenticatedServidorEmailRouteImport.update({
+    id: '/servidor-email',
+    path: '/servidor-email',
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedRelatoriosRoute = AuthenticatedRelatoriosRouteImport.update({
   id: '/relatorios',
@@ -428,6 +436,12 @@ const AuthenticatedRelatoriosConsolidadoRoute =
   AuthenticatedRelatoriosConsolidadoRouteImport.update({
     id: '/consolidado',
     path: '/consolidado',
+    getParentRoute: () => AuthenticatedRelatoriosRoute,
+  } as any)
+const AuthenticatedRelatoriosComparativosRoute =
+  AuthenticatedRelatoriosComparativosRouteImport.update({
+    id: '/comparativos',
+    path: '/comparativos',
     getParentRoute: () => AuthenticatedRelatoriosRoute,
   } as any)
 const AuthenticatedRelatoriosComissoesRoute =
@@ -774,6 +788,7 @@ export interface FileRoutesByFullPath {
   '/matriculas': typeof AuthenticatedMatriculasRoute
   '/parceiro-inicio': typeof AuthenticatedParceiroInicioRoute
   '/relatorios': typeof AuthenticatedRelatoriosRouteWithChildren
+  '/servidor-email': typeof AuthenticatedServidorEmailRoute
   '/cliente/acompanhar-minha-proposta': typeof ClienteAcompanharMinhaPropostaRoute
   '/cliente/chat': typeof ClienteChatRoute
   '/cliente/logout': typeof ClienteLogoutRoute
@@ -820,6 +835,7 @@ export interface FileRoutesByFullPath {
   '/relatorios/clientes': typeof AuthenticatedRelatoriosClientesRoute
   '/relatorios/comerciais': typeof AuthenticatedRelatoriosComerciaisRoute
   '/relatorios/comissoes': typeof AuthenticatedRelatoriosComissoesRoute
+  '/relatorios/comparativos': typeof AuthenticatedRelatoriosComparativosRoute
   '/relatorios/consolidado': typeof AuthenticatedRelatoriosConsolidadoRoute
   '/relatorios/crm': typeof AuthenticatedRelatoriosCrmRoute
   '/relatorios/demandas': typeof AuthenticatedRelatoriosDemandasRoute
@@ -884,6 +900,7 @@ export interface FileRoutesByTo {
   '/links': typeof AuthenticatedLinksRoute
   '/matriculas': typeof AuthenticatedMatriculasRoute
   '/parceiro-inicio': typeof AuthenticatedParceiroInicioRoute
+  '/servidor-email': typeof AuthenticatedServidorEmailRoute
   '/cliente/acompanhar-minha-proposta': typeof ClienteAcompanharMinhaPropostaRoute
   '/cliente/chat': typeof ClienteChatRoute
   '/cliente/logout': typeof ClienteLogoutRoute
@@ -930,6 +947,7 @@ export interface FileRoutesByTo {
   '/relatorios/clientes': typeof AuthenticatedRelatoriosClientesRoute
   '/relatorios/comerciais': typeof AuthenticatedRelatoriosComerciaisRoute
   '/relatorios/comissoes': typeof AuthenticatedRelatoriosComissoesRoute
+  '/relatorios/comparativos': typeof AuthenticatedRelatoriosComparativosRoute
   '/relatorios/consolidado': typeof AuthenticatedRelatoriosConsolidadoRoute
   '/relatorios/crm': typeof AuthenticatedRelatoriosCrmRoute
   '/relatorios/demandas': typeof AuthenticatedRelatoriosDemandasRoute
@@ -998,6 +1016,7 @@ export interface FileRoutesById {
   '/_authenticated/matriculas': typeof AuthenticatedMatriculasRoute
   '/_authenticated/parceiro-inicio': typeof AuthenticatedParceiroInicioRoute
   '/_authenticated/relatorios': typeof AuthenticatedRelatoriosRouteWithChildren
+  '/_authenticated/servidor-email': typeof AuthenticatedServidorEmailRoute
   '/cliente/acompanhar-minha-proposta': typeof ClienteAcompanharMinhaPropostaRoute
   '/cliente/chat': typeof ClienteChatRoute
   '/cliente/logout': typeof ClienteLogoutRoute
@@ -1044,6 +1063,7 @@ export interface FileRoutesById {
   '/_authenticated/relatorios/clientes': typeof AuthenticatedRelatoriosClientesRoute
   '/_authenticated/relatorios/comerciais': typeof AuthenticatedRelatoriosComerciaisRoute
   '/_authenticated/relatorios/comissoes': typeof AuthenticatedRelatoriosComissoesRoute
+  '/_authenticated/relatorios/comparativos': typeof AuthenticatedRelatoriosComparativosRoute
   '/_authenticated/relatorios/consolidado': typeof AuthenticatedRelatoriosConsolidadoRoute
   '/_authenticated/relatorios/crm': typeof AuthenticatedRelatoriosCrmRoute
   '/_authenticated/relatorios/demandas': typeof AuthenticatedRelatoriosDemandasRoute
@@ -1112,6 +1132,7 @@ export interface FileRouteTypes {
     | '/matriculas'
     | '/parceiro-inicio'
     | '/relatorios'
+    | '/servidor-email'
     | '/cliente/acompanhar-minha-proposta'
     | '/cliente/chat'
     | '/cliente/logout'
@@ -1158,6 +1179,7 @@ export interface FileRouteTypes {
     | '/relatorios/clientes'
     | '/relatorios/comerciais'
     | '/relatorios/comissoes'
+    | '/relatorios/comparativos'
     | '/relatorios/consolidado'
     | '/relatorios/crm'
     | '/relatorios/demandas'
@@ -1222,6 +1244,7 @@ export interface FileRouteTypes {
     | '/links'
     | '/matriculas'
     | '/parceiro-inicio'
+    | '/servidor-email'
     | '/cliente/acompanhar-minha-proposta'
     | '/cliente/chat'
     | '/cliente/logout'
@@ -1268,6 +1291,7 @@ export interface FileRouteTypes {
     | '/relatorios/clientes'
     | '/relatorios/comerciais'
     | '/relatorios/comissoes'
+    | '/relatorios/comparativos'
     | '/relatorios/consolidado'
     | '/relatorios/crm'
     | '/relatorios/demandas'
@@ -1335,6 +1359,7 @@ export interface FileRouteTypes {
     | '/_authenticated/matriculas'
     | '/_authenticated/parceiro-inicio'
     | '/_authenticated/relatorios'
+    | '/_authenticated/servidor-email'
     | '/cliente/acompanhar-minha-proposta'
     | '/cliente/chat'
     | '/cliente/logout'
@@ -1381,6 +1406,7 @@ export interface FileRouteTypes {
     | '/_authenticated/relatorios/clientes'
     | '/_authenticated/relatorios/comerciais'
     | '/_authenticated/relatorios/comissoes'
+    | '/_authenticated/relatorios/comparativos'
     | '/_authenticated/relatorios/consolidado'
     | '/_authenticated/relatorios/crm'
     | '/_authenticated/relatorios/demandas'
@@ -1571,6 +1597,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/cliente/acompanhar-minha-proposta'
       preLoaderRoute: typeof ClienteAcompanharMinhaPropostaRouteImport
       parentRoute: typeof ClienteRoute
+    }
+    '/_authenticated/servidor-email': {
+      id: '/_authenticated/servidor-email'
+      path: '/servidor-email'
+      fullPath: '/servidor-email'
+      preLoaderRoute: typeof AuthenticatedServidorEmailRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/relatorios': {
       id: '/_authenticated/relatorios'
@@ -1836,6 +1869,13 @@ declare module '@tanstack/react-router' {
       path: '/consolidado'
       fullPath: '/relatorios/consolidado'
       preLoaderRoute: typeof AuthenticatedRelatoriosConsolidadoRouteImport
+      parentRoute: typeof AuthenticatedRelatoriosRoute
+    }
+    '/_authenticated/relatorios/comparativos': {
+      id: '/_authenticated/relatorios/comparativos'
+      path: '/comparativos'
+      fullPath: '/relatorios/comparativos'
+      preLoaderRoute: typeof AuthenticatedRelatoriosComparativosRouteImport
       parentRoute: typeof AuthenticatedRelatoriosRoute
     }
     '/_authenticated/relatorios/comissoes': {
@@ -2274,6 +2314,7 @@ interface AuthenticatedRelatoriosRouteChildren {
   AuthenticatedRelatoriosClientesRoute: typeof AuthenticatedRelatoriosClientesRoute
   AuthenticatedRelatoriosComerciaisRoute: typeof AuthenticatedRelatoriosComerciaisRoute
   AuthenticatedRelatoriosComissoesRoute: typeof AuthenticatedRelatoriosComissoesRoute
+  AuthenticatedRelatoriosComparativosRoute: typeof AuthenticatedRelatoriosComparativosRoute
   AuthenticatedRelatoriosConsolidadoRoute: typeof AuthenticatedRelatoriosConsolidadoRoute
   AuthenticatedRelatoriosCrmRoute: typeof AuthenticatedRelatoriosCrmRoute
   AuthenticatedRelatoriosDemandasRoute: typeof AuthenticatedRelatoriosDemandasRoute
@@ -2298,6 +2339,8 @@ const AuthenticatedRelatoriosRouteChildren: AuthenticatedRelatoriosRouteChildren
       AuthenticatedRelatoriosComerciaisRoute,
     AuthenticatedRelatoriosComissoesRoute:
       AuthenticatedRelatoriosComissoesRoute,
+    AuthenticatedRelatoriosComparativosRoute:
+      AuthenticatedRelatoriosComparativosRoute,
     AuthenticatedRelatoriosConsolidadoRoute:
       AuthenticatedRelatoriosConsolidadoRoute,
     AuthenticatedRelatoriosCrmRoute: AuthenticatedRelatoriosCrmRoute,
@@ -2336,6 +2379,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMatriculasRoute: typeof AuthenticatedMatriculasRoute
   AuthenticatedParceiroInicioRoute: typeof AuthenticatedParceiroInicioRoute
   AuthenticatedRelatoriosRoute: typeof AuthenticatedRelatoriosRouteWithChildren
+  AuthenticatedServidorEmailRoute: typeof AuthenticatedServidorEmailRoute
   AuthenticatedAdminApisIaRoute: typeof AuthenticatedAdminApisIaRoute
   AuthenticatedAdminAuditoriaRoute: typeof AuthenticatedAdminAuditoriaRoute
   AuthenticatedAdminBackupRoute: typeof AuthenticatedAdminBackupRoute
@@ -2403,6 +2447,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMatriculasRoute: AuthenticatedMatriculasRoute,
   AuthenticatedParceiroInicioRoute: AuthenticatedParceiroInicioRoute,
   AuthenticatedRelatoriosRoute: AuthenticatedRelatoriosRouteWithChildren,
+  AuthenticatedServidorEmailRoute: AuthenticatedServidorEmailRoute,
   AuthenticatedAdminApisIaRoute: AuthenticatedAdminApisIaRoute,
   AuthenticatedAdminAuditoriaRoute: AuthenticatedAdminAuditoriaRoute,
   AuthenticatedAdminBackupRoute: AuthenticatedAdminBackupRoute,
