@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatarCelular } from "@/lib/crm/documento";
 import { Linha, formatarDataCivil } from "./utils";
+import { TransferirAtendimentoDialog } from "./transferir-atendimento-dialog";
 
 export function ResumoTab({
   cliente: c,
@@ -59,8 +60,12 @@ export function ResumoTab({
         </CardContent>
       </Card>
       <Card>
-        <CardHeader className="pb-2">
+        <CardHeader className="flex flex-row items-center justify-between gap-2 pb-2">
           <CardTitle className="text-sm">Atendimento</CardTitle>
+          <TransferirAtendimentoDialog
+            clienteId={c.id}
+            responsavelAtualId={c.responsavel_id ?? null}
+          />
         </CardHeader>
         <CardContent className="space-y-1 text-sm">
           <Linha rotulo="Responsável" valor={responsavelNome ?? "—"} />
