@@ -307,6 +307,15 @@ export function exportPDF(
     drawFooter(doc, pageW, pageH, p, total);
   }
 
+  // Impressão direta: abre o PDF já com o diálogo de impressão do navegador.
+  if (modo === "print") {
+    doc.autoPrint();
+    const url = doc.output("bloburl") as unknown as string;
+    const win = window.open(url, "_blank");
+    if (!win) doc.save(`${(filename || titulo).replace(/[\\/:*?"<>|]+/g, "")}.pdf`);
+    return;
+  }
+
   if (filename && filename.trim()) {
     const limpo = filename.replace(/[\\/:*?"<>|]+/g, "").replace(/\s+/g, " ").trim();
     doc.save(`${limpo}.pdf`);
