@@ -113,6 +113,8 @@ export function exportPDF(
   orientation: "landscape" | "portrait" = "landscape",
   /** Informações do documento em destaque (Data, Cliente, CPF...). Substitui a linha meta. */
   docInfo?: { label: string; value: string }[],
+  /** "download" salva o arquivo; "print" abre o PDF com o diálogo de impressão. */
+  modo: "download" | "print" = "download",
 ) {
   P = getPdfPalette();
   const doc = new jsPDF({ orientation, unit: "pt", format: "a4" });
@@ -305,6 +307,15 @@ export function exportPDF(
   for (let p = 1; p <= total; p++) {
     doc.setPage(p);
     drawFooter(doc, pageW, pageH, p, total);
+  }
+
+  // Impressão direta: abre o PDF já com o diálogo de impressão do navegador.
+  if (modo === "print") {
+    doc.autoPrint();
+    const url = doc.output("bloburl") as unknown as string;
+    const win = window.open(url, "_blank");
+    if (!win) doc.save(`${(filename || titulo).replace(/[\\/:*?"<>|]+/g, "")}.pdf`);
+    return;
   }
 
   if (filename && filename.trim()) {

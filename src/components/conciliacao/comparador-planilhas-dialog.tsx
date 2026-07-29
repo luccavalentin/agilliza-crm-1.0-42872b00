@@ -1,7 +1,16 @@
 import { useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Download, FileSpreadsheet, Loader2, Search, Trash2, Upload } from "lucide-react";
+import {
+  Download,
+  FileSpreadsheet,
+  FileText,
+  Loader2,
+  Printer,
+  Search,
+  Trash2,
+  Upload,
+} from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -37,6 +46,7 @@ import {
   type ResultadoComparativo,
 } from "@/lib/conciliacao/planilhas";
 import { abaResumo, baixarXlsx } from "@/lib/conciliacao/exportar-xlsx";
+import { gerarPdfComparativo, type ModoSaida } from "@/lib/conciliacao/exportar-pdf";
 
 const brl = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 const fmtValor = (v: number | null | undefined) => (v == null ? "—" : brl.format(Number(v)));
@@ -285,6 +295,56 @@ export function ComparadorPlanilhasDialog({
     ]);
   }
 
+  function exportarPdf(modo: ModoSaida) {
+    if (!itens?.length) return;
+    const alvo = filtrados.length ? filtrados : itens;
+    gerarPdfComparativo({
+      titulo: "Comparativo de planilhas e dados",
+      descricao: "Cruzamento entre as planilhas do meu controle, os relatórios dos bancos e o sistema",
+      meta: [
+        `${controle.arquivos.length} planilha(s) do meu controle`,
+        `${banco.arquivos.length} relatório(s) de banco`,
+        `Visão: ${aba === "todos" ? "Todos" : RESULTADO_COMPARATIVO_LABEL[aba]}`,
+        `${alvo.length} registros`,
+      ],
+      kpis: [
+        { label: "Registros comparados", valor: String(contagens.todos ?? 0) },
+        { label: "Coincidentes", valor: String(contagens.igual ?? 0) },
+        { label: "Divergentes", valor: String(contagens.divergente ?? 0) },
+        { label: "Só meu controle", valor: String(contagens.so_controle ?? 0) },
+        { label: "Só banco", valor: String(contagens.so_banco ?? 0) },
+      ],
+      colunas: [
+        { key: "resultado", label: "Resultado" },
+        { key: "proposta", label: "Nº proposta" },
+        { key: "cliente", label: "Cliente" },
+        { key: "cpf", label: "CPF" },
+        { key: "statusControle", label: "Status (meu controle)" },
+        { key: "valorControle", label: "Valor (controle)", format: "brl", footer: "sum" },
+        { key: "statusBanco", label: "Status (banco)" },
+        { key: "valorBanco", label: "Valor (banco)", format: "brl", footer: "sum" },
+        { key: "statusSistema", label: "Status (sistema)" },
+        { key: "divergencias", label: "Divergências" },
+      ],
+      linhas: alvo.map((i) => ({
+        resultado: RESULTADO_COMPARATIVO_LABEL[i.resultado],
+        proposta: i.numeroProposta,
+        cliente: i.nome,
+        cpf: i.cpf,
+        statusControle: i.controle?.status ?? null,
+        valorControle: i.controle?.valor ?? null,
+        statusBanco: i.banco?.status ?? null,
+        valorBanco: i.banco?.valor ?? null,
+        statusSistema: i.sistema?.situacao
+          ? (SITUACAO_LABEL[i.sistema.situacao] ?? i.sistema.situacao)
+          : null,
+        divergencias: i.detalhes.join(" · ") || null,
+      })),
+      arquivo: `agilliza-comparativo-planilhas-${new Date().toISOString().slice(0, 10)}`,
+      modo,
+    });
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[92vh] max-w-6xl overflow-y-auto">
@@ -366,6 +426,14 @@ export function ComparadorPlanilhasDialog({
                 <Button variant="outline" size="sm" onClick={exportar}>
                   <Download className="h-3.5 w-3.5" />
                   Planilha consolidada
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => exportarPdf("download")}>
+                  <FileText className="h-3.5 w-3.5" />
+                  PDF
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => exportarPdf("print")}>
+                  <Printer className="h-3.5 w-3.5" />
+                  Imprimir
                 </Button>
               </div>
             </div>
