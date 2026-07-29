@@ -1260,6 +1260,9 @@ export type Database = {
           criador_id: string | null
           data_expedicao: string | null
           data_nascimento: string | null
+          deleted_at: string | null
+          deleted_by: string | null
+          deleted_motivo: string | null
           digito_conta: string | null
           documento: string
           documento_secundario: string | null
@@ -1348,6 +1351,9 @@ export type Database = {
           criador_id?: string | null
           data_expedicao?: string | null
           data_nascimento?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          deleted_motivo?: string | null
           digito_conta?: string | null
           documento: string
           documento_secundario?: string | null
@@ -1436,6 +1442,9 @@ export type Database = {
           criador_id?: string | null
           data_expedicao?: string | null
           data_nascimento?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          deleted_motivo?: string | null
           digito_conta?: string | null
           documento?: string
           documento_secundario?: string | null
@@ -2169,6 +2178,9 @@ export type Database = {
           created_at: string
           criador_id: string | null
           dados_simulacao: string | null
+          deleted_at: string | null
+          deleted_by: string | null
+          deleted_motivo: string | null
           descricao: string | null
           escalonada: boolean
           escalonada_em: string | null
@@ -2194,6 +2206,9 @@ export type Database = {
           created_at?: string
           criador_id?: string | null
           dados_simulacao?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          deleted_motivo?: string | null
           descricao?: string | null
           escalonada?: boolean
           escalonada_em?: string | null
@@ -2219,6 +2234,9 @@ export type Database = {
           created_at?: string
           criador_id?: string | null
           dados_simulacao?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          deleted_motivo?: string | null
           descricao?: string | null
           escalonada?: boolean
           escalonada_em?: string | null
@@ -6657,6 +6675,9 @@ export type Database = {
           correspondente_id: string
           created_at: string
           criador_id: string | null
+          deleted_at: string | null
+          deleted_by: string | null
+          deleted_motivo: string | null
           descricao: string | null
           id: string
           numero: string | null
@@ -6674,6 +6695,9 @@ export type Database = {
           correspondente_id: string
           created_at?: string
           criador_id?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          deleted_motivo?: string | null
           descricao?: string | null
           id?: string
           numero?: string | null
@@ -6691,6 +6715,9 @@ export type Database = {
           correspondente_id?: string
           created_at?: string
           criador_id?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          deleted_motivo?: string | null
           descricao?: string | null
           id?: string
           numero?: string | null
