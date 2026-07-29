@@ -328,6 +328,11 @@
 .landing-fx.auth-fx {
   z-index: 1;
 }
+/* Efeito de água no fundo do formulário de login em telas pequenas. */
+.landing-fx.auth-fx-mobile {
+  z-index: 0;
+  opacity: 0.9;
+}
 
 
 
