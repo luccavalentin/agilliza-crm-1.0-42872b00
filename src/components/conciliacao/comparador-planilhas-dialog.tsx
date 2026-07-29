@@ -480,16 +480,31 @@ export function ComparadorPlanilhasDialog({
                           </div>
                         </TableCell>
                         <TableCell className="text-xs">
-                          <div>{i.controle?.status ?? "—"}</div>
-                          <div className="font-mono text-muted-foreground">
-                            {fmtValor(i.controle?.valor ?? null)}
-                          </div>
+                          {i.controle?.status === i.banco?.status ? (
+                            <div>{i.banco?.status ?? i.controle?.status ?? "—"}</div>
+                          ) : (
+                            <div className="space-y-1">
+                              {i.controle?.status && (
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-[10px] uppercase text-muted-foreground">Controle</span>
+                                  <span>{i.controle.status}</span>
+                                </div>
+                              )}
+                              {i.banco?.status && (
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-[10px] uppercase text-muted-foreground">Banco</span>
+                                  <span>{i.banco.status}</span>
+                                </div>
+                              )}
+                              {!i.controle?.status && !i.banco?.status && "—"}
+                            </div>
+                          )}
                         </TableCell>
-                        <TableCell className="text-xs">
-                          <div>{i.banco?.status ?? "—"}</div>
-                          <div className="font-mono text-muted-foreground">
-                            {fmtValor(i.banco?.valor ?? null)}
-                          </div>
+                        <TableCell className="text-right font-mono text-xs tabular-nums">
+                          {fmtValor(i.controle?.valor ?? null)}
+                        </TableCell>
+                        <TableCell className="text-right font-mono text-xs tabular-nums">
+                          {fmtValor(i.banco?.valor ?? null)}
                         </TableCell>
                         <TableCell className="text-xs">
                           {i.sistema ? (
