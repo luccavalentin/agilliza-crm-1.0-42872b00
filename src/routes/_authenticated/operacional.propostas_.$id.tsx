@@ -248,7 +248,10 @@ function Pagina() {
         }
       }
     };
-    const t0 = setTimeout(tick, 2_000);
+    // Espera 30s antes do primeiro poll: bancos como Itaú/Santander levam
+    // alguns segundos para propagar a inclusão da proposta; ler antes disso
+    // devolve estado transitório e faria a UI piscar "erro de envio".
+    const t0 = setTimeout(tick, 30_000);
     iv = setInterval(tick, 60_000);
     return () => {
       cancelado = true;
