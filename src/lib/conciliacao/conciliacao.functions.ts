@@ -161,3 +161,28 @@ export const excluirLoteConciliacao = createServerFn({ method: "POST" })
     });
     return { ok: true };
   });
+
+/** Cruza as chaves das planilhas comparadas contra as propostas do sistema. */
+export const cruzarComSistema = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z
+      .object({
+        chaves: z
+          .array(
+            z.object({
+              chave: z.string().min(1).max(120),
+              numero: z.string().max(60).nullable(),
+              cpf: z.string().max(20).nullable(),
+              nome: z.string().max(200).nullable(),
+            }),
+          )
+          .min(1)
+          .max(20000),
+      })
+      .parse(data),
+  )
+  .handler(async ({ data, context }) => {
+    const { cruzarComSistemaImpl } = await import("@/lib/conciliacao/comparador.server");
+    return cruzarComSistemaImpl(context.supabase, data.chaves);
+  });

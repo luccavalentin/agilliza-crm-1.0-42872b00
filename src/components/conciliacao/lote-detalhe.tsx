@@ -3,7 +3,6 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Link } from "@tanstack/react-router";
 import { Download, ExternalLink, Search } from "lucide-react";
-import * as XLSX from "xlsx";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { abaResumo, baixarXlsx } from "@/lib/conciliacao/exportar-xlsx";
 import { listarItensConciliacao } from "@/lib/conciliacao/conciliacao.functions";
 import { SITUACAO_LABEL } from "@/lib/conciliacao/bancos";
 import {
@@ -66,26 +66,68 @@ export function LoteDetalhe({ lote }: { lote: ConciliacaoLote }) {
   }, [itens, aba, busca]);
 
   function exportar() {
-    const linhas = filtrados.map((i) => ({
-      Resultado: RESULTADO_LABEL[i.resultado],
-      "Nº proposta (banco)": i.numero_proposta_banco ?? "",
-      "Nº proposta (sistema)": i.numero_proposta_sistema ?? "",
-      Cliente: i.nome_cliente_banco ?? "",
-      CPF: i.cpf_banco ?? "",
-      "Status banco": i.status_banco ?? "",
-      "Status sistema": i.status_sistema ? (SITUACAO_LABEL[i.status_sistema] ?? i.status_sistema) : "",
-      "Valor banco": i.valor_financiamento_banco ?? "",
-      "Valor sistema": i.valor_financiamento_sistema ?? "",
-      "Data envio": i.data_envio_banco ?? "",
-      "Data emissão": i.data_emissao_banco ?? "",
-      "Data assinatura": i.data_assinatura_banco ?? "",
-      Divergência: i.detalhe_divergencia ?? "",
+    const linhas = itens.map((i) => ({
+      resultado: RESULTADO_LABEL[i.resultado],
+      propostaBanco: i.numero_proposta_banco,
+      propostaSistema: i.numero_proposta_sistema,
+      cliente: i.nome_cliente_banco,
+      cpf: i.cpf_banco,
+      statusBanco: i.status_banco,
+      statusSistema: i.status_sistema
+        ? (SITUACAO_LABEL[i.status_sistema] ?? i.status_sistema)
+        : null,
+      valorBanco: i.valor_financiamento_banco,
+      valorSistema: i.valor_financiamento_sistema,
+      diferenca:
+        i.valor_financiamento_banco != null && i.valor_financiamento_sistema != null
+          ? Number(i.valor_financiamento_banco) - Number(i.valor_financiamento_sistema)
+          : null,
+      dataEnvio: i.data_envio_banco,
+      dataEmissao: i.data_emissao_banco,
+      dataAssinatura: i.data_assinatura_banco,
+      produto: i.produto_banco,
+      divergencia: i.detalhe_divergencia,
     }));
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(linhas), "Conciliação");
-    XLSX.writeFile(
-      wb,
-      `conciliacao_${lote.banco_nome.toLowerCase()}_${lote.periodo_referencia.slice(0, 7)}.xlsx`,
+    const colunas = [
+      { header: "Resultado", key: "resultado", width: 22 },
+      { header: "Nº proposta (banco)", key: "propostaBanco", width: 20 },
+      { header: "Nº proposta (sistema)", key: "propostaSistema", width: 20 },
+      { header: "Cliente", key: "cliente", width: 34 },
+      { header: "CPF", key: "cpf", width: 16 },
+      { header: "Status no banco", key: "statusBanco", width: 30 },
+      { header: "Status no sistema", key: "statusSistema", width: 26 },
+      { header: "Valor banco", key: "valorBanco", tipo: "brl" as const, width: 18 },
+      { header: "Valor sistema", key: "valorSistema", tipo: "brl" as const, width: 18 },
+      { header: "Diferença", key: "diferenca", tipo: "brl" as const, width: 18 },
+      { header: "Data de envio", key: "dataEnvio", tipo: "data" as const, width: 14 },
+      { header: "Data de emissão", key: "dataEmissao", tipo: "data" as const, width: 15 },
+      { header: "Data de assinatura", key: "dataAssinatura", tipo: "data" as const, width: 16 },
+      { header: "Produto", key: "produto", width: 24 },
+      { header: "Divergência", key: "divergencia", width: 52 },
+    ];
+    const por = (r: ResultadoConciliacao) =>
+      linhas.filter((l) => l.resultado === RESULTADO_LABEL[r]);
+
+    baixarXlsx(
+      `agilliza-comparativo-${lote.banco_nome.toLowerCase()}-${lote.periodo_referencia.slice(0, 7)}`,
+      [
+        abaResumo("Comparativo de dados", [
+          { rotulo: "Banco", valor: lote.banco_nome },
+          { rotulo: "Mês de referência", valor: lote.periodo_referencia.slice(0, 7) },
+          { rotulo: "Arquivo importado", valor: lote.nome_arquivo },
+          { rotulo: "Processado em", valor: new Date(lote.enviado_em).toLocaleString("pt-BR") },
+          { rotulo: "Linhas comparadas", valor: lote.total_linhas },
+          { rotulo: "Conferidas", valor: lote.total_conferidas },
+          { rotulo: "Divergentes", valor: lote.total_divergentes },
+          { rotulo: "Ausentes no sistema", valor: lote.total_ausentes_sistema },
+          { rotulo: "Ausentes no banco", valor: lote.total_ausentes_banco },
+        ]),
+        { nome: "Todos", colunas, linhas },
+        { nome: "Divergentes", colunas, linhas: por("divergente") },
+        { nome: "Ausentes no sistema", colunas, linhas: por("ausente_no_sistema") },
+        { nome: "Ausentes no banco", colunas, linhas: por("ausente_no_banco") },
+        { nome: "Conferidas", colunas, linhas: por("conferido") },
+      ],
     );
   }
 
@@ -124,9 +166,9 @@ export function LoteDetalhe({ lote }: { lote: ConciliacaoLote }) {
               className="h-9 w-56 pl-8"
             />
           </div>
-          <Button variant="outline" size="sm" onClick={exportar} disabled={!filtrados.length}>
+          <Button variant="outline" size="sm" onClick={exportar} disabled={!itens.length}>
             <Download className="h-3.5 w-3.5" />
-            XLSX
+            Planilha consolidada
           </Button>
         </div>
       </div>
