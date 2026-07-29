@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Link } from "@tanstack/react-router";
-import { Download, ExternalLink, Search } from "lucide-react";
+import { Download, ExternalLink, FileText, Printer, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +16,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { abaResumo, baixarXlsx } from "@/lib/conciliacao/exportar-xlsx";
+import { gerarPdfComparativo, type ModoSaida } from "@/lib/conciliacao/exportar-pdf";
 import { listarItensConciliacao } from "@/lib/conciliacao/conciliacao.functions";
 import { SITUACAO_LABEL } from "@/lib/conciliacao/bancos";
 import {
@@ -129,6 +130,55 @@ export function LoteDetalhe({ lote }: { lote: ConciliacaoLote }) {
         { nome: "Conferidas", colunas, linhas: por("conferido") },
       ],
     );
+  }
+
+  function exportarPdf(modo: ModoSaida) {
+    const alvo = filtrados.length ? filtrados : itens;
+    gerarPdfComparativo({
+      titulo: `Comparativo de dados — ${lote.banco_nome}`,
+      descricao: `Relatório do banco cruzado com as propostas do sistema · ${lote.periodo_referencia.slice(0, 7)}`,
+      meta: [
+        `Arquivo: ${lote.nome_arquivo}`,
+        `Processado em ${new Date(lote.enviado_em).toLocaleString("pt-BR")}`,
+        `Visão: ${aba === "todos" ? "Todos" : RESULTADO_LABEL[aba]}`,
+        `${alvo.length} registros`,
+      ],
+      kpis: [
+        { label: "Linhas comparadas", valor: String(lote.total_linhas) },
+        { label: "Conferidas", valor: String(lote.total_conferidas) },
+        { label: "Divergentes", valor: String(lote.total_divergentes) },
+        { label: "Ausentes no sistema", valor: String(lote.total_ausentes_sistema) },
+        { label: "Ausentes no banco", valor: String(lote.total_ausentes_banco) },
+      ],
+      colunas: [
+        { key: "resultado", label: "Resultado" },
+        { key: "propostaBanco", label: "Nº banco" },
+        { key: "propostaSistema", label: "Nº sistema" },
+        { key: "cliente", label: "Cliente" },
+        { key: "cpf", label: "CPF" },
+        { key: "statusBanco", label: "Status no banco" },
+        { key: "statusSistema", label: "Status no sistema" },
+        { key: "valorBanco", label: "Valor banco", format: "brl", footer: "sum" },
+        { key: "valorSistema", label: "Valor sistema", format: "brl", footer: "sum" },
+        { key: "divergencia", label: "Divergência" },
+      ],
+      linhas: alvo.map((i) => ({
+        resultado: RESULTADO_LABEL[i.resultado],
+        propostaBanco: i.numero_proposta_banco,
+        propostaSistema: i.numero_proposta_sistema,
+        cliente: i.nome_cliente_banco,
+        cpf: i.cpf_banco,
+        statusBanco: i.status_banco,
+        statusSistema: i.status_sistema
+          ? (SITUACAO_LABEL[i.status_sistema] ?? i.status_sistema)
+          : null,
+        valorBanco: i.valor_financiamento_banco,
+        valorSistema: i.valor_financiamento_sistema,
+        divergencia: i.detalhe_divergencia,
+      })),
+      arquivo: `agilliza-comparativo-${lote.banco_nome.toLowerCase()}-${lote.periodo_referencia.slice(0, 7)}`,
+      modo,
+    });
   }
 
   const contagens: Record<string, number> = {
