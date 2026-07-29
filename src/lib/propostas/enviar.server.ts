@@ -196,17 +196,9 @@ async function renovarSimulacaoSeConsumida({
   const familiaAtual = await dadosFamiliaresAtuaisDaProposta({ prop, propostaId, supabase });
   await sincronizarSnapshotFamiliarLocal({ prop, ctx, familiaAtual, supabase });
 
-  if (!sim) {
-    const valorImovel = num(prop.valor_imovel ?? simLocal?.valor_imovel);
-    const valorFinanciamento = num(prop.valor_financiamento ?? simLocal?.valor_financiamento);
-    const prazo = num(prop.prazo ?? simLocal?.prazo);
-    if (!(valorImovel > 0) || !(valorFinanciamento > 0) || !(prazo > 0)) {
-      throw new Error(
-        `Dados financeiros incompletos para enviar ao ${pb.nome_banco ?? "banco"}. Revise valor do imóvel, financiamento e prazo.`,
-      );
-    }
-    return Number(idAtual);
-  }
+  // Nota: se `sim` for null (simulação órfã / não existe mais na oportunidade),
+  // NÃO reutilizamos o idAtual — isso causa HTTP 500 no /incluir-proposta-integracao.
+  // Em vez disso, tratamos como "consumida" e criamos uma nova simulação abaixo.
 
   const tipo = String(sim?.tipoSituacao ?? "").toUpperCase().charAt(0);
   const erroSimulacaoAtual = erroRetornoIntegracaoResposta(sim);
