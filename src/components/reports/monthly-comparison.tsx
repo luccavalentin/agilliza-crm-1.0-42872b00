@@ -13,6 +13,8 @@ import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import type { ComparativoMensal } from "@/lib/relatorios/shared";
+import { BancoLogo } from "@/components/bancos/banco-logo";
+import { corDoBanco } from "@/lib/bancos/cores";
 
 const tooltipStyle = {
   background: "hsl(var(--card))",
@@ -278,8 +280,19 @@ export function MonthlyComparison({ dados }: { dados: ComparativoMensal }) {
                       .sort((a, b) => b.valor - a.valor)
                       .map((b) => (
                         <tr key={b.nome} className="border-b border-border/60 last:border-0">
-                          <td className="px-3 py-2">{b.nome}</td>
-                          <td className="px-3 py-2 text-right tabular-nums">{intFmt(b.valor)}</td>
+                          <td className="px-3 py-2">
+                            <div className="flex items-center gap-2">
+                              <BancoLogo nome={b.nome} size="sm" />
+                              <span className="font-medium text-foreground">{b.nome}</span>
+                            </div>
+                          </td>
+                          <td className="px-3 py-2 text-right tabular-nums">
+                            {b.valor > 0 ? (
+                              intFmt(b.valor)
+                            ) : (
+                              <span className="text-muted-foreground/50">—</span>
+                            )}
+                          </td>
                         </tr>
                       ))}
                   </tbody>
