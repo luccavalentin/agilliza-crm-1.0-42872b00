@@ -212,9 +212,46 @@ export const processarLeitura = createServerFn({ method: "POST" })
       .maybeSingle();
     if (!leitura || leitura.correspondente_id !== corr) throw new Error("Leitura não encontrada.");
 
-    const apiKey = process.env.GEMINI_API_KEY;
+    // Carrega a configuração salva pelo usuário em Admin › APIs de IA.
+    const { data: cfgRow } = await supabase
+      .from("admin_api_integrations")
+      .select("api_key, base_url, config, ativo")
+      .eq("correspondente_id", corr)
+      .eq("chave", "ia")
+      .maybeSingle();
+
+    const cfg = (cfgRow?.config ?? {}) as Record<string, unknown>;
+    const provedor: "gemini" | "openai" = cfg.provedor === "openai" ? "openai" : "gemini";
+    const modeloCfg =
+      typeof cfg.modelo === "string" && cfg.modelo.trim().length > 0
+        ? cfg.modelo.trim()
+        : provedor === "openai"
+          ? "gpt-4o-mini"
+          : "gemini-2.5-flash";
+    const temperatura = typeof cfg.temperatura === "number" ? cfg.temperatura : 0;
+    const promptSistema =
+      typeof cfg.prompt_scan === "string" && cfg.prompt_scan.trim().length > 0
+        ? cfg.prompt_scan.trim()
+        : "";
+
+    // Prioriza a chave salva no sistema; só cai para o env se o usuário não configurou.
+    const apiKeySalva = typeof cfgRow?.api_key === "string" ? cfgRow.api_key.trim() : "";
+    const apiKey =
+      apiKeySalva ||
+      (provedor === "openai" ? process.env.OPENAI_API_KEY : process.env.GEMINI_API_KEY) ||
+      "";
+
+    if (cfgRow && cfgRow.ativo === false) {
+      const msg = "Integração de IA desativada. Ative-a em Admin › APIs de IA.";
+      await supabase
+        .from("scan_ia_leituras")
+        .update({ status: "erro", erro: msg })
+        .eq("id", data.id);
+      return { ok: false, erro: msg };
+    }
+
     if (!apiKey) {
-      const msg = "Provedor de IA não configurado. Cadastre a chave do provedor nas configurações.";
+      const msg = "Chave da API não cadastrada. Configure-a em Admin › APIs de IA.";
       await supabase
         .from("scan_ia_leituras")
         .update({ status: "erro", erro: msg })
@@ -238,8 +275,7 @@ export const processarLeitura = createServerFn({ method: "POST" })
       const base64 = bytes.toString("base64");
       const mime = (blob as Blob).type || "application/pdf";
 
-      const prompt =
-        `Você é um extrator de dados de documentos brasileiros de financiamento imobiliário. ` +
+      const instrucaoBase =
         `Tipo do documento: "${leitura.tipo_documento ?? "desconhecido"}". ` +
         `Faça OCR e extraia os campos a seguir quando presentes: ${CAMPOS_ESPERADOS.join(", ")}. ` +
         `Responda SOMENTE com JSON no formato ` +
@@ -247,34 +283,70 @@ export const processarLeitura = createServerFn({ method: "POST" })
         `Use exatamente os nomes de campo listados. Para valores monetários, mantenha o formato numérico. ` +
         `A confiança deve refletir a legibilidade e a certeza da extração. ` +
         `Não invente valores: se um campo não existir no documento, não o inclua.`;
+      const prompt = promptSistema ? `${promptSistema}\n\n${instrucaoBase}` : instrucaoBase;
 
-      const resp = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
-        {
+      let resp: Response;
+      if (provedor === "openai") {
+        const baseUrl = (
+          (typeof cfgRow?.base_url === "string" && cfgRow.base_url) || "https://api.openai.com/v1"
+        ).replace(/\/+$/, "");
+        resp = await fetch(`${baseUrl}/chat/completions`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${apiKey}`,
+          },
           body: JSON.stringify({
-            contents: [
+            model: modeloCfg,
+            temperature: temperatura,
+            response_format: { type: "json_object" },
+            messages: [
               {
                 role: "user",
-                parts: [{ text: prompt }, { inline_data: { mime_type: mime, data: base64 } }],
+                content: [
+                  { type: "text", text: prompt },
+                  { type: "image_url", image_url: { url: `data:${mime};base64,${base64}` } },
+                ],
               },
             ],
-            generationConfig: { temperature: 0, responseMimeType: "application/json" },
           }),
-        },
-      );
+        });
+      } else {
+        const baseUrl = (
+          (typeof cfgRow?.base_url === "string" && cfgRow.base_url) ||
+          "https://generativelanguage.googleapis.com"
+        ).replace(/\/+$/, "");
+        resp = await fetch(
+          `${baseUrl}/v1beta/models/${encodeURIComponent(modeloCfg)}:generateContent?key=${encodeURIComponent(apiKey)}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              contents: [
+                {
+                  role: "user",
+                  parts: [
+                    { text: prompt },
+                    { inline_data: { mime_type: mime, data: base64 } },
+                  ],
+                },
+              ],
+              generationConfig: { temperature: temperatura, responseMimeType: "application/json" },
+            }),
+          },
+        );
+      }
 
       if (!resp.ok) {
         const body = await resp.text();
         if (resp.status === 429) {
           throw new Error(
-            "Cota da API do Gemini esgotada. Verifique o plano/billing da sua chave em https://ai.google.dev/gemini-api/docs/rate-limits ou tente novamente mais tarde.",
+            "Cota da API esgotada. Verifique o plano/billing da sua chave ou tente novamente mais tarde.",
           );
         }
         if (resp.status === 401 || resp.status === 403) {
           throw new Error(
-            "Chave da API do Gemini inválida ou sem permissão. Revise a chave em Admin › APIs de IA.",
+            "Chave da API inválida ou sem permissão. Revise a chave em Admin › APIs de IA.",
           );
         }
         throw new Error(`Provedor de IA retornou ${resp.status}: ${body.slice(0, 300)}`);
@@ -282,7 +354,9 @@ export const processarLeitura = createServerFn({ method: "POST" })
 
       const json = await resp.json();
       const texto: string =
-        json?.candidates?.[0]?.content?.parts?.map((p: any) => p.text).join("") ?? "";
+        provedor === "openai"
+          ? (json?.choices?.[0]?.message?.content ?? "")
+          : (json?.candidates?.[0]?.content?.parts?.map((p: any) => p.text).join("") ?? "");
 
       let parsed: { campos?: Array<{ campo: string; valor: string; confianca: number }> };
       try {
