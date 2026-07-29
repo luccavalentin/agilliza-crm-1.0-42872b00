@@ -395,18 +395,6 @@ export const navInterno: NavGroup[] = [
     ],
   },
   {
-    id: "servidor-email",
-    label: "Servidor de Email",
-    items: [
-      {
-        label: "Servidor de Email",
-        icon: Inbox,
-        to: "/servidor-email",
-      },
-    ],
-  },
-
-  {
     id: "administracao",
     label: "Administração",
     items: [
