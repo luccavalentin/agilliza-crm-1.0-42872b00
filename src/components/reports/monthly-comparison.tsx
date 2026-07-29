@@ -9,7 +9,9 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import type { ComparativoMensal } from "@/lib/relatorios/shared";
 
 const tooltipStyle = {
@@ -54,6 +56,12 @@ export function MonthlyComparison({ dados }: { dados: ComparativoMensal }) {
 
   const totalPorMes = meses.map((_, i) => bancos.reduce((s, b) => s + b.valores[i], 0));
 
+  const [mesAberto, setMesAberto] = useState<number | null>(null);
+  const abrirMes = (label: unknown) => {
+    const i = meses.indexOf(String((label as { label?: string })?.label ?? label));
+    if (i >= 0) setMesAberto(i);
+  };
+
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
@@ -82,7 +90,13 @@ export function MonthlyComparison({ dados }: { dados: ComparativoMensal }) {
                   tickFormatter={intFmt}
                 />
                 <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => intFmt(v)} />
-                <Bar dataKey="valor" fill="var(--chart-1)" radius={[4, 4, 0, 0]} />
+                <Bar
+                  dataKey="valor"
+                  fill="var(--chart-1)"
+                  radius={[4, 4, 0, 0]}
+                  style={{ cursor: "pointer" }}
+                  onClick={(d: unknown) => abrirMes((d as { payload?: unknown })?.payload ?? d)}
+                />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -120,6 +134,12 @@ export function MonthlyComparison({ dados }: { dados: ComparativoMensal }) {
                   stroke="var(--chart-1)"
                   strokeWidth={2}
                   dot={{ r: 3 }}
+                  activeDot={{
+                    r: 5,
+                    cursor: "pointer",
+                    onClick: (_: unknown, p: unknown) =>
+                      abrirMes((p as { payload?: unknown })?.payload ?? p),
+                  }}
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -134,10 +154,11 @@ export function MonthlyComparison({ dados }: { dados: ComparativoMensal }) {
               <th className="px-3 py-2 text-left text-[11px] font-medium uppercase tracking-[0.1em] text-muted-foreground">
                 Banco
               </th>
-              {meses.map((m) => (
+              {meses.map((m, i) => (
                 <th
                   key={m}
-                  className="px-3 py-2 text-right text-[11px] font-medium uppercase tracking-[0.1em] text-muted-foreground"
+                  onClick={() => setMesAberto(i)}
+                  className="cursor-pointer px-3 py-2 text-right text-[11px] font-medium uppercase tracking-[0.1em] text-muted-foreground hover:text-foreground"
                 >
                   {m}
                 </th>
@@ -179,6 +200,67 @@ export function MonthlyComparison({ dados }: { dados: ComparativoMensal }) {
           </tfoot>
         </table>
       </div>
+
+      <Dialog open={mesAberto !== null} onOpenChange={(o) => !o && setMesAberto(null)}>
+        <DialogContent className="max-h-[85vh] max-w-lg overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {mesAberto !== null ? `Detalhes de ${meses[mesAberto]}` : ""}
+            </DialogTitle>
+          </DialogHeader>
+          {mesAberto !== null && (
+            <div className="space-y-3 text-sm">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-lg border border-border p-3">
+                  <p className="text-xs text-muted-foreground">Propostas</p>
+                  <p className="text-lg font-semibold tabular-nums">
+                    {intFmt(quantidade[mesAberto])}
+                  </p>
+                </div>
+                <div className="rounded-lg border border-border p-3">
+                  <p className="text-xs text-muted-foreground">Taxa de aprovação</p>
+                  <p className="text-lg font-semibold tabular-nums">
+                    {pctFmt(taxaAprovacao[mesAberto])}
+                  </p>
+                </div>
+              </div>
+              <div className="rounded-lg border border-border">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-border bg-muted/40">
+                      <th className="px-3 py-2 text-left text-[11px] uppercase tracking-[0.1em] text-muted-foreground">
+                        Banco
+                      </th>
+                      <th className="px-3 py-2 text-right text-[11px] uppercase tracking-[0.1em] text-muted-foreground">
+                        Propostas
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {bancos
+                      .map((b) => ({ nome: b.nome, valor: b.valores[mesAberto] }))
+                      .sort((a, b) => b.valor - a.valor)
+                      .map((b) => (
+                        <tr key={b.nome} className="border-b border-border/60 last:border-0">
+                          <td className="px-3 py-2">{b.nome}</td>
+                          <td className="px-3 py-2 text-right tabular-nums">{intFmt(b.valor)}</td>
+                        </tr>
+                      ))}
+                  </tbody>
+                  <tfoot>
+                    <tr className="bg-muted/50 font-semibold">
+                      <td className="px-3 py-2">Total</td>
+                      <td className="px-3 py-2 text-right tabular-nums">
+                        {intFmt(totalPorMes[mesAberto])}
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
