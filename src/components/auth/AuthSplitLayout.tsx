@@ -82,21 +82,22 @@ export function AuthSplitLayout({
       </aside>
 
       {/* Formulário. */}
-      <main className="flex flex-col bg-muted px-4 py-8 sm:px-8">
-        <div className="flex items-center justify-between">
+      <main className="relative flex flex-col overflow-hidden bg-[var(--brand-azul-noite)] px-4 py-8 sm:px-8 lg:bg-muted">
+        <LandingFx className="auth-fx-mobile lg:hidden" />
+        <div className="relative z-10 flex items-center justify-between">
           <Link
             to="/"
-            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+            className="inline-flex items-center gap-1.5 text-sm text-primary-foreground/80 transition-colors hover:text-primary-foreground lg:text-muted-foreground lg:hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4" />
             Voltar
           </Link>
-          <span className="rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-muted-foreground lg:hidden">
+          <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-medium text-primary-foreground backdrop-blur lg:hidden">
             {portalNome}
           </span>
         </div>
 
-        <div className="flex flex-1 items-center justify-center py-8">
+        <div className="relative z-10 flex flex-1 items-center justify-center py-8">
           <div className="w-full max-w-md">
             <div className="auth-form-card rounded-2xl border border-border p-6 sm:p-8">
               <div className="mb-8 flex flex-col items-center gap-5 text-center">
