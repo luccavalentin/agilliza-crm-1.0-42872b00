@@ -1809,6 +1809,106 @@ export const getPanelDrilldown = createServerFn({ method: "POST" })
       }
     }
 
+    // Clique no gráfico "Distribuição de propostas" → agrega propostas por status
+    if (chave === "distribuicao de propostas") {
+      const rows = (await propostasNoPeriodo()).filter((p) => dentroPeriodo(p.created_at));
+      const porStatus = new Map<string, any[]>();
+      for (const p of rows) {
+        const s = (p.status as string) || "—";
+        if (!porStatus.has(s)) porStatus.set(s, []);
+        porStatus.get(s)!.push(p);
+      }
+      const formula = Array.from(porStatus.entries())
+        .sort((a, b) => b[1].length - a[1].length)
+        .map(([s, list]) => ({
+          label: rotularStatus(s, PROP_LABEL),
+          valor: int(list.length),
+          tone:
+            s === "credito_aprovado" || s === "contrato_emitido"
+              ? ("success" as const)
+              : s === "credito_recusado" || s === "cancelada"
+                ? ("danger" as const)
+                : s === "em_analise_credito" || s === "enviada_banco"
+                  ? ("warning" as const)
+                  : ("brand" as const),
+        }));
+      return {
+        titulo: "Distribuição de propostas",
+        subtitulo: "Propostas do período agrupadas por status",
+        valor: int(rows.length),
+        formula,
+        itens: rows.map(itemProposta),
+        linkAbrir: "/operacional/propostas",
+        linkAbrirLabel: "Abrir lista completa de propostas",
+      };
+    }
+
+    // Clique no gráfico "Distribuição de simulações" → agrega simulações por status
+    if (chave === "distribuicao de simulacoes") {
+      const rows = await simulacoesNoPeriodo();
+      const porStatus = new Map<string, any[]>();
+      for (const s of rows) {
+        const st = (s.status as string) || "—";
+        if (!porStatus.has(st)) porStatus.set(st, []);
+        porStatus.get(st)!.push(s);
+      }
+      const formula = Array.from(porStatus.entries())
+        .sort((a, b) => b[1].length - a[1].length)
+        .map(([s, list]) => ({
+          label: rotularStatus(s, SIM_LABEL),
+          valor: int(list.length),
+          tone:
+            s === "simulada" || s === "promovida"
+              ? ("success" as const)
+              : s === "erro_banco" || s === "cancelada"
+                ? ("danger" as const)
+                : ("brand" as const),
+        }));
+      return {
+        titulo: "Distribuição de simulações",
+        subtitulo: "Simulações do período agrupadas por status",
+        valor: int(rows.length),
+        formula,
+        itens: rows.map(itemSimulacao),
+        linkAbrir: "/operacional/simulacoes",
+        linkAbrirLabel: "Abrir lista completa de simulações",
+      };
+    }
+
+    // Clique num rótulo de status individual (Aprovada, Recusada, Em análise, etc.)
+    {
+      const propStatusPorLabel = new Map(
+        Object.entries(PROP_LABEL).map(([k, v]) => [normLabel(v), k]),
+      );
+      const simStatusPorLabel = new Map(
+        Object.entries(SIM_LABEL).map(([k, v]) => [normLabel(v), k]),
+      );
+      const propStatusKey = propStatusPorLabel.get(chave);
+      if (propStatusKey) {
+        const rows = (await propostasNoPeriodo()).filter(
+          (p) => dentroPeriodo(p.created_at) && p.status === propStatusKey,
+        );
+        return {
+          titulo: `Propostas — ${PROP_LABEL[propStatusKey]}`,
+          subtitulo: "Propostas do período com este status",
+          valor: int(rows.length),
+          itens: rows.map(itemProposta),
+          linkAbrir: "/operacional/propostas",
+        };
+      }
+      const simStatusKey = simStatusPorLabel.get(chave);
+      if (simStatusKey) {
+        const rows = (await simulacoesNoPeriodo()).filter((s) => s.status === simStatusKey);
+        return {
+          titulo: `Simulações — ${SIM_LABEL[simStatusKey]}`,
+          subtitulo: "Simulações do período com este status",
+          valor: int(rows.length),
+          itens: rows.map(itemSimulacao),
+          linkAbrir: "/operacional/simulacoes",
+        };
+      }
+    }
+
     return {
       titulo: data.metrica,
       subtitulo: "Detalhamento não disponível para este indicador",
@@ -1817,3 +1917,4 @@ export const getPanelDrilldown = createServerFn({ method: "POST" })
       itens: [],
     };
   });
+
