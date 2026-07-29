@@ -267,6 +267,16 @@ export const processarLeitura = createServerFn({ method: "POST" })
 
       if (!resp.ok) {
         const body = await resp.text();
+        if (resp.status === 429) {
+          throw new Error(
+            "Cota da API do Gemini esgotada. Verifique o plano/billing da sua chave em https://ai.google.dev/gemini-api/docs/rate-limits ou tente novamente mais tarde.",
+          );
+        }
+        if (resp.status === 401 || resp.status === 403) {
+          throw new Error(
+            "Chave da API do Gemini inválida ou sem permissão. Revise a chave em Admin › APIs de IA.",
+          );
+        }
         throw new Error(`Provedor de IA retornou ${resp.status}: ${body.slice(0, 300)}`);
       }
 
