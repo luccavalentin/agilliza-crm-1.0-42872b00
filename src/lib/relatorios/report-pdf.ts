@@ -113,6 +113,8 @@ export function exportPDF(
   orientation: "landscape" | "portrait" = "landscape",
   /** Informações do documento em destaque (Data, Cliente, CPF...). Substitui a linha meta. */
   docInfo?: { label: string; value: string }[],
+  /** "download" salva o arquivo; "print" abre o PDF com o diálogo de impressão. */
+  modo: "download" | "print" = "download",
 ) {
   P = getPdfPalette();
   const doc = new jsPDF({ orientation, unit: "pt", format: "a4" });
