@@ -135,8 +135,8 @@ export function DetalheBancoDialog({
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="sm">
-          <FileText className="mr-1 h-4 w-4" /> Detalhes
+        <Button variant="ghost" size="icon" className="h-8 w-8" title="Ver detalhes" aria-label="Ver detalhes">
+          <FileText className="h-4 w-4" />
         </Button>
       </DialogTrigger>
       <DialogContent className="max-h-[92vh] max-w-4xl overflow-hidden p-0">
