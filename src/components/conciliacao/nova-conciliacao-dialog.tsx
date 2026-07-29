@@ -64,7 +64,7 @@ export function NovaConciliacaoDialog({
           linhas,
         },
       });
-      toast.success(`Conciliação concluída — ${linhas.length} linhas lidas.`);
+      toast.success(`Comparativo concluído — ${linhas.length} linhas lidas.`);
       onOpenChange(false);
       setArquivo(null);
       onConcluido(loteId);
@@ -81,7 +81,7 @@ export function NovaConciliacaoDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Nova conciliação</DialogTitle>
+          <DialogTitle>Novo comparativo de dados</DialogTitle>
           <DialogDescription>
             Envie o relatório oficial do banco. O sistema apenas compara — nenhuma
             proposta é criada ou alterada.

@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { FileSpreadsheet, Plus, Trash2 } from "lucide-react";
+import { FileSpreadsheet, Plus, Trash2, GitCompare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { NovaConciliacaoDialog } from "@/components/conciliacao/nova-conciliacao-dialog";
+import { ComparadorPlanilhasDialog } from "@/components/conciliacao/comparador-planilhas-dialog";
 import { LoteDetalhe } from "@/components/conciliacao/lote-detalhe";
 import {
   excluirLoteConciliacao,
@@ -26,13 +27,13 @@ import { BANCOS_CONCILIACAO } from "@/lib/conciliacao/bancos";
 export const Route = createFileRoute("/_authenticated/relatorios/comparativos")({
   head: () => ({
     meta: [
-      { title: "Conciliação bancária — Agilliza" },
+      { title: "Comparativo de dados — Agilliza" },
       {
         name: "description",
         content:
           "Cruze o relatório oficial do banco contra as propostas do sistema e veja divergências, ausências e conferências em segundos.",
       },
-      { property: "og:title", content: "Conciliação bancária — Agilliza" },
+      { property: "og:title", content: "Comparativo de dados — Agilliza" },
       {
         property: "og:description",
         content:
@@ -64,6 +65,7 @@ function Pagina() {
   const [periodo, setPeriodo] = useState(mesAtual());
   const [banco, setBanco] = useState<string>("todos");
   const [aberto, setAberto] = useState(false);
+  const [comparador, setComparador] = useState(false);
   const [loteSelecionado, setLoteSelecionado] = useState<string | null>(null);
 
   const filtros = {
@@ -129,16 +131,22 @@ function Pagina() {
           <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
             Relatórios · Comparativos
           </p>
-          <h1 className="text-2xl font-semibold tracking-tight">Conciliação bancária</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">Comparativo de dados</h1>
           <p className="text-sm text-muted-foreground">
             Faça o upload do relatório oficial do banco. O sistema cruza contra as
             propostas existentes e aponta divergências — sem criar ou alterar nada.
           </p>
         </div>
-        <Button onClick={() => setAberto(true)}>
-          <Plus className="h-4 w-4" />
-          Nova conciliação
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="outline" onClick={() => setComparador(true)}>
+            <GitCompare className="h-4 w-4" />
+            Comparativo de planilhas e dados
+          </Button>
+          <Button onClick={() => setAberto(true)}>
+            <Plus className="h-4 w-4" />
+            Novo comparativo
+          </Button>
+        </div>
       </header>
 
       <div className="flex flex-wrap items-end gap-3">
@@ -218,7 +226,7 @@ function Pagina() {
           <Card className="flex flex-col items-center gap-2 p-10 text-center">
             <FileSpreadsheet className="h-6 w-6 opacity-50" />
             <p className="text-sm text-muted-foreground">
-              Nenhuma conciliação neste período. Envie o relatório do banco para começar.
+              Nenhum comparativo neste período. Envie o relatório do banco para começar.
             </p>
           </Card>
         ) : (
@@ -258,6 +266,8 @@ function Pagina() {
       </section>
 
       {lote && <LoteDetalhe lote={lote} />}
+
+      <ComparadorPlanilhasDialog open={comparador} onOpenChange={setComparador} />
 
       <NovaConciliacaoDialog
         open={aberto}
