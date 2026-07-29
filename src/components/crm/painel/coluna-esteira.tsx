@@ -1,4 +1,7 @@
-import { FolderClosed, Lock, Plus, Users } from "lucide-react";
+import { FolderClosed, FolderOpen, Lock, Plus, Search, Users } from "lucide-react";
+
+/** Máximo de cards visíveis antes de "empilhar" o restante numa pasta com busca. */
+const MAX_VISIVEIS_POR_COLUNA = 4;
 import type { PainelStage } from "@/lib/crm/clientes.functions";
 import { ICONES_ETAPA, type PainelClienteItem } from "./utils";
 
