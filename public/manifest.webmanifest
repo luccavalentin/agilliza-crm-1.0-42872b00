@@ -9,7 +9,7 @@
   "display_override": ["standalone", "minimal-ui"],
   "orientation": "portrait-primary",
   "theme_color": "#000F9F",
-  "background_color": "#12131A",
+  "background_color": "#00052E",
   "lang": "pt-BR",
   "dir": "ltr",
   "categories": ["business", "finance", "productivity"],
