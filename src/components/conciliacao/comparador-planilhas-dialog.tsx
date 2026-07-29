@@ -319,9 +319,8 @@ export function ComparadorPlanilhasDialog({
         { key: "proposta", label: "Nº proposta" },
         { key: "cliente", label: "Cliente" },
         { key: "cpf", label: "CPF" },
-        { key: "statusControle", label: "Status (meu controle)" },
+        { key: "status", label: "Status" },
         { key: "valorControle", label: "Valor (controle)", format: "brl", footer: "sum" },
-        { key: "statusBanco", label: "Status (banco)" },
         { key: "valorBanco", label: "Valor (banco)", format: "brl", footer: "sum" },
         { key: "statusSistema", label: "Status (sistema)" },
         { key: "divergencias", label: "Divergências" },
@@ -331,9 +330,16 @@ export function ComparadorPlanilhasDialog({
         proposta: i.numeroProposta,
         cliente: i.nome,
         cpf: i.cpf,
-        statusControle: i.controle?.status ?? null,
+        status:
+          i.controle?.status === i.banco?.status
+            ? (i.banco?.status ?? i.controle?.status ?? null)
+            : [
+                i.controle?.status ? `Controle: ${i.controle.status}` : "",
+                i.banco?.status ? `Banco: ${i.banco.status}` : "",
+              ]
+                .filter(Boolean)
+                .join(" / ") || null,
         valorControle: i.controle?.valor ?? null,
-        statusBanco: i.banco?.status ?? null,
         valorBanco: i.banco?.valor ?? null,
         statusSistema: i.sistema?.situacao
           ? (SITUACAO_LABEL[i.sistema.situacao] ?? i.sistema.situacao)
