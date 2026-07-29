@@ -354,7 +354,9 @@ export const processarLeitura = createServerFn({ method: "POST" })
 
       const json = await resp.json();
       const texto: string =
-        json?.candidates?.[0]?.content?.parts?.map((p: any) => p.text).join("") ?? "";
+        provedor === "openai"
+          ? (json?.choices?.[0]?.message?.content ?? "")
+          : (json?.candidates?.[0]?.content?.parts?.map((p: any) => p.text).join("") ?? "");
 
       let parsed: { campos?: Array<{ campo: string; valor: string; confianca: number }> };
       try {
