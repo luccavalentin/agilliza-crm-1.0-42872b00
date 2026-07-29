@@ -9,6 +9,7 @@ import {
   listarPropostas,
   excluirProposta,
   restaurarProposta,
+  sincronizarPropostasAtivas,
 } from "@/lib/propostas/propostas.functions";
 import { Button } from "@/components/ui/button";
 import { listarColegas } from "@/lib/operacional/shared.functions";
@@ -44,6 +45,7 @@ function Pagina() {
   const queryClient = useQueryClient();
   const excluir = useServerFn(excluirProposta);
   const restaurar = useServerFn(restaurarProposta);
+  const sincronizarLoteFn = useServerFn(sincronizarPropostasAtivas);
   const padrao = useMemo(() => intervaloMesAtual(), []);
   const [escopo, setEscopo] = useState<Escopo>("minhas");
   const [grupo, setGrupo] = useState<GrupoProposta | null>(null);
@@ -107,6 +109,34 @@ function Pagina() {
       }
     };
   }, [queryClient]);
+
+  // Sincronização automática em lote: consulta o banco para todas as propostas
+  // ativas visíveis e atualiza status instantaneamente, sem precisar abrir cada
+  // proposta. Executa ao montar e a cada 45s. Como a atualização toca a tabela
+  // `propostas`, o realtime acima invalida a lista automaticamente.
+  useEffect(() => {
+    let cancelado = false;
+    let falhas = 0;
+    const tick = async () => {
+      if (cancelado) return;
+      try {
+        await sincronizarLoteFn({ data: { limite: 40 } });
+        falhas = 0;
+      } catch {
+        falhas++;
+      }
+    };
+    const t0 = setTimeout(tick, 1_500);
+    const iv = setInterval(() => {
+      if (falhas >= 3) return;
+      tick();
+    }, 45_000);
+    return () => {
+      cancelado = true;
+      clearTimeout(t0);
+      clearInterval(iv);
+    };
+  }, [sincronizarLoteFn]);
 
   const { data, isLoading } = useQuery({
     queryKey: ["propostas", escopo, busca, dataInicio, dataFim, responsavel, verExcluidas],

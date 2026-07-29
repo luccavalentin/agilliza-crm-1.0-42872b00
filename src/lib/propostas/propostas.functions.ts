@@ -1495,6 +1495,63 @@ export const sincronizarProposta = createServerFn({ method: "POST" })
     return sincronizarPropostaImpl({ propostaId: data.proposta_id, userId, supabase });
   });
 
+/**
+ * Sincroniza em lote todas as propostas ativas visíveis ao usuário (RLS aplica).
+ * Chamado pela tela de listagem para refletir o retorno do banco sem depender
+ * do usuário abrir cada proposta individualmente.
+ */
+export const sincronizarPropostasAtivas = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data) =>
+    z.object({ limite: z.number().int().min(1).max(100).default(40) }).parse(data ?? {}),
+  )
+  .handler(async ({ context, data }) => {
+    const { supabase, userId } = context;
+    const STATUS_ATIVOS = [
+      "enviada_banco",
+      "em_analise_credito",
+      "credito_aprovado",
+      "aguardando_documentos",
+      "engenharia_vistoria",
+      "analise_juridica",
+    ];
+    const { data: rows, error } = await supabase
+      .from("propostas")
+      .select("id")
+      .in("status", STATUS_ATIVOS as any)
+      .not("homefin_id_oportunidade", "is", null)
+      .is("deleted_at", null)
+      .order("ultima_sincronizacao_em", { ascending: true, nullsFirst: true } as any)
+      .limit(data.limite);
+    if (error) throw new Error(error.message);
+    const { sincronizarPropostaImpl } = await import("./enviar.server");
+    const fila = [...(rows ?? [])];
+    let processadas = 0;
+    let atualizadas = 0;
+    const CONCORRENCIA = 6;
+    async function worker() {
+      while (fila.length > 0) {
+        const p = fila.shift();
+        if (!p) break;
+        try {
+          const r = await sincronizarPropostaImpl({
+            propostaId: (p as any).id,
+            userId,
+            supabase,
+          });
+          processadas++;
+          if (r.atualizado) atualizadas++;
+        } catch (e) {
+          console.error("[sincronizarPropostasAtivas] falha", (p as any).id, e);
+        }
+      }
+    }
+    await Promise.all(
+      Array.from({ length: Math.min(CONCORRENCIA, fila.length) }, () => worker()),
+    );
+    return { processadas, atualizadas };
+  });
+
 /** ===== Enviar documentos do cadastro ao banco (upload + inclusão) ===== */
 export const enviarDocumentosBanco = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
