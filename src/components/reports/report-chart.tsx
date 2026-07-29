@@ -91,10 +91,12 @@ function MobileBarList({
   chart,
   colorByBank,
   fmt,
+  onSelect,
 }: {
   chart: ReportChart;
   colorByBank: boolean;
   fmt: (v: number) => string;
+  onSelect?: (label: string, valor: number) => void;
 }) {
   const maxValor = Math.max(1, ...chart.dados.map((d) => Number(d.valor) || 0));
   return (
@@ -106,7 +108,11 @@ function MobileBarList({
           ? corDoBanco(d.label)
           : "linear-gradient(90deg, color-mix(in oklab, var(--primary) 55%, transparent), var(--primary))";
         return (
-          <div key={d.label} className="min-w-0 space-y-1.5">
+          <div
+            key={d.label}
+            className={`min-w-0 space-y-1.5 ${onSelect ? "cursor-pointer" : ""}`}
+            onClick={onSelect ? () => onSelect(d.label, valor) : undefined}
+          >
             <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 text-xs">
               <span className="flex min-w-0 items-center gap-2 font-medium text-foreground">
                 {logo && (
@@ -141,11 +147,23 @@ function MobileBarList({
 export function ReportChartView({
   chart,
   colorByBank = false,
+  onSelect,
 }: {
   chart: ReportChart;
   /** Colore cada barra com a cor de marca do banco correspondente ao rótulo. */
   colorByBank?: boolean;
+  /** Torna barras/fatias/pontos clicáveis (detalhamento do rótulo). */
+  onSelect?: (label: string, valor: number) => void;
 }) {
+  const clique = onSelect
+    ? (item: unknown) => {
+        const d = item as { label?: string; valor?: number; payload?: { label?: string; valor?: number } };
+        const label = d?.label ?? d?.payload?.label;
+        const valor = Number(d?.valor ?? d?.payload?.valor ?? 0);
+        if (label != null) onSelect(String(label), valor);
+      }
+    : undefined;
+  const cursor = onSelect ? { cursor: "pointer" as const } : undefined;
   const isMobile = useIsMobile();
   const fmt = chart.moeda
     ? (v: number) => formatBRL(Number(v))
@@ -186,6 +204,8 @@ export function ReportChartView({
             paddingAngle={2}
             stroke="var(--card)"
             strokeWidth={2}
+            onClick={clique}
+            style={cursor}
           >
             {chart.dados.map((d, i) => (
               <Cell
@@ -264,8 +284,8 @@ export function ReportChartView({
             name={chart.serie1 ?? "Total"}
             stroke="var(--chart-1)"
             strokeWidth={2.5}
-            dot={false}
-            activeDot={{ r: 4, strokeWidth: 0 }}
+            dot={onSelect ? { r: 3, strokeWidth: 0 } : false}
+            activeDot={{ r: 5, strokeWidth: 0, ...(cursor ?? {}), onClick: clique }}
           />
           {chart.serie2 && (
             <Line
@@ -285,7 +305,7 @@ export function ReportChartView({
 
   if (chart.tipo === "barh" || chart.tipo === "funnel") {
     if (isMobile) {
-      return <MobileBarList chart={chart} colorByBank={colorByBank} fmt={fmt} />;
+      return <MobileBarList chart={chart} colorByBank={colorByBank} fmt={fmt} onSelect={onSelect} />;
     }
 
     const maxValor = Math.max(0, ...chart.dados.map((d) => Number(d.valor) || 0));
@@ -327,7 +347,14 @@ export function ReportChartView({
             formatter={(v: number) => fmt(v)}
             cursor={{ fill: "color-mix(in oklab, var(--muted) 55%, transparent)" }}
           />
-          <Bar dataKey="valor" radius={[6, 6, 6, 6]} fill="url(#barhFill)" maxBarSize={26}>
+          <Bar
+            dataKey="valor"
+            radius={[6, 6, 6, 6]}
+            fill="url(#barhFill)"
+            maxBarSize={26}
+            onClick={clique}
+            style={cursor}
+          >
             {chart.dados.map((d, i) => (
               <Cell key={i} fill={colorByBank ? corDoBanco(d.label) : "url(#barhFill)"} />
             ))}
@@ -377,7 +404,14 @@ export function ReportChartView({
           formatter={(v: number) => fmt(v)}
           cursor={{ fill: "color-mix(in oklab, var(--muted) 55%, transparent)" }}
         />
-        <Bar dataKey="valor" radius={[6, 6, 0, 0]} fill="url(#barvFill)" maxBarSize={48}>
+        <Bar
+          dataKey="valor"
+          radius={[6, 6, 0, 0]}
+          fill="url(#barvFill)"
+          maxBarSize={48}
+          onClick={clique}
+          style={cursor}
+        >
           {chart.dados.map((d, i) => (
             <Cell key={i} fill={colorByBank ? corDoBanco(d.label) : "url(#barvFill)"} />
           ))}
