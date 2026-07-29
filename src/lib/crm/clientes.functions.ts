@@ -2150,3 +2150,96 @@ export const listarContratosEmitidos = createServerFn({ method: "GET" })
       };
     });
   });
+
+// ============================================================================
+// Transferência de atendimento
+// ============================================================================
+
+export interface EquipeAtendimentoItem {
+  id: string;
+  nome: string | null;
+  email: string | null;
+  papel_principal: string | null;
+}
+
+/** Lista pessoas do mesmo correspondente que podem receber um atendimento. */
+export const listarEquipeAtendimento = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<EquipeAtendimentoItem[]> => {
+    const { supabase, userId } = context;
+    const { data: me } = await supabase
+      .from("profiles")
+      .select("correspondente_id")
+      .eq("id", userId)
+      .maybeSingle();
+    const corr = me?.correspondente_id;
+    if (!corr) return [];
+
+    const { data: pessoas } = await supabase
+      .from("profiles")
+      .select("id, nome, email, ativo")
+      .eq("correspondente_id", corr)
+      .eq("ativo", true)
+      .order("nome", { ascending: true });
+
+    const lista = pessoas ?? [];
+    if (lista.length === 0) return [];
+
+    const ids = lista.map((p) => p.id);
+    const { data: roleRows } = await supabase
+      .from("user_roles")
+      .select("user_id, role")
+      .in("user_id", ids);
+    const roles = new Map<string, string[]>();
+    (roleRows ?? []).forEach((r) => {
+      const arr = roles.get(r.user_id) ?? [];
+      arr.push(String(r.role));
+      roles.set(r.user_id, arr);
+    });
+
+    const permitidos = new Set([
+      "admin",
+      "correspondente",
+      "gestor",
+      "comercial",
+      "analista",
+      "financeiro",
+      "parceiro",
+    ]);
+
+    return lista
+      .map((p) => {
+        const rs = roles.get(p.id) ?? [];
+        const principal = rs.find((r) => permitidos.has(r)) ?? null;
+        return {
+          id: p.id,
+          nome: p.nome ?? null,
+          email: p.email ?? null,
+          papel_principal: principal,
+          _elegivel: rs.some((r) => permitidos.has(r)),
+        };
+      })
+      .filter((p) => p._elegivel)
+      .map(({ _elegivel: _e, ...rest }) => rest);
+  });
+
+const transferirSchema = z.object({
+  cliente_id: z.string().uuid(),
+  novo_responsavel_id: z.string().uuid(),
+  observacao: z.string().trim().max(500).optional(),
+});
+
+export const transferirAtendimento = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => transferirSchema.parse(d))
+  .handler(async ({ data, context }): Promise<{ ok: boolean }> => {
+    const { supabase } = context;
+    const { error } = await supabase.rpc("crm_transferir_atendimento" as any, {
+      _cliente_id: data.cliente_id,
+      _novo_responsavel: data.novo_responsavel_id,
+      _observacao: data.observacao ?? null,
+    } as any);
+    if (error) throw new Error(error.message ?? "Falha ao transferir.");
+    return { ok: true };
+  });
+
