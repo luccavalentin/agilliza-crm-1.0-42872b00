@@ -12,6 +12,7 @@ import {
   overviewGestaoChat,
   type ChatEtiqueta,
 } from "@/lib/crm/chat-gestao.functions";
+import { listarEstadoChatDoUsuario } from "@/lib/chats/gestao.functions";
 import type { FiltroChat } from "./helpers";
 
 /**
