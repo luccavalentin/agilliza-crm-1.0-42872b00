@@ -1816,6 +1816,151 @@ export type Database = {
           },
         ]
       }
+      conciliacao_itens: {
+        Row: {
+          cpf_banco: string | null
+          created_at: string
+          data_assinatura_banco: string | null
+          data_emissao_banco: string | null
+          data_envio_banco: string | null
+          detalhe_divergencia: string | null
+          extras: Json | null
+          id: string
+          lote_id: string
+          nome_cliente_banco: string | null
+          numero_proposta_banco: string | null
+          numero_proposta_sistema: string | null
+          produto_banco: string | null
+          proposta_banco_id: string | null
+          proposta_id: string | null
+          resultado: Database["public"]["Enums"]["conciliacao_resultado"]
+          status_banco: string | null
+          status_sistema: string | null
+          valor_financiamento_banco: number | null
+          valor_financiamento_sistema: number | null
+        }
+        Insert: {
+          cpf_banco?: string | null
+          created_at?: string
+          data_assinatura_banco?: string | null
+          data_emissao_banco?: string | null
+          data_envio_banco?: string | null
+          detalhe_divergencia?: string | null
+          extras?: Json | null
+          id?: string
+          lote_id: string
+          nome_cliente_banco?: string | null
+          numero_proposta_banco?: string | null
+          numero_proposta_sistema?: string | null
+          produto_banco?: string | null
+          proposta_banco_id?: string | null
+          proposta_id?: string | null
+          resultado: Database["public"]["Enums"]["conciliacao_resultado"]
+          status_banco?: string | null
+          status_sistema?: string | null
+          valor_financiamento_banco?: number | null
+          valor_financiamento_sistema?: number | null
+        }
+        Update: {
+          cpf_banco?: string | null
+          created_at?: string
+          data_assinatura_banco?: string | null
+          data_emissao_banco?: string | null
+          data_envio_banco?: string | null
+          detalhe_divergencia?: string | null
+          extras?: Json | null
+          id?: string
+          lote_id?: string
+          nome_cliente_banco?: string | null
+          numero_proposta_banco?: string | null
+          numero_proposta_sistema?: string | null
+          produto_banco?: string | null
+          proposta_banco_id?: string | null
+          proposta_id?: string | null
+          resultado?: Database["public"]["Enums"]["conciliacao_resultado"]
+          status_banco?: string | null
+          status_sistema?: string | null
+          valor_financiamento_banco?: number | null
+          valor_financiamento_sistema?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conciliacao_itens_lote_id_fkey"
+            columns: ["lote_id"]
+            isOneToOne: false
+            referencedRelation: "conciliacao_lotes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conciliacao_itens_proposta_banco_id_fkey"
+            columns: ["proposta_banco_id"]
+            isOneToOne: false
+            referencedRelation: "proposta_bancos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conciliacao_itens_proposta_id_fkey"
+            columns: ["proposta_id"]
+            isOneToOne: false
+            referencedRelation: "propostas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      conciliacao_lotes: {
+        Row: {
+          banco_nome: string
+          correspondente_id: string
+          created_at: string
+          enviado_em: string
+          enviado_por: string | null
+          id: string
+          nome_arquivo: string
+          observacao: string | null
+          periodo_referencia: string
+          total_ausentes_banco: number
+          total_ausentes_sistema: number
+          total_conferidas: number
+          total_divergentes: number
+          total_linhas: number
+          updated_at: string
+        }
+        Insert: {
+          banco_nome: string
+          correspondente_id: string
+          created_at?: string
+          enviado_em?: string
+          enviado_por?: string | null
+          id?: string
+          nome_arquivo: string
+          observacao?: string | null
+          periodo_referencia: string
+          total_ausentes_banco?: number
+          total_ausentes_sistema?: number
+          total_conferidas?: number
+          total_divergentes?: number
+          total_linhas?: number
+          updated_at?: string
+        }
+        Update: {
+          banco_nome?: string
+          correspondente_id?: string
+          created_at?: string
+          enviado_em?: string
+          enviado_por?: string | null
+          id?: string
+          nome_arquivo?: string
+          observacao?: string | null
+          periodo_referencia?: string
+          total_ausentes_banco?: number
+          total_ausentes_sistema?: number
+          total_conferidas?: number
+          total_divergentes?: number
+          total_linhas?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       configuracoes_modulos: {
         Row: {
           config: Json
@@ -7115,6 +7260,11 @@ export type Database = {
         | "analista"
         | "outro"
       comissao_usuario_status: "a_pagar" | "paga" | "cancelada"
+      conciliacao_resultado:
+        | "conferido"
+        | "divergente"
+        | "ausente_no_sistema"
+        | "ausente_no_banco"
       demanda_status:
         | "aberta"
         | "em_andamento"
@@ -7395,6 +7545,12 @@ export const Constants = {
         "outro",
       ],
       comissao_usuario_status: ["a_pagar", "paga", "cancelada"],
+      conciliacao_resultado: [
+        "conferido",
+        "divergente",
+        "ausente_no_sistema",
+        "ausente_no_banco",
+      ],
       demanda_status: [
         "aberta",
         "em_andamento",
