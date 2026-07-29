@@ -371,20 +371,20 @@ export function ResultadoInlineCompleta({ simulacaoId, onFechar }: Props) {
                 </div>
 
                 {/* Desktop: tabela */}
-                <div className="hidden overflow-x-auto rounded-xl border border-border/60 shadow-sm lg:block">
-                  <Table>
+                <div className="hidden overflow-hidden rounded-xl border border-border/60 shadow-sm lg:block">
+                  <Table className="w-full table-auto text-xs">
                     <TableHeader>
                       <TableRow className="border-border/60 bg-muted/50 hover:bg-muted/50">
-                        <TableHead className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Banco</TableHead>
-                        <TableHead className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Situação</TableHead>
-                        <TableHead className="text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Parcela</TableHead>
-                        <TableHead className="text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Taxa a.a.</TableHead>
-                        <TableHead className="text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Prazo máx</TableHead>
-                        <TableHead className="text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Financ. máx</TableHead>
-                        <TableHead className="text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Total financiado</TableHead>
-                        <TableHead className="text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">IOF</TableHead>
-                        <TableHead className="text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Renda estimada</TableHead>
-                        <TableHead></TableHead>
+                        <TableHead className="px-2 py-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Banco</TableHead>
+                        <TableHead className="px-2 py-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Situação</TableHead>
+                        <TableHead className="px-2 py-2 text-right text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Parcela</TableHead>
+                        <TableHead className="px-2 py-2 text-right text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Taxa a.a.</TableHead>
+                        <TableHead className="px-2 py-2 text-right text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Prazo</TableHead>
+                        <TableHead className="px-2 py-2 text-right text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Financ. máx</TableHead>
+                        <TableHead className="px-2 py-2 text-right text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Total fin.</TableHead>
+                        <TableHead className="px-2 py-2 text-right text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">IOF</TableHead>
+                        <TableHead className="px-2 py-2 text-right text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Renda est.</TableHead>
+                        <TableHead className="px-2 py-2"></TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -397,51 +397,54 @@ export function ResultadoInlineCompleta({ simulacaoId, onFechar }: Props) {
                               "bg-success/5 even:bg-success/5 hover:bg-success/10 [box-shadow:inset_3px_0_0_var(--success)]",
                           )}
                         >
-                          <TableCell className="py-3 text-sm font-semibold">
-                            <div className="flex items-center gap-2.5">
-                              <BancoLogo nome={b.nome_banco} size="lg" />
-                              <span style={{ color: corDoBanco(b.nome_banco) }}>
+                          <TableCell className="px-2 py-2 text-xs font-semibold">
+                            <div className="flex items-center gap-1.5">
+                              <BancoLogo nome={b.nome_banco} size="sm" />
+                              <span className="truncate" style={{ color: corDoBanco(b.nome_banco) }}>
                                 {b.nome_banco}
                               </span>
                               {b.id === melhorId && (
-                                <ToneBadge tone="success">Melhor taxa</ToneBadge>
+                                <ToneBadge tone="success" className="hidden xl:inline-flex">Melhor</ToneBadge>
                               )}
                             </div>
                             {b.status_banco === "erro" && b.mensagem_banco && (
-                              <p className="mt-1 text-xs text-destructive">{b.mensagem_banco}</p>
+                              <p className="mt-1 text-[10px] text-destructive">{b.mensagem_banco}</p>
                             )}
                           </TableCell>
-                          <TableCell className="py-3">
+                          <TableCell className="px-2 py-2">
                             <BancoStatusBadge status={b.status_banco} />
                           </TableCell>
-                          <TableCell className="py-3 text-right text-sm font-semibold tabular-nums whitespace-nowrap">
+                          <TableCell className="px-2 py-2 text-right font-semibold tabular-nums whitespace-nowrap">
                             {formatBRL(b.valor_parcela)}
                           </TableCell>
-                          <TableCell className="py-3 text-right text-sm tabular-nums whitespace-nowrap">
+                          <TableCell className="px-2 py-2 text-right tabular-nums whitespace-nowrap">
                             {b.taxa_juros_ano != null ? formatPercent(b.taxa_juros_ano / 100) : "—"}
                           </TableCell>
-                          <TableCell className="py-3 text-right text-sm tabular-nums whitespace-nowrap">
+                          <TableCell className="px-2 py-2 text-right tabular-nums whitespace-nowrap">
                             {b.prazo_pagamento_max ? `${b.prazo_pagamento_max}m` : "—"}
                           </TableCell>
-                          <TableCell className="py-3 text-right text-sm tabular-nums whitespace-nowrap">
+                          <TableCell className="px-2 py-2 text-right tabular-nums whitespace-nowrap">
                             {formatBRL(b.valor_financiamento_max)}
                           </TableCell>
-                          <TableCell className="py-3 text-right text-sm font-semibold tabular-nums whitespace-nowrap">
+                          <TableCell className="px-2 py-2 text-right font-semibold tabular-nums whitespace-nowrap">
                             {formatBRL(totalFinanciado(b))}
                           </TableCell>
-                          <TableCell className="py-3 text-right text-sm tabular-nums whitespace-nowrap">
+                          <TableCell className="px-2 py-2 text-right tabular-nums whitespace-nowrap">
                             {formatBRL(b.valor_iof)}
                           </TableCell>
-                          <TableCell className="py-3 text-right text-sm font-semibold tabular-nums whitespace-nowrap text-primary">
+                          <TableCell className="px-2 py-2 text-right font-semibold tabular-nums whitespace-nowrap text-primary">
                             {formatBRL(rendaMinimaDoBanco(b))}
                           </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex items-center justify-end gap-1">
+                          <TableCell className="px-2 py-2 text-right">
+                            <div className="flex items-center justify-end gap-0.5">
                               <DetalheBancoDialog banco={b} simulacao={s} />
                               {b.status_banco === "simulada" && (
                                 <Button
-                                  size="sm"
-                                  variant="outline"
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-8 w-8"
+                                  title="Baixar PDF deste banco"
+                                  aria-label="Baixar PDF deste banco"
                                   onClick={async () => {
                                     try {
                                       const { baixarSimulacaoDetalhadaPDF } = await import("@/lib/simulacao/simulacao-pdf");
@@ -451,30 +454,32 @@ export function ResultadoInlineCompleta({ simulacaoId, onFechar }: Props) {
                                       toast.error("Não foi possível gerar o PDF.");
                                     }
                                   }}
-                                  title="Baixar PDF deste banco"
                                 >
-                                  <Download className="mr-1 h-4 w-4" /> PDF
+                                  <Download className="h-4 w-4" />
                                 </Button>
                               )}
                               {b.status_banco === "erro" ? (
                                 <Button
-                                  size="sm"
+                                  size="icon"
                                   variant="secondary"
+                                  className="h-8 w-8"
+                                  title={reenviandoBanco === b.banco_id ? "Reenviando…" : "Reenviar"}
+                                  aria-label="Reenviar"
                                   disabled={reenviandoBanco !== null}
                                   onClick={() => reenviarBanco(b.banco_id)}
                                 >
-                                  <RefreshCw className="mr-1 h-4 w-4" />
-                                  {reenviandoBanco === b.banco_id ? "Reenviando…" : "Reenviar"}
+                                  <RefreshCw className="h-4 w-4" />
                                 </Button>
                               ) : (
                                 <Button
-                                  size="sm"
-                                  className="bg-gradient-to-b from-primary to-primary/90 shadow-sm transition-all duration-200 hover:-translate-y-px hover:shadow-md hover:brightness-105 active:translate-y-0 active:scale-[0.98]"
+                                  size="icon"
+                                  className="h-8 w-8 bg-gradient-to-b from-primary to-primary/90 shadow-sm transition-all duration-200 hover:-translate-y-px hover:shadow-md hover:brightness-105 active:translate-y-0 active:scale-[0.98]"
+                                  title={criandoBanco === b.banco_id ? "Enviando…" : "Enviar aprovação"}
+                                  aria-label="Enviar aprovação"
                                   disabled={b.status_banco !== "simulada" || criandoBanco !== null}
                                   onClick={() => enviarAprovacao(b.banco_id)}
                                 >
-                                  <Send className="mr-1 h-4 w-4" />
-                                  {criandoBanco === b.banco_id ? "Enviando…" : "Enviar Aprovação"}
+                                  <Send className="h-4 w-4" />
                                 </Button>
                               )}
                             </div>
