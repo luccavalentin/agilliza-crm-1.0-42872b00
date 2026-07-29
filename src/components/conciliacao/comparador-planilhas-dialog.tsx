@@ -445,8 +445,9 @@ export function ComparadorPlanilhasDialog({
                     <TableHead className="w-[170px]">Resultado</TableHead>
                     <TableHead>Proposta</TableHead>
                     <TableHead>Cliente</TableHead>
-                    <TableHead>Meu controle</TableHead>
-                    <TableHead>Banco</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Valor controle</TableHead>
+                    <TableHead className="text-right">Valor banco</TableHead>
                     <TableHead>Sistema</TableHead>
                     <TableHead>Divergências</TableHead>
                   </TableRow>
@@ -455,7 +456,7 @@ export function ComparadorPlanilhasDialog({
                   {filtrados.length === 0 ? (
                     <TableRow>
                       <TableCell
-                        colSpan={7}
+                        colSpan={8}
                         className="py-10 text-center text-sm text-muted-foreground"
                       >
                         Nenhum registro nesta visão.
