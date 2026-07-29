@@ -68,7 +68,7 @@ export function CartoesSimulacoes({
                 "--banco-ring": `${corBanco}26`,
               } as React.CSSProperties
             }
-            className="group/card relative cursor-pointer overflow-hidden rounded-xl border border-border/60 bg-card p-4 shadow-sm ring-1 ring-inset ring-[var(--banco-ring)] transition-all duration-300 ease-out hover:z-10 hover:-translate-y-1 hover:scale-[1.02] hover:shadow-[0_18px_40px_-12px_rgba(0,0,0,0.18),0_0_0_1px_var(--banco-ring)] group-hover/cards:opacity-55 group-hover/cards:blur-[0.5px] group-hover/cards:group-hover/card:opacity-100 group-hover/cards:group-hover/card:blur-0 active:scale-[0.99]"
+            className="group/card relative cursor-pointer overflow-hidden rounded-xl border border-border/60 bg-card p-4 shadow-sm ring-1 ring-inset ring-[var(--banco-ring)] transition-all duration-300 ease-out hover:z-10 hover:-translate-y-1 hover:scale-[1.02] hover:shadow-[0_18px_40px_-12px_rgba(0,0,0,0.18),0_0_0_1px_var(--banco-ring)] active:scale-[0.99]"
             onClick={() => (verExcluidas ? undefined : handlers.onEditar(s.id))}
           >
             <span className="absolute inset-y-0 left-0 w-1 bg-[var(--banco)]" />

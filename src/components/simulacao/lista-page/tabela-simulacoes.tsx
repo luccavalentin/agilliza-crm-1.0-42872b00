@@ -92,7 +92,7 @@ export function TabelaSimulacoes({
                     "--banco-ring": `${corBanco}40`,
                   } as React.CSSProperties
                 }
-                className="group/row relative cursor-pointer border-border/50 transition-all duration-300 ease-out odd:bg-muted/[0.18] hover:z-10 hover:scale-[1.005] hover:bg-[var(--banco-tint)] hover:shadow-[inset_3px_0_0_0_var(--banco),0_12px_28px_-8px_rgba(0,0,0,0.12)] group-hover/table:opacity-60 group-hover/table:blur-[0.3px] hover:opacity-100 hover:blur-0"
+                className="group/row relative cursor-pointer border-border/50 transition-all duration-300 ease-out odd:bg-muted/[0.18] hover:z-10 hover:scale-[1.005] hover:bg-[var(--banco-tint)] hover:shadow-[inset_3px_0_0_0_var(--banco),0_12px_28px_-8px_rgba(0,0,0,0.12)]"
                 onClick={() => (verExcluidas ? undefined : handlers.onEditar(s.id))}
               >
                 <TableCell className="relative py-3.5">
