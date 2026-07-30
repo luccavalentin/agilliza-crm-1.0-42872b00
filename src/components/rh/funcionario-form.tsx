@@ -285,8 +285,8 @@ export function FuncionarioForm({
 
   return (
     <div className="mx-auto w-full max-w-[1400px] space-y-4 p-3 sm:p-4 md:p-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-4">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 sm:flex sm:flex-wrap sm:justify-between">
+        <div className="flex min-w-0 items-center gap-3 sm:gap-4">
           {inicial?.id && (
             <FuncionarioFoto
               funcionarioId={inicial.id}
@@ -294,14 +294,14 @@ export function FuncionarioForm({
               fotoPath={(inicial as any).foto_url ?? null}
             />
           )}
-        <div>
+        <div className="min-w-0">
           <button
             onClick={() => navigate({ to: "/rh/funcionarios" })}
             className="mb-2 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="h-3.5 w-3.5" /> Voltar
           </button>
-          <h1 className="text-xl font-semibold text-foreground md:text-2xl">
+          <h1 className="truncate text-lg font-semibold text-foreground sm:text-xl md:text-2xl">
             {inicial ? `Editar · ${inicial.nome}` : "Novo funcionário"}
           </h1>
           {inicial?.numero && (
