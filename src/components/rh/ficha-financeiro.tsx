@@ -29,12 +29,20 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   listarAdiantamentos,
   listarDescontos,
   registrarAdiantamento,
   registrarDesconto,
   listarAlteracoesSalariais,
   registrarAlteracaoSalarial,
+  type LancamentoStatus,
 } from "@/lib/rh/submodulos.functions";
 import { formatBRL } from "@/lib/financeiro/format";
 
