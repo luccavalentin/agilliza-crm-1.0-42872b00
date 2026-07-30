@@ -189,7 +189,11 @@ export function rotuloCampo(campo: string): string {
 }
 
 export type DestinoCampo =
-  | { tipo: "coluna"; coluna: string; formato?: "texto" | "numero" | "data" | "estado_civil" | "regime_casamento" }
+  | {
+      tipo: "coluna";
+      coluna: string;
+      formato?: "texto" | "numero" | "data" | "estado_civil" | "regime_casamento" | "documento";
+    }
   | { tipo: "matricula"; chave: string }
   | { tipo: "nenhum" };
 
