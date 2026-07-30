@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { LinkIcon, Plus, Pencil, Trash2, ExternalLink, Search, Loader2 } from "lucide-react";
+import { LinkIcon, Plus, Pencil, Trash2, ExternalLink, Search, Loader2, Tags } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -34,8 +34,21 @@ import {
   criarLink,
   atualizarLink,
   excluirLink,
+  listarCategoriasLinks,
+  type LinkCategoria,
 } from "@/lib/links/links.functions";
 import { OpHero, OpStat } from "@/components/operacional/ui";
+import { CategoriasLinksDialog } from "@/components/links/categorias-dialog";
+import { iconeCategoria, classeCategoria } from "@/lib/links/categorias-icones";
+import { cn } from "@/lib/utils";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
 
 function hostname(url: string): string {
   try {
@@ -47,15 +60,31 @@ function hostname(url: string): string {
 
 export function LinksView() {
   const listar = useServerFn(listarLinks);
+  const listarCats = useServerFn(listarCategoriasLinks);
   const excluirFn = useServerFn(excluirLink);
   const qc = useQueryClient();
 
   const { data, isLoading } = useQuery({ queryKey: ["links"], queryFn: () => listar() });
+  const { data: categorias } = useQuery({
+    queryKey: ["links-categorias"],
+    queryFn: () => listarCats(),
+  });
+
+  const catPorNome = useMemo(() => {
+    const m = new Map<string, { icone: string; cor: string }>();
+    ((categorias ?? []) as LinkCategoria[]).forEach((c) =>
+      m.set(c.nome.toLowerCase(), { icone: c.icone, cor: c.cor }),
+    );
+    return m;
+  }, [categorias]);
+
 
   const [busca, setBusca] = useState("");
   const [criando, setCriando] = useState(false);
+  const [gerenciandoCats, setGerenciandoCats] = useState(false);
   const [editando, setEditando] = useState<LinkUtil | null>(null);
   const [excluindo, setExcluindo] = useState<LinkUtil | null>(null);
+
 
   const filtrados = useMemo(() => {
     const termo = busca.trim().toLowerCase();
@@ -79,7 +108,7 @@ export function LinksView() {
   });
 
   const totalLinks = (data ?? []).length;
-  const totalCategorias = new Set((data ?? []).map((l) => l.categoria).filter(Boolean)).size;
+  const totalCategorias = ((categorias ?? []) as LinkCategoria[]).length;
 
   return (
     <div className="mx-auto w-full max-w-none space-y-5 p-4 md:p-6">
@@ -89,10 +118,16 @@ export function LinksView() {
         titulo="Links úteis"
         descricao="Repositório central de links. Busque e clique para abrir em nova aba."
         acoes={
-          <Button onClick={() => setCriando(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Novo link
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="outline" onClick={() => setGerenciandoCats(true)}>
+              <Tags className="mr-2 h-4 w-4" />
+              Categorias
+            </Button>
+            <Button onClick={() => setCriando(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Novo link
+            </Button>
+          </div>
         }
       />
 
@@ -103,15 +138,42 @@ export function LinksView() {
           icon={<LinkIcon className="h-5 w-5 text-primary" />}
           tint="bg-primary/10 text-primary"
         />
-        <OpStat
-          label="Categorias"
-          value={totalCategorias}
-          icon={<Search className="h-5 w-5 text-primary" />}
-          tint="bg-primary/10 text-primary"
-        />
+        <button type="button" onClick={() => setGerenciandoCats(true)} className="text-left">
+          <OpStat
+            label="Categorias"
+            value={totalCategorias}
+            icon={<Tags className="h-5 w-5 text-primary" />}
+            tint="bg-primary/10 text-primary"
+          />
+        </button>
       </div>
 
+      {((categorias ?? []) as LinkCategoria[]).length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {((categorias ?? []) as LinkCategoria[]).map((c) => {
+            const Icon = iconeCategoria(c.icone);
+            const ativo = busca.trim().toLowerCase() === c.nome.toLowerCase();
+            return (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => setBusca(ativo ? "" : c.nome)}
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium ring-1 transition-all hover:scale-[1.03]",
+                  classeCategoria(c.cor),
+                  ativo && "ring-2",
+                )}
+              >
+                <Icon className="h-3.5 w-3.5" />
+                {c.nome}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       <div className="relative">
+
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           value={busca}
@@ -136,7 +198,10 @@ export function LinksView() {
             </CardContent>
           </Card>
         ) : (
-          filtrados.map((l) => (
+          filtrados.map((l) => {
+            const meta = l.categoria ? catPorNome.get(l.categoria.toLowerCase()) : undefined;
+            const CatIcon = meta ? iconeCategoria(meta.icone) : ExternalLink;
+            return (
             <div
               key={l.id}
               className="group flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card p-4 transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-[0_10px_30px_-15px_hsl(var(--primary)/0.5)]"
@@ -147,18 +212,28 @@ export function LinksView() {
                 rel="noopener noreferrer"
                 className="flex min-w-0 flex-1 items-center gap-3"
               >
-                <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/20 transition-transform group-hover:scale-105">
-                  <ExternalLink className="h-4 w-4" />
+                <span
+                  className={cn(
+                    "grid size-10 shrink-0 place-items-center rounded-xl ring-1 transition-transform group-hover:scale-105",
+                    classeCategoria(meta?.cor),
+                  )}
+                >
+                  <CatIcon className="h-4 w-4" />
                 </span>
                 <div className="min-w-0">
                   <p className="flex items-center gap-2 truncate font-semibold text-foreground group-hover:text-primary">
                     {l.titulo}
                     {l.categoria && (
-                      <Badge variant="secondary" className="shrink-0 font-normal">
+                      <Badge
+                        variant="secondary"
+                        className={cn("shrink-0 gap-1 font-normal", meta && classeCategoria(meta.cor))}
+                      >
+                        <CatIcon className="h-3 w-3" />
                         {l.categoria}
                       </Badge>
                     )}
                   </p>
+
                   <p className="truncate text-xs text-muted-foreground">
                     {l.descricao ? `${l.descricao} · ` : ""}
                     {hostname(l.url)}
@@ -180,12 +255,17 @@ export function LinksView() {
                 </Button>
               </div>
             </div>
-          ))
+            );
+          })
+
         )}
       </div>
 
+      {gerenciandoCats && <CategoriasLinksDialog onClose={() => setGerenciandoCats(false)} />}
+
       {criando && (
         <LinkDialog
+          categorias={(categorias ?? []) as LinkCategoria[]}
           onClose={() => setCriando(false)}
           onDone={() => {
             setCriando(false);
@@ -197,6 +277,7 @@ export function LinksView() {
       {editando && (
         <LinkDialog
           link={editando}
+          categorias={(categorias ?? []) as LinkCategoria[]}
           onClose={() => setEditando(null)}
           onDone={() => {
             setEditando(null);
@@ -204,6 +285,7 @@ export function LinksView() {
           }}
         />
       )}
+
 
       <AlertDialog open={!!excluindo} onOpenChange={(o) => !o && setExcluindo(null)}>
         <AlertDialogContent>
@@ -230,13 +312,16 @@ export function LinksView() {
 
 function LinkDialog({
   link,
+  categorias,
   onClose,
   onDone,
 }: {
   link?: LinkUtil;
+  categorias: LinkCategoria[];
   onClose: () => void;
   onDone: () => void;
 }) {
+
   const criar = useServerFn(criarLink);
   const atualizar = useServerFn(atualizarLink);
   const [titulo, setTitulo] = useState(link?.titulo ?? "");
@@ -305,14 +390,35 @@ function LinkDialog({
           </div>
           <div className="space-y-1.5">
             <Label>Categoria (opcional)</Label>
-            <Input
-              value={categoria}
-              onChange={(e) => setCategoria(e.target.value)}
-              placeholder="Ex.: Bancos, Cartórios, Ferramentas"
-            />
+            <Select
+              value={categoria || "__nenhuma__"}
+              onValueChange={(v) => setCategoria(v === "__nenhuma__" ? "" : v)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione uma categoria" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__nenhuma__">Sem categoria</SelectItem>
+                {categorias.map((c) => {
+                  const Icon = iconeCategoria(c.icone);
+                  return (
+                    <SelectItem key={c.id} value={c.nome}>
+                      <span className="flex items-center gap-2">
+                        <Icon className="h-4 w-4" />
+                        {c.nome}
+                      </span>
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              Gerencie as categorias e seus ícones no botão "Categorias".
+            </p>
           </div>
           <div className="space-y-1.5">
             <Label>Descrição (opcional)</Label>
+
             <Textarea
               value={descricao}
               onChange={(e) => setDescricao(e.target.value)}
