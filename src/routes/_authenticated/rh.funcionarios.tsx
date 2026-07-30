@@ -151,6 +151,7 @@ function Pagina() {
                   <th className="px-4 py-2 text-left">Status</th>
                   <th className="px-4 py-2 text-left">Admissão</th>
                   <th className="px-4 py-2 text-right">Salário atual</th>
+                  <th className="px-4 py-2 text-right">Ações</th>
                 </tr>
               </thead>
               <tbody>
@@ -171,11 +172,33 @@ function Pagina() {
                       {new Date(f.data_admissao).toLocaleDateString("pt-BR")}
                     </td>
                     <td className="px-4 py-2 text-right tabular-nums">{formatBRL(f.salario_atual)}</td>
+                    <td className="px-4 py-2 text-right" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex justify-end gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          title="Editar"
+                          onClick={() => navigate({ to: "/rh/funcionarios/$id", params: { id: f.id } })}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          title="Excluir"
+                          className="text-destructive hover:text-destructive"
+                          onClick={() => setParaExcluir({ id: f.id, nome: f.nome })}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
+
         </>
       )}
     </div>
