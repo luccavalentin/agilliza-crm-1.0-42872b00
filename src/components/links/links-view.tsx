@@ -418,6 +418,8 @@ function LinkDialog({
               Gerencie as categorias e seus ícones no botão "Categorias".
             </p>
           </div>
+          <div className="space-y-1.5">
+            <Label>Descrição (opcional)</Label>
 
             <Textarea
               value={descricao}
