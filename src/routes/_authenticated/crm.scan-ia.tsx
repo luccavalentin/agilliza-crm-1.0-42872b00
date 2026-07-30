@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ScanLine, UploadCloud, FileText, RefreshCw, ChevronRight } from "lucide-react";
+import { ScanLine, UploadCloud, FileText, RefreshCw, ChevronRight, Bot } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -115,15 +115,23 @@ function Pagina() {
 
   return (
     <div className="space-y-6 p-4 md:p-6">
-      <div className="flex items-center gap-3">
-        <ScanLine className="h-6 w-6 text-primary" />
-        <div>
-          <h1 className="text-xl font-semibold">Scan IA</h1>
+      <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3 sm:flex sm:justify-between">
+        <ScanLine className="h-6 w-6 shrink-0 text-primary" />
+        <div className="min-w-0 sm:flex-1">
+          <h1 className="truncate text-xl font-semibold">Scan IA</h1>
           <p className="text-sm text-muted-foreground">
             Leitura automática de documentos com extração de campos por IA.
           </p>
         </div>
+        <Button asChild variant="outline" className="col-span-2 w-full sm:w-auto">
+          <Link to="/crm/consultor-ia">
+            <Bot className="mr-2 h-4 w-4" />
+            Consultor IA
+            <ChevronRight className="ml-1 h-4 w-4" />
+          </Link>
+        </Button>
       </div>
+
 
 
 
