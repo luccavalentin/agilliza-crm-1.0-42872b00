@@ -174,7 +174,7 @@ function LancamentosTab({
                   type="number"
                   min={1}
                   max={12}
-                  value={form.competencia_mes}
+                  value={form.competencia_mes || ""}
                   onChange={(e) =>
                     setForm((p) => ({ ...p, competencia_mes: Number(e.target.value) }))
                   }
@@ -186,7 +186,7 @@ function LancamentosTab({
                   type="number"
                   min={2020}
                   max={2100}
-                  value={form.competencia_ano}
+                  value={form.competencia_ano || ""}
                   onChange={(e) =>
                     setForm((p) => ({ ...p, competencia_ano: Number(e.target.value) }))
                   }

@@ -167,12 +167,12 @@ function Pagina() {
                   </div>
                   <div className="space-y-1.5">
                     <Label>Valor (empresa)</Label>
-                    <Input type="number" step="0.01" value={vinc.valor}
+                    <Input type="number" step="0.01" value={vinc.valor || ""}
                       onChange={(e) => setVinc((p) => ({ ...p, valor: Number(e.target.value) }))} />
                   </div>
                   <div className="space-y-1.5">
                     <Label>Desconto (funcionário)</Label>
-                    <Input type="number" step="0.01" value={vinc.desconto}
+                    <Input type="number" step="0.01" value={vinc.desconto || ""}
                       onChange={(e) => setVinc((p) => ({ ...p, desconto: Number(e.target.value) }))} />
                   </div>
                   <div className="space-y-1.5">
@@ -270,12 +270,12 @@ function Pagina() {
                   <div className="grid gap-3 sm:grid-cols-2">
                     <div className="space-y-1.5">
                       <Label>Valor padrão</Label>
-                      <Input type="number" step="0.01" value={tipo.valor_padrao}
+                      <Input type="number" step="0.01" value={tipo.valor_padrao || ""}
                         onChange={(e) => setTipo((p) => ({ ...p, valor_padrao: Number(e.target.value) }))} />
                     </div>
                     <div className="space-y-1.5">
                       <Label>Desconto padrão</Label>
-                      <Input type="number" step="0.01" value={tipo.desconto_padrao}
+                      <Input type="number" step="0.01" value={tipo.desconto_padrao || ""}
                         onChange={(e) => setTipo((p) => ({ ...p, desconto_padrao: Number(e.target.value) }))} />
                     </div>
                   </div>

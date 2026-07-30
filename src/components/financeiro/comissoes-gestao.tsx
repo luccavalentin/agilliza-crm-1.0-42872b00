@@ -378,7 +378,7 @@ export function SecaoRegrasComissao() {
                   type="number"
                   min={0}
                   max={100}
-                  value={form.percentual_interno}
+                  value={form.percentual_interno || ""}
                   readOnly
                   disabled
                 />

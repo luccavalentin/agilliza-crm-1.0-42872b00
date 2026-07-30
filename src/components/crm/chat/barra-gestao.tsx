@@ -438,7 +438,7 @@ function BarraGestao({
                 <Input
                   type="number"
                   min={1}
-                  value={slaHoras}
+                  value={slaHoras || ""}
                   onChange={(e) => setSlaHoras(e.target.value)}
                   className="h-8 text-xs"
                 />

@@ -181,7 +181,7 @@ function ImovelDadosTab({ clienteId, cliente }: { clienteId: string; cliente: Cl
           <Input
             type="number"
             inputMode="decimal"
-            value={f.imovel_valor}
+            value={f.imovel_valor || ""}
             onChange={(e) => set("imovel_valor", e.target.value)}
           />
         </div>

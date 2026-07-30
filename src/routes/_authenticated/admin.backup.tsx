@@ -360,7 +360,7 @@ function Pagina() {
               type="number"
               min={1}
               max={365}
-              value={diasInput}
+              value={diasInput || ""}
               onChange={(e) => setDiasInput(Number(e.target.value))}
             />
             <p className="text-xs text-muted-foreground">

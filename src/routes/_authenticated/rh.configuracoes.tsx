@@ -493,7 +493,7 @@ function BeneficiosTab() {
               <Input
                 type="number"
                 step="0.01"
-                value={form.valor_padrao}
+                value={form.valor_padrao || ""}
                 onChange={(e) =>
                   setForm((f) => ({ ...f, valor_padrao: Number(e.target.value || 0) }))
                 }
@@ -504,7 +504,7 @@ function BeneficiosTab() {
               <Input
                 type="number"
                 step="0.01"
-                value={form.desconto_padrao}
+                value={form.desconto_padrao || ""}
                 onChange={(e) =>
                   setForm((f) => ({ ...f, desconto_padrao: Number(e.target.value || 0) }))
                 }

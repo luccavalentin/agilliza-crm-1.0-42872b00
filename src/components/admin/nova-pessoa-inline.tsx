@@ -335,7 +335,7 @@ export function NovaPessoaInline({
                 id="np-com"
                 type="number"
                 step="0.01"
-                value={comissao}
+                value={comissao || ""}
                 onChange={(e) => setComissao(e.target.value)}
               />
             </div>

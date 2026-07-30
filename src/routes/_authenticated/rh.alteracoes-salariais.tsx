@@ -121,7 +121,7 @@ function Pagina() {
                   <Input
                     type="number"
                     step="0.01"
-                    value={form.salario_novo}
+                    value={form.salario_novo || ""}
                     onChange={(e) => setForm((p) => ({ ...p, salario_novo: Number(e.target.value) }))}
                   />
                 </div>

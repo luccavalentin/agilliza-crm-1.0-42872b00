@@ -168,7 +168,7 @@ function Pagina() {
                   type="number"
                   min={1}
                   max={30}
-                  value={form.dias_gozados}
+                  value={form.dias_gozados || ""}
                   onChange={(e) => setForm((p) => ({ ...p, dias_gozados: Number(e.target.value) }))}
                 />
               </div>
@@ -178,7 +178,7 @@ function Pagina() {
                   type="number"
                   min={0}
                   max={10}
-                  value={form.abono_dias}
+                  value={form.abono_dias || ""}
                   onChange={(e) => setForm((p) => ({ ...p, abono_dias: Number(e.target.value) }))}
                 />
               </div>

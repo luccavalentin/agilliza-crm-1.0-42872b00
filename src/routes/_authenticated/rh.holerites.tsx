@@ -399,7 +399,7 @@ function Pagina() {
                 <Input
                   type="number"
                   step="0.01"
-                  value={form.valor_liquido}
+                  value={form.valor_liquido || ""}
                   onChange={(e) => setForm((p) => ({ ...p, valor_liquido: Number(e.target.value) }))}
                 />
               </div>

@@ -540,7 +540,7 @@ export function FichaHolerites({ funcionarioId }: { funcionarioId: string }) {
                   type="number"
                   min={1}
                   max={12}
-                  value={form.mes}
+                  value={form.mes || ""}
                   onChange={(e) => setForm((p) => ({ ...p, mes: Number(e.target.value) }))}
                 />
               </div>
@@ -550,7 +550,7 @@ export function FichaHolerites({ funcionarioId }: { funcionarioId: string }) {
                   type="number"
                   min={2020}
                   max={2100}
-                  value={form.ano}
+                  value={form.ano || ""}
                   onChange={(e) => setForm((p) => ({ ...p, ano: Number(e.target.value) }))}
                 />
               </div>

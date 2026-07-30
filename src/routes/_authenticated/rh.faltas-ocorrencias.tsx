@@ -188,7 +188,7 @@ function Pagina() {
                 <Input
                   type="number"
                   min={0}
-                  value={form.dias}
+                  value={form.dias || ""}
                   onChange={(e) => setForm((p) => ({ ...p, dias: e.target.value }))}
                 />
               </div>

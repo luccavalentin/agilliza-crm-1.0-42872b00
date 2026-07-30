@@ -166,7 +166,7 @@ export function NovaContaDialog({ tipo }: { tipo: ContaTipo }) {
                   type="number"
                   min={2}
                   max={360}
-                  value={parcelas}
+                  value={parcelas || ""}
                   onChange={(e) => setParcelas(Math.max(2, Number(e.target.value) || 2))}
                 />
               </div>
