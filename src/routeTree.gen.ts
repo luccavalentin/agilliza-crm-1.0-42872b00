@@ -39,6 +39,7 @@ import { Route as AuthenticatedRhIndexRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedRelatoriosIndexRouteImport } from './routes/_authenticated/relatorios.index'
 import { Route as AuthenticatedFormulariosIndexRouteImport } from './routes/_authenticated/formularios.index'
 import { Route as ApiPublicSyncPropostasRouteImport } from './routes/api/public/sync-propostas'
+import { Route as ApiConsultorIaStreamRouteImport } from './routes/api/consultor-ia.stream'
 import { Route as AuthenticatedVisaoGeralPainelRouteImport } from './routes/_authenticated/visao-geral.painel'
 import { Route as AuthenticatedRhRelatoriosRouteImport } from './routes/_authenticated/rh.relatorios'
 import { Route as AuthenticatedRhPreviaFolhaRouteImport } from './routes/_authenticated/rh.previa-folha'
@@ -276,6 +277,11 @@ const AuthenticatedFormulariosIndexRoute =
 const ApiPublicSyncPropostasRoute = ApiPublicSyncPropostasRouteImport.update({
   id: '/api/public/sync-propostas',
   path: '/api/public/sync-propostas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiConsultorIaStreamRoute = ApiConsultorIaStreamRouteImport.update({
+  id: '/api/consultor-ia/stream',
+  path: '/api/consultor-ia/stream',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedVisaoGeralPainelRoute =
@@ -870,6 +876,7 @@ export interface FileRoutesByFullPath {
   '/rh/previa-folha': typeof AuthenticatedRhPreviaFolhaRoute
   '/rh/relatorios': typeof AuthenticatedRhRelatoriosRoute
   '/visao-geral/painel': typeof AuthenticatedVisaoGeralPainelRoute
+  '/api/consultor-ia/stream': typeof ApiConsultorIaStreamRoute
   '/api/public/sync-propostas': typeof ApiPublicSyncPropostasRoute
   '/formularios/': typeof AuthenticatedFormulariosIndexRoute
   '/relatorios/': typeof AuthenticatedRelatoriosIndexRoute
@@ -983,6 +990,7 @@ export interface FileRoutesByTo {
   '/rh/previa-folha': typeof AuthenticatedRhPreviaFolhaRoute
   '/rh/relatorios': typeof AuthenticatedRhRelatoriosRoute
   '/visao-geral/painel': typeof AuthenticatedVisaoGeralPainelRoute
+  '/api/consultor-ia/stream': typeof ApiConsultorIaStreamRoute
   '/api/public/sync-propostas': typeof ApiPublicSyncPropostasRoute
   '/formularios': typeof AuthenticatedFormulariosIndexRoute
   '/relatorios': typeof AuthenticatedRelatoriosIndexRoute
@@ -1100,6 +1108,7 @@ export interface FileRoutesById {
   '/_authenticated/rh/previa-folha': typeof AuthenticatedRhPreviaFolhaRoute
   '/_authenticated/rh/relatorios': typeof AuthenticatedRhRelatoriosRoute
   '/_authenticated/visao-geral/painel': typeof AuthenticatedVisaoGeralPainelRoute
+  '/api/consultor-ia/stream': typeof ApiConsultorIaStreamRoute
   '/api/public/sync-propostas': typeof ApiPublicSyncPropostasRoute
   '/_authenticated/formularios/': typeof AuthenticatedFormulariosIndexRoute
   '/_authenticated/relatorios/': typeof AuthenticatedRelatoriosIndexRoute
@@ -1217,6 +1226,7 @@ export interface FileRouteTypes {
     | '/rh/previa-folha'
     | '/rh/relatorios'
     | '/visao-geral/painel'
+    | '/api/consultor-ia/stream'
     | '/api/public/sync-propostas'
     | '/formularios/'
     | '/relatorios/'
@@ -1330,6 +1340,7 @@ export interface FileRouteTypes {
     | '/rh/previa-folha'
     | '/rh/relatorios'
     | '/visao-geral/painel'
+    | '/api/consultor-ia/stream'
     | '/api/public/sync-propostas'
     | '/formularios'
     | '/relatorios'
@@ -1446,6 +1457,7 @@ export interface FileRouteTypes {
     | '/_authenticated/rh/previa-folha'
     | '/_authenticated/rh/relatorios'
     | '/_authenticated/visao-geral/painel'
+    | '/api/consultor-ia/stream'
     | '/api/public/sync-propostas'
     | '/_authenticated/formularios/'
     | '/_authenticated/relatorios/'
@@ -1480,6 +1492,7 @@ export interface RootRouteChildren {
   ParceiroRoute: typeof ParceiroRouteWithChildren
   PoliticaDePrivacidadeRoute: typeof PoliticaDePrivacidadeRoute
   PortalRoute: typeof PortalRoute
+  ApiConsultorIaStreamRoute: typeof ApiConsultorIaStreamRoute
   ApiPublicSyncPropostasRoute: typeof ApiPublicSyncPropostasRoute
 }
 
@@ -1693,6 +1706,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/sync-propostas'
       fullPath: '/api/public/sync-propostas'
       preLoaderRoute: typeof ApiPublicSyncPropostasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/consultor-ia/stream': {
+      id: '/api/consultor-ia/stream'
+      path: '/api/consultor-ia/stream'
+      fullPath: '/api/consultor-ia/stream'
+      preLoaderRoute: typeof ApiConsultorIaStreamRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/visao-geral/painel': {
@@ -2600,18 +2620,9 @@ const rootRouteChildren: RootRouteChildren = {
   ParceiroRoute: ParceiroRouteWithChildren,
   PoliticaDePrivacidadeRoute: PoliticaDePrivacidadeRoute,
   PortalRoute: PortalRoute,
+  ApiConsultorIaStreamRoute: ApiConsultorIaStreamRoute,
   ApiPublicSyncPropostasRoute: ApiPublicSyncPropostasRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
