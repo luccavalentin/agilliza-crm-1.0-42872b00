@@ -73,12 +73,16 @@ export function useChatConversas() {
   });
 
   const estadoPorCliente = useMemo(() => {
-    const m = new Map<string, { fixado: boolean; apelido: string | null }>();
+    const m = new Map<
+      string,
+      { fixado: boolean; apelido: string | null; ocultoEm: string | null }
+    >();
     for (const e of estadosUsuario ?? []) {
       if (e.chat_tipo !== "cliente") continue;
       m.set(e.chat_id, {
         fixado: !!e.pinado_em,
         apelido: e.apelido ?? null,
+        ocultoEm: e.oculto_em ?? null,
       });
     }
     return m;
@@ -89,6 +93,16 @@ export function useChatConversas() {
   }
   function apelidoCliente(clienteId: string) {
     return estadoPorCliente.get(clienteId)?.apelido ?? null;
+  }
+  /**
+   * Conversa "excluída" some da lista do usuário. Volta a aparecer apenas se
+   * chegar mensagem nova depois da exclusão.
+   */
+  function ocultaCliente(clienteId: string, ultimaEm?: string | null) {
+    const oc = estadoPorCliente.get(clienteId)?.ocultoEm;
+    if (!oc) return false;
+    if (!ultimaEm) return true;
+    return new Date(ultimaEm).getTime() <= new Date(oc).getTime();
   }
 
   const idsConversa = useMemo(
@@ -194,7 +208,9 @@ export function useChatConversas() {
 
   const filtradas = useMemo(() => {
     const t = busca.trim().toLowerCase();
-    let lista = conversas ?? [];
+    let lista = (conversas ?? []).filter(
+      (c) => !ocultaCliente(c.cliente_id, c.ultima_em),
+    );
     if (t) {
       lista = lista.filter(
         (c) =>
@@ -231,6 +247,18 @@ export function useChatConversas() {
     return lista;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conversas, busca, etiquetaFiltro, filtro, etiquetasCliente, metasCliente, estadoPorCliente, tickMinuto]);
+
+  // Se a conversa aberta foi excluída (oculta), fecha o painel.
+  useEffect(() => {
+    if (!selecionado) return;
+    const conv = (conversas ?? []).find((c) => c.cliente_id === selecionado);
+    if (ocultaCliente(selecionado, conv?.ultima_em ?? null)) {
+      setSelecionado(null);
+      setAtendenteSel(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selecionado, estadoPorCliente, conversas]);
+
 
   const novosClientes = useMemo(() => {
     if (termoBusca.length < 2) return [];
@@ -269,18 +297,20 @@ export function useChatConversas() {
       : null;
 
   const contadores = useMemo(() => {
-    const lista = (conversas ?? []).filter((c) => !arquivada(c.cliente_id));
+    const visiveis = (conversas ?? []).filter(
+      (c) => !ocultaCliente(c.cliente_id, c.ultima_em),
+    );
+    const lista = visiveis.filter((c) => !arquivada(c.cliente_id));
     return {
       nao_lidas: lista.filter((c) => c.nao_lidas > 0).length,
       sla: lista.filter((c) =>
         slaEstourado(c.cliente_id, c.ultimo_remetente, c.ultima_em),
       ).length,
       lembrete: lista.filter((c) => lembreteDevido(c.cliente_id)).length,
-      arquivadas: (conversas ?? []).filter((c) => arquivada(c.cliente_id))
-        .length,
+      arquivadas: visiveis.filter((c) => arquivada(c.cliente_id)).length,
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [conversas, metasCliente, tickMinuto]);
+  }, [conversas, metasCliente, estadoPorCliente, tickMinuto]);
 
   return {
     // estado
