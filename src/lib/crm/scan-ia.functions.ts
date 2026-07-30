@@ -387,13 +387,25 @@ export const processarLeitura = createServerFn({ method: "POST" })
         (tipoInformado
           ? `O operador informou o tipo como "${tipoInformado}", mas classifique de forma independente pelo conteúdo real.\n`
           : "") +
-        `PASSO 2 — Faça OCR e extraia SOMENTE os campos previstos para o tipo que você classificou:\n${mapaTipos}\n` +
+        `PASSO 2 — Faça OCR de TODAS as páginas (inclusive digitalizações, carimbos e textos em coluna) ` +
+        `e extraia SOMENTE os campos previstos para o tipo que você classificou:\n${mapaTipos}\n` +
+        `REGRAS PARA MATRÍCULA DE IMÓVEL (matricula_imovel): leia o cabeçalho (número da matrícula, ` +
+        `cartório/oficial de registro de imóveis e comarca), a descrição do imóvel (tipo, logradouro, número, ` +
+        `complemento/apartamento/torre, bairro, cidade, UF, áreas: terreno, construída, privativa e fração ideal, ` +
+        `contribuinte/inscrição imobiliária) e TODOS os atos R./AV. até o final. ` +
+        `O proprietário é o do ATO MAIS RECENTE de aquisição, com CPF, estado civil, cônjuge e regime de bens quando citados. ` +
+        `Em onus_gravames descreva em texto corrido os ônus vigentes (hipoteca, alienação fiduciária, penhora, usufruto) ` +
+        `ou escreva "Nenhum ônus vigente" quando a matrícula estiver livre; em alienacao_fiduciaria descreva o credor, ` +
+        `valor e situação (ativa/cancelada). valor_imovel é o valor da última transação/avaliação declarada. ` +
+        `Nunca devolva a lista de campos vazia se o documento for legível.\n` +
         `Responda SOMENTE com JSON no formato ` +
         `{"tipo_documento":"<um dos tipos>","confianca_tipo":<0-1>,"campos":[{"campo":"<nome>","valor":"<texto>","confianca":<0-1>}]}. ` +
+        `Todo "valor" deve ser uma STRING simples (nunca objeto ou lista). ` +
         `Use exatamente os nomes de campo listados para o tipo. Para valores monetários, mantenha o formato numérico. ` +
         `Datas em dd/mm/aaaa. A confiança deve refletir a legibilidade e a certeza da extração. ` +
         `Não invente valores: se um campo não existir no documento, não o inclua.`;
       const prompt = promptSistema ? `${promptSistema}\n\n${instrucaoBase}` : instrucaoBase;
+
 
 
       let resp: Response;
