@@ -259,7 +259,12 @@ export const listarComissoesUsuario = createServerFn({ method: "GET" })
     if (error) throw new Error(error.message);
 
     const userIds = Array.from(new Set((rows ?? []).map((r: any) => r.usuario_id)));
-    const propIds = Array.from(new Set((rows ?? []).map((r: any) => r.proposta_id)));
+    const propIds = Array.from(
+      new Set((rows ?? []).map((r: any) => r.proposta_id).filter(Boolean)),
+    );
+    const simIds = Array.from(
+      new Set((rows ?? []).map((r: any) => r.simulacao_id).filter(Boolean)),
+    );
     const payIds = Array.from(
       new Set((rows ?? []).map((r: any) => r.payable_id).filter(Boolean)),
     );
@@ -277,6 +282,14 @@ export const listarComissoesUsuario = createServerFn({ method: "GET" })
         .in("id", propIds);
       (pp ?? []).forEach((p: any) => props.set(p.id, p.nome_cliente));
     }
+    if (simIds.length) {
+      const { data: ss } = await supabase
+        .from("simulacoes")
+        .select("id, nome_cliente")
+        .in("id", simIds);
+      (ss ?? []).forEach((s: any) => props.set(s.id, s.nome_cliente));
+    }
+
     const pays = new Map<
       string,
       { vencimento: string | null; data_pagamento: string | null }
