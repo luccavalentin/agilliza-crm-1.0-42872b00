@@ -308,6 +308,17 @@ export function ThreadChat({
     onError: (e: any) => toast.error(e?.message ?? "Não foi possível excluir a mensagem."),
   });
 
+  const excluirConversa = useMutation({
+    mutationFn: () => clienteExcluirConversa({ data: { atendente_id: atendenteId } }),
+    onSuccess: () => {
+      toast.success("Conversa excluída da sua lista.");
+      qc.invalidateQueries({ queryKey: ["cliente", "atendentes"] });
+      onVoltar();
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Não foi possível excluir a conversa."),
+  });
+
+
   const reagir = useMutation({
     mutationFn: (p: { mensagem_id: string; emoji: string }) =>
       clienteReagirMensagem({ data: p }),
