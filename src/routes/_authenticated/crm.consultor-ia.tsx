@@ -298,7 +298,7 @@ function ConsultorIaPage() {
                     {m.sem_resposta ? (
                       <p className="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-amber-700 dark:text-amber-400">
                         <TriangleAlert className="size-3.5" />
-                        Lacuna de conhecimento na base
+                        Resposta com conhecimento geral da IA — não consta na base da empresa
                       </p>
                     ) : null}
                     <Markdown conteudo={m.conteudo} />
