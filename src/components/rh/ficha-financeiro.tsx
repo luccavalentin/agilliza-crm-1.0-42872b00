@@ -29,12 +29,20 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   listarAdiantamentos,
   listarDescontos,
   registrarAdiantamento,
   registrarDesconto,
   listarAlteracoesSalariais,
   registrarAlteracaoSalarial,
+  type LancamentoStatus,
 } from "@/lib/rh/submodulos.functions";
 import { formatBRL } from "@/lib/financeiro/format";
 
@@ -97,6 +105,7 @@ function LancamentosTab({
     competencia_mes: hoje.getMonth() + 1,
     competencia_ano: hoje.getFullYear(),
     descricao: "",
+    status: "previsto" as LancamentoStatus,
   });
 
   const q = useQuery({
@@ -116,7 +125,7 @@ function LancamentosTab({
           competencia_mes: form.competencia_mes,
           competencia_ano: form.competencia_ano,
           descricao: form.descricao || null,
-          status: "previsto" as const,
+          status: form.status,
         },
       });
     },
@@ -191,6 +200,22 @@ function LancamentosTab({
                     setForm((p) => ({ ...p, competencia_ano: Number(e.target.value) }))
                   }
                 />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Situação</Label>
+                <Select
+                  value={form.status}
+                  onValueChange={(v) => setForm((p) => ({ ...p, status: v as LancamentoStatus }))}
+                >
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="previsto">Previsto</SelectItem>
+                    <SelectItem value="recebido">Recebido</SelectItem>
+                    <SelectItem value="descontado">Descontado</SelectItem>
+                    <SelectItem value="pago">Pago</SelectItem>
+                    <SelectItem value="cancelado">Cancelado</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-1.5 sm:col-span-2">
                 <Label>Descrição</Label>

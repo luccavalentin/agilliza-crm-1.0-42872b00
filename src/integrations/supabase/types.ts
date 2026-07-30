@@ -7585,7 +7585,12 @@ export type Database = {
         | "concluida"
         | "cancelada"
       rh_folha_status: "aberta" | "conferida" | "fechada" | "cancelada"
-      rh_lancamento_status: "previsto" | "descontado" | "pago" | "cancelado"
+      rh_lancamento_status:
+        | "previsto"
+        | "descontado"
+        | "pago"
+        | "cancelado"
+        | "recebido"
       rh_ocorrencia_tipo:
         | "falta"
         | "atestado"
@@ -7874,7 +7879,13 @@ export const Constants = {
         "cancelada",
       ],
       rh_folha_status: ["aberta", "conferida", "fechada", "cancelada"],
-      rh_lancamento_status: ["previsto", "descontado", "pago", "cancelado"],
+      rh_lancamento_status: [
+        "previsto",
+        "descontado",
+        "pago",
+        "cancelado",
+        "recebido",
+      ],
       rh_ocorrencia_tipo: [
         "falta",
         "atestado",
