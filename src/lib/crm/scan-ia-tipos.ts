@@ -597,6 +597,14 @@ export function converterValor(
   const destino = destinoDoCampo(campo);
   const bruto = valor.trim();
   if (!bruto) return { ok: false, motivo: "Valor vazio." };
+  if (destino.tipo === "endereco") {
+    if (destino.formato === "documento") {
+      const d = bruto.replace(/\D+/g, "");
+      return d ? { ok: true, valor: d } : { ok: false, motivo: "Documento inválido." };
+    }
+    if (destino.coluna === "uf") return { ok: true, valor: bruto.slice(0, 2).toUpperCase() };
+    return { ok: true, valor: bruto };
+  }
   if (destino.tipo === "matricula") {
     if (destino.formato === "data") {
       const d = normalizarData(bruto);
