@@ -32,6 +32,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { ConfirmDelete } from "@/components/shared/confirm-delete";
+import { BancoLogo } from "@/components/bancos/banco-logo";
 import {
   listarRegrasComissaoAdmin,
   salvarRegraComissao,
@@ -204,7 +205,10 @@ export function SecaoRegrasComissao() {
                 {data!.map((r) => (
                   <TableRow key={r.id}>
                     <TableCell className="font-medium text-foreground">
-                      {r.banco_nome ?? "Todos os bancos"}
+                      <span className="flex items-center gap-2">
+                        <BancoLogo nome={r.banco_nome} size="xs" />
+                        {r.banco_nome ?? "Todos os bancos"}
+                      </span>
                     </TableCell>
                     <TableCell>{produtoLabel(r.produto)}</TableCell>
                     <TableCell className="text-right tabular-nums">
@@ -269,7 +273,10 @@ export function SecaoRegrasComissao() {
                     <SelectItem value={TODOS_BANCOS}>Todos os bancos</SelectItem>
                     {(bancos ?? []).map((b) => (
                       <SelectItem key={b.codigo} value={b.codigo}>
-                        {b.nome}
+                        <span className="flex items-center gap-2">
+                          <BancoLogo nome={b.nome} size="xs" />
+                          {b.nome}
+                        </span>
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -468,7 +475,10 @@ export function SimuladorComissao() {
                 <SelectItem value={TODOS_BANCOS}>Todos os bancos</SelectItem>
                 {(bancos ?? []).map((b) => (
                   <SelectItem key={b.codigo} value={b.codigo}>
-                    {b.nome}
+                    <span className="flex items-center gap-2">
+                      <BancoLogo nome={b.nome} size="xs" />
+                      {b.nome}
+                    </span>
                   </SelectItem>
                 ))}
               </SelectContent>

@@ -24,9 +24,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { BancoLogo } from "@/components/bancos/banco-logo";
+import { rotuloGatilho } from "@/lib/financeiro/comissoes-gatilhos";
 import {
   BASES_CALCULO,
-  GATILHOS_COMISSAO,
   TIPOS_VINCULO_COMISSAO,
   excluirRegraComissaoUsuario,
   listarRegrasComissaoUsuario,
@@ -147,12 +148,21 @@ export function RegrasAbas() {
                             <div className="font-medium">{r.usuario_nome ?? "—"}</div>
                             <div className="text-xs text-muted-foreground">{r.usuario_email}</div>
                           </TableCell>
-                          <TableCell>{rotulo(GATILHOS_COMISSAO, r.gatilho)}</TableCell>
+                          <TableCell>{rotuloGatilho(r.gatilho)}</TableCell>
                           <TableCell>{rotulo(BASES_CALCULO, r.base_calculo)}</TableCell>
                           <TableCell className="text-right font-medium">
                             {r.percentual.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}%
                           </TableCell>
-                          <TableCell>{r.banco_nome ?? "Todos"}</TableCell>
+                          <TableCell>
+                            {r.banco_nome ? (
+                              <span className="flex items-center gap-2">
+                                <BancoLogo nome={r.banco_nome} size="xs" />
+                                {r.banco_nome}
+                              </span>
+                            ) : (
+                              "Todos"
+                            )}
+                          </TableCell>
                           <TableCell>{r.produto ?? "Todos"}</TableCell>
                           <TableCell className="text-center">
                             {r.ativo ? (

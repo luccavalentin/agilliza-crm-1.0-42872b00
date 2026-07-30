@@ -18,6 +18,8 @@ import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
+  SelectGroup,
+  SelectLabel,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -33,8 +35,9 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
+import { BancoLogo } from "@/components/bancos/banco-logo";
+import { GRUPOS_GATILHOS_COMISSAO } from "@/lib/financeiro/comissoes-gatilhos";
 import {
-  GATILHOS_COMISSAO,
   TIPOS_VINCULO_COMISSAO,
   listarBancosComissao,
   listarUsuariosComissionaveis,
@@ -253,10 +256,15 @@ export function RegraComissaoUsuarioForm({ aberto, onFechar, tipoInicial, regra 
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {GATILHOS_COMISSAO.map((g) => (
-                  <SelectItem key={g.valor} value={g.valor}>
-                    {g.rotulo}
-                  </SelectItem>
+                {GRUPOS_GATILHOS_COMISSAO.map((grupo) => (
+                  <SelectGroup key={grupo.titulo}>
+                    <SelectLabel>{grupo.titulo}</SelectLabel>
+                    {grupo.itens.map((g) => (
+                      <SelectItem key={g.valor} value={g.valor}>
+                        {g.rotulo}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
                 ))}
               </SelectContent>
             </Select>
@@ -315,7 +323,10 @@ export function RegraComissaoUsuarioForm({ aberto, onFechar, tipoInicial, regra 
                 <SelectItem value="__todos__">Todos os bancos</SelectItem>
                 {(bancos ?? []).map((b) => (
                   <SelectItem key={b} value={b}>
-                    {b}
+                    <span className="flex items-center gap-2">
+                      <BancoLogo nome={b} size="xs" />
+                      {b}
+                    </span>
                   </SelectItem>
                 ))}
               </SelectContent>
