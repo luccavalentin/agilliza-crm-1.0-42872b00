@@ -50,6 +50,7 @@ export function ContasCardsMobile({
                 conta={c}
                 tipo={tipo}
                 onDetalhe={() => acoes.onDetalhe(c.id)}
+                    onEditar={() => acoes.onEditar(c.id)}
                 onBaixar={() => acoes.onBaixar(c)}
                 onEstornar={() => acoes.onEstornar(c.id)}
                 onCancelar={() => acoes.onCancelar(c.id)}

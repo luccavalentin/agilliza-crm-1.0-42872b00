@@ -8,7 +8,7 @@ import type { ContaTipo } from "@/lib/financeiro/financeiro.functions";
  * usado no painel e no fluxo de caixa para manter tipografia, hierarquia
  * e chip de status consistentes em todo o módulo Financeiro.
  */
-export function ContasHeader({ tipo }: { tipo: ContaTipo }) {
+export function ContasHeader({ tipo, extraActions }: { tipo: ContaTipo; extraActions?: React.ReactNode }) {
   const recebe = tipo === "receber";
   return (
     <PanelHeader
@@ -20,7 +20,8 @@ export function ContasHeader({ tipo }: { tipo: ContaTipo }) {
           : "Fornecedores, parceiros, impostos e despesas."
       }
       actions={
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          {extraActions}
           <span className="hidden items-center gap-1.5 rounded-full border border-border bg-background/60 px-2.5 py-1 text-[11px] font-medium text-muted-foreground sm:inline-flex">
             {recebe ? (
               <ArrowDownCircle className="h-3.5 w-3.5 text-success" />

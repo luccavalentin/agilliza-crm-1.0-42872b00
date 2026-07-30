@@ -10,13 +10,16 @@ import {
   resumoContas,
   type ContaTipo,
 } from "@/lib/financeiro/financeiro.functions";
+import { formatData } from "@/lib/financeiro/format";
 import { BaixarDialog } from "@/components/financeiro/baixar-dialog";
 import { ContaDrawer } from "@/components/financeiro/conta-drawer";
+import { EditarContaDialog } from "@/components/financeiro/editar-conta-dialog";
 import { EstornarDialog } from "@/components/financeiro/estornar-dialog";
 
 import { AlertExcluirConta } from "./contas/alert-excluir-conta";
 import { ContasCardsMobile } from "./contas/contas-cards-mobile";
 import { ContasFiltros } from "./contas/contas-filtros";
+import { ContasExport } from "./contas/contas-export";
 import { ContasHeader } from "./contas/contas-header";
 import { ContasKpis } from "./contas/contas-kpis";
 import { ContasTabela, type ContaItem } from "./contas/contas-tabela";
@@ -38,6 +41,7 @@ export function ContasPage({ tipo }: { tipo: ContaTipo }) {
   const [baixarConta, setBaixarConta] = useState<ContaItem | null>(null);
   const [estorno, setEstorno] = useState<{ id: string; acao: "estornar" | "cancelar" } | null>(null);
   const [detalheId, setDetalheId] = useState<string | null>(null);
+  const [editarId, setEditarId] = useState<string | null>(null);
   const [excluirAlvo, setExcluirAlvo] = useState<{ id: string; numero: string } | null>(null);
 
   const queryClient = useQueryClient();
@@ -94,6 +98,7 @@ export function ContasPage({ tipo }: { tipo: ContaTipo }) {
 
   const acoes = {
     onDetalhe: (id: string) => setDetalheId(id),
+    onEditar: (id: string) => setEditarId(id),
     onBaixar: (c: ContaItem) => setBaixarConta(c),
     onEstornar: (id: string) => setEstorno({ id, acao: "estornar" }),
     onCancelar: (id: string) => setEstorno({ id, acao: "cancelar" }),
@@ -102,7 +107,22 @@ export function ContasPage({ tipo }: { tipo: ContaTipo }) {
 
   return (
     <div className="mx-auto w-full max-w-none space-y-6 p-3 sm:p-4 md:p-6">
-      <ContasHeader tipo={tipo} />
+      <ContasHeader
+        tipo={tipo}
+        extraActions={
+          <ContasExport
+            tipo={tipo}
+            itens={itens}
+            resumo={resumo ?? null}
+            meta={[
+              `Período: ${de ? formatData(de) : "início"} a ${ate ? formatData(ate) : "hoje"}`,
+              `Status: ${status || "todos"}`,
+              `Registros: ${itens.length}`,
+              `Emitido em ${new Date().toLocaleString("pt-BR")}`,
+            ]}
+          />
+        }
+      />
 
       <ContasKpis tipo={tipo} resumo={resumo} />
 
@@ -146,6 +166,12 @@ export function ContasPage({ tipo }: { tipo: ContaTipo }) {
         contaId={estorno?.id ?? null}
         open={!!estorno}
         onOpenChange={(o) => !o && setEstorno(null)}
+      />
+      <EditarContaDialog
+        tipo={tipo}
+        contaId={editarId}
+        open={!!editarId}
+        onOpenChange={(o) => !o && setEditarId(null)}
       />
       <ContaDrawer
         tipo={tipo}
