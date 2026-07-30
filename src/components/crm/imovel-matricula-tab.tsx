@@ -273,8 +273,74 @@ export function MatriculaTab({
               onChange={(e) => set("aquisicao_data", e.target.value)}
             />
           </div>
+          <div>
+            <Label>Estado civil do proprietário</Label>
+            <Input
+              value={m.estado_civil_proprietario ?? ""}
+              onChange={(e) => set("estado_civil_proprietario", e.target.value)}
+            />
+          </div>
         </div>
       </section>
+
+      {/* Compra e venda */}
+      <section className="space-y-3">
+        <h4 className="text-sm font-semibold">Compra e venda / transmissão</h4>
+        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
+          <div className="sm:col-span-2">
+            <Label>Vendedor (transmitente)</Label>
+            <Input
+              value={m.vendedor_nome ?? ""}
+              onChange={(e) => set("vendedor_nome", e.target.value)}
+            />
+          </div>
+          <div>
+            <Label>CPF/CNPJ do vendedor</Label>
+            <Input
+              value={m.vendedor_cpf ?? ""}
+              onChange={(e) => set("vendedor_cpf", e.target.value)}
+            />
+          </div>
+          <div className="sm:col-span-2">
+            <Label>Comprador (adquirente)</Label>
+            <Input
+              value={m.comprador_nome ?? ""}
+              onChange={(e) => set("comprador_nome", e.target.value)}
+            />
+          </div>
+          <div>
+            <Label>CPF/CNPJ do comprador</Label>
+            <Input
+              value={m.comprador_cpf ?? ""}
+              onChange={(e) => set("comprador_cpf", e.target.value)}
+            />
+          </div>
+          <div>
+            <Label>Valor da compra e venda (R$)</Label>
+            <Input
+              inputMode="decimal"
+              value={m.valor_transacao ?? ""}
+              onChange={(e) => set("valor_transacao", e.target.value)}
+            />
+          </div>
+          <div>
+            <Label>Data da compra e venda</Label>
+            <Input
+              type="date"
+              value={m.data_transacao ?? ""}
+              onChange={(e) => set("data_transacao", e.target.value)}
+            />
+          </div>
+          <div>
+            <Label>ITBI (guia / valor / data)</Label>
+            <Input
+              value={m.itbi_informacao ?? ""}
+              onChange={(e) => set("itbi_informacao", e.target.value)}
+            />
+          </div>
+        </div>
+      </section>
+
 
       {/* Fiscal */}
       <section className="space-y-3">
