@@ -198,7 +198,7 @@ export function PainelDrilldownDialog({
         </ScrollArea>
 
         {data?.linkAbrir && (
-          <div className="flex items-center justify-end gap-2 border-t border-border/60 bg-muted/30 px-6 py-3">
+          <div className="flex shrink-0 items-center justify-end gap-2 border-t border-border/60 bg-muted/30 px-6 py-3">
             <Button asChild size="sm" variant="outline" className="h-8 rounded-lg">
               <Link to={data.linkAbrir} onClick={() => onOpenChange(false)}>
                 <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
