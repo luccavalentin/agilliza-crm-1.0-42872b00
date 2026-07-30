@@ -216,7 +216,14 @@ export function HoleriteBuilderDialog({
               <div className="grid gap-3 sm:grid-cols-3">
                 <div className="space-y-1.5 sm:col-span-1">
                   <Label className="text-xs text-muted-foreground">Funcionário</Label>
-                  <FuncionarioPicker value={funcionarioId} onChange={setFuncionarioId} />
+                  {funcionarioFixo ? (
+                    <div className="flex h-9 items-center rounded-md border border-border bg-muted/40 px-3 text-sm">
+                      {func?.nome ?? "Carregando…"}
+                    </div>
+                  ) : (
+                    <FuncionarioPicker value={funcionarioId} onChange={setFuncionarioId} />
+                  )}
+
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs text-muted-foreground">Mês</Label>
