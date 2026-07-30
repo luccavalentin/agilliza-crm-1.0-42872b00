@@ -72,9 +72,12 @@ export function LinksView() {
 
   const catPorNome = useMemo(() => {
     const m = new Map<string, { icone: string; cor: string }>();
-    (categorias ?? []).forEach((c) => m.set(c.nome.toLowerCase(), { icone: c.icone, cor: c.cor }));
+    ((categorias ?? []) as LinkCategoria[]).forEach((c) =>
+      m.set(c.nome.toLowerCase(), { icone: c.icone, cor: c.cor }),
+    );
     return m;
   }, [categorias]);
+
 
   const [busca, setBusca] = useState("");
   const [criando, setCriando] = useState(false);
