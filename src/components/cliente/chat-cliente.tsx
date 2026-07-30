@@ -140,15 +140,26 @@ export function ChatCliente({ altura = ALTURA_PADRAO }: { altura?: string }) {
 
   const multiplos = (atendentes?.length ?? 0) > 1;
 
+  const excluirConversaLista = useMutation({
+    mutationFn: (atendente_id: string) => clienteExcluirConversa({ data: { atendente_id } }),
+    onSuccess: () => {
+      toast.success("Conversa excluída da sua lista.");
+      qcLista.invalidateQueries({ queryKey: ["cliente", "atendentes"] });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Não foi possível excluir a conversa."),
+  });
+
   if (!atendenteSel) {
     return (
       <ListaAtendentes
         atendentes={atendentes ?? []}
         altura={altura}
         onSelecionar={setAtendenteSel}
+        onExcluir={(a) => excluirConversaLista.mutate(a.atendente_id)}
       />
     );
   }
+
 
   return (
     <ThreadChat
