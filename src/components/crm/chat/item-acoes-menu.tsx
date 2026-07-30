@@ -155,7 +155,7 @@ export function ItemAcoesMenu({
       <Button
         variant="ghost"
         size="icon"
-        className="size-7 shrink-0 text-muted-foreground opacity-0 transition-opacity hover:text-destructive focus-visible:opacity-100 group-hover:opacity-100"
+        className="size-7 shrink-0 text-muted-foreground opacity-100 transition-colors hover:text-destructive sm:opacity-0 sm:transition-opacity sm:focus-visible:opacity-100 sm:group-hover:opacity-100"
         onClick={(e) => {
           e.stopPropagation();
           e.preventDefault();
@@ -172,7 +172,7 @@ export function ItemAcoesMenu({
           <Button
             variant="ghost"
             size="icon"
-            className="size-7 shrink-0 opacity-0 transition-opacity focus-visible:opacity-100 group-hover:opacity-100 data-[state=open]:opacity-100"
+            className="size-7 shrink-0 opacity-100 transition-opacity sm:opacity-0 sm:focus-visible:opacity-100 sm:group-hover:opacity-100 data-[state=open]:opacity-100"
             onClick={(e) => {
               e.stopPropagation();
               e.preventDefault();
