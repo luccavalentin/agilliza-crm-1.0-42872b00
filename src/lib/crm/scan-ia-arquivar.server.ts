@@ -121,6 +121,10 @@ export async function arquivarLeituraNaDocumentacao(params: {
         aprovado_por: userId,
         aprovado_em: new Date().toISOString(),
         enviado_por: userId,
+        // Fica pendente na fila de envio ao banco (sequenciamento da proposta).
+        situacao_integracao: null,
+        integrado_em: null,
+        erro_integracao: null,
       })
       .select("id")
       .single();
