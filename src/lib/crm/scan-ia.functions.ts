@@ -938,7 +938,6 @@ function normalizarCampoExtraido(campo: string, valor: string): { campo: string;
   const v = valor.trim();
   if (c === "endereco_completo" || c === "endereco") {
     const cep = v.match(/\b\d{5}[-\s]?\d{3}\b/);
-    const partes = v.split(/\s+-\s+|,\s*/).map((p) => p.trim()).filter(Boolean);
     return { campo: c, valor: cep ? v.replace(cep[0], "").trim().replace(/[,-]\s*$/, "") : v };
   }
   if (c === "cep") return { campo: "endereco_cep", valor: v };
