@@ -1,3 +1,4 @@
+import type React from "react";
 import { useState } from "react";
 import { z } from "zod";
 import { useNavigate } from "@tanstack/react-router";
@@ -96,12 +97,29 @@ const CONTRATO_LABEL: Record<TipoContrato, string> = {
   aprendiz: "Aprendiz",
 };
 
+/** Classe padrão das abas da ficha (usada também pelas abas extras da página). */
+export const ABA_CLASS =
+  "shrink-0 whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-medium transition-colors data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm sm:text-sm";
+
 function toEmpty<T extends string | number | null | undefined>(v: T): string {
   return v === null || v === undefined ? "" : String(v);
 }
 
 /** Formulário completo do funcionário (usado em Novo e Editar). */
-export function FuncionarioForm({ inicial }: { inicial?: Funcionario | null }) {
+export function FuncionarioForm({
+  inicial,
+  abasExtras,
+  conteudoExtra,
+  acoes,
+}: {
+  inicial?: Funcionario | null;
+  /** <TabsTrigger> adicionais renderizados na mesma barra de abas. */
+  abasExtras?: React.ReactNode;
+  /** <TabsContent> adicionais renderizados dentro do mesmo <Tabs>. */
+  conteudoExtra?: React.ReactNode;
+  /** Ações extras exibidas ao lado do botão Salvar. */
+  acoes?: React.ReactNode;
+}) {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const criar = useServerFn(criarFuncionario);
@@ -291,10 +309,13 @@ export function FuncionarioForm({ inicial }: { inicial?: Funcionario | null }) {
           )}
         </div>
         </div>
-        <Button onClick={salvar} disabled={mut.isPending}>
+        <div className="flex flex-wrap items-center gap-2">
+          {acoes}
+          <Button onClick={salvar} disabled={mut.isPending}>
           {mut.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-          Salvar
-        </Button>
+            Salvar
+          </Button>
+        </div>
       </div>
 
       <Card className="border-primary/30 bg-primary/5">
@@ -842,6 +863,8 @@ export function FuncionarioForm({ inicial }: { inicial?: Funcionario | null }) {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {conteudoExtra}
       </Tabs>
     </div>
   );
