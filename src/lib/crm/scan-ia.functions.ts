@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import {
+  valoresEquivalentes,
   CAMPOS_ESPERADOS,
   CAMPOS_POR_TIPO,
   TIPOS_DOCUMENTO,
@@ -895,7 +896,7 @@ export const previaAplicacao = createServerFn({ method: "GET" })
       }
 
       const novoTexto = conv.ok ? textoValorAtual(conv.valor) : null;
-      const conflito = !!valorAtual && !!novoTexto && valorAtual !== novoTexto;
+      const conflito = !!valorAtual && !!novoTexto && !valoresEquivalentes(valorAtual, novoTexto);
 
       return {
         campo_id: c.id,
@@ -1012,7 +1013,7 @@ export const aplicarAoCadastro = createServerFn({ method: "POST" })
         }
         const temAtual = valorAtual !== null && valorAtual !== undefined && valorAtual !== "";
         const novoTexto = conv.ok ? textoValorAtual(conv.valor) : null;
-        const conflito = temAtual && !!novoTexto && textoValorAtual(valorAtual) !== novoTexto;
+        const conflito = temAtual && !!novoTexto && !valoresEquivalentes(textoValorAtual(valorAtual), novoTexto);
 
         const registro = {
           campo: campo.campo,

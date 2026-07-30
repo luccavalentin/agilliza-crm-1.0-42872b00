@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { AlertTriangle, ShieldCheck } from "lucide-react";
 import {
@@ -35,6 +36,7 @@ export function AplicarCadastroDialog({
   onOpenChange: (v: boolean) => void;
 }) {
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const [marcados, setMarcados] = useState<Record<string, boolean>>({});
   const [escolhas, setEscolhas] = useState<Record<string, Escolha>>({});
 
@@ -91,6 +93,11 @@ export function AplicarCadastroDialog({
       qc.invalidateQueries({ queryKey: ["scan-ia-previa", leituraId] });
       qc.invalidateQueries({ queryKey: ["cliente-docs"] });
       onOpenChange(false);
+      // Depois de aplicar, leva o operador direto ao cadastro do cliente no CRM.
+      const clienteId = previa.data?.cliente_id;
+      if (clienteId) {
+        navigate({ to: "/crm/clientes/$id", params: { id: clienteId } });
+      }
     },
     onError: (e: any) => toast.error(e?.message ?? "Falha ao aplicar."),
   });
