@@ -39,9 +39,19 @@ export interface MatriculaDados {
 
   proprietario_atual?: string;
   proprietario_cpf?: string;
+  estado_civil_proprietario?: string;
   aquisicao_forma?: string;
   aquisicao_data?: string;
   transcricao_anterior?: string;
+
+  // Compra e venda / transmissão
+  vendedor_nome?: string;
+  vendedor_cpf?: string;
+  comprador_nome?: string;
+  comprador_cpf?: string;
+  valor_transacao?: string;
+  data_transacao?: string;
+  itbi_informacao?: string;
 
   inscricao_imobiliaria?: string;
   inscricao_iptu?: string;
@@ -65,15 +75,26 @@ export interface MatriculaDados {
   hipoteca_credor?: string;
   tem_alienacao_fiduciaria?: boolean;
   alienacao_credor?: string;
+  alienacao_valor?: string;
+  alienacao_data?: string;
+  alienacao_situacao?: string;
+  alienacao_descricao?: string;
+  tem_interveniente_quitante?: boolean;
+  interveniente_nome?: string;
   tem_penhora?: boolean;
   tem_usufruto?: boolean;
   tem_indisponibilidade?: boolean;
   outros_onus?: string;
+  onus_gravames?: string;
 
   certidao_onus_data?: string;
   certidao_onus_valida_ate?: string;
   cnd_iptu?: boolean;
   cnd_condominio?: boolean;
+
+  data_registro?: string;
+  ultimo_registro?: string;
+  historico_atos?: string;
 
   observacoes?: string;
 }
@@ -99,6 +120,7 @@ const CAMPOS_AREA: Array<[keyof MatriculaDados, string, string?]> = [
 const ONUS_CHECKS: Array<[keyof MatriculaDados, string]> = [
   ["tem_hipoteca", "Hipoteca"],
   ["tem_alienacao_fiduciaria", "Alienação fiduciária"],
+  ["tem_interveniente_quitante", "Interveniente quitante"],
   ["tem_penhora", "Penhora"],
   ["tem_usufruto", "Usufruto"],
   ["tem_indisponibilidade", "Indisponibilidade"],
@@ -109,6 +131,7 @@ const AVERBACOES_CHECKS: Array<[keyof MatriculaDados, string]> = [
   ["construcao_averbada", "Construção averbada"],
   ["edificacao_regularizada", "Edificação regularizada"],
 ];
+
 
 export function MatriculaTab({
   clienteId,
