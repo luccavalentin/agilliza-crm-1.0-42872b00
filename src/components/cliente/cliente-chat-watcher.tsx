@@ -1,7 +1,10 @@
 import { useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { clienteListarAtendentes } from "@/lib/portal/cliente.functions";
-import { signalIncomingChat } from "@/components/shared/chat-alert-store";
+import {
+  signalIncomingChat,
+  pedirPermissaoNotificacao,
+} from "@/components/shared/chat-alert-store";
 
 /**
  * Observador global de mensagens no portal do cliente.
@@ -24,6 +27,10 @@ export function ClienteChatWatcher() {
   });
 
 
+
+  useEffect(() => {
+    pedirPermissaoNotificacao();
+  }, []);
 
   const previa = useRef<Map<string, { nao_lidas: number; ultima_em: string | null }> | null>(null);
 
@@ -50,7 +57,10 @@ export function ClienteChatWatcher() {
         (!!a.ultima_em && a.ultima_em !== prev?.ultima_em && nlAtual > 0);
       if (chegou) {
         // Id sintético estável por (atendente + timestamp) — o store dedupa.
-        signalIncomingChat(`cliente:${a.atendente_id}:${a.ultima_em ?? ""}`);
+        signalIncomingChat(`cliente:${a.atendente_id}:${a.ultima_em ?? ""}`, {
+          titulo: `Nova mensagem · ${a.nome}`,
+          corpo: a.ultima_mensagem ?? undefined,
+        });
       }
       anterior.set(a.atendente_id, {
         nao_lidas: nlAtual,

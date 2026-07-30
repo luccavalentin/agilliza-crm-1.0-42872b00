@@ -22,8 +22,36 @@ function subscribe(cb: () => void): () => void {
   return () => listeners.delete(cb);
 }
 
+/** Pede permissão de notificação do navegador (silencioso se já decidido). */
+export function pedirPermissaoNotificacao(): void {
+  if (typeof window === "undefined" || !("Notification" in window)) return;
+  try {
+    if (Notification.permission === "default") void Notification.requestPermission();
+  } catch {
+    /* ignore */
+  }
+}
+
+/** Exibe uma notificação do sistema operacional (se permitido). */
+function notificarSO(titulo: string, corpo?: string): void {
+  if (typeof window === "undefined" || !("Notification" in window)) return;
+  try {
+    if (Notification.permission !== "granted") return;
+    const n = new Notification(titulo, { body: corpo, tag: "agilliza-chat" });
+    n.onclick = () => {
+      window.focus();
+      n.close();
+    };
+  } catch {
+    /* ignore */
+  }
+}
+
 /** Sinaliza a chegada de UMA mensagem de chat recebida (deduplicada por id). */
-export function signalIncomingChat(id: string): void {
+export function signalIncomingChat(
+  id: string,
+  info?: { titulo?: string; corpo?: string },
+): void {
   if (vistas.has(id)) return;
   vistas.add(id);
   // Evita crescer indefinidamente.
@@ -33,6 +61,7 @@ export function signalIncomingChat(id: string): void {
   }
   if (!tipoAtivo("chat")) return;
   if (tipoComSom("chat")) playChatSound();
+  notificarSO(info?.titulo ?? "Nova mensagem", info?.corpo);
   startFlash();
 }
 

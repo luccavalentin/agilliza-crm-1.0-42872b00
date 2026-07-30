@@ -7,7 +7,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { useChatFlash, stopFlash } from "@/components/shared/chat-alert-store";
 import type { NavGroup, NavItem } from "./nav-config";
 
-const ROTA_CHAT = "/crm/chat";
+const ROTAS_CHAT = ["/crm/chat", "/operacional/chats"];
+const ehRotaChat = (to?: string | null) => !!to && ROTAS_CHAT.includes(to);
 
 function useActivePath() {
   return useRouterState({ select: (s) => s.location.pathname });
@@ -117,7 +118,7 @@ function SidebarLink({
 }) {
   const Icon = item.icon;
   const flash = useChatFlash();
-  const isChat = item.to === ROTA_CHAT;
+  const isChat = ehRotaChat(item.to);
   const piscar = isChat && flash && !active;
 
   useEffect(() => {
@@ -216,7 +217,7 @@ export function SidebarRail({ nav, onNavigate }: SidebarProps) {
         const Icon = item.icon;
         const active = itemAtivo(item, melhor, pasta);
         const to = item.to ?? item.children?.[0]?.to;
-        const isChat = to === ROTA_CHAT || item.to === ROTA_CHAT;
+        const isChat = ehRotaChat(to) || ehRotaChat(item.to);
         const piscar = isChat && flash && !active;
         return (
           <Tooltip key={item.label}>
