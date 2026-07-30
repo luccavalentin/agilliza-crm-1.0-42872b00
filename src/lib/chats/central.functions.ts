@@ -382,15 +382,35 @@ export const listarMensagensDm = createServerFn({ method: "POST" })
       "dm",
       lista.map((m) => m.id as string),
     );
+    // Assina os anexos guardados no bucket privado `chat-anexos`.
+    const caminhos = Array.from(
+      new Set(
+        lista
+          .map((m) => (m.anexo_url as string | null) ?? null)
+          .filter((u): u is string => !!u && !/^https?:\/\//i.test(u)),
+      ),
+    );
+    const assinado = new Map<string, string>();
+    if (caminhos.length > 0) {
+      const { data: urls } = await supabase.storage
+        .from("chat-anexos")
+        .createSignedUrls(caminhos, 3600);
+      for (const s of (urls ?? []) as Array<{ path: string | null; signedUrl: string | null }>) {
+        if (s.path && s.signedUrl) assinado.set(s.path, s.signedUrl);
+      }
+    }
+
     return lista.map((m) => {
       const alvo = m.responde_a ? porId.get(m.responde_a as string) : null;
+      const bruto = (m.anexo_url as string | null) ?? null;
+      const url = bruto ? (/^https?:\/\//i.test(bruto) ? bruto : (assinado.get(bruto) ?? null)) : null;
       return {
         id: m.id as string,
         autor_id: m.autor_id as string,
         autor_nome: (m.profiles?.nome as string | null) ?? null,
         autor_foto: (m.profiles?.foto_url as string | null) ?? null,
         texto: (m.texto as string | null) ?? null,
-        anexo_url: (m.anexo_url as string | null) ?? null,
+        anexo_url: url,
         anexo_nome: (m.anexo_nome as string | null) ?? null,
         created_at: m.created_at as string,
         editada_em: (m.editada_em as string | null) ?? null,
@@ -409,17 +429,29 @@ export const listarMensagensDm = createServerFn({ method: "POST" })
     });
   });
 
-/** Envia mensagem em uma DM. */
+/** Envia mensagem em uma DM (texto e/ou anexo). */
 export const enviarMensagemDm = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { conversa_id: string; texto: string; responde_a?: string | null }) =>
-    z
-      .object({
-        conversa_id: z.string().uuid(),
-        texto: z.string().min(1).max(4000),
-        responde_a: z.string().uuid().optional().nullable(),
-      })
-      .parse(d),
+  .inputValidator(
+    (d: {
+      conversa_id: string;
+      texto: string;
+      responde_a?: string | null;
+      anexo_path?: string | null;
+      anexo_nome?: string | null;
+    }) =>
+      z
+        .object({
+          conversa_id: z.string().uuid(),
+          texto: z.string().max(4000).default(""),
+          responde_a: z.string().uuid().optional().nullable(),
+          anexo_path: z.string().trim().max(1000).optional().nullable(),
+          anexo_nome: z.string().trim().max(255).optional().nullable(),
+        })
+        .refine((v) => v.texto.trim().length > 0 || !!v.anexo_path, {
+          message: "Mensagem vazia.",
+        })
+        .parse(d),
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
@@ -440,12 +472,15 @@ export const enviarMensagemDm = createServerFn({ method: "POST" })
       conversa_id: data.conversa_id,
       autor_id: userId,
       correspondente_id: me.correspondente_id,
-      texto: data.texto,
+      texto: data.texto?.trim() || data.anexo_nome || "Anexo",
+      anexo_url: data.anexo_path ?? null,
+      anexo_nome: data.anexo_nome ?? null,
       responde_a: data.responde_a ?? null,
     });
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
 
 /** Edita o texto da própria mensagem em uma DM. */
 export const editarMensagemDm = createServerFn({ method: "POST" })
