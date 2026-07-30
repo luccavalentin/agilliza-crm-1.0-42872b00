@@ -405,7 +405,11 @@ export const processarLeitura = createServerFn({ method: "POST" })
           ? (json?.choices?.[0]?.message?.content ?? "")
           : (json?.candidates?.[0]?.content?.parts?.map((p: any) => p.text).join("") ?? "");
 
-      let parsed: { campos?: Array<{ campo: string; valor: string; confianca: number }> };
+      let parsed: {
+        tipo_documento?: string;
+        confianca_tipo?: number;
+        campos?: Array<{ campo: string; valor: string; confianca: number }>;
+      };
       try {
         parsed = JSON.parse(texto);
       } catch {
@@ -413,8 +417,18 @@ export const processarLeitura = createServerFn({ method: "POST" })
         parsed = m ? JSON.parse(m[0]) : { campos: [] };
       }
 
+      const tipoSugerido = ehTipoConhecido(parsed.tipo_documento)
+        ? parsed.tipo_documento
+        : "outro";
+      // Só aceita campos previstos para o tipo sugerido (evita ruído do modelo).
+      const permitidos = new Set([
+        ...camposEsperadosDoTipo(tipoSugerido),
+        ...(tipoInformado ? camposEsperadosDoTipo(tipoInformado) : []),
+        ...CAMPOS_ESPERADOS,
+      ]);
+
       const campos = (parsed.campos ?? [])
-        .filter((c) => c && c.campo && c.valor != null)
+        .filter((c) => c && c.campo && c.valor != null && permitidos.has(String(c.campo)))
         .map((c) => ({
           leitura_id: data.id,
           campo: String(c.campo).slice(0, 120),
@@ -429,9 +443,14 @@ export const processarLeitura = createServerFn({ method: "POST" })
         if (insErr) throw insErr;
       }
 
+      // O tipo sugerido NUNCA sobrescreve o tipo efetivo — só um humano confirma.
       await supabase
         .from("scan_ia_leituras")
-        .update({ status: "concluida", erro: null })
+        .update({
+          status: "concluida",
+          erro: null,
+          tipo_documento_sugerido: tipoSugerido,
+        })
         .eq("id", data.id);
 
       await supabase.from("scan_ia_auditoria").insert({
@@ -439,8 +458,15 @@ export const processarLeitura = createServerFn({ method: "POST" })
         leitura_id: data.id,
         ator_id: userId,
         acao: "processada",
-        dados: { total_campos: campos.length },
+        dados: {
+          total_campos: campos.length,
+          tipo_informado: tipoInformado || null,
+          tipo_sugerido: tipoSugerido,
+          confianca_tipo: Number(parsed.confianca_tipo) || null,
+          divergencia_tipo: !!tipoInformado && tipoInformado !== tipoSugerido,
+        },
       });
+
 
       return { ok: true };
     } catch (e: any) {
