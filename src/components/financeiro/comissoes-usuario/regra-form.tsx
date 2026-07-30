@@ -224,7 +224,7 @@ export function RegraComissaoUsuarioForm({ aberto, onFechar, tipoInicial, regra 
                             value={`${label} ${u.email ?? ""}`}
                             onSelect={() => {
                               setUsuarioId(u.id);
-                              if (!regra) setTipoVinculo(inferirTipoVinculo(u.tipo_pessoa));
+                              if (!regra) setTipoVinculo(inferirTipoVinculo(u.tipo_pessoa, u.papeis));
                               setUsuarioOpen(false);
                             }}
                           >
