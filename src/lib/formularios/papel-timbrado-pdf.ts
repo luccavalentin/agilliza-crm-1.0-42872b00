@@ -401,20 +401,20 @@ export function gerarPapelTimbradoPDF(dados: PapelTimbradoDados = {}, filename?:
 
   const linhaCabecalho = [dados.cidade?.trim(), dados.data?.trim()].filter(Boolean).join(", ");
   if (linhaCabecalho) {
-    doc.setFont("helvetica", "normal");
+    doc.setFont(fonteCorpo, "normal");
     doc.setFontSize(11);
     doc.setTextColor(rTxt, gTxt, bTxt);
-    doc.text(linhaCabecalho, pageW - MARGEM, y, { align: "right" });
+    doc.text(linhaCabecalho, pageW - margem, y, { align: "right" });
     y += 28;
   }
 
   if (dados.destinatario?.trim()) {
-    doc.setFont("helvetica", "normal");
+    doc.setFont(fonteCorpo, "normal");
     doc.setFontSize(11);
     doc.setTextColor(rTxt, gTxt, bTxt);
     const linhas = doc.splitTextToSize(dados.destinatario.trim(), largura) as string[];
     linhas.forEach((l) => {
-      doc.text(l, MARGEM, y);
+      doc.text(l, margem, y);
       y += 14;
     });
     y += 10;
@@ -422,45 +422,43 @@ export function gerarPapelTimbradoPDF(dados: PapelTimbradoDados = {}, filename?:
 
 
   if (dados.referencia?.trim()) {
-    doc.setFont("helvetica", "bold");
+    doc.setFont(fonteCorpo, "bold");
     doc.setFontSize(11);
     doc.setTextColor(rDest, gDest, bDest);
-    doc.text("Ref.:", MARGEM, y);
-    doc.setFont("helvetica", "normal");
+    doc.text("Ref.:", margem, y);
+    doc.setFont(fonteCorpo, "normal");
     doc.setTextColor(rTxt, gTxt, bTxt);
     const refLinhas = doc.splitTextToSize(dados.referencia.trim(), largura - 40) as string[];
     refLinhas.forEach((l, i) => {
-      doc.text(l, MARGEM + 40, y + i * 14);
+      doc.text(l, margem + 40, y + i * 14);
     });
     y += Math.max(20, refLinhas.length * 14 + 8);
   }
 
   if (dados.saudacao?.trim()) {
-    doc.setFont("helvetica", "normal");
+    doc.setFont(fonteCorpo, "normal");
     doc.setFontSize(11);
     doc.setTextColor(rTxt, gTxt, bTxt);
-    doc.text(dados.saudacao.trim(), MARGEM, y);
+    doc.text(dados.saudacao.trim(), margem, y);
     y += 22;
   }
 
   if (dados.mensagem?.trim()) {
-    doc.setFont("helvetica", "normal");
+    doc.setFont(fonteCorpo, "normal");
     doc.setFontSize(11);
     doc.setTextColor(rTxt, gTxt, bTxt);
     const paragrafos = dados.mensagem.trim().split(/\n{2,}/);
     for (const par of paragrafos) {
       const linhas = doc.splitTextToSize(par.replace(/\n/g, " "), largura) as string[];
       for (const l of linhas) {
-        if (y > pageH - 140) {
+        if (y > pageH - (ehReal ? 160 : 140)) {
           doc.addPage();
-          drawWatermark(doc, pageW, pageH, modelo.marcaDagua);
-          drawHeader(doc, pageW, modelo);
-          y = HEADER_H + 44;
-          doc.setFont("helvetica", "normal");
+          y = drawPagina(doc, pageW, pageH, modelo);
+          doc.setFont(fonteCorpo, "normal");
           doc.setFontSize(11);
           doc.setTextColor(rTxt, gTxt, bTxt);
         }
-        doc.text(l, MARGEM, y, { maxWidth: largura });
+        doc.text(l, margem, y, { maxWidth: largura });
         y += 16;
       }
       y += 8;
@@ -469,30 +467,35 @@ export function gerarPapelTimbradoPDF(dados: PapelTimbradoDados = {}, filename?:
   }
 
   if (dados.despedida?.trim()) {
-    doc.setFont("helvetica", "normal");
+    doc.setFont(fonteCorpo, "normal");
     doc.setFontSize(11);
     doc.setTextColor(rTxt, gTxt, bTxt);
-    doc.text(dados.despedida.trim(), MARGEM, y);
+    doc.text(dados.despedida.trim(), margem, y);
     y += 40;
   }
 
   if (dados.assinante?.trim() || dados.cargo?.trim()) {
-    doc.setDrawColor(rBorda, gBorda, bBorda);
+    if (ehReal) {
+      const [mr, mg, mb] = hex(modelo.metalico ?? modelo.destaque);
+      doc.setDrawColor(mr, mg, mb);
+    } else {
+      doc.setDrawColor(rBorda, gBorda, bBorda);
+    }
     doc.setLineWidth(0.75);
-    doc.line(MARGEM, y, MARGEM + 240, y);
+    doc.line(margem, y, margem + 240, y);
     y += 14;
     if (dados.assinante?.trim()) {
-      doc.setFont("helvetica", "bold");
+      doc.setFont(fonteCorpo, "bold");
       doc.setFontSize(11);
       doc.setTextColor(rDest, gDest, bDest);
-      doc.text(dados.assinante.trim(), MARGEM, y);
+      doc.text(dados.assinante.trim(), margem, y);
       y += 14;
     }
     if (dados.cargo?.trim()) {
-      doc.setFont("helvetica", "normal");
+      doc.setFont(fonteCorpo, "normal");
       doc.setFontSize(9.5);
       doc.setTextColor(rCinza, gCinza, bCinza);
-      doc.text(dados.cargo.trim(), MARGEM, y);
+      doc.text(dados.cargo.trim(), margem, y);
     }
   }
 
@@ -500,17 +503,28 @@ export function gerarPapelTimbradoPDF(dados: PapelTimbradoDados = {}, filename?:
   const total = doc.getNumberOfPages();
   for (let i = 1; i <= total; i++) {
     doc.setPage(i);
-    const yF = pageH - 30;
-    doc.setDrawColor(rBorda, gBorda, bBorda);
-    doc.setLineWidth(0.5);
-    doc.line(MARGEM, yF, pageW - MARGEM, yF);
+    const yF = pageH - (ehReal ? 56 : 30);
+    if (ehReal) {
+      const [mr, mg, mb] = hex(modelo.metalico ?? modelo.destaque);
+      doc.setDrawColor(mr, mg, mb);
+      doc.setLineWidth(0.5);
+      doc.line(margem, yF, pageW - margem, yF);
+      doc.setFillColor(mr, mg, mb);
+      doc.circle(pageW / 2, yF, 2.2, "F");
+      doc.setFont("times", "normal");
+    } else {
+      doc.setDrawColor(rBorda, gBorda, bBorda);
+      doc.setLineWidth(0.5);
+      doc.line(margem, yF, pageW - margem, yF);
+      doc.setFont("helvetica", "normal");
+    }
     doc.setFontSize(7.5);
-    doc.setFont("helvetica", "normal");
     doc.setTextColor(rCinza, gCinza, bCinza);
     const emitido = new Date().toLocaleString("pt-BR");
-    doc.text(`${modelo.rodape}  —  Emitido em ${emitido}`, MARGEM, yF + 12);
-    doc.text(`Página ${i} de ${total}`, pageW - MARGEM, yF + 12, { align: "right" });
+    doc.text(`${modelo.rodape}  —  Emitido em ${emitido}`, margem, yF + 14);
+    doc.text(`Página ${i} de ${total}`, pageW - margem, yF + 14, { align: "right" });
   }
+
 
   const suf = modelo.id;
   const nome =
