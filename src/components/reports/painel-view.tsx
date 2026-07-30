@@ -43,6 +43,7 @@ import { listarColegas } from "@/lib/operacional/shared.functions";
 import { getPanelDados } from "@/lib/relatorios/paineis.functions";
 import { getEscopoRelatorios } from "@/lib/relatorios/reports.functions";
 import { PERIODO_LABEL, type Periodo, type Escopo } from "@/lib/relatorios/shared";
+import { useRealtimeInvalidate, TABELAS_METRICAS } from "@/hooks/use-realtime-invalidate";
 import {
   PainelDrilldownDialog,
   type DrilldownContext,
@@ -155,7 +156,8 @@ export function PainelView({
         },
       }),
     enabled: customPronto,
-    staleTime: 30_000,
+    staleTime: 15_000,
+    refetchOnWindowFocus: true,
   });
 
   const filtrosAtuais = {
@@ -169,20 +171,10 @@ export function PainelView({
     setDrilldown({ metrica, valorAtual, filtros: filtrosAtuais });
 
 
-  const tabelasKey = realtimeTabelas.join(",");
-  useEffect(() => {
-    const tabelas = tabelasKey ? tabelasKey.split(",") : [];
-    const channel = supabase.channel(`panel-${modulo}`);
-    tabelas.forEach((t) => {
-      channel.on("postgres_changes", { event: "*", schema: "public", table: t }, () => {
-        qc.invalidateQueries({ queryKey: ["panel", modulo] });
-      });
-    });
-    channel.subscribe();
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [modulo, qc, tabelasKey]);
+  // Une as tabelas específicas do painel às tabelas globais de métricas para
+  // que os cards (inclusive ticket médio) reajam a qualquer alteração.
+  const tabelasRealtime = Array.from(new Set([...realtimeTabelas, ...TABELAS_METRICAS]));
+  useRealtimeInvalidate(`panel-${modulo}`, [["panel", modulo]], tabelasRealtime);
 
   const atualizado = dataUpdatedAt
     ? new Date(dataUpdatedAt).toLocaleTimeString("pt-BR", { timeZone: "America/Sao_Paulo",   hour: "2-digit", minute: "2-digit" })
