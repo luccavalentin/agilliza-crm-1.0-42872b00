@@ -46,7 +46,7 @@ export function PainelDrilldownDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[85vh] max-w-2xl flex-col gap-0 overflow-hidden border-border/60 p-0 shadow-2xl">
+      <DialogContent className="flex max-h-[88vh] w-[calc(100vw-1.5rem)] max-w-2xl flex-col gap-0 overflow-hidden border-border/60 p-0 shadow-2xl sm:max-h-[85vh]">
         <img
           src={agillizaSymbol}
           alt=""
@@ -54,9 +54,9 @@ export function PainelDrilldownDialog({
           draggable={false}
           className="pointer-events-none absolute left-1/2 top-1/2 h-[320px] w-auto -translate-x-1/2 -translate-y-1/2 select-none opacity-[0.035] dark:opacity-[0.06]"
         />
-        <DialogHeader className="relative shrink-0 space-y-1 border-b border-border/60 bg-gradient-to-br from-primary/[0.06] via-background to-background px-7 pt-6 pb-5">
+        <DialogHeader className="relative shrink-0 space-y-1 border-b border-border/60 bg-gradient-to-br from-primary/[0.06] via-background to-background px-4 pt-5 pb-4 sm:px-7 sm:pt-6 sm:pb-5">
           <span className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
-          <DialogTitle className="text-[15px] font-semibold tracking-tight text-foreground">
+          <DialogTitle className="pr-8 text-sm font-semibold tracking-tight text-foreground sm:text-[15px]">
             {data?.titulo ?? contexto?.metrica ?? "Detalhamento"}
           </DialogTitle>
           {(() => {
@@ -66,27 +66,58 @@ export function PainelDrilldownDialog({
             const descricao = ehCalculo(data?.descricao) ? undefined : data?.descricao;
             if (!subtitulo && !descricao) return null;
             return (
-              <DialogDescription className="text-[13px] leading-relaxed text-muted-foreground">
+              <DialogDescription className="text-xs leading-relaxed text-muted-foreground sm:text-[13px]">
                 {subtitulo}
                 {subtitulo && descricao ? " · " : ""}
                 {descricao}
               </DialogDescription>
             );
           })()}
-          {(data?.valor || contexto?.valorAtual) && (
-            <div className="mt-3 flex items-baseline gap-2.5">
-              <span className="font-mono text-[34px] font-semibold leading-none tabular-nums text-foreground">
-                {data?.valor ?? contexto?.valorAtual}
-              </span>
-              {data?.total && data.total !== data.valor && (
-                <span className="text-xs text-muted-foreground">
-                  Volume total <span className="font-mono font-medium text-foreground/80">{data.total}</span>
-                </span>
-              )}
+          {data?.formula && data.formula.length > 0 ? (
+            <div className="mt-3 flex flex-wrap items-stretch gap-2">
+              {data.formula.map((f, i) => {
+                const tone =
+                  f.tone === "success"
+                    ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
+                    : f.tone === "warning"
+                      ? "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400"
+                      : f.tone === "danger"
+                        ? "border-destructive/30 bg-destructive/10 text-destructive"
+                        : f.tone === "brand"
+                          ? "border-primary/30 bg-primary/10 text-primary"
+                          : "border-border/60 bg-muted/50 text-foreground";
+                return (
+                  <div
+                    key={`${f.label}-${i}`}
+                    className={`min-w-0 flex-1 basis-[130px] rounded-xl border px-3 py-2 ${tone}`}
+                  >
+                    <p className="truncate text-[10px] font-semibold uppercase tracking-wide opacity-80">
+                      {f.label}
+                    </p>
+                    <p className="font-mono text-xl font-semibold leading-tight tabular-nums sm:text-2xl">
+                      {f.valor}
+                    </p>
+                  </div>
+                );
+              })}
             </div>
+          ) : (
+            (data?.valor || contexto?.valorAtual) && (
+              <div className="mt-3 flex flex-wrap items-baseline gap-2.5">
+                <span className="font-mono text-[26px] font-semibold leading-none tabular-nums text-foreground sm:text-[34px]">
+                  {data?.valor ?? contexto?.valorAtual}
+                </span>
+                {data?.total && data.total !== data.valor && (
+                  <span className="text-xs text-muted-foreground">
+                    Volume total{" "}
+                    <span className="font-mono font-medium text-foreground/80">{data.total}</span>
+                  </span>
+                )}
+              </div>
+            )
           )}
-
         </DialogHeader>
+
 
         <ScrollArea className="min-h-0 flex-1">
           <div className="px-3 py-2">
@@ -107,17 +138,18 @@ export function PainelDrilldownDialog({
               <ul className="space-y-1 py-1">
                 {data.itens.map((it, idx) => {
                   const conteudo = (
-                    <div className="group relative isolate overflow-hidden rounded-xl border border-transparent px-4 py-3 transition-all duration-300 hover:border-border/60 hover:bg-gradient-to-r hover:from-muted/50 hover:to-transparent hover:shadow-sm">
+                    <div className="group relative isolate overflow-hidden rounded-xl border border-transparent px-3 py-3 transition-all duration-300 hover:border-border/60 hover:bg-gradient-to-r hover:from-muted/50 hover:to-transparent hover:shadow-sm sm:px-4">
                       {it.banco && (
                         <div
                           aria-hidden
-                          className="pointer-events-none absolute -right-3 top-1/2 -translate-y-1/2 opacity-[0.06] transition-opacity duration-300 group-hover:opacity-[0.11]"
+                          className="pointer-events-none absolute -right-3 top-1/2 hidden -translate-y-1/2 opacity-[0.06] transition-opacity duration-300 group-hover:opacity-[0.11] sm:block"
                         >
                           <BancoLogo nome={it.banco} size="xl" className="scale-[2.2] ring-0" />
                         </div>
                       )}
-                      <div className="relative grid grid-cols-[auto_minmax(0,1fr)_auto_auto] items-center gap-3.5">
-                        <BancoLogo nome={it.banco ?? null} size="lg" />
+                      <div className="relative grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2.5 sm:grid-cols-[auto_minmax(0,1fr)_auto_auto] sm:gap-3.5">
+                        <BancoLogo nome={it.banco ?? null} size="lg" className="shrink-0" />
+
                         <div className="min-w-0">
                           <p className="truncate text-[13.5px] font-semibold leading-tight tracking-tight text-foreground">
                             {it.label}
@@ -132,21 +164,22 @@ export function PainelDrilldownDialog({
                         </div>
                         <div className="flex flex-col items-end gap-0.5">
                           {it.valor && (
-                            <span className="font-mono text-sm font-semibold tabular-nums text-foreground">
+                            <span className="font-mono text-xs font-semibold tabular-nums text-foreground sm:text-sm">
                               {it.valor}
                             </span>
                           )}
                           {it.data && (
-                            <span className="text-[10.5px] font-medium uppercase tracking-wider tabular-nums text-muted-foreground/80">
+                            <span className="text-[10px] font-medium uppercase tracking-wider tabular-nums text-muted-foreground/80 sm:text-[10.5px]">
                               {it.data}
                             </span>
                           )}
                         </div>
                         {it.to ? (
-                          <ChevronRight className="h-4 w-4 text-muted-foreground/30 transition-all duration-300 group-hover:translate-x-1 group-hover:text-primary" />
+                          <ChevronRight className="hidden h-4 w-4 text-muted-foreground/30 transition-all duration-300 group-hover:translate-x-1 group-hover:text-primary sm:block" />
                         ) : (
-                          <span className="w-4" />
+                          <span className="hidden w-4 sm:block" />
                         )}
+
                       </div>
                     </div>
                   );

@@ -65,7 +65,7 @@ export function KpiDrilldownDialog({
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[85vh] max-w-2xl flex-col gap-0 overflow-hidden border-border/60 p-0 shadow-2xl">
+      <DialogContent className="flex max-h-[88vh] w-[calc(100vw-1.5rem)] max-w-2xl flex-col gap-0 overflow-hidden border-border/60 p-0 shadow-2xl sm:max-h-[85vh]">
         <img
           src={agillizaSymbol}
           alt=""
@@ -73,13 +73,13 @@ export function KpiDrilldownDialog({
           draggable={false}
           className="pointer-events-none absolute left-1/2 top-1/2 h-[320px] w-auto -translate-x-1/2 -translate-y-1/2 select-none opacity-[0.035] dark:opacity-[0.06]"
         />
-        <DialogHeader className="relative shrink-0 space-y-1 border-b border-border/60 bg-gradient-to-br from-primary/[0.06] via-background to-background px-7 pt-6 pb-5">
+        <DialogHeader className="relative shrink-0 space-y-1 border-b border-border/60 bg-gradient-to-br from-primary/[0.06] via-background to-background px-4 pt-5 pb-4 sm:px-7 sm:pt-6 sm:pb-5">
           <span className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 pr-8">
             {Icon && (
               <span
                 className={cn(
-                  "grid size-9 place-items-center rounded-xl ring-1 ring-inset ring-border/50",
+                  "grid size-9 shrink-0 place-items-center rounded-xl ring-1 ring-inset ring-border/50",
                   toneRing[tone],
                 )}
               >
@@ -87,11 +87,11 @@ export function KpiDrilldownDialog({
               </span>
             )}
             <div className="min-w-0 flex-1">
-              <DialogTitle className="text-[15px] font-semibold tracking-tight text-foreground">
+              <DialogTitle className="text-sm font-semibold tracking-tight text-foreground sm:text-[15px]">
                 {titulo}
               </DialogTitle>
               {(subtitulo || descricao) && (
-                <DialogDescription className="text-[13px] leading-relaxed text-muted-foreground">
+                <DialogDescription className="text-xs leading-relaxed text-muted-foreground sm:text-[13px]">
                   {subtitulo}
                   {subtitulo && descricao ? " · " : ""}
                   {descricao}
@@ -101,12 +101,13 @@ export function KpiDrilldownDialog({
           </div>
           {valor && (
             <div className="mt-3">
-              <span className="font-mono text-[34px] font-semibold leading-none tabular-nums text-foreground">
+              <span className="font-mono text-[26px] font-semibold leading-none tabular-nums text-foreground sm:text-[34px]">
                 {valor}
               </span>
             </div>
           )}
         </DialogHeader>
+
 
         <ScrollArea className="min-h-0 flex-1">
           <div className="px-3 py-2">
