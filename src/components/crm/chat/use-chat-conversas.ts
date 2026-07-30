@@ -208,7 +208,9 @@ export function useChatConversas() {
 
   const filtradas = useMemo(() => {
     const t = busca.trim().toLowerCase();
-    let lista = conversas ?? [];
+    let lista = (conversas ?? []).filter(
+      (c) => !ocultaCliente(c.cliente_id, c.ultima_em),
+    );
     if (t) {
       lista = lista.filter(
         (c) =>
