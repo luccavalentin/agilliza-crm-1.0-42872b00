@@ -18,6 +18,8 @@ import {
   FichaHolerites,
 } from "@/components/rh/ficha-tabs";
 import { FichaDependentes } from "@/components/rh/ficha-dependentes";
+import { FichaPreviaFolha } from "@/components/rh/ficha-previa-folha";
+
 import {
   FichaAdiantamentos,
   FichaDescontos,
