@@ -440,6 +440,30 @@ export type Database = {
           },
         ]
       }
+      cliente_app_conversas_estado: {
+        Row: {
+          atendente_id: string
+          cliente_id: string
+          id: string
+          oculto_em: string | null
+          updated_at: string
+        }
+        Insert: {
+          atendente_id: string
+          cliente_id: string
+          id?: string
+          oculto_em?: string | null
+          updated_at?: string
+        }
+        Update: {
+          atendente_id?: string
+          cliente_id?: string
+          id?: string
+          oculto_em?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       cliente_app_mensagens: {
         Row: {
           anexo_url: string | null
@@ -7164,6 +7188,10 @@ export type Database = {
       }
       portal_meus_documentos: { Args: { _cid: string }; Returns: Json }
       portal_minhas_propostas: { Args: { _cid: string }; Returns: Json }
+      portal_ocultar_conversa: {
+        Args: { _atendente: string; _cid: string; _ocultar?: boolean }
+        Returns: Json
+      }
       portal_reagir_mensagem: {
         Args: { _cid: string; _emoji: string; _mensagem_id: string }
         Returns: Json

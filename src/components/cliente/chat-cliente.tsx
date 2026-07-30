@@ -12,6 +12,7 @@ import {
   Search,
   Phone,
   MoreVertical,
+  Trash2,
 } from "lucide-react";
 import {
   clienteListarAtendentes,
@@ -20,6 +21,7 @@ import {
   clienteReagirMensagem,
   clienteEditarMensagem,
   clienteExcluirMensagem,
+  clienteExcluirConversa,
 
   clienteEnviarMensagemAnexo,
   clienteMarcarLida,
@@ -32,6 +34,12 @@ import { TypingIndicator } from "@/components/shared/typing-indicator";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { VisualizadorArquivo } from "@/components/comum/visualizador-arquivo";
 import { cn } from "@/lib/utils";
 
@@ -103,6 +111,7 @@ const ALTURA_PADRAO = "h-[calc(100dvh-10.5rem)] min-h-[24rem] sm:h-[calc(100dvh-
 
 export function ChatCliente({ altura = ALTURA_PADRAO }: { altura?: string }) {
   const [atendenteSel, setAtendenteSel] = useState<AtendenteCliente | null>(null);
+  const qcLista = useQueryClient();
 
   const { data: atendentes } = useQuery({
     queryKey: ["cliente", "atendentes"],
@@ -132,15 +141,26 @@ export function ChatCliente({ altura = ALTURA_PADRAO }: { altura?: string }) {
 
   const multiplos = (atendentes?.length ?? 0) > 1;
 
+  const excluirConversaLista = useMutation({
+    mutationFn: (atendente_id: string) => clienteExcluirConversa({ data: { atendente_id } }),
+    onSuccess: () => {
+      toast.success("Conversa excluída da sua lista.");
+      qcLista.invalidateQueries({ queryKey: ["cliente", "atendentes"] });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Não foi possível excluir a conversa."),
+  });
+
   if (!atendenteSel) {
     return (
       <ListaAtendentes
         atendentes={atendentes ?? []}
         altura={altura}
         onSelecionar={setAtendenteSel}
+        onExcluir={(a) => excluirConversaLista.mutate(a.atendente_id)}
       />
     );
   }
+
 
   return (
     <ThreadChat
@@ -157,10 +177,12 @@ function ListaAtendentes({
   atendentes,
   altura,
   onSelecionar,
+  onExcluir,
 }: {
   atendentes: AtendenteCliente[];
   altura: string;
   onSelecionar: (a: AtendenteCliente) => void;
+  onExcluir: (a: AtendenteCliente) => void;
 }) {
   return (
     <div
@@ -185,50 +207,66 @@ function ListaAtendentes({
           </div>
         ) : (
           atendentes.map((a) => (
-            <button
+            <div
               key={a.atendente_id}
-              type="button"
-              onClick={() => onSelecionar(a)}
-              className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors hover:bg-muted/60 active:bg-muted"
+              className="group relative flex w-full items-center transition-colors hover:bg-muted/60"
             >
-              <div className="relative shrink-0">
-                <Avatar className="h-12 w-12">
-                  {a.foto_url ? <AvatarImage src={a.foto_url} alt={a.nome} /> : null}
-                  <AvatarFallback className="bg-primary/10 text-sm font-semibold text-primary">
-                    {iniciais(a.nome)}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-card bg-emerald-500" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center justify-between gap-2">
-                  <p className="truncate text-sm font-semibold text-foreground">{a.nome}</p>
-                  {a.ultima_em ? (
-                    <span className="shrink-0 text-[11px] text-muted-foreground">
-                      {horaCurta(a.ultima_em)}
-                    </span>
-                  ) : null}
+              <button
+                type="button"
+                onClick={() => onSelecionar(a)}
+                className="flex min-w-0 flex-1 items-center gap-3 px-4 py-3.5 pr-12 text-left"
+              >
+                <div className="relative shrink-0">
+                  <Avatar className="h-12 w-12">
+                    {a.foto_url ? <AvatarImage src={a.foto_url} alt={a.nome} /> : null}
+                    <AvatarFallback className="bg-primary/10 text-sm font-semibold text-primary">
+                      {iniciais(a.nome)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-card bg-emerald-500" />
                 </div>
-                <div className="mt-0.5 flex items-center justify-between gap-2">
-                  <p
-                    className={cn(
-                      "truncate text-xs",
-                      a.nao_lidas > 0
-                        ? "font-medium text-foreground"
-                        : "text-muted-foreground",
-                    )}
-                  >
-                    {a.ultima_mensagem || "Iniciar conversa"}
-                  </p>
-                  {a.nao_lidas > 0 ? (
-                    <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-semibold text-primary-foreground">
-                      {a.nao_lidas}
-                    </span>
-                  ) : null}
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="truncate text-sm font-semibold text-foreground">{a.nome}</p>
+                    {a.ultima_em ? (
+                      <span className="shrink-0 text-[11px] text-muted-foreground">
+                        {horaCurta(a.ultima_em)}
+                      </span>
+                    ) : null}
+                  </div>
+                  <div className="mt-0.5 flex items-center justify-between gap-2">
+                    <p
+                      className={cn(
+                        "truncate text-xs",
+                        a.nao_lidas > 0
+                          ? "font-medium text-foreground"
+                          : "text-muted-foreground",
+                      )}
+                    >
+                      {a.ultima_mensagem || "Iniciar conversa"}
+                    </p>
+                    {a.nao_lidas > 0 ? (
+                      <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-semibold text-primary-foreground">
+                        {a.nao_lidas}
+                      </span>
+                    ) : null}
+                  </div>
                 </div>
-              </div>
-            </button>
+              </button>
+              <button
+                type="button"
+                aria-label={`Excluir conversa com ${a.nome}`}
+                onClick={() => {
+                  if (!window.confirm("Excluir esta conversa da sua lista?")) return;
+                  onExcluir(a);
+                }}
+                className="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-background/90 text-muted-foreground opacity-100 shadow-sm backdrop-blur transition hover:bg-destructive/10 hover:text-destructive sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </div>
           ))
+
         )}
       </div>
     </div>
@@ -299,6 +337,17 @@ export function ThreadChat({
     },
     onError: (e: any) => toast.error(e?.message ?? "Não foi possível excluir a mensagem."),
   });
+
+  const excluirConversa = useMutation({
+    mutationFn: () => clienteExcluirConversa({ data: { atendente_id: atendenteId } }),
+    onSuccess: () => {
+      toast.success("Conversa excluída da sua lista.");
+      qc.invalidateQueries({ queryKey: ["cliente", "atendentes"] });
+      onVoltar();
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Não foi possível excluir a conversa."),
+  });
+
 
   const reagir = useMutation({
     mutationFn: (p: { mensagem_id: string; emoji: string }) =>
@@ -472,11 +521,30 @@ export function ThreadChat({
               <Button variant="outline" size="icon" className="h-9 w-9 rounded-full" aria-label="Ligar">
                 <Phone className="h-4 w-4" />
               </Button>
-              <Button variant="outline" size="icon" className="h-9 w-9 rounded-full" aria-label="Mais opções">
-                <MoreVertical className="h-4 w-4" />
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="icon" className="h-9 w-9 rounded-full" aria-label="Mais opções">
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-52">
+                  <DropdownMenuItem
+                    className="text-destructive focus:text-destructive"
+                    disabled={excluirConversa.isPending}
+                    onSelect={(e) => {
+                      e.preventDefault();
+                      if (!window.confirm("Excluir esta conversa da sua lista?")) return;
+                      excluirConversa.mutate();
+                    }}
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Excluir conversa
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           )}
+
         </div>
       )}
 
