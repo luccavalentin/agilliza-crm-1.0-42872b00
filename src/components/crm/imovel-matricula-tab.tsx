@@ -21,6 +21,20 @@ const UFS = [
   "MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO",
 ];
 
+/** Aceita boolean ou texto ("Sim"/"Não") vindo da leitura por IA. */
+function ehVerdadeiro(v: unknown): boolean {
+  if (typeof v === "boolean") return v;
+  if (typeof v !== "string") return false;
+  const t = v
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLowerCase();
+  if (!t) return false;
+  return !/^(nao|n|false|0|nenhum|nenhuma|inexistente|sem)\b/.test(t);
+}
+
+
 /**
  * Estrutura dos "Dados da matrícula" do imóvel — campos avaliados pelos
  * bancos ao analisar uma matrícula para fins de financiamento imobiliário
