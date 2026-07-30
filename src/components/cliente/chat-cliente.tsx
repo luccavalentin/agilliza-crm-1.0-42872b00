@@ -20,7 +20,7 @@ import {
   clienteEnviarMensagem,
   clienteReagirMensagem,
   clienteEditarMensagem,
-  clienteExcluirMensagem,
+  clienteExcluirConversa,
 
   clienteEnviarMensagemAnexo,
   clienteMarcarLida,
