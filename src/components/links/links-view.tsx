@@ -40,6 +40,7 @@ import {
 import { OpHero, OpStat } from "@/components/operacional/ui";
 import { CategoriasLinksDialog } from "@/components/links/categorias-dialog";
 import { iconeCategoria, classeCategoria } from "@/lib/links/categorias-icones";
+import { logoUrlDoBanco } from "@/components/bancos/banco-logo";
 import { cn } from "@/lib/utils";
 import {
   Select,
