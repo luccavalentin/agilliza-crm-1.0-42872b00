@@ -306,54 +306,6 @@ function Pagina() {
         </div>
         <div className="flex flex-wrap gap-2">
           <HoleriteBuilderDialog />
-          <Dialog open={openGerar} onOpenChange={setOpenGerar}>
-            <DialogTrigger asChild>
-              <Button variant="outline">
-                <Sparkles className="mr-2 h-4 w-4" /> Gerar da competência
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Gerar holerites em PDF</DialogTitle>
-              </DialogHeader>
-              <div className="grid gap-3">
-                <p className="text-sm text-muted-foreground">
-                  A competência precisa estar <strong>fechada</strong> na Prévia da Folha.
-                  Um PDF será gerado, anexado e armazenado por funcionário.
-                </p>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="space-y-1.5">
-                    <Label>Mês</Label>
-                    <Select
-                      value={String(gerarForm.mes)}
-                      onValueChange={(v) => setGerarForm((p) => ({ ...p, mes: Number(v) }))}
-                    >
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        {MESES.map((m, i) => (
-                          <SelectItem key={m} value={String(i + 1)}>{m}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label>Ano</Label>
-                    <YearPicker
-                      value={gerarForm.ano}
-                      onChange={(a) => setGerarForm((p) => ({ ...p, ano: a }))}
-                    />
-                  </div>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setOpenGerar(false)}>Cancelar</Button>
-                <Button onClick={() => gerar.mutate()} disabled={gerar.isPending}>
-                  <FileDown className="mr-2 h-4 w-4" />
-                  {gerar.isPending ? "Gerando…" : "Gerar e anexar"}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
 
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
