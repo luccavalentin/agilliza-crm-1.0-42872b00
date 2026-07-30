@@ -192,6 +192,7 @@ async function carregarContratosCliente(
     supabase
       .from("clientes")
       .select("id,contrato_emitido_em,imovel_valor")
+      .is("deleted_at", null)
       .not("contrato_emitido_em", "is", null)
       .gte("contrato_emitido_em", de)
       .lte("contrato_emitido_em", ate)
@@ -406,6 +407,7 @@ export const getPanelDados = createServerFn({ method: "POST" })
           supabase
             .from("clientes")
             .select("id,created_at,contrato_emitido_em,responsavel_id")
+            .is("deleted_at", null)
             .gte("created_at", de)
             .lte("created_at", ateFim)
             .limit(5000),
@@ -1188,6 +1190,7 @@ export const getPanelDrilldown = createServerFn({ method: "POST" })
         supabase
           .from("clientes")
           .select("id,nome,contrato_emitido_em,imovel_valor")
+          .is("deleted_at", null)
           .not("contrato_emitido_em", "is", null)
           .gte("contrato_emitido_em", de)
           .lte("contrato_emitido_em", ate)
@@ -1498,6 +1501,7 @@ export const getPanelDrilldown = createServerFn({ method: "POST" })
         supabase
           .from("clientes")
           .select("id,nome,documento,created_at,telefone_celular")
+          .is("deleted_at", null)
           .gte("created_at", de)
           .lte("created_at", ateFim)
           .order("created_at", { ascending: false })
