@@ -77,7 +77,15 @@ function CampoNum({
   );
 }
 
-export function HoleriteBuilderDialog({ trigger }: { trigger?: React.ReactNode }) {
+export function HoleriteBuilderDialog({
+  trigger,
+  funcionarioFixo,
+}: {
+  trigger?: React.ReactNode;
+  /** Quando informado, o holerite já abre travado neste funcionário (ficha individual). */
+  funcionarioFixo?: string;
+}) {
+
   const qc = useQueryClient();
   const hoje = new Date();
   const fnFunc = useServerFn(obterFuncionario);
