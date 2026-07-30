@@ -142,6 +142,7 @@ function ConsultorIaPage() {
       if (erro) throw new Error(erro);
       await qc.invalidateQueries({ queryKey: ["consultor-ia-mensagens", idConversa] });
       await qc.invalidateQueries({ queryKey: ["consultor-ia-conversas"] });
+      await qc.invalidateQueries({ queryKey: ["consultor-ia-base-perguntas"] });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Falha ao consultar a IA.");
     } finally {
