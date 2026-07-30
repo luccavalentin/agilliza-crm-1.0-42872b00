@@ -400,12 +400,17 @@ export function FuncionarioForm({ inicial }: { inicial?: Funcionario | null }) {
       </Card>
 
       <Tabs value={tab} onValueChange={setTab}>
-        <TabsList className="flex flex-wrap">
-          <TabsTrigger value="pessoal">Dados pessoais</TabsTrigger>
-          <TabsTrigger value="endereco">Endereço</TabsTrigger>
-          <TabsTrigger value="profissional">Profissional</TabsTrigger>
-          <TabsTrigger value="bancario">Bancário</TabsTrigger>
-        </TabsList>
+        {/* Barra única de navegação da ficha: cadastro + submódulos.
+            Em telas pequenas rola horizontalmente; a partir de lg quebra em linhas. */}
+        <div className="sticky top-0 z-20 -mx-3 bg-background/85 px-3 py-2 backdrop-blur supports-[backdrop-filter]:bg-background/70 sm:-mx-4 sm:px-4 md:-mx-6 md:px-6">
+          <TabsList className="flex h-auto w-full justify-start gap-1 overflow-x-auto rounded-xl border border-border/60 bg-muted/50 p-1 [scrollbar-width:none] lg:flex-wrap lg:overflow-visible [&::-webkit-scrollbar]:hidden">
+            <TabsTrigger value="pessoal" className={ABA_CLASS}>Dados pessoais</TabsTrigger>
+            <TabsTrigger value="endereco" className={ABA_CLASS}>Endereço</TabsTrigger>
+            <TabsTrigger value="profissional" className={ABA_CLASS}>Profissional</TabsTrigger>
+            <TabsTrigger value="bancario" className={ABA_CLASS}>Bancário</TabsTrigger>
+            {abasExtras}
+          </TabsList>
+        </div>
 
         <TabsContent value="pessoal" className="mt-4">
           <Card>
