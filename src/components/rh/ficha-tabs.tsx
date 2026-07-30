@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Link } from "@tanstack/react-router";
-import { Calculator, Download, ExternalLink, Eye, Trash2, Upload } from "lucide-react";
+import { Calculator, Download, ExternalLink, Eye, Pencil, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { HoleriteBuilderDialog } from "@/components/rh/holerite-builder-dialog";
@@ -499,6 +499,8 @@ export function FichaHolerites({ funcionarioId }: { funcionarioId: string }) {
     onError: (e: any) => toast.error(e?.message ?? "Falha ao anexar."),
   });
 
+  const [emEdicao, setEmEdicao] = useState<any | null>(null);
+
   const remover = useMutation({
     mutationFn: (id: string) => fnExcluir({ data: { id } }),
     onSuccess: () => {
@@ -609,6 +611,14 @@ export function FichaHolerites({ funcionarioId }: { funcionarioId: string }) {
                 {h.valor_liquido !== null ? formatBRL(h.valor_liquido) : "—"}
               </TableCell>
               <TableCell className="text-right">
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  title="Editar holerite"
+                  onClick={() => setEmEdicao(h)}
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
                 <Button size="icon" variant="ghost" title="Visualizar" onClick={() => abrir(h.arquivo_path)}>
                   <Eye className="h-4 w-4" />
                 </Button>
@@ -634,6 +644,23 @@ export function FichaHolerites({ funcionarioId }: { funcionarioId: string }) {
           ))}
         </TableBody>
       </Table>
+      {emEdicao && (
+        <HoleriteBuilderDialog
+          key={emEdicao.id}
+          trigger={null}
+          open
+          onOpenChange={(v) => {
+            if (!v) setEmEdicao(null);
+          }}
+          edicao={{
+            id: emEdicao.id,
+            funcionario_id: emEdicao.funcionario_id,
+            mes: emEdicao.mes,
+            ano: emEdicao.ano,
+            entrada: emEdicao.entrada ?? null,
+          }}
+        />
+      )}
     </Chrome>
   );
 }
