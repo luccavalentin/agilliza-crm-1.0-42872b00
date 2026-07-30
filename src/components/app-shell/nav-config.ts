@@ -512,6 +512,12 @@ export const navInterno: NavGroup[] = [
             perm: { modulo: "admin.integracoes" },
           },
           {
+            label: "Base do Consultor IA",
+            icon: BookOpen,
+            to: "/admin/consultor-ia-base",
+            perm: { modulo: "admin.parametros" },
+          },
+          {
             label: "Backup",
             icon: DatabaseBackup,
             to: "/admin/backup",
