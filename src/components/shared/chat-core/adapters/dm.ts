@@ -10,6 +10,12 @@ import {
 } from "@/lib/chats/central.functions";
 import { reagirMensagem } from "@/lib/chat-core/reacoes.functions";
 import { getMinhaSessao } from "@/lib/session.functions";
+import { supabase } from "@/integrations/supabase/client";
+
+const IMG_EXT = /\.(png|jpe?g|gif|webp|bmp|heic|heif|svg)$/i;
+
+/** Guarda o nome original do arquivo enviado para exibir na bolha. */
+const nomesAnexo = new Map<string, string>();
 
 import type {
   ChatAdapter,
@@ -165,9 +171,6 @@ export function useAdaptadorDm({
       // Um papel único por usuário permite múltiplos "digitando" simultâneos.
       typing: { id: conversaId, myRole: meuId ?? "eu" },
 
-      uploadAnexo: async () => {
-        throw new Error("Anexo indisponível em mensagens diretas.");
-      },
     }),
     [
       conversaId,
