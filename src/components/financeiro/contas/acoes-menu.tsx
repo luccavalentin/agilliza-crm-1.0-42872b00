@@ -17,6 +17,7 @@ export function AcoesMenu({
   conta,
   tipo,
   onDetalhe,
+  onEditar,
   onBaixar,
   onEstornar,
   onCancelar,
@@ -25,6 +26,7 @@ export function AcoesMenu({
   conta: any;
   tipo: ContaTipo;
   onDetalhe: () => void;
+  onEditar: () => void;
   onBaixar: () => void;
   onEstornar: () => void;
   onCancelar: () => void;
@@ -39,6 +41,7 @@ export function AcoesMenu({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem onClick={onDetalhe}>Ver detalhes</DropdownMenuItem>
+        <DropdownMenuItem onClick={onEditar}>Editar</DropdownMenuItem>
         {conta.status !== "paga" &&
           conta.status !== "cancelada" &&
           conta.status !== "estornada" && (

@@ -27,6 +27,7 @@ interface Item {
 
 export interface ContasAcoes {
   onDetalhe: (id: string) => void;
+  onEditar: (id: string) => void;
   onBaixar: (conta: Item) => void;
   onEstornar: (id: string) => void;
   onCancelar: (id: string) => void;
@@ -125,6 +126,7 @@ export function ContasTabela({
                     conta={c}
                     tipo={tipo}
                     onDetalhe={() => acoes.onDetalhe(c.id)}
+                    onEditar={() => acoes.onEditar(c.id)}
                     onBaixar={() => acoes.onBaixar(c)}
                     onEstornar={() => acoes.onEstornar(c.id)}
                     onCancelar={() => acoes.onCancelar(c.id)}
