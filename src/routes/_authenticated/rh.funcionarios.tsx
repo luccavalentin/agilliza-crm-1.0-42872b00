@@ -1,19 +1,31 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
-import { Users, UserPlus, Search } from "lucide-react";
+import { toast } from "sonner";
+import { Users, UserPlus, Search, Pencil, Trash2 } from "lucide-react";
 import { assertModuloPermitido } from "@/lib/route-guards";
-import { listarFuncionarios } from "@/lib/rh/funcionarios.functions";
+import { listarFuncionarios, excluirFuncionario } from "@/lib/rh/funcionarios.functions";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { StatusFuncionarioBadge } from "@/components/rh/status-badge";
 import { formatBRL } from "@/lib/financeiro/format";
+
 
 export const Route = createFileRoute("/_authenticated/rh/funcionarios")({
   head: () => ({ meta: [{ title: "Funcionários — Agilliza" }] }),
