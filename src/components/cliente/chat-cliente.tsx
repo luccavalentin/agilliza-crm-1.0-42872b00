@@ -165,10 +165,12 @@ function ListaAtendentes({
   atendentes,
   altura,
   onSelecionar,
+  onExcluir,
 }: {
   atendentes: AtendenteCliente[];
   altura: string;
   onSelecionar: (a: AtendenteCliente) => void;
+  onExcluir: (a: AtendenteCliente) => void;
 }) {
   return (
     <div
