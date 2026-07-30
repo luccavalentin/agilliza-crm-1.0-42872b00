@@ -17,7 +17,9 @@ import {
 import { BancoLogo } from "@/components/bancos/banco-logo";
 import { NovaConciliacaoDialog } from "@/components/conciliacao/nova-conciliacao-dialog";
 import { ComparadorPlanilhasDialog } from "@/components/conciliacao/comparador-planilhas-dialog";
-import { LoteDetalhe, type FiltroLote } from "@/components/conciliacao/lote-detalhe";
+import { ComparativoConsolidado } from "@/components/conciliacao/comparativo-consolidado";
+import { MultiSelect } from "@/components/conciliacao/multi-select";
+import { RESULTADO_LABEL, type ResultadoConciliacao } from "@/lib/conciliacao/tipos";
 import {
   excluirLoteConciliacao,
   listarLotesConciliacao,
@@ -65,21 +67,30 @@ function Pagina() {
   const excluir = useServerFn(excluirLoteConciliacao);
 
   const [periodo, setPeriodo] = useState(mesAtual());
-  const [banco, setBanco] = useState<string>("todos");
+  const [bancos, setBancos] = useState<string[]>([]);
   const [aberto, setAberto] = useState(false);
   const [comparador, setComparador] = useState(false);
-  const [loteSelecionado, setLoteSelecionado] = useState<string | null>(null);
-  const [filtroResultado, setFiltroResultado] = useState<FiltroLote>("divergente");
+  const [lotesSelecionados, setLotesSelecionados] = useState<string[]>([]);
+  const [resultados, setResultados] = useState<ResultadoConciliacao[]>([]);
 
-  const filtros = {
-    periodo: periodo || null,
-    banco: banco === "todos" ? null : banco,
-  };
+  const filtros = { periodo: periodo || null, banco: null };
 
-  const { data: lotes = [] } = useQuery({
+  const { data: todosLotes = [] } = useQuery({
     queryKey: ["conciliacao-lotes", filtros],
     queryFn: () => listar({ data: filtros }),
   });
+
+  /** Lotes visíveis conforme os bancos escolhidos (vazio = todos). */
+  const lotes = useMemo(
+    () => (bancos.length ? todosLotes.filter((l) => bancos.includes(l.banco_nome)) : todosLotes),
+    [todosLotes, bancos],
+  );
+
+  /** Lotes efetivamente considerados no detalhamento/exportação. */
+  const lotesAtivos = useMemo(
+    () => (lotesSelecionados.length ? lotes.filter((l) => lotesSelecionados.includes(l.id)) : lotes),
+    [lotes, lotesSelecionados],
+  );
 
   const { data: resumos = [] } = useQuery({
     queryKey: ["conciliacao-resumo", periodo],
@@ -87,8 +98,8 @@ function Pagina() {
   });
 
   const resumosVisiveis = useMemo(
-    () => (banco === "todos" ? resumos : resumos.filter((r) => r.banco_nome === banco)),
-    [resumos, banco],
+    () => (bancos.length ? resumos.filter((r) => bancos.includes(r.banco_nome)) : resumos),
+    [resumos, bancos],
   );
 
   const totais = useMemo(
@@ -105,8 +116,6 @@ function Pagina() {
       ),
     [resumosVisiveis],
   );
-
-  const lote = lotes.find((l) => l.id === loteSelecionado) ?? lotes[0] ?? null;
 
   /** Lotes agrupados por banco, para leitura organizada. */
   const lotesPorBanco = useMemo(() => {
@@ -126,22 +135,22 @@ function Pagina() {
 
   const filtrosAtivos =
     periodo !== mesAtual() ||
-    banco !== "todos" ||
-    filtroResultado !== "divergente" ||
-    loteSelecionado !== null;
+    bancos.length > 0 ||
+    resultados.length > 0 ||
+    lotesSelecionados.length > 0;
 
   function limpar() {
     setPeriodo(mesAtual());
-    setBanco("todos");
-    setFiltroResultado("divergente");
-    setLoteSelecionado(null);
+    setBancos([]);
+    setResultados([]);
+    setLotesSelecionados([]);
     toast.success("Filtros limpos.");
   }
 
   async function remover(id: string) {
     try {
       await excluir({ data: { loteId: id } });
-      if (loteSelecionado === id) setLoteSelecionado(null);
+      setLotesSelecionados((p) => p.filter((x) => x !== id));
       invalidar();
       toast.success("Lote removido.");
     } catch (e) {
@@ -149,12 +158,17 @@ function Pagina() {
     }
   }
 
-  const kpis: { label: string; valor: number; tone: string; filtro: FiltroLote }[] = [
+  const kpis: {
+    label: string;
+    valor: number;
+    tone: string;
+    filtro: ResultadoConciliacao | null;
+  }[] = [
     {
       label: "Linhas conciliadas",
       valor: totais.total,
       tone: "bg-muted-foreground/40",
-      filtro: "todos",
+      filtro: null,
     },
     { label: "Conferidas", valor: totais.conferidas, tone: "bg-emerald-500", filtro: "conferido" },
     { label: "Divergentes", valor: totais.divergentes, tone: "bg-amber-500", filtro: "divergente" },
@@ -214,27 +228,36 @@ function Pagina() {
           <label className="text-[11px] uppercase tracking-wide text-muted-foreground">
             Banco
           </label>
-          <Select value={banco} onValueChange={setBanco}>
-            <SelectTrigger className="h-9 w-56">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="todos">
-                <span className="flex items-center gap-2">
-                  <FileSpreadsheet className="h-4 w-4 opacity-60" />
-                  Todos os bancos
-                </span>
-              </SelectItem>
-              {BANCOS_CONCILIACAO.map((b) => (
-                <SelectItem key={b.id} value={b.label}>
-                  <span className="flex items-center gap-2">
-                    <BancoLogo nome={b.label} size="sm" />
-                    {b.label}
-                  </span>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <MultiSelect
+            className="w-64"
+            placeholder="Todos os bancos"
+            valores={bancos}
+            onChange={setBancos}
+            opcoes={BANCOS_CONCILIACAO.map((b) => ({
+              value: b.label,
+              label: b.label,
+              icone: <BancoLogo nome={b.label} size="sm" />,
+            }))}
+          />
+        </div>
+        <div className="space-y-1">
+          <label className="text-[11px] uppercase tracking-wide text-muted-foreground">
+            Resultado
+          </label>
+          <MultiSelect
+            className="w-56"
+            placeholder="Todos os resultados"
+            valores={resultados}
+            onChange={(v) => setResultados(v as ResultadoConciliacao[])}
+            opcoes={(
+              [
+                "conferido",
+                "divergente",
+                "ausente_no_sistema",
+                "ausente_no_banco",
+              ] as ResultadoConciliacao[]
+            ).map((r) => ({ value: r, label: RESULTADO_LABEL[r] }))}
+          />
         </div>
         {filtrosAtivos && (
           <Button variant="ghost" className="h-9" onClick={limpar}>
@@ -246,17 +269,25 @@ function Pagina() {
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
         {kpis.map((k) => {
-          const ativo = filtroResultado === k.filtro;
+          const ativo = k.filtro ? resultados.includes(k.filtro) : resultados.length === 0;
+          const aplicar = () => {
+            if (!k.filtro) return setResultados([]);
+            setResultados(
+              resultados.includes(k.filtro)
+                ? resultados.filter((r) => r !== k.filtro)
+                : [...resultados, k.filtro],
+            );
+          };
           return (
             <Card
               key={k.label}
               role="button"
               tabIndex={0}
-              onClick={() => setFiltroResultado(k.filtro)}
+              onClick={aplicar}
               onKeyDown={(e) => {
                 if (e.key === "Enter" || e.key === " ") {
                   e.preventDefault();
-                  setFiltroResultado(k.filtro);
+                  aplicar();
                 }
               }}
               className={`relative cursor-pointer overflow-hidden p-4 transition hover:-translate-y-0.5 hover:shadow-md ${
@@ -285,15 +316,25 @@ function Pagina() {
                 key={r.banco_nome}
                 role="button"
                 tabIndex={0}
-                onClick={() => setBanco(banco === r.banco_nome ? "todos" : r.banco_nome)}
+                onClick={() =>
+                  setBancos(
+                    bancos.includes(r.banco_nome)
+                      ? bancos.filter((b) => b !== r.banco_nome)
+                      : [...bancos, r.banco_nome],
+                  )
+                }
                 onKeyDown={(e) => {
                   if (e.key === "Enter" || e.key === " ") {
                     e.preventDefault();
-                    setBanco(banco === r.banco_nome ? "todos" : r.banco_nome);
+                    setBancos(
+                      bancos.includes(r.banco_nome)
+                        ? bancos.filter((b) => b !== r.banco_nome)
+                        : [...bancos, r.banco_nome],
+                    );
                   }
                 }}
                 className={`cursor-pointer p-4 transition hover:-translate-y-0.5 hover:shadow-md ${
-                  banco === r.banco_nome ? "border-primary ring-1 ring-primary/30" : ""
+                  bancos.includes(r.banco_nome) ? "border-primary ring-1 ring-primary/30" : ""
                 }`}
               >
                 <div className="flex items-center justify-between gap-2">
@@ -343,12 +384,18 @@ function Pagina() {
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {lista.map((l) => {
-                    const ativo = lote?.id === l.id;
+                    const ativo = lotesSelecionados.includes(l.id);
                     return (
                       <button
                         key={l.id}
                         type="button"
-                        onClick={() => setLoteSelecionado(l.id)}
+                        onClick={() =>
+                          setLotesSelecionados(
+                            ativo
+                              ? lotesSelecionados.filter((x) => x !== l.id)
+                              : [...lotesSelecionados, l.id],
+                          )
+                        }
                         className={`group flex items-center gap-3 rounded-lg border px-3 py-2 text-left transition ${
                           ativo ? "border-primary bg-primary/5" : "hover:bg-muted/50"
                         }`}
@@ -379,8 +426,13 @@ function Pagina() {
         )}
       </section>
 
-      {lote && (
-        <LoteDetalhe lote={lote} filtro={filtroResultado} onFiltroChange={setFiltroResultado} />
+      {lotesAtivos.length > 0 && (
+        <ComparativoConsolidado
+          lotes={lotesAtivos}
+          resultados={resultados}
+          onResultadosChange={setResultados}
+          periodoLabel={fmtPeriodo(periodo || mesAtual())}
+        />
       )}
 
 
@@ -391,7 +443,7 @@ function Pagina() {
         onOpenChange={setAberto}
         periodoPadrao={periodo || mesAtual()}
         onConcluido={(id) => {
-          setLoteSelecionado(id);
+          setLotesSelecionados([id]);
           invalidar();
         }}
       />
