@@ -17,6 +17,7 @@ import {
   clienteListarAtendentes,
   clienteListarMensagens,
   clienteEnviarMensagem,
+  clienteReagirMensagem,
   clienteEnviarMensagemAnexo,
   clienteMarcarLida,
   type AtendenteCliente,
@@ -267,11 +268,26 @@ export function ThreadChat({
   const { peerTyping, notifyTyping, notifyStop } = useChatTyping(atendenteId, "cliente");
   const { peerOnline } = useChatPresence(atendenteId, "cliente");
 
+  const [respondendo, setRespondendo] = useState<{ id: string; autor: string; texto: string } | null>(
+    null,
+  );
+
+  const reagir = useMutation({
+    mutationFn: (p: { mensagem_id: string; emoji: string }) =>
+      clienteReagirMensagem({ data: p }),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: ["cliente", "mensagens", atendenteId] }),
+    onError: () => toast.error("Não foi possível registrar a reação."),
+  });
+
   const enviar = useMutation({
     mutationFn: (mensagem: string) =>
-      clienteEnviarMensagem({ data: { atendente_id: atendenteId, mensagem } }),
+      clienteEnviarMensagem({
+        data: { atendente_id: atendenteId, mensagem, responde_a: respondendo?.id ?? null },
+      }),
     onSuccess: () => {
       setTexto("");
+      setRespondendo(null);
       qc.invalidateQueries({ queryKey: ["cliente", "mensagens", atendenteId] });
       qc.invalidateQueries({ queryKey: ["cliente", "atendentes"] });
     },
@@ -498,6 +514,21 @@ export function ThreadChat({
                         <p className="px-3.5 py-2 text-sm italic opacity-70">Mensagem excluída</p>
                       ) : (
                         <>
+                          {m.citacao ? (
+                            <div
+                              className={cn(
+                                "mx-2 mt-2 rounded-lg border-l-2 px-2 py-1 text-[11px]",
+                                doCliente
+                                  ? "border-primary-foreground/50 bg-primary-foreground/10"
+                                  : "border-primary/50 bg-primary/5",
+                              )}
+                            >
+                              <span className="block font-semibold opacity-80">
+                                {m.citacao.autor}
+                              </span>
+                              <span className="line-clamp-2 opacity-80">{m.citacao.texto}</span>
+                            </div>
+                          ) : null}
                           {temAnexo && m.anexo_is_imagem ? (
                             <button
                               type="button"
@@ -534,6 +565,54 @@ export function ThreadChat({
                         </>
                       )}
                     </div>
+                    {!excluida ? (
+                      <div
+                        className={cn(
+                          "mt-0.5 flex flex-wrap items-center gap-1",
+                          doCliente ? "justify-end" : "justify-start",
+                        )}
+                      >
+                        {(m.reacoes ?? []).map((r) => (
+                          <button
+                            key={r.emoji}
+                            type="button"
+                            onClick={() => reagir.mutate({ mensagem_id: m.id, emoji: r.emoji })}
+                            className={cn(
+                              "rounded-full border px-1.5 py-0.5 text-[11px] leading-none transition",
+                              r.mine
+                                ? "border-primary/50 bg-primary/10 text-primary"
+                                : "border-border/60 bg-muted/50 text-muted-foreground",
+                            )}
+                          >
+                            {r.emoji} {r.count}
+                          </button>
+                        ))}
+                        {EMOJIS_RAPIDOS.map((e) => (
+                          <button
+                            key={e}
+                            type="button"
+                            aria-label={`Reagir com ${e}`}
+                            onClick={() => reagir.mutate({ mensagem_id: m.id, emoji: e })}
+                            className="rounded-full px-1 text-[13px] leading-none opacity-40 transition hover:opacity-100"
+                          >
+                            {e}
+                          </button>
+                        ))}
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setRespondendo({
+                              id: m.id,
+                              autor: doCliente ? "Você" : atendente.nome,
+                              texto: (m.mensagem?.trim() || m.anexo_nome || "Anexo").slice(0, 140),
+                            })
+                          }
+                          className="rounded-full px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground transition hover:text-primary"
+                        >
+                          Responder
+                        </button>
+                      </div>
+                    ) : null}
                     <span className="mt-0.5 px-1 text-[10px] text-muted-foreground">
                       {horaMin(m.criada_em)}
                       {m.editada_em && !excluida ? " · editado" : ""}
@@ -583,6 +662,25 @@ export function ThreadChat({
       ) : null}
 
 
+
+      {respondendo ? (
+        <div className="flex shrink-0 items-start gap-2 border-t border-border/60 bg-muted/40 px-3 py-2 text-xs">
+          <div className="min-w-0 flex-1 border-l-2 border-primary/60 pl-2">
+            <span className="block font-semibold text-primary">
+              Respondendo {respondendo.autor}
+            </span>
+            <span className="line-clamp-2 text-muted-foreground">{respondendo.texto}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setRespondendo(null)}
+            className="shrink-0 text-muted-foreground hover:text-foreground"
+            aria-label="Cancelar resposta"
+          >
+            ✕
+          </button>
+        </div>
+      ) : null}
 
       <form
         className="flex shrink-0 items-end gap-1.5 border-t border-border/60 bg-background/95 p-2.5 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:p-3"
