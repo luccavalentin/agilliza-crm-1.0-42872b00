@@ -7099,28 +7099,17 @@ export type Database = {
         Returns: Json
       }
       portal_cliente_sessao: { Args: { _cid: string }; Returns: Json }
-      portal_enviar_mensagem:
-        | {
-            Args: {
-              _anexo: string
-              _atendente: string
-              _cid: string
-              _corr: string
-              _msg: string
-            }
-            Returns: Json
-          }
-        | {
-            Args: {
-              _anexo: string
-              _atendente: string
-              _cid: string
-              _corr: string
-              _msg: string
-              _responde_a?: string
-            }
-            Returns: Json
-          }
+      portal_enviar_mensagem: {
+        Args: {
+          _anexo: string
+          _atendente: string
+          _cid: string
+          _corr: string
+          _msg: string
+          _responde_a?: string
+        }
+        Returns: Json
+      }
       portal_excluir_app_cliente: { Args: { _cid: string }; Returns: Json }
       portal_listar_atendentes: { Args: { _cid: string }; Returns: Json }
       portal_listar_mensagens: {
