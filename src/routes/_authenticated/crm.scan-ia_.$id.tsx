@@ -262,7 +262,11 @@ function Pagina() {
             </div>
 
             {/* 2. Cliente vinculado */}
-            <div className="space-y-3 rounded-lg border border-border bg-card p-4">
+            <div
+              className={`space-y-3 rounded-lg border bg-card p-4 ${
+                d.cliente_id ? "border-border" : "border-warning/60 ring-1 ring-warning/20"
+              }`}
+            >
               <div className="flex items-center justify-between gap-2">
                 <h2 className="text-sm font-semibold">2. Cliente</h2>
                 {d.cliente_id ? (
@@ -272,10 +276,29 @@ function Pagina() {
                 )}
               </div>
 
-              <ClienteCRMPicker
-                selecionado={d.cliente_nome ?? null}
-                onSelect={(c) => vincular.mutate(c.id)}
-              />
+              {!d.cliente_id ? (
+                <div className="flex gap-2 rounded-md border border-warning/50 bg-warning/10 p-3 text-xs">
+                  <AlertTriangle className="h-4 w-4 shrink-0 text-warning" />
+                  <span>
+                    Este documento ainda não pertence a nenhum cliente. Escolha{" "}
+                    <strong>uma das duas opções abaixo</strong> para continuar:{" "}
+                    <strong>A)</strong> buscar um cliente que já existe, ou <strong>B)</strong>{" "}
+                    cadastrar um cliente novo com os dados lidos do documento.
+                  </span>
+                </div>
+              ) : null}
+
+              <div className="space-y-2">
+                {!d.cliente_id ? (
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    A) O cliente já é cadastrado
+                  </p>
+                ) : null}
+                <ClienteCRMPicker
+                  selecionado={d.cliente_nome ?? null}
+                  onSelect={(c) => vincular.mutate(c.id)}
+                />
+              </div>
 
               {d.cliente_id ? (
                 <Button
@@ -287,44 +310,60 @@ function Pagina() {
                   Desvincular
                 </Button>
               ) : (
-                <div className="space-y-2 rounded-md border border-dashed border-border p-3">
-                  <p className="text-xs text-muted-foreground">
-                    Ou crie um cliente novo. Revise nome e CPF/CNPJ antes de salvar — os valores
-                    vieram do documento e podem conter erros de leitura.
-                  </p>
+                <div className="space-y-3 rounded-md border-2 border-dashed border-primary/50 bg-primary/5 p-4">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-primary">
+                      B) O cliente ainda NÃO tem cadastro
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Vamos criar o cadastro agora com o nome e o CPF/CNPJ lidos do documento e já
+                      vincular esta leitura a ele. Confira os dois campos abaixo — a leitura da IA
+                      pode conter erros.
+                    </p>
+                  </div>
                   <div className="grid gap-2 sm:grid-cols-2">
                     <div className="grid gap-1">
                       <Label htmlFor="novo-nome" className="text-xs">
-                        Nome
+                        Nome completo *
                       </Label>
                       <Input
                         id="novo-nome"
                         value={novoNome}
+                        placeholder="Nome do cliente"
                         onChange={(e) => setNovoNome(e.target.value)}
                       />
                     </div>
                     <div className="grid gap-1">
                       <Label htmlFor="novo-doc" className="text-xs">
-                        CPF / CNPJ
+                        CPF / CNPJ *
                       </Label>
                       <Input
                         id="novo-doc"
                         value={novoDoc}
+                        placeholder="Somente números"
                         onChange={(e) => setNovoDoc(e.target.value)}
                       />
                     </div>
                   </div>
                   <Button
-                    size="sm"
-                    variant="outline"
+                    className="w-full"
                     disabled={criarCliente.isPending || novoNome.trim().length < 3 || !novoDoc.trim()}
                     onClick={() => criarCliente.mutate()}
                   >
-                    <UserPlus className="mr-2 h-4 w-4" /> Criar e vincular cliente
+                    <UserPlus className="mr-2 h-4 w-4" />
+                    {criarCliente.isPending
+                      ? "Criando cadastro…"
+                      : "Criar cadastro do cliente e vincular este documento"}
                   </Button>
+                  {novoNome.trim().length < 3 || !novoDoc.trim() ? (
+                    <p className="text-xs text-muted-foreground">
+                      Preencha nome (mín. 3 letras) e CPF/CNPJ para habilitar o botão.
+                    </p>
+                  ) : null}
                 </div>
               )}
             </div>
+
 
             {/* 3. Campos extraídos */}
             <div className="space-y-3 rounded-lg border border-border bg-card p-4">
