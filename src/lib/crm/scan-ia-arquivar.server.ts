@@ -94,8 +94,9 @@ export async function arquivarLeituraNaDocumentacao(params: {
       .upload(path, buffer, { contentType, upsert: true });
     if (upErr) throw upErr;
 
-    const categoria: Categoria = CATEGORIA_POR_TIPO[tipoDocumento ?? ""] ?? "comprador";
-    const tipo = tipoDocumento ?? "outro";
+    const destino = DESTINO_CHECKLIST[tipoDocumento ?? ""];
+    const categoria: Categoria = destino?.categoria ?? "comprador";
+    const tipo = destino?.tipo ?? rotuloTipo(tipoDocumento);
 
     const { count } = await supabase
       .from("cliente_documentos")
@@ -116,12 +117,33 @@ export async function arquivarLeituraNaDocumentacao(params: {
         mime_type: contentType,
         tamanho_bytes: buffer.byteLength,
         versao: (count ?? 0) + 1,
-        status: "recebido",
+        status: "aprovado",
+        aprovado_por: userId,
+        aprovado_em: new Date().toISOString(),
         enviado_por: userId,
       })
       .select("id")
       .single();
     if (insErr) throw insErr;
+
+    // Marca o item correspondente no checklist do cliente (risca o item).
+    if (destino?.itemKey) {
+      const { data: cli } = await supabase
+        .from("clientes")
+        .select("documentos_checklist")
+        .eq("id", clienteId)
+        .maybeSingle();
+      const atual =
+        cli?.documentos_checklist && typeof cli.documentos_checklist === "object"
+          ? (cli.documentos_checklist as Record<string, any>)
+          : {};
+      if (atual[destino.itemKey] !== true) {
+        await supabase
+          .from("clientes")
+          .update({ documentos_checklist: { ...atual, [destino.itemKey]: true } })
+          .eq("id", clienteId);
+      }
+    }
 
     await supabase.from("cliente_historico").insert({
       cliente_id: clienteId,
@@ -129,6 +151,7 @@ export async function arquivarLeituraNaDocumentacao(params: {
       descricao: `Documento do Scan IA arquivado na documentação: ${nomeArquivo}`,
       ator_id: userId,
     });
+
 
     return { arquivado: true, ja_existia: false, documento_id: inserido.id, erro: null };
   } catch (e: any) {
