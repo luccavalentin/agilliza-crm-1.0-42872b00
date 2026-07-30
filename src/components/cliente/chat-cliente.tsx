@@ -12,6 +12,7 @@ import {
   Search,
   Phone,
   MoreVertical,
+  Trash2,
 } from "lucide-react";
 import {
   clienteListarAtendentes,
