@@ -404,7 +404,6 @@ export const DESTINO_CAMPO: Record<string, DestinoCampo> = {
   nome_conjuge: { tipo: "coluna", coluna: "conjuge_nome" },
   cpf_conjuge: { tipo: "coluna", coluna: "conjuge_cpf", formato: "documento" },
   data_nascimento_conjuge: { tipo: "coluna", coluna: "conjuge_data_nascimento", formato: "data" },
-  conjuge_naturalidade: { tipo: "coluna", coluna: "conjuge_nacionalidade" },
   conjuge_nacionalidade: { tipo: "coluna", coluna: "conjuge_nacionalidade" },
   conjuge_nome_mae: { tipo: "coluna", coluna: "conjuge_nome_mae" },
   conjuge_profissao: { tipo: "coluna", coluna: "conjuge_profissao" },
@@ -512,6 +511,7 @@ export const DESTINO_CAMPO: Record<string, DestinoCampo> = {
   cidade_imovel: { tipo: "coluna", coluna: "imovel_cidade" },
   // Dados informativos sem destino direto no cadastro atual.
   endereco_titular: { tipo: "nenhum" },
+  conjuge_naturalidade: { tipo: "nenhum" },
   data_casamento: { tipo: "nenhum" },
   matricula_certidao: { tipo: "nenhum" },
   cartorio_certidao: { tipo: "nenhum" },
