@@ -48,13 +48,31 @@ import {
 
 const TIPOS_VINCULO_VALIDOS = new Set(TIPOS_VINCULO_COMISSAO.map((t) => t.valor));
 
-function inferirTipoVinculo(tipoPessoa: string | null | undefined): TipoVinculoComissao {
+/** Papel (role) → tipo de vínculo de comissão. */
+const PAPEL_PARA_VINCULO: Record<string, TipoVinculoComissao> = {
+  corretor: "corretor",
+  imobiliaria: "imobiliaria",
+  analista: "analista",
+  comercial: "comercial_agilliza",
+  comercial_agilliza: "comercial_agilliza",
+  parceiro: "parceiro",
+};
+
+function inferirTipoVinculo(
+  tipoPessoa: string | null | undefined,
+  papeis: string[] = [],
+): TipoVinculoComissao {
+  for (const p of papeis) {
+    const v = PAPEL_PARA_VINCULO[(p ?? "").toLowerCase()];
+    if (v) return v;
+  }
   const slug = (tipoPessoa ?? "").toLowerCase();
   if (TIPOS_VINCULO_VALIDOS.has(slug as TipoVinculoComissao)) {
     return slug as TipoVinculoComissao;
   }
   return "outro";
 }
+
 
 
 interface Props {
