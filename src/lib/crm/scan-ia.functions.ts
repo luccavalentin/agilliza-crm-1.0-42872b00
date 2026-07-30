@@ -55,6 +55,62 @@ export interface LeituraDetalhe {
 }
 
 
+/**
+ * Detecta o MIME real pelos bytes ("magic numbers"). O `blob.type` vindo do
+ * Storage costuma chegar vazio ou como octet-stream no runtime do servidor —
+ * usar o fallback fixo "application/pdf" fazia o provedor de IA responder
+ * "The document has no pages" ao receber uma imagem rotulada como PDF.
+ */
+function detectarMime(bytes: Buffer, arquivoUrl: string, tipoBlob?: string): string {
+  const b = bytes;
+  const hex = (n: number) => b.subarray(0, n).toString("hex").toUpperCase();
+  const ascii = (i: number, n: number) => b.subarray(i, i + n).toString("latin1");
+
+  if (ascii(0, 4) === "%PDF") return "application/pdf";
+  if (hex(3) === "FFD8FF") return "image/jpeg";
+  if (hex(8) === "89504E470D0A1A0A") return "image/png";
+  if (ascii(0, 4) === "RIFF" && ascii(8, 4) === "WEBP") return "image/webp";
+  if (ascii(0, 3) === "GIF") return "image/gif";
+  if (hex(4) === "49492A00" || hex(4) === "4D4D002A") return "image/tiff";
+  if (hex(2) === "424D") return "image/bmp";
+  if (ascii(4, 4) === "ftyp") {
+    const marca = ascii(8, 4).toLowerCase();
+    if (marca.startsWith("heic") || marca.startsWith("heix")) return "image/heic";
+    if (marca.startsWith("mif1") || marca.startsWith("msf1") || marca.startsWith("heif"))
+      return "image/heif";
+  }
+
+  // Sem assinatura reconhecida: tenta o tipo declarado, depois a extensão.
+  const declarado = (tipoBlob ?? "").toLowerCase();
+  if (declarado && declarado !== "application/octet-stream") return declarado;
+
+  const ext = (arquivoUrl.split("?")[0].split(".").pop() ?? "").toLowerCase();
+  const porExt: Record<string, string> = {
+    pdf: "application/pdf",
+    jpg: "image/jpeg",
+    jpeg: "image/jpeg",
+    png: "image/png",
+    webp: "image/webp",
+    gif: "image/gif",
+    heic: "image/heic",
+    heif: "image/heif",
+    tif: "image/tiff",
+    tiff: "image/tiff",
+    bmp: "image/bmp",
+  };
+  return porExt[ext] ?? "application/octet-stream";
+}
+
+/** Formatos que os provedores de IA conseguem interpretar diretamente. */
+const MIMES_SUPORTADOS = new Set([
+  "application/pdf",
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/heic",
+  "image/heif",
+]);
+
 async function correspondenteDoUsuario(
   supabase: { from: (t: string) => any },
   userId: string,
@@ -310,7 +366,14 @@ export const processarLeitura = createServerFn({ method: "POST" })
 
       const bytes = Buffer.from(await blob.arrayBuffer());
       const base64 = bytes.toString("base64");
-      const mime = (blob as Blob).type || "application/pdf";
+      const mime = detectarMime(bytes, leitura.arquivo_url, (blob as Blob).type);
+      if (!MIMES_SUPORTADOS.has(mime)) {
+        throw new Error(
+          `Formato do arquivo (${mime}) não é suportado pela leitura automática. ` +
+            `Envie o documento em PDF, JPG, PNG ou WEBP.`,
+        );
+      }
+      const ehPdf = mime === "application/pdf";
 
       const mapaTipos = Object.entries(CAMPOS_POR_TIPO)
         .map(([t, cs]) => `- ${t}: ${cs.join(", ")}`)
@@ -352,7 +415,17 @@ export const processarLeitura = createServerFn({ method: "POST" })
                 role: "user",
                 content: [
                   { type: "text", text: prompt },
-                  { type: "image_url", image_url: { url: `data:${mime};base64,${base64}` } },
+                  // PDFs vão como arquivo; imagens como image_url (o endpoint rejeita
+                  // um PDF enviado dentro de image_url).
+                  ehPdf
+                    ? {
+                        type: "file",
+                        file: {
+                          filename: (leitura.arquivo_url.split("/").pop() ?? "documento.pdf"),
+                          file_data: `data:${mime};base64,${base64}`,
+                        },
+                      }
+                    : { type: "image_url", image_url: { url: `data:${mime};base64,${base64}` } },
                 ],
               },
             ],
@@ -394,6 +467,12 @@ export const processarLeitura = createServerFn({ method: "POST" })
         if (resp.status === 401 || resp.status === 403) {
           throw new Error(
             "Chave da API inválida ou sem permissão. Revise a chave em Admin › APIs de IA.",
+          );
+        }
+        if (/has no pages|Unsupported MIME|invalid image|unsupported image/i.test(body)) {
+          throw new Error(
+            "O provedor de IA não conseguiu abrir este arquivo. Verifique se o PDF não está " +
+              "corrompido/protegido por senha e tente enviar como JPG ou PNG.",
           );
         }
         throw new Error(`Provedor de IA retornou ${resp.status}: ${body.slice(0, 300)}`);
