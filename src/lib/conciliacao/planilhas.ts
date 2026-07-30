@@ -302,3 +302,89 @@ export function aplicarSistema(
     };
   });
 }
+
+/* ------------------------------------------------------------------ */
+/* Etapas do funil — classificação a partir do texto de status         */
+/* ------------------------------------------------------------------ */
+
+export type EtapaComparativo =
+  | "contrato_emitido"
+  | "aprovado"
+  | "pre_aprovado"
+  | "nao_aprovado"
+  | "avaliacao_imovel"
+  | "credito_analise"
+  | "documentos"
+  | "cancelado"
+  | "outros";
+
+export const ETAPA_COMPARATIVO_LABEL: Record<EtapaComparativo, string> = {
+  contrato_emitido: "Contrato emitido",
+  aprovado: "Aprovado",
+  pre_aprovado: "Pré-aprovado",
+  nao_aprovado: "Não aprovado",
+  avaliacao_imovel: "Avaliação do imóvel",
+  credito_analise: "Crédito em análise",
+  documentos: "Enviar documentos",
+  cancelado: "Cancelado / desistência",
+  outros: "Sem etapa identificada",
+};
+
+export const ETAPA_COMPARATIVO_TONE: Record<EtapaComparativo, string> = {
+  contrato_emitido: "text-emerald-700 dark:text-emerald-300 border-emerald-500/40 bg-emerald-500/10",
+  aprovado: "text-emerald-600 dark:text-emerald-400 border-emerald-500/40 bg-emerald-500/10",
+  pre_aprovado: "text-teal-600 dark:text-teal-400 border-teal-500/40 bg-teal-500/10",
+  nao_aprovado: "text-red-600 dark:text-red-400 border-red-500/40 bg-red-500/10",
+  avaliacao_imovel: "text-violet-600 dark:text-violet-400 border-violet-500/40 bg-violet-500/10",
+  credito_analise: "text-blue-600 dark:text-blue-400 border-blue-500/40 bg-blue-500/10",
+  documentos: "text-amber-600 dark:text-amber-400 border-amber-500/40 bg-amber-500/10",
+  cancelado: "text-slate-600 dark:text-slate-400 border-slate-500/40 bg-slate-500/10",
+  outros: "text-muted-foreground border-border bg-muted/40",
+};
+
+/** Ordem lógica do funil, usada nos filtros e na ordenação. */
+export const ETAPAS_COMPARATIVO: EtapaComparativo[] = [
+  "documentos",
+  "credito_analise",
+  "pre_aprovado",
+  "aprovado",
+  "avaliacao_imovel",
+  "contrato_emitido",
+  "nao_aprovado",
+  "cancelado",
+  "outros",
+];
+
+/** Classifica um texto livre de status (planilha ou sistema) em uma etapa. */
+export function classificarEtapa(texto: unknown): EtapaComparativo | null {
+  const t = normalizarNome(texto);
+  if (!t) return null;
+  if (/(nao enviad|sem envio|aguardando documento)/.test(t)) return "documentos";
+  if (/(contrato|instrumento|escritur|assinad|formaliz|registrad|liberad|emitid)/.test(t))
+    return "contrato_emitido";
+  if (/(cancel|desist|expirad|encerrad|arquivad|distrat)/.test(t)) return "cancelado";
+  if (/(recus|reprov|negad|indeferid|nao aprovad|inapt|restri)/.test(t)) return "nao_aprovado";
+  if (/(vistoria|avaliac|engenharia|laudo|imovel|pericia|conformidade)/.test(t))
+    return "avaliacao_imovel";
+  if (/(pre aprovad|preaprovad|condicion|pendencia|ressalva|aprovad[ao] com)/.test(t))
+    return "pre_aprovado";
+  if (/(aprovad|deferid|apto|credito ok)/.test(t)) return "aprovado";
+  if (/(document|dossie|pasta|checklist|anexo|pendente de envio|enviar doc)/.test(t))
+    return "documentos";
+  if (/(analis|andamento|estudo|processament|em aberto|aguardand|enviad|cadastrad|digitad|simulac)/.test(t))
+    return "credito_analise";
+  return "outros";
+}
+
+/**
+ * Etapa consolidada de um item: prioriza o que o banco informou, depois o
+ * sistema e por último o controle interno.
+ */
+export function etapaDoItem(i: ItemComparativo): EtapaComparativo {
+  return (
+    classificarEtapa(i.banco?.status) ??
+    classificarEtapa(i.sistema?.situacao) ??
+    classificarEtapa(i.controle?.status) ??
+    "outros"
+  );
+}

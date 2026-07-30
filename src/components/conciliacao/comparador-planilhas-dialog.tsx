@@ -7,6 +7,7 @@ import {
   FileText,
   Loader2,
   Printer,
+  Layers,
   Search,
   Trash2,
   Upload,
@@ -37,6 +38,11 @@ import {
   aplicarSistema,
   chavesParaSistema,
   cruzarPlanilhas,
+  etapaDoItem,
+  ETAPAS_COMPARATIVO,
+  ETAPA_COMPARATIVO_LABEL,
+  ETAPA_COMPARATIVO_TONE,
+  type EtapaComparativo,
   lerPlanilhaGenerica,
   RESULTADO_COMPARATIVO_LABEL,
   RESULTADO_COMPARATIVO_TONE,
@@ -152,6 +158,7 @@ export function ComparadorPlanilhasDialog({
   const [itens, setItens] = useState<ItemComparativo[] | null>(null);
   const [aba, setAba] = useState<"todos" | ResultadoComparativo>("todos");
   const [busca, setBusca] = useState("");
+  const [etapas, setEtapas] = useState<EtapaComparativo[]>([]);
   const [ocupado, setOcupado] = useState(false);
 
   async function adicionar(lado: LadoPlanilha, files: FileList | null) {
@@ -201,6 +208,7 @@ export function ComparadorPlanilhasDialog({
       }
       setItens(resultado);
       setAba("todos");
+      setEtapas([]);
       toast.success(
         comSistema
           ? "Planilhas cruzadas entre si e contra o sistema."
@@ -218,12 +226,22 @@ export function ComparadorPlanilhasDialog({
     const b = busca.trim().toLowerCase();
     return itens.filter((i) => {
       if (aba !== "todos" && i.resultado !== aba) return false;
+      if (etapas.length && !etapas.includes(etapaDoItem(i))) return false;
       if (!b) return true;
       return [i.numeroProposta, i.nome, i.cpf, i.sistema?.numero_proposta]
         .filter(Boolean)
         .some((v) => String(v).toLowerCase().includes(b));
     });
-  }, [itens, aba, busca]);
+  }, [itens, aba, busca, etapas]);
+
+  const contagemEtapas = useMemo(() => {
+    const base = new Map<EtapaComparativo, number>();
+    for (const i of itens ?? []) {
+      const e = etapaDoItem(i);
+      base.set(e, (base.get(e) ?? 0) + 1);
+    }
+    return base;
+  }, [itens]);
 
   const contagens = useMemo(() => {
     const base: Record<string, number> = {
@@ -241,6 +259,7 @@ export function ComparadorPlanilhasDialog({
     if (!itens?.length) return;
     const linhas = itens.map((i) => ({
       resultado: RESULTADO_COMPARATIVO_LABEL[i.resultado],
+      etapa: ETAPA_COMPARATIVO_LABEL[etapaDoItem(i)],
       proposta: i.numeroProposta,
       cliente: i.nome,
       cpf: i.cpf,
@@ -259,6 +278,7 @@ export function ComparadorPlanilhasDialog({
     }));
     const colunas = [
       { header: "Resultado", key: "resultado", width: 24 },
+      { header: "Etapa", key: "etapa", width: 22 },
       { header: "Nº proposta", key: "proposta", width: 18 },
       { header: "Cliente", key: "cliente", width: 32 },
       { header: "CPF", key: "cpf", width: 16 },
@@ -305,6 +325,7 @@ export function ComparadorPlanilhasDialog({
         `${controle.arquivos.length} planilha(s) do meu controle`,
         `${banco.arquivos.length} relatório(s) de banco`,
         `Visão: ${aba === "todos" ? "Todos" : RESULTADO_COMPARATIVO_LABEL[aba]}`,
+        `Etapas: ${etapas.length ? etapas.map((e) => ETAPA_COMPARATIVO_LABEL[e]).join(", ") : "Todas"}`,
         `${alvo.length} registros`,
       ],
       kpis: [
@@ -316,6 +337,7 @@ export function ComparadorPlanilhasDialog({
       ],
       colunas: [
         { key: "resultado", label: "Resultado" },
+        { key: "etapa", label: "Etapa" },
         { key: "proposta", label: "Nº proposta" },
         { key: "cliente", label: "Cliente" },
         { key: "cpf", label: "CPF" },
@@ -327,6 +349,7 @@ export function ComparadorPlanilhasDialog({
       ],
       linhas: alvo.map((i) => ({
         resultado: RESULTADO_COMPARATIVO_LABEL[i.resultado],
+        etapa: ETAPA_COMPARATIVO_LABEL[etapaDoItem(i)],
         proposta: i.numeroProposta,
         cliente: i.nome,
         cpf: i.cpf,
@@ -355,12 +378,26 @@ export function ComparadorPlanilhasDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[92vh] max-w-6xl overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Comparativo de planilhas e dados</DialogTitle>
-          <DialogDescription>
-            Envie de um lado as suas planilhas de controle e do outro os relatórios dos
-            bancos. O sistema cruza as planilhas entre si e, se quiser, também contra as
-            propostas cadastradas.
-          </DialogDescription>
+          <div className="flex flex-wrap items-start justify-between gap-3 pr-8">
+            <div className="min-w-[260px] flex-1">
+              <DialogTitle>Comparativo de planilhas e dados</DialogTitle>
+              <DialogDescription>
+                Envie de um lado as suas planilhas de controle e do outro os relatórios dos
+                bancos. O sistema cruza as planilhas entre si e, se quiser, também contra as
+                propostas cadastradas.
+              </DialogDescription>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => void comparar(true)}
+              disabled={ocupado}
+              className="shrink-0"
+            >
+              {ocupado ? <Loader2 className="h-4 w-4 animate-spin" /> : <Layers className="h-4 w-4" />}
+              Cruzar com o sistema
+            </Button>
+          </div>
         </DialogHeader>
 
         <div className="grid gap-3 md:grid-cols-2">
@@ -388,14 +425,15 @@ export function ComparadorPlanilhasDialog({
           />
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <Button onClick={() => void comparar(false)} disabled={ocupado} variant="outline">
+        <div className="flex flex-wrap items-center gap-3">
+          <Button
+            size="lg"
+            onClick={() => void comparar(false)}
+            disabled={ocupado}
+            className="min-w-[220px] shadow-sm"
+          >
             {ocupado && <Loader2 className="h-4 w-4 animate-spin" />}
             Cruzar planilhas
-          </Button>
-          <Button onClick={() => void comparar(true)} disabled={ocupado}>
-            {ocupado && <Loader2 className="h-4 w-4 animate-spin" />}
-            Cruzar planilhas + sistema
           </Button>
           <span className="text-xs text-muted-foreground">
             {controle.linhas.length} linhas no controle · {banco.linhas.length} linhas dos
@@ -405,6 +443,44 @@ export function ComparadorPlanilhasDialog({
 
         {itens && (
           <div className="space-y-3">
+            <div className="flex flex-wrap items-center gap-1.5 rounded-lg border bg-muted/20 p-2">
+              <span className="mr-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                Etapa
+              </span>
+              <button
+                type="button"
+                onClick={() => setEtapas([])}
+                className={`rounded-full border px-2.5 py-1 text-xs transition ${
+                  etapas.length === 0
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-border bg-background hover:bg-muted"
+                }`}
+              >
+                Todas ({itens.length})
+              </button>
+              {ETAPAS_COMPARATIVO.filter((e) => (contagemEtapas.get(e) ?? 0) > 0).map((e) => {
+                const ativo = etapas.includes(e);
+                return (
+                  <button
+                    key={e}
+                    type="button"
+                    onClick={() =>
+                      setEtapas((prev) =>
+                        prev.includes(e) ? prev.filter((x) => x !== e) : [...prev, e],
+                      )
+                    }
+                    className={`rounded-full border px-2.5 py-1 text-xs transition ${
+                      ativo
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : `${ETAPA_COMPARATIVO_TONE[e]} hover:brightness-105`
+                    }`}
+                  >
+                    {ETAPA_COMPARATIVO_LABEL[e]} ({contagemEtapas.get(e) ?? 0})
+                  </button>
+                );
+              })}
+            </div>
+
             <div className="flex flex-wrap items-center justify-between gap-2">
               <Tabs value={aba} onValueChange={(v) => setAba(v as typeof aba)}>
                 <TabsList>
@@ -449,6 +525,7 @@ export function ComparadorPlanilhasDialog({
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-[170px]">Resultado</TableHead>
+                    <TableHead className="w-[150px]">Etapa</TableHead>
                     <TableHead>Proposta</TableHead>
                     <TableHead>Cliente</TableHead>
                     <TableHead>Status</TableHead>
@@ -462,7 +539,7 @@ export function ComparadorPlanilhasDialog({
                   {filtrados.length === 0 ? (
                     <TableRow>
                       <TableCell
-                        colSpan={8}
+                        colSpan={9}
                         className="py-10 text-center text-sm text-muted-foreground"
                       >
                         Nenhum registro nesta visão.
@@ -474,6 +551,11 @@ export function ComparadorPlanilhasDialog({
                         <TableCell>
                           <Badge variant="outline" className={RESULTADO_COMPARATIVO_TONE[i.resultado]}>
                             {RESULTADO_COMPARATIVO_LABEL[i.resultado]}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className={ETAPA_COMPARATIVO_TONE[etapaDoItem(i)]}>
+                            {ETAPA_COMPARATIVO_LABEL[etapaDoItem(i)]}
                           </Badge>
                         </TableCell>
                         <TableCell className="font-mono text-xs tabular-nums">
