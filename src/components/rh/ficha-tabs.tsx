@@ -170,8 +170,6 @@ export function FichaDocumentos({ funcionarioId }: { funcionarioId: string }) {
     onError: (e: any) => toast.error(e?.message ?? "Falha ao anexar."),
   });
 
-  const [emEdicao, setEmEdicao] = useState<any | null>(null);
-
   const remover = useMutation({
     mutationFn: (id: string) => fnExcluir({ data: { id } }),
     onSuccess: () => {
@@ -346,24 +344,6 @@ export function FichaBeneficios({ funcionarioId }: { funcionarioId: string }) {
           ))}
         </TableBody>
       </Table>
-
-      {emEdicao && (
-        <HoleriteBuilderDialog
-          key={emEdicao.id}
-          trigger={null}
-          open
-          onOpenChange={(v) => {
-            if (!v) setEmEdicao(null);
-          }}
-          edicao={{
-            id: emEdicao.id,
-            funcionario_id: emEdicao.funcionario_id,
-            mes: emEdicao.mes,
-            ano: emEdicao.ano,
-            entrada: emEdicao.entrada ?? null,
-          }}
-        />
-      )}
     </Chrome>
   );
 }
@@ -519,6 +499,8 @@ export function FichaHolerites({ funcionarioId }: { funcionarioId: string }) {
     onError: (e: any) => toast.error(e?.message ?? "Falha ao anexar."),
   });
 
+  const [emEdicao, setEmEdicao] = useState<any | null>(null);
+
   const remover = useMutation({
     mutationFn: (id: string) => fnExcluir({ data: { id } }),
     onSuccess: () => {
@@ -662,6 +644,23 @@ export function FichaHolerites({ funcionarioId }: { funcionarioId: string }) {
           ))}
         </TableBody>
       </Table>
+      {emEdicao && (
+        <HoleriteBuilderDialog
+          key={emEdicao.id}
+          trigger={null}
+          open
+          onOpenChange={(v) => {
+            if (!v) setEmEdicao(null);
+          }}
+          edicao={{
+            id: emEdicao.id,
+            funcionario_id: emEdicao.funcionario_id,
+            mes: emEdicao.mes,
+            ano: emEdicao.ano,
+            entrada: emEdicao.entrada ?? null,
+          }}
+        />
+      )}
     </Chrome>
   );
 }
