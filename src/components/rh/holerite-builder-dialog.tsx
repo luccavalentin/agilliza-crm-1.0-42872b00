@@ -153,7 +153,8 @@ export function HoleriteBuilderDialog({
   const gerar = useMutation({
     mutationFn: async () => {
       if (!funcionarioId || !func) throw new Error("Selecione o funcionário.");
-      if (e.salario_base <= 0) throw new Error("Informe o salário base.");
+      // Campos não preenchidos são tratados como zero: o PDF sempre é gerado.
+
 
       const user = (await supabase.auth.getUser()).data.user;
       if (!user) throw new Error("Sessão expirada.");
