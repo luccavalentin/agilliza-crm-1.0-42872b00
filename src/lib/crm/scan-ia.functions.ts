@@ -469,6 +469,12 @@ export const processarLeitura = createServerFn({ method: "POST" })
             "Chave da API inválida ou sem permissão. Revise a chave em Admin › APIs de IA.",
           );
         }
+        if (/has no pages|Unsupported MIME|invalid image|unsupported image/i.test(body)) {
+          throw new Error(
+            "O provedor de IA não conseguiu abrir este arquivo. Verifique se o PDF não está " +
+              "corrompido/protegido por senha e tente enviar como JPG ou PNG.",
+          );
+        }
         throw new Error(`Provedor de IA retornou ${resp.status}: ${body.slice(0, 300)}`);
       }
 
