@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
@@ -24,7 +24,6 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-import { supabase } from "@/integrations/supabase/client";
 import {
   PanelHeader,
   SectionTitle,
