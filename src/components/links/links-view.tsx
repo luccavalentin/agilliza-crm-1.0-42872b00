@@ -261,8 +261,11 @@ export function LinksView() {
         )}
       </div>
 
+      {gerenciandoCats && <CategoriasLinksDialog onClose={() => setGerenciandoCats(false)} />}
+
       {criando && (
         <LinkDialog
+          categorias={(categorias ?? []) as LinkCategoria[]}
           onClose={() => setCriando(false)}
           onDone={() => {
             setCriando(false);
@@ -274,6 +277,7 @@ export function LinksView() {
       {editando && (
         <LinkDialog
           link={editando}
+          categorias={(categorias ?? []) as LinkCategoria[]}
           onClose={() => setEditando(null)}
           onDone={() => {
             setEditando(null);
@@ -281,6 +285,7 @@ export function LinksView() {
           }}
         />
       )}
+
 
       <AlertDialog open={!!excluindo} onOpenChange={(o) => !o && setExcluindo(null)}>
         <AlertDialogContent>
