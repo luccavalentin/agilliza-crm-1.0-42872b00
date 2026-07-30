@@ -22,6 +22,7 @@ import {
   confirmarTipoDocumento,
   vincularClienteLeitura,
   criarClienteParaLeitura,
+  arquivarDocumentoDaLeitura,
 } from "@/lib/crm/scan-ia.functions";
 import {
   CONFIANCA_LABEL,
@@ -143,6 +144,19 @@ function Pagina() {
     onError: (e: any) => toast.error(e?.message ?? "Falha ao criar cliente."),
   });
 
+  const arquivar = useMutation({
+    mutationFn: () => arquivarDocumentoDaLeitura({ data: { leitura_id: id } }),
+    onSuccess: (r) => {
+      toast.success(
+        r.ja_existia
+          ? "Este documento já estava na documentação do cliente."
+          : "Documento arquivado na aba Documentos do cliente.",
+      );
+      qc.invalidateQueries({ queryKey: ["cliente-docs"] });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Falha ao arquivar documento."),
+  });
+
   const d = leitura.data;
   const divergencia = useMemo(() => {
     if (!d?.tipo_documento_sugerido) return false;
@@ -262,7 +276,11 @@ function Pagina() {
             </div>
 
             {/* 2. Cliente vinculado */}
-            <div className="space-y-3 rounded-lg border border-border bg-card p-4">
+            <div
+              className={`space-y-3 rounded-lg border bg-card p-4 ${
+                d.cliente_id ? "border-border" : "border-warning/60 ring-1 ring-warning/20"
+              }`}
+            >
               <div className="flex items-center justify-between gap-2">
                 <h2 className="text-sm font-semibold">2. Cliente</h2>
                 {d.cliente_id ? (
@@ -272,10 +290,29 @@ function Pagina() {
                 )}
               </div>
 
-              <ClienteCRMPicker
-                selecionado={d.cliente_nome ?? null}
-                onSelect={(c) => vincular.mutate(c.id)}
-              />
+              {!d.cliente_id ? (
+                <div className="flex gap-2 rounded-md border border-warning/50 bg-warning/10 p-3 text-xs">
+                  <AlertTriangle className="h-4 w-4 shrink-0 text-warning" />
+                  <span>
+                    Este documento ainda não pertence a nenhum cliente. Escolha{" "}
+                    <strong>uma das duas opções abaixo</strong> para continuar:{" "}
+                    <strong>A)</strong> buscar um cliente que já existe, ou <strong>B)</strong>{" "}
+                    cadastrar um cliente novo com os dados lidos do documento.
+                  </span>
+                </div>
+              ) : null}
+
+              <div className="space-y-2">
+                {!d.cliente_id ? (
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    A) O cliente já é cadastrado
+                  </p>
+                ) : null}
+                <ClienteCRMPicker
+                  selecionado={d.cliente_nome ?? null}
+                  onSelect={(c) => vincular.mutate(c.id)}
+                />
+              </div>
 
               {d.cliente_id ? (
                 <Button
@@ -287,44 +324,60 @@ function Pagina() {
                   Desvincular
                 </Button>
               ) : (
-                <div className="space-y-2 rounded-md border border-dashed border-border p-3">
-                  <p className="text-xs text-muted-foreground">
-                    Ou crie um cliente novo. Revise nome e CPF/CNPJ antes de salvar — os valores
-                    vieram do documento e podem conter erros de leitura.
-                  </p>
+                <div className="space-y-3 rounded-md border-2 border-dashed border-primary/50 bg-primary/5 p-4">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-primary">
+                      B) O cliente ainda NÃO tem cadastro
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Vamos criar o cadastro agora com o nome e o CPF/CNPJ lidos do documento e já
+                      vincular esta leitura a ele. Confira os dois campos abaixo — a leitura da IA
+                      pode conter erros.
+                    </p>
+                  </div>
                   <div className="grid gap-2 sm:grid-cols-2">
                     <div className="grid gap-1">
                       <Label htmlFor="novo-nome" className="text-xs">
-                        Nome
+                        Nome completo *
                       </Label>
                       <Input
                         id="novo-nome"
                         value={novoNome}
+                        placeholder="Nome do cliente"
                         onChange={(e) => setNovoNome(e.target.value)}
                       />
                     </div>
                     <div className="grid gap-1">
                       <Label htmlFor="novo-doc" className="text-xs">
-                        CPF / CNPJ
+                        CPF / CNPJ *
                       </Label>
                       <Input
                         id="novo-doc"
                         value={novoDoc}
+                        placeholder="Somente números"
                         onChange={(e) => setNovoDoc(e.target.value)}
                       />
                     </div>
                   </div>
                   <Button
-                    size="sm"
-                    variant="outline"
+                    className="w-full"
                     disabled={criarCliente.isPending || novoNome.trim().length < 3 || !novoDoc.trim()}
                     onClick={() => criarCliente.mutate()}
                   >
-                    <UserPlus className="mr-2 h-4 w-4" /> Criar e vincular cliente
+                    <UserPlus className="mr-2 h-4 w-4" />
+                    {criarCliente.isPending
+                      ? "Criando cadastro…"
+                      : "Criar cadastro do cliente e vincular este documento"}
                   </Button>
+                  {novoNome.trim().length < 3 || !novoDoc.trim() ? (
+                    <p className="text-xs text-muted-foreground">
+                      Preencha nome (mín. 3 letras) e CPF/CNPJ para habilitar o botão.
+                    </p>
+                  ) : null}
                 </div>
               )}
             </div>
+
 
             {/* 3. Campos extraídos */}
             <div className="space-y-3 rounded-lg border border-border bg-card p-4">
@@ -389,7 +442,8 @@ function Pagina() {
               <h2 className="text-sm font-semibold">4. Aplicar ao cadastro</h2>
               <p className="text-xs text-muted-foreground">
                 A revisão é obrigatória: você decide campo a campo o que entra no cadastro do
-                cliente. Nada é gravado automaticamente.
+                cliente. Nada é gravado automaticamente. Ao confirmar, o arquivo original também é
+                arquivado na aba <strong>Documentos</strong> do cliente.
               </p>
               {!podeAplicar ? (
                 <p className="text-xs text-warning">
@@ -400,10 +454,28 @@ function Pagina() {
                       : "Nenhum campo extraído."}
                 </p>
               ) : null}
-              <Button disabled={!podeAplicar} onClick={() => setAplicarAberto(true)}>
-                Aplicar ao cadastro
-              </Button>
+              <div className="flex flex-wrap gap-2">
+                <Button disabled={!podeAplicar} onClick={() => setAplicarAberto(true)}>
+                  Aplicar ao cadastro
+                </Button>
+                <Button
+                  variant="outline"
+                  disabled={!d.cliente_id || arquivar.isPending}
+                  onClick={() => arquivar.mutate()}
+                >
+                  <FileText className="mr-2 h-4 w-4" />
+                  {arquivar.isPending ? "Arquivando…" : "Só arquivar em Documentos"}
+                </Button>
+                {d.cliente_id ? (
+                  <Button asChild variant="ghost">
+                    <Link to="/crm/clientes/$id" params={{ id: d.cliente_id }}>
+                      Ver documentação do cliente
+                    </Link>
+                  </Button>
+                ) : null}
+              </div>
             </div>
+
           </div>
         </div>
       )}

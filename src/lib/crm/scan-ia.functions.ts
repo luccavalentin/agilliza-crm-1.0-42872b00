@@ -954,14 +954,22 @@ export const aplicarAoCadastro = createServerFn({ method: "POST" })
     async ({
       data,
       context,
-    }): Promise<{ ok: boolean; aplicados: number; descartados: number }> => {
+    }): Promise<{
+      ok: boolean;
+      aplicados: number;
+      descartados: number;
+      arquivado: boolean;
+      erro_arquivo: string | null;
+    }> => {
       const { supabase, userId } = context;
       const corr = await correspondenteDoUsuario(supabase, userId);
       if (!corr) throw new Error("Sem correspondente.");
 
       const { data: leitura } = await supabase
         .from("scan_ia_leituras")
-        .select("id, correspondente_id, cliente_id, tipo_documento, tipo_confirmado")
+        .select(
+          "id, correspondente_id, cliente_id, tipo_documento, tipo_confirmado, arquivo_url",
+        )
         .eq("id", data.leitura_id)
         .maybeSingle();
       if (!leitura || leitura.correspondente_id !== corr)
@@ -1054,6 +1062,17 @@ export const aplicarAoCadastro = createServerFn({ method: "POST" })
         .update({ status: "aplicada" })
         .eq("id", data.leitura_id);
 
+      // Documento confirmado → vai para a Documentação do cliente.
+      const { arquivarLeituraNaDocumentacao } = await import("./scan-ia-arquivar.server");
+      const arq = await arquivarLeituraNaDocumentacao({
+        supabase,
+        userId,
+        leituraId: data.leitura_id,
+        clienteId: leitura.cliente_id,
+        tipoDocumento: leitura.tipo_documento,
+        arquivoUrl: leitura.arquivo_url,
+      });
+
       await supabase.from("scan_ia_auditoria").insert({
         correspondente_id: corr,
         leitura_id: data.leitura_id,
@@ -1066,9 +1085,64 @@ export const aplicarAoCadastro = createServerFn({ method: "POST" })
           campos_aplicados: aplicados,
           campos_descartados: descartados,
           colunas_atualizadas: Object.keys(patch),
+          documento_arquivado: arq.arquivado,
+          documento_id: arq.documento_id,
+          erro_arquivo: arq.erro,
         },
       });
 
-      return { ok: true, aplicados: aplicados.length, descartados: descartados.length };
+      return {
+        ok: true,
+        aplicados: aplicados.length,
+        descartados: descartados.length,
+        arquivado: arq.arquivado,
+        erro_arquivo: arq.erro,
+      };
+    },
+  );
+
+/**
+ * Arquiva o arquivo da leitura na Documentação do cliente sem aplicar campos.
+ * Útil quando o operador só quer guardar o documento no cadastro.
+ */
+export const arquivarDocumentoDaLeitura = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { leitura_id: string }) =>
+    z.object({ leitura_id: z.string().uuid() }).parse(d),
+  )
+  .handler(
+    async ({ data, context }): Promise<{ ok: boolean; ja_existia: boolean; erro: string | null }> => {
+      const { supabase, userId } = context;
+      const corr = await correspondenteDoUsuario(supabase, userId);
+      if (!corr) throw new Error("Sem correspondente.");
+
+      const { data: leitura } = await supabase
+        .from("scan_ia_leituras")
+        .select("id, correspondente_id, cliente_id, tipo_documento, arquivo_url")
+        .eq("id", data.leitura_id)
+        .maybeSingle();
+      if (!leitura || leitura.correspondente_id !== corr) throw new Error("Leitura não encontrada.");
+      if (!leitura.cliente_id) throw new Error("Vincule um cliente antes de arquivar o documento.");
+
+      const { arquivarLeituraNaDocumentacao } = await import("./scan-ia-arquivar.server");
+      const arq = await arquivarLeituraNaDocumentacao({
+        supabase,
+        userId,
+        leituraId: data.leitura_id,
+        clienteId: leitura.cliente_id,
+        tipoDocumento: leitura.tipo_documento,
+        arquivoUrl: leitura.arquivo_url,
+      });
+      if (!arq.arquivado) throw new Error(arq.erro ?? "Falha ao arquivar o documento.");
+
+      await supabase.from("scan_ia_auditoria").insert({
+        correspondente_id: corr,
+        leitura_id: data.leitura_id,
+        ator_id: userId,
+        acao: "documento_arquivado",
+        dados: { cliente_id: leitura.cliente_id, documento_id: arq.documento_id },
+      });
+
+      return { ok: true, ja_existia: arq.ja_existia, erro: null };
     },
   );

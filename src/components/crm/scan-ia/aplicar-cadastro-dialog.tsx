@@ -78,10 +78,18 @@ export function AplicarCadastroDialog({
         },
       }),
     onSuccess: (r) => {
-      toast.success(`${r.aplicados} campo(s) aplicados ao cadastro.`);
+      toast.success(
+        r.arquivado
+          ? `${r.aplicados} campo(s) aplicados e documento arquivado na aba Documentos do cliente.`
+          : `${r.aplicados} campo(s) aplicados ao cadastro.`,
+      );
+      if (!r.arquivado && r.erro_arquivo) {
+        toast.warning(`Não foi possível arquivar o documento: ${r.erro_arquivo}`);
+      }
       qc.invalidateQueries({ queryKey: ["scan-ia-leitura", leituraId] });
       qc.invalidateQueries({ queryKey: ["scan-ia-leituras"] });
       qc.invalidateQueries({ queryKey: ["scan-ia-previa", leituraId] });
+      qc.invalidateQueries({ queryKey: ["cliente-docs"] });
       onOpenChange(false);
     },
     onError: (e: any) => toast.error(e?.message ?? "Falha ao aplicar."),
