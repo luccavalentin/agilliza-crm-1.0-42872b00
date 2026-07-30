@@ -17,7 +17,7 @@ type Props = {
  * atual) segue vindo do hook `useChatConversas`.
  */
 export function PainelChat({ hook, acoes }: Props) {
-  const { alvoAtual, selecionado, setSelecionado, verTodos } = hook;
+  const { alvoAtual, selecionado, setSelecionado } = hook;
 
   return (
     <div
