@@ -967,7 +967,9 @@ export const aplicarAoCadastro = createServerFn({ method: "POST" })
 
       const { data: leitura } = await supabase
         .from("scan_ia_leituras")
-        .select("id, correspondente_id, cliente_id, tipo_documento, tipo_confirmado")
+        .select(
+          "id, correspondente_id, cliente_id, tipo_documento, tipo_confirmado, arquivo_url",
+        )
         .eq("id", data.leitura_id)
         .maybeSingle();
       if (!leitura || leitura.correspondente_id !== corr)
