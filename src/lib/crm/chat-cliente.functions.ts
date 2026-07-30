@@ -132,55 +132,24 @@ export const listarConversasCliente = createServerFn({ method: "GET" })
   .inputValidator((d?: { ver_todos?: boolean }) =>
     z.object({ ver_todos: z.boolean().optional() }).parse(d ?? {}),
   )
-  .handler(async ({ data, context }): Promise<ConversaCliente[]> => {
+  .handler(async ({ context }): Promise<ConversaCliente[]> => {
     const { supabase, userId } = context;
-    const gestor = data.ver_todos ? await ehGestor(supabase, userId) : false;
 
     const colunas =
       "cliente_id, atendente_id, mensagem, remetente_tipo, lida_em, criada_em";
 
-    let rows: any[] = [];
-    if (gestor) {
-      const { data: r, error } = await supabase
-        .from("cliente_app_mensagens")
-        .select(colunas)
-        .order("criada_em", { ascending: false })
-        .limit(3000);
-      if (error) throw new Error(error.message);
-      rows = r ?? [];
-    } else {
-      // Threads próprias (dono) + threads compartilhadas (participante convidado).
-      const { data: minhas, error: e1 } = await supabase
-        .from("cliente_app_mensagens")
-        .select(colunas)
-        .eq("atendente_id", userId)
-        .order("criada_em", { ascending: false })
-        .limit(3000);
-      if (e1) throw new Error(e1.message);
-      rows = minhas ?? [];
+    // Busca TODAS as threads visíveis pela RLS (mesmo correspondente). O
+    // filtro final por escopo de dados do cliente é aplicado mais abaixo, de
+    // modo que nenhuma mensagem enviada pelo cliente fique invisível só
+    // porque foi direcionada a outro atendente.
+    const { data: r, error } = await supabase
+      .from("cliente_app_mensagens")
+      .select(colunas)
+      .order("criada_em", { ascending: false })
+      .limit(3000);
+    if (error) throw new Error(error.message);
+    const rows: any[] = r ?? [];
 
-      const { data: participa } = await supabase
-        .from("crm_chat_participantes")
-        .select("cliente_id, atendente_id")
-        .eq("usuario_id", userId);
-      const threadsCompart = (participa ?? []) as {
-        cliente_id: string;
-        atendente_id: string;
-      }[];
-      if (threadsCompart.length > 0) {
-        // Uma única query com .or() no lugar do N+1 anterior.
-        const filtroOr = threadsCompart
-          .map((t) => `and(cliente_id.eq.${t.cliente_id},atendente_id.eq.${t.atendente_id})`)
-          .join(",");
-        const { data: r } = await supabase
-          .from("cliente_app_mensagens")
-          .select(colunas)
-          .or(filtroOr)
-          .order("criada_em", { ascending: false })
-          .limit(3000);
-        rows = rows.concat(r ?? []);
-      }
-    }
 
 
     // Agrupa por thread (cliente + atendente).
