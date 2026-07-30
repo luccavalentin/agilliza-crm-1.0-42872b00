@@ -47,6 +47,20 @@ export function ClienteChatFlutuante() {
   }, [aberto, atendentes, selecionado]);
 
   const flashing = useChatFlash();
+  const [autoMinimizado, setAutoMinimizado] = useState(false);
+
+  // Chegou mensagem em qualquer tela do portal: abre a janela MINIMIZADA no
+  // meio da tela, sem interromper o que o cliente está fazendo.
+  useEffect(() => {
+    if (!flashing || aberto) return;
+    if (!atendentes || atendentes.length === 0) return;
+    setSelecionado(
+      (atual) =>
+        atual ?? atendentes.find((a) => (a.nao_lidas ?? 0) > 0) ?? atendentes[0],
+    );
+    setAutoMinimizado(true);
+    setAberto(true);
+  }, [flashing, aberto, atendentes]);
 
   if (esconderNaPagina) return null;
   // Sem atendente disponível ainda, apenas oculta a bolha.
@@ -60,7 +74,10 @@ export function ClienteChatFlutuante() {
       {!aberto && (
         <button
           type="button"
-          onClick={() => setAberto(true)}
+          onClick={() => {
+            setAutoMinimizado(false);
+            setAberto(true);
+          }}
           aria-label="Abrir conversa com atendente"
           className={cn(
             "fixed bottom-4 right-4 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-xl transition-transform hover:scale-105 active:scale-95",
@@ -78,8 +95,13 @@ export function ClienteChatFlutuante() {
 
       {aberto && selecionado && (
         <FloatingWindow
+          key={autoMinimizado ? "min" : "full"}
           title={`Conversa · ${selecionado.nome}`}
-          onClose={() => setAberto(false)}
+          startMinimized={autoMinimizado}
+          onClose={() => {
+            setAberto(false);
+            setAutoMinimizado(false);
+          }}
         >
           <div className="h-full min-h-[24rem]">
             <ThreadChat
