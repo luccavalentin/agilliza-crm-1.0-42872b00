@@ -609,6 +609,8 @@ export const atualizarConta = createServerFn({ method: "POST" })
       .single();
     if (e0) throw new Error(e0.message);
     if (!atual) throw new Error("Conta não encontrada.");
+    const atualRow = atual as Record<string, any>;
+
 
     const pago = Number(atual.valor_pago) || 0;
     if (pago > data.valor)
