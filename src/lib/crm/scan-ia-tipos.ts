@@ -501,12 +501,26 @@ export function normalizarData(valor: string): string | null {
 export function converterValor(
   campo: string,
   valor: string,
-): { ok: true; valor: string | number | null } | { ok: false; motivo: string } {
+): { ok: true; valor: string | number | boolean | null } | { ok: false; motivo: string } {
   const destino = destinoDoCampo(campo);
   const bruto = valor.trim();
   if (!bruto) return { ok: false, motivo: "Valor vazio." };
-  if (destino.tipo === "matricula") return { ok: true, valor: bruto };
+  if (destino.tipo === "matricula") {
+    if (destino.formato === "data") {
+      const d = normalizarData(bruto);
+      return { ok: true, valor: d ?? bruto };
+    }
+    if (destino.formato === "booleano") {
+      const v = semAcento(bruto);
+      const negativo = /^(nao|n|false|0|inexistente|nenhum|nenhuma|sem)\b/.test(v);
+      const positivo = /^(sim|s|true|1|existe|possui|averbad|constitu|ativa)/.test(v);
+      if (!negativo && !positivo) return { ok: true, valor: bruto };
+      return { ok: true, valor: positivo };
+    }
+    return { ok: true, valor: bruto };
+  }
   if (destino.tipo === "nenhum") return { ok: false, motivo: "Campo sem destino no cadastro." };
+
 
   switch (destino.formato) {
     case "numero": {
