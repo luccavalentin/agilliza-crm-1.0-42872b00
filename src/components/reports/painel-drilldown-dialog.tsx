@@ -13,7 +13,6 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { BancoLogo } from "@/components/bancos/banco-logo";
-import { cn } from "@/lib/utils";
 import { getPanelDrilldown } from "@/lib/relatorios/paineis.functions";
 import type { ReportFiltros } from "@/lib/relatorios/shared";
 import agillizaSymbol from "@/assets/brand/agilliza-symbol-oficial.png";
