@@ -233,6 +233,7 @@ export const listarThreadsCentral = createServerFn({ method: "GET" })
     const { data: clientes } = await supabase
       .from("clientes")
       .select("id, nome, foto_url")
+      .is("deleted_at", null)
       .limit(200);
     const clienteIds = (clientes ?? []).map((c: any) => c.id as string);
 

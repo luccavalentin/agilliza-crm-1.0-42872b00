@@ -102,6 +102,7 @@ export const explorarDocumentosGerais = createServerFn({ method: "GET" })
       .from("clientes")
       .select("id, nome, numero_cliente, documento, responsavel_id, criador_id")
       .eq("ativo", true)
+      .is("deleted_at", null)
       .order("nome", { ascending: true });
     if (corr) clientesQuery = clientesQuery.eq("correspondente_id", corr);
     const { data: clientes, error: cliErr } = await clientesQuery.limit(1000);
