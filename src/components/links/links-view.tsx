@@ -34,8 +34,21 @@ import {
   criarLink,
   atualizarLink,
   excluirLink,
+  listarCategoriasLinks,
+  type LinkCategoria,
 } from "@/lib/links/links.functions";
 import { OpHero, OpStat } from "@/components/operacional/ui";
+import { CategoriasLinksDialog } from "@/components/links/categorias-dialog";
+import { iconeCategoria, classeCategoria } from "@/lib/links/categorias-icones";
+import { cn } from "@/lib/utils";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
 
 function hostname(url: string): string {
   try {
