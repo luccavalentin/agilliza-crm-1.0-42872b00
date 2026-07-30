@@ -116,3 +116,131 @@ export const excluirLink = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+// ============================================================
+// Categorias de links (com ícone e cor)
+// ============================================================
+
+export interface LinkCategoria {
+  id: string;
+  nome: string;
+  icone: string;
+  cor: string;
+  created_at: string;
+  updated_at: string;
+}
+
+/** Lista as categorias cadastradas. */
+export const listarCategoriasLinks = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<LinkCategoria[]> => {
+    const { data, error } = await context.supabase
+      .from("links_categorias")
+      .select("*")
+      .order("nome", { ascending: true });
+    if (error) throw new Error(error.message);
+    return (data ?? []) as LinkCategoria[];
+  });
+
+/** Cria uma categoria. */
+export const criarCategoriaLink = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z
+      .object({
+        nome: z.string().trim().min(1, "Informe o nome").max(120),
+        icone: z.string().trim().min(1).max(40).default("link"),
+        cor: z.string().trim().min(1).max(30).default("azul"),
+      })
+      .parse(data),
+  )
+  .handler(async ({ data, context }): Promise<LinkCategoria> => {
+    const { data: row, error } = await context.supabase
+      .from("links_categorias")
+      .insert({ nome: data.nome, icone: data.icone, cor: data.cor, criado_por: context.userId })
+      .select("*")
+      .single();
+    if (error) {
+      throw new Error(
+        error.code === "23505" ? "Já existe uma categoria com esse nome." : error.message,
+      );
+    }
+    return row as LinkCategoria;
+  });
+
+/** Atualiza nome/ícone/cor de uma categoria e propaga a renomeação para os links. */
+export const atualizarCategoriaLink = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z
+      .object({
+        id: z.string().uuid(),
+        nome: z.string().trim().min(1, "Informe o nome").max(120),
+        icone: z.string().trim().min(1).max(40),
+        cor: z.string().trim().min(1).max(30),
+      })
+      .parse(data),
+  )
+  .handler(async ({ data, context }): Promise<LinkCategoria> => {
+    const { supabase } = context;
+    const { data: atual, error: errAtual } = await supabase
+      .from("links_categorias")
+      .select("nome")
+      .eq("id", data.id)
+      .single();
+    if (errAtual) throw new Error(errAtual.message);
+
+    const { data: row, error } = await supabase
+      .from("links_categorias")
+      .update({ nome: data.nome, icone: data.icone, cor: data.cor })
+      .eq("id", data.id)
+      .select("*")
+      .single();
+    if (error) {
+      throw new Error(
+        error.code === "23505" ? "Já existe uma categoria com esse nome." : error.message,
+      );
+    }
+
+    if (atual?.nome && atual.nome !== data.nome) {
+      const { error: errLinks } = await supabase
+        .from("links_uteis")
+        .update({ categoria: data.nome })
+        .eq("categoria", atual.nome);
+      if (errLinks) throw new Error(errLinks.message);
+    }
+    return row as LinkCategoria;
+  });
+
+/** Exclui uma categoria. Os links vinculados ficam sem categoria (ou são reatribuídos). */
+export const excluirCategoriaLink = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z
+      .object({
+        id: z.string().uuid(),
+        moverPara: z.string().trim().max(120).optional().nullable(),
+      })
+      .parse(data),
+  )
+  .handler(async ({ data, context }): Promise<{ ok: true }> => {
+    const { supabase } = context;
+    const { data: atual, error: errAtual } = await supabase
+      .from("links_categorias")
+      .select("nome")
+      .eq("id", data.id)
+      .single();
+    if (errAtual) throw new Error(errAtual.message);
+
+    if (atual?.nome) {
+      const { error: errLinks } = await supabase
+        .from("links_uteis")
+        .update({ categoria: data.moverPara?.trim() || null })
+        .eq("categoria", atual.nome);
+      if (errLinks) throw new Error(errLinks.message);
+    }
+
+    const { error } = await supabase.from("links_categorias").delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
