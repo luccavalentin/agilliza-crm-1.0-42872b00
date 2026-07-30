@@ -121,6 +121,10 @@ export async function arquivarLeituraNaDocumentacao(params: {
         aprovado_por: userId,
         aprovado_em: new Date().toISOString(),
         enviado_por: userId,
+        // Fica pendente na fila de envio ao banco (sequenciamento da proposta).
+        situacao_integracao: null,
+        integrado_em: null,
+        erro_integracao: null,
       })
       .select("id")
       .single();
@@ -152,6 +156,33 @@ export async function arquivarLeituraNaDocumentacao(params: {
       ator_id: userId,
     });
 
+    // Vincula a leitura (e o documento) à proposta em andamento do cliente,
+    // para que o sequenciamento de envio ao banco já enxergue o arquivo.
+    try {
+      const { data: prop } = await supabase
+        .from("propostas")
+        .select("id, numero")
+        .eq("cliente_id", clienteId)
+        .is("deleted_at", null)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (prop?.id) {
+        await supabase
+          .from("scan_ia_leituras")
+          .update({ proposta_id: prop.id })
+          .eq("id", leituraId)
+          .is("proposta_id", null);
+        await supabase.from("proposta_historico").insert({
+          proposta_id: prop.id,
+          tipo_evento: "documento",
+          descricao: `Documento validado pelo Scan IA disponível para envio ao banco: ${nomeArquivo}`,
+          ator_id: userId,
+        });
+      }
+    } catch {
+      /* vínculo com proposta é best-effort */
+    }
 
     return { arquivado: true, ja_existia: false, documento_id: inserido.id, erro: null };
   } catch (e: any) {
