@@ -255,7 +255,9 @@ export function LinksView() {
                 </Button>
               </div>
             </div>
-          ))
+            );
+          })
+
         )}
       </div>
 
