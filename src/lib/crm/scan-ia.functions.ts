@@ -567,10 +567,12 @@ export const processarLeitura = createServerFn({ method: "POST" })
       };
 
       const campos = (parsed.campos ?? [])
-        .map((c) => {
-          const normalizado = normalizarCampoExtraido(String(c?.campo ?? ""), comoTexto(c?.valor));
-          return { bruto: c, ...normalizado };
-        })
+        .flatMap((c) =>
+          normalizarCampoExtraido(String(c?.campo ?? ""), comoTexto(c?.valor)).map((n) => ({
+            bruto: c,
+            ...n,
+          })),
+        )
         .filter((c) => c.campo && c.valor && permitidos.has(c.campo))
         .map((c) => ({
           leitura_id: data.id,
@@ -933,18 +935,24 @@ function textoValorAtual(v: unknown): string | null {
   return String(v);
 }
 
-function normalizarCampoExtraido(campo: string, valor: string): { campo: string; valor: string } {
+function normalizarCampoExtraido(campo: string, valor: string): Array<{ campo: string; valor: string }> {
   const c = campo.trim();
   const v = valor.trim();
   if (c === "endereco_completo" || c === "endereco") {
     const cep = v.match(/\b\d{5}[-\s]?\d{3}\b/);
-    return { campo: c, valor: cep ? v.replace(cep[0], "").trim().replace(/[,-]\s*$/, "") : v };
+    const linha = cep ? v.replace(cep[0], "").trim().replace(/[,-]\s*$/, "") : v;
+    return cep
+      ? [
+          { campo: c, valor: linha },
+          { campo: "endereco_cep", valor: cep[0] },
+        ]
+      : [{ campo: c, valor: v }];
   }
-  if (c === "cep") return { campo: "endereco_cep", valor: v };
-  if (c === "bairro") return { campo: "endereco_bairro", valor: v };
-  if (c === "cidade") return { campo: "endereco_cidade", valor: v };
-  if (c === "uf") return { campo: "endereco_uf", valor: v };
-  return { campo: c, valor: v };
+  if (c === "cep") return [{ campo: "endereco_cep", valor: v }];
+  if (c === "bairro") return [{ campo: "endereco_bairro", valor: v }];
+  if (c === "cidade") return [{ campo: "endereco_cidade", valor: v }];
+  if (c === "uf") return [{ campo: "endereco_uf", valor: v }];
+  return [{ campo: c, valor: v }];
 }
 
 /** Monta a prévia do modal de aplicação: valor da IA x valor atual do cadastro. */
