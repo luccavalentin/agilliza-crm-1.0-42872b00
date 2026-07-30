@@ -73,12 +73,16 @@ export function useChatConversas() {
   });
 
   const estadoPorCliente = useMemo(() => {
-    const m = new Map<string, { fixado: boolean; apelido: string | null }>();
+    const m = new Map<
+      string,
+      { fixado: boolean; apelido: string | null; ocultoEm: string | null }
+    >();
     for (const e of estadosUsuario ?? []) {
       if (e.chat_tipo !== "cliente") continue;
       m.set(e.chat_id, {
         fixado: !!e.pinado_em,
         apelido: e.apelido ?? null,
+        ocultoEm: e.oculto_em ?? null,
       });
     }
     return m;
@@ -89,6 +93,16 @@ export function useChatConversas() {
   }
   function apelidoCliente(clienteId: string) {
     return estadoPorCliente.get(clienteId)?.apelido ?? null;
+  }
+  /**
+   * Conversa "excluída" some da lista do usuário. Volta a aparecer apenas se
+   * chegar mensagem nova depois da exclusão.
+   */
+  function ocultaCliente(clienteId: string, ultimaEm?: string | null) {
+    const oc = estadoPorCliente.get(clienteId)?.ocultoEm;
+    if (!oc) return false;
+    if (!ultimaEm) return true;
+    return new Date(ultimaEm).getTime() <= new Date(oc).getTime();
   }
 
   const idsConversa = useMemo(
