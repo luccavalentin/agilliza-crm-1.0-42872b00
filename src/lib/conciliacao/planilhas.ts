@@ -359,6 +359,7 @@ export const ETAPAS_COMPARATIVO: EtapaComparativo[] = [
 export function classificarEtapa(texto: unknown): EtapaComparativo | null {
   const t = normalizarNome(texto);
   if (!t) return null;
+  if (/(nao enviad|sem envio|aguardando documento)/.test(t)) return "documentos";
   if (/(contrato|instrumento|escritur|assinad|formaliz|registrad|liberad|emitid)/.test(t))
     return "contrato_emitido";
   if (/(cancel|desist|expirad|encerrad|arquivad|distrat)/.test(t)) return "cancelado";
