@@ -254,6 +254,40 @@ function Pagina() {
         />
       </div>
 
+      {/*
+        Visualizar todos: os lançamentos saíram do menu lateral e vivem na ficha
+        do funcionário, mas o gestor ainda precisa da visão consolidada.
+      */}
+      <div className="rounded-xl border border-border bg-card p-4">
+        <div className="mb-3">
+          <h2 className="text-sm font-semibold text-foreground">Visualizar todos</h2>
+          <p className="text-xs text-muted-foreground">
+            Visões consolidadas da empresa. O lançamento individual é feito na ficha de cada
+            funcionário.
+          </p>
+        </div>
+        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          {[
+            { to: "/rh/beneficios", label: "Benefícios" },
+            { to: "/rh/adiantamentos", label: "Adiantamentos" },
+            { to: "/rh/descontos", label: "Descontos" },
+            { to: "/rh/alteracoes-salariais", label: "Alterações salariais" },
+            { to: "/rh/previa-folha", label: "Prévia da folha" },
+            { to: "/rh/holerites", label: "Holerites" },
+          ].map((l) => (
+            <Link
+              key={l.to}
+              to={l.to}
+              className="rounded-lg border border-border px-3 py-2 text-sm text-foreground transition-all hover:scale-[1.01] hover:border-primary/50 hover:shadow-sm"
+            >
+              {l.label}
+            </Link>
+          ))}
+        </div>
+      </div>
+
+
+
       {drill && (
         <KpiDrilldownDialog
           open={!!drill}

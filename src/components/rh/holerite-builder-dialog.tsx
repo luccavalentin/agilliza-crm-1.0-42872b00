@@ -77,14 +77,22 @@ function CampoNum({
   );
 }
 
-export function HoleriteBuilderDialog({ trigger }: { trigger?: React.ReactNode }) {
+export function HoleriteBuilderDialog({
+  trigger,
+  funcionarioFixo,
+}: {
+  trigger?: React.ReactNode;
+  /** Quando informado, o holerite já abre travado neste funcionário (ficha individual). */
+  funcionarioFixo?: string;
+}) {
+
   const qc = useQueryClient();
   const hoje = new Date();
   const fnFunc = useServerFn(obterFuncionario);
   const fnAnexar = useServerFn(anexarHolerite);
 
   const [open, setOpen] = useState(false);
-  const [funcionarioId, setFuncionarioId] = useState<string | null>(null);
+  const [funcionarioId, setFuncionarioId] = useState<string | null>(funcionarioFixo ?? null);
   const [mes, setMes] = useState(hoje.getMonth() + 1);
   const [ano, setAno] = useState(hoje.getFullYear());
   const [e, setE] = useState<HoleriteEntrada>({ ...ENTRADA_PADRAO });
@@ -208,7 +216,14 @@ export function HoleriteBuilderDialog({ trigger }: { trigger?: React.ReactNode }
               <div className="grid gap-3 sm:grid-cols-3">
                 <div className="space-y-1.5 sm:col-span-1">
                   <Label className="text-xs text-muted-foreground">Funcionário</Label>
-                  <FuncionarioPicker value={funcionarioId} onChange={setFuncionarioId} />
+                  {funcionarioFixo ? (
+                    <div className="flex h-9 items-center rounded-md border border-border bg-muted/40 px-3 text-sm">
+                      {func?.nome ?? "Carregando…"}
+                    </div>
+                  ) : (
+                    <FuncionarioPicker value={funcionarioId} onChange={setFuncionarioId} />
+                  )}
+
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs text-muted-foreground">Mês</Label>

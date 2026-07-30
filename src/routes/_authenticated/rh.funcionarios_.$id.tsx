@@ -18,6 +18,8 @@ import {
   FichaHolerites,
 } from "@/components/rh/ficha-tabs";
 import { FichaDependentes } from "@/components/rh/ficha-dependentes";
+import { FichaPreviaFolha } from "@/components/rh/ficha-previa-folha";
+
 import {
   FichaAdiantamentos,
   FichaDescontos,
@@ -107,7 +109,9 @@ function Pagina() {
             <TabsTrigger value="adiantamentos">Adiantamentos</TabsTrigger>
             <TabsTrigger value="descontos">Descontos</TabsTrigger>
             <TabsTrigger value="salarios">Alterações salariais</TabsTrigger>
+            <TabsTrigger value="previa">Prévia da folha</TabsTrigger>
             <TabsTrigger value="holerites">Holerites</TabsTrigger>
+
           </TabsList>
 
           <TabsContent value="historico" className="mt-4">
@@ -171,9 +175,13 @@ function Pagina() {
           <TabsContent value="salarios" className="mt-4">
             <FichaAlteracoesSalariais funcionarioId={id} />
           </TabsContent>
+          <TabsContent value="previa" className="mt-4">
+            <FichaPreviaFolha funcionarioId={id} />
+          </TabsContent>
           <TabsContent value="holerites" className="mt-4">
             <FichaHolerites funcionarioId={id} />
           </TabsContent>
+
         </Tabs>
       </div>
     </div>

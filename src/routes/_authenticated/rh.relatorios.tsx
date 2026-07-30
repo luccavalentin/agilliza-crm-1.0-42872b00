@@ -311,65 +311,12 @@ function RelatoriosRhPage() {
         </CardContent>
       </Card>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Admissões (últimos 12 meses)</CardTitle>
-          </CardHeader>
-          <CardContent className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={admissoes}>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                <XAxis dataKey="mes" fontSize={11} />
-                <YAxis allowDecimals={false} fontSize={11} />
-                <Tooltip
-                  contentStyle={{
-                    background: "hsl(var(--card))",
-                    border: "1px solid hsl(var(--border))",
-                    borderRadius: 6,
-                    fontSize: 12,
-                  }}
-                />
-                <Bar dataKey="total" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+      {/*
+        Gráficos de admissões x desligamentos e quadro por departamento foram
+        removidos a pedido: a empresa é pequena e os números cabem nos KPIs
+        acima e nos relatórios detalhados abaixo.
+      */}
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Quadro por departamento</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {quadro.length === 0 ? (
-              <div className="p-6 text-center text-sm text-muted-foreground">
-                Sem funcionários cadastrados.
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {quadro.map((d) => {
-                  const max = Math.max(...quadro.map((x) => x.total));
-                  const pct = max > 0 ? (d.total / max) * 100 : 0;
-                  return (
-                    <div key={d.nome} className="space-y-1">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="font-medium text-foreground">{d.nome}</span>
-                        <span className="text-muted-foreground">{d.total}</span>
-                      </div>
-                      <div className="h-2 overflow-hidden rounded-full bg-muted">
-                        <div
-                          className="h-full rounded-full bg-primary transition-all"
-                          style={{ width: `${pct}%` }}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
 
       <Card>
         <CardHeader>
