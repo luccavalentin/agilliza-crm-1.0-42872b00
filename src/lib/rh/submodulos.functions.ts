@@ -28,7 +28,7 @@ export type FeriasStatus =
   | "concluida"
   | "cancelada";
 
-export type LancamentoStatus = "previsto" | "descontado" | "pago" | "cancelado";
+export type LancamentoStatus = "previsto" | "recebido" | "descontado" | "pago" | "cancelado";
 
 export interface FuncionarioResumo {
   id: string;
@@ -798,7 +798,7 @@ const lancamentoInput = z.object({
   competencia_ano: z.number().min(2020).max(2100),
   descricao: z.string().optional().nullable(),
   status: z
-    .enum(["previsto", "descontado", "pago", "cancelado"])
+    .enum(["previsto", "recebido", "descontado", "pago", "cancelado"])
     .default("previsto"),
 });
 
