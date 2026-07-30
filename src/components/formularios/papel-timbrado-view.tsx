@@ -441,22 +441,90 @@ function PreviewPagina({
   modelo: PapelTimbradoModelo;
   children: React.ReactNode;
 }) {
+  const ehReal = modelo.estilo === "real";
   return (
     <div
-      className="relative overflow-hidden rounded-xl border border-border bg-white"
+      className="relative overflow-hidden rounded-xl border border-border"
       style={{
+        background: ehReal ? (modelo.fundo ?? "#FBF7EE") : "#ffffff",
         boxShadow: `0 20px 48px -24px ${modelo.primaria}55, 0 2px 6px -2px rgba(0,0,0,0.08)`,
+        padding: ehReal ? 14 : undefined,
       }}
     >
-      {/* Marca d'água central */}
-      <span className="pointer-events-none absolute inset-0 grid select-none place-items-center overflow-hidden">
-        <span
-          className="rotate-[-24deg] whitespace-nowrap text-[120px] font-black tracking-[0.05em]"
-          style={{ color: modelo.marcaDagua, opacity: 0.05 }}
-        >
-          AGILLIZA
+      {/* Moldura ornamental (linha Real) */}
+      {ehReal && (
+        <span className="pointer-events-none absolute inset-0" aria-hidden>
+          <span
+            className="absolute inset-[10px] border-[1.5px]"
+            style={{ borderColor: modelo.primaria }}
+          />
+          <span
+            className="absolute inset-[15px] border"
+            style={{ borderColor: modelo.metalico ?? modelo.destaque, opacity: 0.9 }}
+          />
+          <span
+            className="absolute inset-[19px] border"
+            style={{ borderColor: modelo.metalico ?? modelo.destaque, opacity: 0.45 }}
+          />
+          {[
+            "left-[8px] top-[8px]",
+            "right-[8px] top-[8px]",
+            "left-[8px] bottom-[8px]",
+            "right-[8px] bottom-[8px]",
+          ].map((pos) => (
+            <span
+              key={pos}
+              className={cn("absolute size-2 rotate-45", pos)}
+              style={{ background: modelo.metalico ?? modelo.destaque }}
+            />
+          ))}
         </span>
-      </span>
+      )}
+
+      {/* Marca d'água central */}
+      {ehReal ? (
+        <span
+          className="pointer-events-none absolute inset-0 grid select-none place-items-center overflow-hidden"
+          aria-hidden
+        >
+          <span className="relative grid size-[300px] place-items-center">
+            <span
+              className="absolute inset-0 rounded-full border-[3px]"
+              style={{ borderColor: modelo.marcaDagua, opacity: 0.08 }}
+            />
+            <span
+              className="absolute inset-[10px] rounded-full border"
+              style={{ borderColor: modelo.marcaDagua, opacity: 0.08 }}
+            />
+            <span
+              className="absolute inset-[38px] rounded-full border"
+              style={{ borderColor: modelo.marcaDagua, opacity: 0.08 }}
+            />
+            <span
+              className="font-serif text-[170px] font-bold leading-none"
+              style={{ color: modelo.marcaDagua, opacity: 0.07 }}
+            >
+              A
+            </span>
+            <span
+              className="absolute bottom-6 font-serif text-[11px] tracking-[0.34em]"
+              style={{ color: modelo.marcaDagua, opacity: 0.1 }}
+            >
+              AGILLIZA
+            </span>
+          </span>
+        </span>
+      ) : (
+        <span className="pointer-events-none absolute inset-0 grid select-none place-items-center overflow-hidden">
+          <span
+            className="rotate-[-24deg] whitespace-nowrap text-[120px] font-black tracking-[0.05em]"
+            style={{ color: modelo.marcaDagua, opacity: 0.05 }}
+          >
+            AGILLIZA
+          </span>
+        </span>
+      )}
+
 
       {/* Cabeçalho conforme estilo */}
       {modelo.estilo === "faixa" && (
