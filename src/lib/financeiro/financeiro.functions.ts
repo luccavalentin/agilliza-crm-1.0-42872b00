@@ -578,7 +578,84 @@ export const cancelarConta = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+/** ===== Editar conta (qualquer status) ===== */
+export const atualizarConta = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        tipo: z.enum(["pagar", "receber"]),
+        id: z.string().uuid(),
+        descricao: z.string().min(1),
+        contraparte: z.string().optional().nullable(),
+        valor: z.number().positive(),
+        vencimento: z.string(),
+        categoria_id: z.string().uuid().optional().nullable(),
+        cost_center_id: z.string().uuid().optional().nullable(),
+        comprovante_path: z.string().optional().nullable(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ context, data }): Promise<{ ok: true }> => {
+    const { supabase, userId } = context;
+    const correspondente_id = await correspondenteId(supabase, userId);
+    const contraCol = data.tipo === "pagar" ? "fornecedor" : "pagador";
+
+    const { data: atual, error: e0 } = await supabase
+      .from(TABELA[data.tipo])
+      .select("*")
+      .eq("id", data.id)
+      .eq("correspondente_id", correspondente_id)
+      .single();
+    if (e0) throw new Error(e0.message);
+    if (!atual) throw new Error("Conta não encontrada.");
+
+    const pago = Number(atual.valor_pago) || 0;
+    if (pago > data.valor)
+      throw new Error("O valor não pode ser menor do que o total já baixado nesta conta.");
+
+    const patch: Record<string, unknown> = {
+      descricao: data.descricao,
+      [contraCol]: data.contraparte ?? null,
+      valor: data.valor,
+      vencimento: data.vencimento,
+      categoria_id: data.categoria_id ?? null,
+      cost_center_id: data.cost_center_id ?? null,
+    };
+    if (data.comprovante_path) patch.comprovante_path = data.comprovante_path;
+
+    const { error } = await supabase
+      .from(TABELA[data.tipo])
+      .update(patch as any)
+      .eq("id", data.id)
+      .eq("correspondente_id", correspondente_id);
+    if (error) throw new Error(error.message);
+
+    await registrarHistorico(
+      supabase,
+      correspondente_id,
+      data.tipo,
+      data.id,
+      "editada",
+      data.descricao,
+      data.valor,
+    );
+    await registrarAuditoria(supabase, correspondente_id, `conta_${data.tipo}`, data.id, "editada", {
+      antes: {
+        descricao: atual.descricao,
+        valor: Number(atual.valor),
+        vencimento: atual.vencimento,
+        contraparte: atual[contraCol] ?? null,
+        categoria_id: atual.categoria_id ?? null,
+        cost_center_id: atual.cost_center_id ?? null,
+      },
+      depois: patch,
+    });
+    return { ok: true };
+  });
+
 /** ===== Detalhe da conta ===== */
+
 export const obterConta = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data) =>
