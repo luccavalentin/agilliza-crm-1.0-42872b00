@@ -349,10 +349,15 @@ export function ThreadChat({
 
   function submeter() {
     const v = texto.trim();
-    if (!v || enviar.isPending || enviandoAnexo) return;
+    if (!v || enviar.isPending || enviandoAnexo || editarMsg.isPending) return;
     notifyStop();
+    if (editando) {
+      editarMsg.mutate({ mensagem_id: editando.id, mensagem: v });
+      return;
+    }
     enviar.mutate(v);
   }
+
 
   function selecionar(file: File | undefined) {
     if (!file) return;
