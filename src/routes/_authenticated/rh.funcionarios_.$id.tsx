@@ -1,14 +1,17 @@
-import { createFileRoute, useParams } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { createFileRoute, useParams, useNavigate } from "@tanstack/react-router";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, Printer } from "lucide-react";
+import { useState } from "react";
+import { Loader2, Printer, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { assertModuloPermitido } from "@/lib/route-guards";
 import {
   obterFuncionario,
   listarHistoricoFuncionario,
   listarDependentes,
+  excluirFuncionario,
 } from "@/lib/rh/funcionarios.functions";
+
 import { FuncionarioForm, ABA_CLASS } from "@/components/rh/funcionario-form";
 import {
   FichaDocumentos,
