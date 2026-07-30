@@ -1,13 +1,27 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import {
+  CAMPOS_ESPERADOS,
+  CAMPOS_POR_TIPO,
+  TIPOS_DOCUMENTO,
+  camposEsperadosDoTipo,
+  converterValor,
+  destinoDoCampo,
+  ehTipoConhecido,
+  faixaConfianca,
+  rotuloCampo,
+} from "./scan-ia-tipos";
 
 export interface LeituraLista {
   id: string;
   tipo_documento: string | null;
+  tipo_documento_sugerido: string | null;
+  tipo_confirmado: boolean;
   status: string;
   erro: string | null;
   cliente_id: string | null;
+  cliente_nome: string | null;
   proposta_id: string | null;
   created_at: string;
   total_campos: number;
@@ -26,6 +40,11 @@ export interface LeituraDetalhe {
   id: string;
   arquivo_url: string;
   tipo_documento: string | null;
+  tipo_documento_sugerido: string | null;
+  tipo_confirmado: boolean;
+  cliente_id: string | null;
+  cliente_nome: string | null;
+  cliente_documento: string | null;
   status: string;
   erro: string | null;
   created_at: string;
@@ -34,6 +53,7 @@ export interface LeituraDetalhe {
   criador_id: string | null;
   criador_nome: string | null;
 }
+
 
 async function correspondenteDoUsuario(
   supabase: { from: (t: string) => any },
@@ -66,7 +86,7 @@ export const listarLeituras = createServerFn({ method: "GET" })
     const { data, error } = await supabase
       .from("scan_ia_leituras")
       .select(
-        "id, tipo_documento, status, erro, cliente_id, proposta_id, created_at, criador_id, scan_ia_campos_extraidos(count)",
+        "id, tipo_documento, tipo_documento_sugerido, tipo_confirmado, status, erro, cliente_id, proposta_id, created_at, criador_id, scan_ia_campos_extraidos(count)",
       )
       .eq("correspondente_id", corr)
       .order("created_at", { ascending: false })
@@ -84,18 +104,29 @@ export const listarLeituras = createServerFn({ method: "GET" })
       nomes = new Map((perfis ?? []).map((p: any) => [p.id, p.nome]));
     }
 
+    const clienteIds = [...new Set(linhas.map((r: any) => r.cliente_id).filter(Boolean))];
+    let clientes = new Map<string, string | null>();
+    if (clienteIds.length > 0) {
+      const { data: cs } = await supabase.from("clientes").select("id, nome").in("id", clienteIds);
+      clientes = new Map((cs ?? []).map((c: any) => [c.id, c.nome]));
+    }
+
     return linhas.map((r: any) => ({
       id: r.id,
       tipo_documento: r.tipo_documento,
+      tipo_documento_sugerido: r.tipo_documento_sugerido ?? null,
+      tipo_confirmado: !!r.tipo_confirmado,
       status: r.status,
       erro: r.erro,
       cliente_id: r.cliente_id,
+      cliente_nome: r.cliente_id ? (clientes.get(r.cliente_id) ?? null) : null,
       proposta_id: r.proposta_id,
       created_at: r.created_at,
       total_campos: r.scan_ia_campos_extraidos?.[0]?.count ?? 0,
       criador_id: r.criador_id ?? null,
       criador_nome: r.criador_id ? (nomes.get(r.criador_id) ?? null) : null,
     }));
+
   });
 
 export const obterLeitura = createServerFn({ method: "GET" })
@@ -109,7 +140,7 @@ export const obterLeitura = createServerFn({ method: "GET" })
     const { data: leitura, error } = await supabase
       .from("scan_ia_leituras")
       .select(
-        "id, arquivo_url, tipo_documento, status, erro, created_at, correspondente_id, criador_id",
+        "id, arquivo_url, tipo_documento, tipo_documento_sugerido, tipo_confirmado, cliente_id, status, erro, created_at, correspondente_id, criador_id",
       )
       .eq("id", data.id)
       .maybeSingle();
@@ -136,10 +167,27 @@ export const obterLeitura = createServerFn({ method: "GET" })
       criadorNome = perfil?.nome ?? null;
     }
 
+    let clienteNome: string | null = null;
+    let clienteDocumento: string | null = null;
+    if (leitura.cliente_id) {
+      const { data: cli } = await supabase
+        .from("clientes")
+        .select("nome, documento")
+        .eq("id", leitura.cliente_id)
+        .maybeSingle();
+      clienteNome = cli?.nome ?? null;
+      clienteDocumento = cli?.documento ?? null;
+    }
+
     return {
       id: leitura.id,
       arquivo_url: leitura.arquivo_url,
       tipo_documento: leitura.tipo_documento,
+      tipo_documento_sugerido: leitura.tipo_documento_sugerido ?? null,
+      tipo_confirmado: !!leitura.tipo_confirmado,
+      cliente_id: leitura.cliente_id ?? null,
+      cliente_nome: clienteNome,
+      cliente_documento: clienteDocumento,
       status: leitura.status,
       erro: leitura.erro,
       created_at: leitura.created_at,
@@ -150,14 +198,14 @@ export const obterLeitura = createServerFn({ method: "GET" })
     };
   });
 
-/** Registra a leitura após o upload do arquivo no bucket. */
+/** Registra a leitura após o upload do arquivo no bucket. O tipo é OPCIONAL — em branco, a IA identifica. */
 export const criarLeitura = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { arquivo_url: string; tipo_documento: string }) =>
+  .inputValidator((d: { arquivo_url: string; tipo_documento?: string | null }) =>
     z
       .object({
         arquivo_url: z.string().min(1),
-        tipo_documento: z.string().min(1).max(120),
+        tipo_documento: z.string().max(120).nullable().optional(),
       })
       .parse(d),
   )
@@ -166,12 +214,15 @@ export const criarLeitura = createServerFn({ method: "POST" })
     const corr = await correspondenteDoUsuario(supabase, userId);
     if (!corr) throw new Error("Sem correspondente.");
 
+    const tipoInformado = (data.tipo_documento ?? "").trim() || null;
+
     const { data: inserida, error } = await supabase
       .from("scan_ia_leituras")
       .insert({
         correspondente_id: corr,
         arquivo_url: data.arquivo_url,
-        tipo_documento: data.tipo_documento,
+        tipo_documento: tipoInformado,
+        tipo_confirmado: false,
         status: "pendente",
         criador_id: userId,
       })
@@ -181,20 +232,6 @@ export const criarLeitura = createServerFn({ method: "POST" })
     return { id: inserida.id };
   });
 
-const CAMPOS_ESPERADOS = [
-  "nome_completo",
-  "cpf_cnpj",
-  "rg",
-  "data_nascimento",
-  "estado_civil",
-  "renda_mensal",
-  "endereco",
-  "cep",
-  "telefone",
-  "email",
-  "valor_imovel",
-  "numero_documento",
-];
 
 /** Processa a leitura com IA (OCR + extração estruturada de campos). */
 export const processarLeitura = createServerFn({ method: "POST" })
@@ -275,15 +312,25 @@ export const processarLeitura = createServerFn({ method: "POST" })
       const base64 = bytes.toString("base64");
       const mime = (blob as Blob).type || "application/pdf";
 
+      const mapaTipos = Object.entries(CAMPOS_POR_TIPO)
+        .map(([t, cs]) => `- ${t}: ${cs.join(", ")}`)
+        .join("\n");
+      const tipoInformado = (leitura.tipo_documento ?? "").trim();
+
       const instrucaoBase =
-        `Tipo do documento: "${leitura.tipo_documento ?? "desconhecido"}". ` +
-        `Faça OCR e extraia os campos a seguir quando presentes: ${CAMPOS_ESPERADOS.join(", ")}. ` +
+        `Você analisa documentos brasileiros para um correspondente bancário.\n` +
+        `PASSO 1 — Classifique o documento em EXATAMENTE um destes tipos: ${TIPOS_DOCUMENTO.join(", ")}.\n` +
+        (tipoInformado
+          ? `O operador informou o tipo como "${tipoInformado}", mas classifique de forma independente pelo conteúdo real.\n`
+          : "") +
+        `PASSO 2 — Faça OCR e extraia SOMENTE os campos previstos para o tipo que você classificou:\n${mapaTipos}\n` +
         `Responda SOMENTE com JSON no formato ` +
-        `{"campos":[{"campo":"<nome>","valor":"<texto>","confianca":<0-1>}]}. ` +
-        `Use exatamente os nomes de campo listados. Para valores monetários, mantenha o formato numérico. ` +
-        `A confiança deve refletir a legibilidade e a certeza da extração. ` +
+        `{"tipo_documento":"<um dos tipos>","confianca_tipo":<0-1>,"campos":[{"campo":"<nome>","valor":"<texto>","confianca":<0-1>}]}. ` +
+        `Use exatamente os nomes de campo listados para o tipo. Para valores monetários, mantenha o formato numérico. ` +
+        `Datas em dd/mm/aaaa. A confiança deve refletir a legibilidade e a certeza da extração. ` +
         `Não invente valores: se um campo não existir no documento, não o inclua.`;
       const prompt = promptSistema ? `${promptSistema}\n\n${instrucaoBase}` : instrucaoBase;
+
 
       let resp: Response;
       if (provedor === "openai") {
@@ -358,7 +405,11 @@ export const processarLeitura = createServerFn({ method: "POST" })
           ? (json?.choices?.[0]?.message?.content ?? "")
           : (json?.candidates?.[0]?.content?.parts?.map((p: any) => p.text).join("") ?? "");
 
-      let parsed: { campos?: Array<{ campo: string; valor: string; confianca: number }> };
+      let parsed: {
+        tipo_documento?: string;
+        confianca_tipo?: number;
+        campos?: Array<{ campo: string; valor: string; confianca: number }>;
+      };
       try {
         parsed = JSON.parse(texto);
       } catch {
@@ -366,8 +417,18 @@ export const processarLeitura = createServerFn({ method: "POST" })
         parsed = m ? JSON.parse(m[0]) : { campos: [] };
       }
 
+      const tipoSugerido = ehTipoConhecido(parsed.tipo_documento)
+        ? parsed.tipo_documento
+        : "outro";
+      // Só aceita campos previstos para o tipo sugerido (evita ruído do modelo).
+      const permitidos = new Set([
+        ...camposEsperadosDoTipo(tipoSugerido),
+        ...(tipoInformado ? camposEsperadosDoTipo(tipoInformado) : []),
+        ...CAMPOS_ESPERADOS,
+      ]);
+
       const campos = (parsed.campos ?? [])
-        .filter((c) => c && c.campo && c.valor != null)
+        .filter((c) => c && c.campo && c.valor != null && permitidos.has(String(c.campo)))
         .map((c) => ({
           leitura_id: data.id,
           campo: String(c.campo).slice(0, 120),
@@ -382,9 +443,14 @@ export const processarLeitura = createServerFn({ method: "POST" })
         if (insErr) throw insErr;
       }
 
+      // O tipo sugerido NUNCA sobrescreve o tipo efetivo — só um humano confirma.
       await supabase
         .from("scan_ia_leituras")
-        .update({ status: "concluida", erro: null })
+        .update({
+          status: "concluida",
+          erro: null,
+          tipo_documento_sugerido: tipoSugerido,
+        })
         .eq("id", data.id);
 
       await supabase.from("scan_ia_auditoria").insert({
@@ -392,8 +458,15 @@ export const processarLeitura = createServerFn({ method: "POST" })
         leitura_id: data.id,
         ator_id: userId,
         acao: "processada",
-        dados: { total_campos: campos.length },
+        dados: {
+          total_campos: campos.length,
+          tipo_informado: tipoInformado || null,
+          tipo_sugerido: tipoSugerido,
+          confianca_tipo: Number(parsed.confianca_tipo) || null,
+          divergencia_tipo: !!tipoInformado && tipoInformado !== tipoSugerido,
+        },
       });
+
 
       return { ok: true };
     } catch (e: any) {
@@ -497,3 +570,426 @@ export const excluirLeitura = createServerFn({ method: "POST" })
     if (error) throw error;
     return { ok: true };
   });
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * VALIDAÇÃO HUMANA OBRIGATÓRIA
+ * Nada abaixo grava dado da IA no cadastro sem uma decisão explícita do usuário.
+ * ──────────────────────────────────────────────────────────────────────────── */
+
+/** Confirma (humano) o tipo efetivo do documento. */
+export const confirmarTipoDocumento = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { leitura_id: string; tipo: string }) =>
+    z.object({ leitura_id: z.string().uuid(), tipo: z.enum(TIPOS_DOCUMENTO) }).parse(d),
+  )
+  .handler(async ({ data, context }): Promise<{ ok: true }> => {
+    const { supabase, userId } = context;
+    const corr = await correspondenteDoUsuario(supabase, userId);
+    if (!corr) throw new Error("Sem correspondente.");
+
+    const { data: leitura } = await supabase
+      .from("scan_ia_leituras")
+      .select("id, correspondente_id, tipo_documento, tipo_documento_sugerido")
+      .eq("id", data.leitura_id)
+      .maybeSingle();
+    if (!leitura || leitura.correspondente_id !== corr) throw new Error("Leitura não encontrada.");
+
+    const { error } = await supabase
+      .from("scan_ia_leituras")
+      .update({ tipo_documento: data.tipo, tipo_confirmado: true })
+      .eq("id", data.leitura_id);
+    if (error) throw error;
+
+    await supabase.from("scan_ia_auditoria").insert({
+      correspondente_id: corr,
+      leitura_id: data.leitura_id,
+      ator_id: userId,
+      acao: "tipo_confirmado",
+      dados: {
+        tipo_anterior: leitura.tipo_documento,
+        tipo_sugerido_ia: leitura.tipo_documento_sugerido,
+        tipo_confirmado_pelo_usuario: data.tipo,
+      },
+    });
+    return { ok: true };
+  });
+
+/** Vincula (ou desvincula) a leitura a um cliente já cadastrado. */
+export const vincularClienteLeitura = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { leitura_id: string; cliente_id: string | null }) =>
+    z
+      .object({ leitura_id: z.string().uuid(), cliente_id: z.string().uuid().nullable() })
+      .parse(d),
+  )
+  .handler(async ({ data, context }): Promise<{ ok: true }> => {
+    const { supabase, userId } = context;
+    const corr = await correspondenteDoUsuario(supabase, userId);
+    if (!corr) throw new Error("Sem correspondente.");
+
+    const { data: leitura } = await supabase
+      .from("scan_ia_leituras")
+      .select("id, correspondente_id")
+      .eq("id", data.leitura_id)
+      .maybeSingle();
+    if (!leitura || leitura.correspondente_id !== corr) throw new Error("Leitura não encontrada.");
+
+    if (data.cliente_id) {
+      const { data: cli } = await supabase
+        .from("clientes")
+        .select("id")
+        .eq("id", data.cliente_id)
+        .maybeSingle();
+      if (!cli) throw new Error("Cliente não encontrado.");
+    }
+
+    const { error } = await supabase
+      .from("scan_ia_leituras")
+      .update({ cliente_id: data.cliente_id })
+      .eq("id", data.leitura_id);
+    if (error) throw error;
+
+    await supabase.from("scan_ia_auditoria").insert({
+      correspondente_id: corr,
+      leitura_id: data.leitura_id,
+      ator_id: userId,
+      acao: "cliente_vinculado",
+      dados: { cliente_id: data.cliente_id },
+    });
+    return { ok: true };
+  });
+
+/**
+ * Cria um cliente novo a partir da leitura. Nome e documento vêm do formulário
+ * revisado pelo operador (não direto da IA) — os demais campos só entram depois,
+ * pelo modal de "Aplicar ao cadastro".
+ */
+export const criarClienteParaLeitura = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { leitura_id: string; nome: string; documento: string }) =>
+    z
+      .object({
+        leitura_id: z.string().uuid(),
+        nome: z.string().trim().min(3).max(200),
+        documento: z.string().trim().min(11).max(20),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }): Promise<{ cliente_id: string; reaproveitado: boolean }> => {
+    const { supabase, userId } = context;
+    const corr = await correspondenteDoUsuario(supabase, userId);
+    if (!corr) throw new Error("Sem correspondente.");
+
+    const { data: leitura } = await supabase
+      .from("scan_ia_leituras")
+      .select("id, correspondente_id")
+      .eq("id", data.leitura_id)
+      .maybeSingle();
+    if (!leitura || leitura.correspondente_id !== corr) throw new Error("Leitura não encontrada.");
+
+    const documento = data.documento.replace(/\D/g, "");
+    if (documento.length !== 11 && documento.length !== 14) {
+      throw new Error("Informe um CPF (11 dígitos) ou CNPJ (14 dígitos) válido.");
+    }
+
+    const { data: existente } = await supabase
+      .from("clientes")
+      .select("id")
+      .eq("correspondente_id", corr)
+      .eq("documento", documento)
+      .maybeSingle();
+
+    let clienteId = existente?.id ?? null;
+    let reaproveitado = !!existente;
+
+    if (!clienteId) {
+      const { data: novo, error } = await supabase
+        .from("clientes")
+        .insert({
+          correspondente_id: corr,
+          numero_cliente: "",
+          nome: data.nome.trim(),
+          documento,
+          tipo_pessoa: documento.length === 14 ? "PJ" : "PF",
+          criador_id: userId,
+          responsavel_id: userId,
+        })
+        .select("id")
+        .single();
+      if (error) throw error;
+      clienteId = novo.id;
+      reaproveitado = false;
+    }
+
+    await supabase
+      .from("scan_ia_leituras")
+      .update({ cliente_id: clienteId })
+      .eq("id", data.leitura_id);
+
+    await supabase.from("scan_ia_auditoria").insert({
+      correspondente_id: corr,
+      leitura_id: data.leitura_id,
+      ator_id: userId,
+      acao: reaproveitado ? "cliente_vinculado" : "cliente_criado",
+      dados: { cliente_id: clienteId, nome: data.nome.trim(), documento },
+    });
+
+    return { cliente_id: clienteId!, reaproveitado };
+  });
+
+export interface PreviaCampoAplicacao {
+  campo_id: string;
+  campo: string;
+  rotulo: string;
+  valor: string;
+  confianca: number;
+  faixa: "alta" | "media" | "revisar";
+  aplicavel: boolean;
+  motivo_nao_aplicavel: string | null;
+  destino: string;
+  valor_atual: string | null;
+  conflito: boolean;
+}
+
+export interface PreviaAplicacao {
+  cliente_id: string | null;
+  cliente_nome: string | null;
+  tipo_documento: string | null;
+  tipo_confirmado: boolean;
+  campos: PreviaCampoAplicacao[];
+}
+
+function textoValorAtual(v: unknown): string | null {
+  if (v === null || v === undefined || v === "") return null;
+  if (typeof v === "number") return String(v);
+  if (typeof v === "object") return JSON.stringify(v);
+  return String(v);
+}
+
+/** Monta a prévia do modal de aplicação: valor da IA x valor atual do cadastro. */
+export const previaAplicacao = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { leitura_id: string }) =>
+    z.object({ leitura_id: z.string().uuid() }).parse(d),
+  )
+  .handler(async ({ data, context }): Promise<PreviaAplicacao> => {
+    const { supabase, userId } = context;
+    const corr = await correspondenteDoUsuario(supabase, userId);
+    if (!corr) throw new Error("Sem correspondente.");
+
+    const { data: leitura } = await supabase
+      .from("scan_ia_leituras")
+      .select("id, correspondente_id, cliente_id, tipo_documento, tipo_confirmado")
+      .eq("id", data.leitura_id)
+      .maybeSingle();
+    if (!leitura || leitura.correspondente_id !== corr) throw new Error("Leitura não encontrada.");
+
+    const { data: campos } = await supabase
+      .from("scan_ia_campos_extraidos")
+      .select("id, campo, valor, confianca")
+      .eq("leitura_id", data.leitura_id)
+      .order("campo", { ascending: true });
+
+    let cliente: Record<string, any> | null = null;
+    if (leitura.cliente_id) {
+      const { data: c } = await supabase
+        .from("clientes")
+        .select("*")
+        .eq("id", leitura.cliente_id)
+        .maybeSingle();
+      cliente = (c as any) ?? null;
+    }
+
+    const lista: PreviaCampoAplicacao[] = (campos ?? []).map((c: any) => {
+      const valor = String(c.valor ?? "");
+      const destino = destinoDoCampo(c.campo);
+      const conv = converterValor(c.campo, valor);
+      const confianca = Number(c.confianca ?? 0);
+
+      let valorAtual: string | null = null;
+      if (cliente) {
+        if (destino.tipo === "coluna") valorAtual = textoValorAtual(cliente[destino.coluna]);
+        else if (destino.tipo === "matricula") {
+          const m = (cliente.imovel_matricula ?? {}) as Record<string, unknown>;
+          valorAtual = textoValorAtual(m?.[destino.chave]);
+        }
+      }
+
+      const novoTexto = conv.ok ? textoValorAtual(conv.valor) : null;
+      const conflito = !!valorAtual && !!novoTexto && valorAtual !== novoTexto;
+
+      return {
+        campo_id: c.id,
+        campo: c.campo,
+        rotulo: rotuloCampo(c.campo),
+        valor,
+        confianca,
+        faixa: faixaConfianca(confianca),
+        aplicavel: conv.ok,
+        motivo_nao_aplicavel: conv.ok ? null : conv.motivo,
+        destino:
+          destino.tipo === "coluna"
+            ? destino.coluna
+            : destino.tipo === "matricula"
+              ? `imovel_matricula.${destino.chave}`
+              : "—",
+        valor_atual: valorAtual,
+        conflito,
+      };
+    });
+
+    return {
+      cliente_id: leitura.cliente_id ?? null,
+      cliente_nome: cliente?.nome ?? null,
+      tipo_documento: leitura.tipo_documento ?? null,
+      tipo_confirmado: !!leitura.tipo_confirmado,
+      campos: lista,
+    };
+  });
+
+/**
+ * Aplica ao cadastro do cliente APENAS os campos que o usuário marcou, com a
+ * escolha explícita feita em cada conflito. Registra a trilha completa.
+ */
+export const aplicarAoCadastro = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    (d: {
+      leitura_id: string;
+      decisoes: Array<{ campo_id: string; aplicar: boolean; escolha?: "manter" | "substituir" }>;
+    }) =>
+      z
+        .object({
+          leitura_id: z.string().uuid(),
+          decisoes: z.array(
+            z.object({
+              campo_id: z.string().uuid(),
+              aplicar: z.boolean(),
+              escolha: z.enum(["manter", "substituir"]).optional(),
+            }),
+          ),
+        })
+        .parse(d),
+  )
+  .handler(
+    async ({
+      data,
+      context,
+    }): Promise<{ ok: boolean; aplicados: number; descartados: number }> => {
+      const { supabase, userId } = context;
+      const corr = await correspondenteDoUsuario(supabase, userId);
+      if (!corr) throw new Error("Sem correspondente.");
+
+      const { data: leitura } = await supabase
+        .from("scan_ia_leituras")
+        .select("id, correspondente_id, cliente_id, tipo_documento, tipo_confirmado")
+        .eq("id", data.leitura_id)
+        .maybeSingle();
+      if (!leitura || leitura.correspondente_id !== corr)
+        throw new Error("Leitura não encontrada.");
+      if (!leitura.cliente_id) throw new Error("Vincule um cliente antes de aplicar.");
+      if (!leitura.tipo_confirmado)
+        throw new Error("Confirme o tipo do documento antes de aplicar.");
+
+      const { data: campos } = await supabase
+        .from("scan_ia_campos_extraidos")
+        .select("id, campo, valor, confianca")
+        .eq("leitura_id", data.leitura_id);
+
+      const { data: clienteAtual } = await supabase
+        .from("clientes")
+        .select("*")
+        .eq("id", leitura.cliente_id)
+        .maybeSingle();
+      if (!clienteAtual) throw new Error("Cliente não encontrado.");
+
+      const porId = new Map((campos ?? []).map((c: any) => [c.id, c]));
+      const patch: Record<string, any> = {};
+      const matriculaPatch: Record<string, unknown> = {};
+      const aplicados: any[] = [];
+      const descartados: any[] = [];
+
+      for (const dec of data.decisoes) {
+        const campo = porId.get(dec.campo_id);
+        if (!campo) continue;
+
+        const valor = String(campo.valor ?? "");
+        const destino = destinoDoCampo(campo.campo);
+        const conv = converterValor(campo.campo, valor);
+
+        let valorAtual: unknown = null;
+        if (destino.tipo === "coluna") valorAtual = (clienteAtual as any)[destino.coluna];
+        else if (destino.tipo === "matricula") {
+          const m = ((clienteAtual as any).imovel_matricula ?? {}) as Record<string, unknown>;
+          valorAtual = m?.[destino.chave];
+        }
+        const temAtual = valorAtual !== null && valorAtual !== undefined && valorAtual !== "";
+        const novoTexto = conv.ok ? textoValorAtual(conv.valor) : null;
+        const conflito = temAtual && !!novoTexto && textoValorAtual(valorAtual) !== novoTexto;
+
+        const registro = {
+          campo: campo.campo,
+          rotulo: rotuloCampo(campo.campo),
+          valor_documento: valor,
+          valor_anterior: textoValorAtual(valorAtual),
+          confianca: Number(campo.confianca ?? 0),
+          conflito,
+          escolha: dec.escolha ?? null,
+        };
+
+        if (!dec.aplicar || !conv.ok) {
+          descartados.push({ ...registro, motivo: conv.ok ? "nao_marcado" : conv.motivo });
+          continue;
+        }
+        if (conflito && dec.escolha !== "substituir") {
+          // Sem escolha explícita de substituição, o valor atual prevalece.
+          descartados.push({ ...registro, motivo: "conflito_mantido" });
+          continue;
+        }
+
+        if (destino.tipo === "coluna") patch[destino.coluna] = conv.valor;
+        else if (destino.tipo === "matricula") matriculaPatch[destino.chave] = conv.valor;
+        else {
+          descartados.push({ ...registro, motivo: "sem_destino" });
+          continue;
+        }
+        aplicados.push(registro);
+      }
+
+      if (Object.keys(matriculaPatch).length > 0) {
+        const atual = ((clienteAtual as any).imovel_matricula ?? {}) as Record<string, unknown>;
+        // Mescla — nunca sobrescreve o jsonb inteiro.
+        patch.imovel_matricula = { ...atual, ...matriculaPatch };
+      }
+
+      if (Object.keys(patch).length > 0) {
+        const { error: upErr } = await supabase
+          .from("clientes")
+          .update(patch as never)
+          .eq("id", leitura.cliente_id);
+        if (upErr) throw upErr;
+      }
+
+      await supabase
+        .from("scan_ia_leituras")
+        .update({ status: "aplicada" })
+        .eq("id", data.leitura_id);
+
+      await supabase.from("scan_ia_auditoria").insert({
+        correspondente_id: corr,
+        leitura_id: data.leitura_id,
+        ator_id: userId,
+        acao: "aplicada_ao_cadastro",
+        dados: {
+          cliente_id: leitura.cliente_id,
+          tipo_documento: leitura.tipo_documento,
+          validado_por_humano: true,
+          campos_aplicados: aplicados,
+          campos_descartados: descartados,
+          colunas_atualizadas: Object.keys(patch),
+        },
+      });
+
+      return { ok: true, aplicados: aplicados.length, descartados: descartados.length };
+    },
+  );

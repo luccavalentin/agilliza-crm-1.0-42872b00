@@ -5963,7 +5963,9 @@ export type Database = {
           id: string
           proposta_id: string | null
           status: string
+          tipo_confirmado: boolean
           tipo_documento: string | null
+          tipo_documento_sugerido: string | null
           updated_at: string
         }
         Insert: {
@@ -5976,7 +5978,9 @@ export type Database = {
           id?: string
           proposta_id?: string | null
           status?: string
+          tipo_confirmado?: boolean
           tipo_documento?: string | null
+          tipo_documento_sugerido?: string | null
           updated_at?: string
         }
         Update: {
@@ -5989,7 +5993,9 @@ export type Database = {
           id?: string
           proposta_id?: string | null
           status?: string
+          tipo_confirmado?: boolean
           tipo_documento?: string | null
+          tipo_documento_sugerido?: string | null
           updated_at?: string
         }
         Relationships: [
