@@ -77,13 +77,28 @@ function CampoNum({
   );
 }
 
+export interface HoleriteEdicao {
+  id: string;
+  funcionario_id: string;
+  mes: number;
+  ano: number;
+  entrada: Record<string, string | number | boolean> | null;
+}
+
 export function HoleriteBuilderDialog({
   trigger,
   funcionarioFixo,
+  edicao,
+  open: openProp,
+  onOpenChange,
 }: {
   trigger?: React.ReactNode;
   /** Quando informado, o holerite já abre travado neste funcionário (ficha individual). */
   funcionarioFixo?: string;
+  /** Quando informado, abre um holerite já gerado para edição e regeração do PDF. */
+  edicao?: HoleriteEdicao;
+  open?: boolean;
+  onOpenChange?: (v: boolean) => void;
 }) {
 
   const qc = useQueryClient();
@@ -91,11 +106,22 @@ export function HoleriteBuilderDialog({
   const fnFunc = useServerFn(obterFuncionario);
   const fnAnexar = useServerFn(anexarHolerite);
 
-  const [open, setOpen] = useState(false);
-  const [funcionarioId, setFuncionarioId] = useState<string | null>(funcionarioFixo ?? null);
-  const [mes, setMes] = useState(hoje.getMonth() + 1);
-  const [ano, setAno] = useState(hoje.getFullYear());
-  const [e, setE] = useState<HoleriteEntrada>({ ...ENTRADA_PADRAO });
+  const [openInterno, setOpenInterno] = useState(false);
+  const open = openProp ?? openInterno;
+  const setOpen = (v: boolean) => {
+    if (onOpenChange) onOpenChange(v);
+    else setOpenInterno(v);
+  };
+  const editando = !!edicao;
+  const [funcionarioId, setFuncionarioId] = useState<string | null>(
+    edicao?.funcionario_id ?? funcionarioFixo ?? null,
+  );
+  const [mes, setMes] = useState(edicao?.mes ?? hoje.getMonth() + 1);
+  const [ano, setAno] = useState(edicao?.ano ?? hoje.getFullYear());
+  const [e, setE] = useState<HoleriteEntrada>({
+    ...ENTRADA_PADRAO,
+    ...((edicao?.entrada ?? {}) as Partial<HoleriteEntrada>),
+  });
 
   const set = <K extends keyof HoleriteEntrada>(k: K, v: HoleriteEntrada[K]) =>
     setE((p) => ({ ...p, [k]: v }));
@@ -105,7 +131,8 @@ export function HoleriteBuilderDialog({
     enabled: !!funcionarioId,
     queryFn: async () => {
       const f = await fnFunc({ data: { id: funcionarioId! } });
-      if (f) {
+      // Em edição os valores salvos prevalecem sobre o salário atual da ficha.
+      if (f && !(editando && edicao?.entrada)) {
         setE((p) => ({
           ...p,
           salario_base: Number(f.salario_atual ?? 0),
@@ -169,6 +196,7 @@ export function HoleriteBuilderDialog({
           arquivo_path: path,
           arquivo_nome: filename,
           valor_liquido: calc.liquido,
+          entrada: e as unknown as Record<string, string | number | boolean>,
         },
       });
 
@@ -181,7 +209,11 @@ export function HoleriteBuilderDialog({
       setTimeout(() => URL.revokeObjectURL(url), 5000);
     },
     onSuccess: () => {
-      toast.success("Holerite gerado, anexado à ficha e baixado.");
+      toast.success(
+        editando
+          ? "Holerite atualizado, PDF substituído e baixado."
+          : "Holerite gerado, anexado à ficha e baixado.",
+      );
       qc.invalidateQueries({ queryKey: ["rh-holerites"] });
       qc.invalidateQueries({ queryKey: ["rh-ficha-hol"] });
       setOpen(false);
@@ -191,17 +223,20 @@ export function HoleriteBuilderDialog({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {trigger ?? (
-          <Button>
-            <Calculator className="mr-2 h-4 w-4" /> Novo holerite
-          </Button>
-        )}
-      </DialogTrigger>
+      {trigger !== null && (
+        <DialogTrigger asChild>
+          {trigger ?? (
+            <Button>
+              <Calculator className="mr-2 h-4 w-4" /> Novo holerite
+            </Button>
+          )}
+        </DialogTrigger>
+      )}
       <DialogContent className="max-h-[92vh] max-w-5xl overflow-hidden p-0">
         <DialogHeader className="border-b border-border px-6 py-4">
           <DialogTitle className="flex items-center gap-2">
-            <Calculator className="h-4 w-4 text-primary" /> Montar holerite (CLT)
+            <Calculator className="h-4 w-4 text-primary" />{" "}
+            {editando ? "Editar holerite (CLT)" : "Montar holerite (CLT)"}
           </DialogTitle>
           <p className="text-xs text-muted-foreground">
             Selecione o funcionário e os eventos do mês. O recibo é calculado ao vivo com INSS
@@ -216,7 +251,7 @@ export function HoleriteBuilderDialog({
               <div className="grid gap-3 sm:grid-cols-3">
                 <div className="space-y-1.5 sm:col-span-1">
                   <Label className="text-xs text-muted-foreground">Funcionário</Label>
-                  {funcionarioFixo ? (
+                  {funcionarioFixo || editando ? (
                     <div className="flex h-9 items-center rounded-md border border-border bg-muted/40 px-3 text-sm">
                       {func?.nome ?? "Carregando…"}
                     </div>
@@ -431,7 +466,7 @@ export function HoleriteBuilderDialog({
             ) : (
               <FileDown className="mr-2 h-4 w-4" />
             )}
-            Gerar holerite em PDF
+            {editando ? "Salvar e gerar PDF" : "Gerar holerite em PDF"}
           </Button>
         </DialogFooter>
       </DialogContent>
