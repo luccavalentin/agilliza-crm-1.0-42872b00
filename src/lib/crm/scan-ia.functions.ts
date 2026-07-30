@@ -567,12 +567,16 @@ export const processarLeitura = createServerFn({ method: "POST" })
       };
 
       const campos = (parsed.campos ?? [])
-        .filter((c) => c && c.campo && c.valor != null && permitidos.has(String(c.campo)))
+        .map((c) => {
+          const normalizado = normalizarCampoExtraido(String(c?.campo ?? ""), comoTexto(c?.valor));
+          return { bruto: c, ...normalizado };
+        })
+        .filter((c) => c.campo && c.valor && permitidos.has(c.campo))
         .map((c) => ({
           leitura_id: data.id,
-          campo: String(c.campo).slice(0, 120),
-          valor: comoTexto(c.valor).slice(0, 2000),
-          confianca: Math.max(0, Math.min(1, Number(c.confianca) || 0)),
+          campo: c.campo.slice(0, 120),
+          valor: c.valor.slice(0, 2000),
+          confianca: Math.max(0, Math.min(1, Number(c.bruto?.confianca) || 0)),
         }))
         .filter((c) => c.valor.length > 0);
 
@@ -927,6 +931,21 @@ function textoValorAtual(v: unknown): string | null {
   if (typeof v === "number") return String(v);
   if (typeof v === "object") return JSON.stringify(v);
   return String(v);
+}
+
+function normalizarCampoExtraido(campo: string, valor: string): { campo: string; valor: string } {
+  const c = campo.trim();
+  const v = valor.trim();
+  if (c === "endereco_completo" || c === "endereco") {
+    const cep = v.match(/\b\d{5}[-\s]?\d{3}\b/);
+    const partes = v.split(/\s+-\s+|,\s*/).map((p) => p.trim()).filter(Boolean);
+    return { campo: c, valor: cep ? v.replace(cep[0], "").trim().replace(/[,-]\s*$/, "") : v };
+  }
+  if (c === "cep") return { campo: "endereco_cep", valor: v };
+  if (c === "bairro") return { campo: "endereco_bairro", valor: v };
+  if (c === "cidade") return { campo: "endereco_cidade", valor: v };
+  if (c === "uf") return { campo: "endereco_uf", valor: v };
+  return { campo: c, valor: v };
 }
 
 /** Monta a prévia do modal de aplicação: valor da IA x valor atual do cadastro. */
