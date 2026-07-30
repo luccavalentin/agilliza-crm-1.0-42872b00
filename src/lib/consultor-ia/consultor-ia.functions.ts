@@ -363,3 +363,75 @@ export const consultarAssistenteIA = createServerFn({ method: "POST" })
     );
     return { conversa_id: preparo.conversaId, ...fim };
   });
+
+/* ───────── Base de conhecimento: perguntas já respondidas ───────── */
+
+export interface PerguntaRespondida {
+  id: string;
+  conversa_id: string;
+  pergunta: string;
+  resposta: string;
+  fontes: FonteCitada[];
+  sem_resposta: boolean;
+  avaliacao: "util" | "nao_util" | null;
+  palavras_chave: string[];
+  created_at: string;
+}
+
+/**
+ * Consolida o histórico de perguntas e respostas do consultor em uma base
+ * pesquisável por palavra-chave. A RLS já limita ao que o usuário pode ver.
+ */
+export const listarPerguntasRespondidas = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d?: { q?: string; limite?: number }) =>
+    z.object({ q: z.string().optional(), limite: z.number().min(1).max(500).optional() }).parse(d ?? {}),
+  )
+  .handler(async ({ data, context }): Promise<PerguntaRespondida[]> => {
+    const { supabase } = context as any;
+    const { data: rows, error } = await supabase
+      .from("consultor_ia_mensagens")
+      .select("id, conversa_id, papel, conteudo, fontes_usadas, sem_resposta, avaliacao, created_at")
+      .order("created_at", { ascending: true })
+      .limit(1000);
+    if (error) throw new Error(error.message);
+
+    const porConversa = new Map<string, any[]>();
+    for (const m of rows ?? []) {
+      const arr = porConversa.get(m.conversa_id) ?? [];
+      arr.push(m);
+      porConversa.set(m.conversa_id, arr);
+    }
+
+    const itens: PerguntaRespondida[] = [];
+    for (const msgs of porConversa.values()) {
+      for (let i = 0; i < msgs.length; i++) {
+        if (msgs[i].papel !== "usuario") continue;
+        const resposta = msgs.slice(i + 1).find((m: any) => m.papel === "assistente");
+        if (!resposta) continue;
+        itens.push({
+          id: resposta.id,
+          conversa_id: resposta.conversa_id,
+          pergunta: msgs[i].conteudo,
+          resposta: resposta.conteudo,
+          fontes: Array.isArray(resposta.fontes_usadas) ? resposta.fontes_usadas : [],
+          sem_resposta: !!resposta.sem_resposta,
+          avaliacao: resposta.avaliacao ?? null,
+          palavras_chave: Array.from(new Set(tokens(msgs[i].conteudo))).slice(0, 6),
+          created_at: resposta.created_at,
+        });
+      }
+    }
+
+    const termos = tokens(data.q ?? "");
+    const filtrados = termos.length
+      ? itens.filter((it) => {
+          const alvo = tokens(`${it.pergunta} ${it.resposta} ${it.palavras_chave.join(" ")}`);
+          return termos.every((t) => alvo.some((x) => x.startsWith(t) || t.startsWith(x)));
+        })
+      : itens;
+
+    return filtrados
+      .sort((a, b) => b.created_at.localeCompare(a.created_at))
+      .slice(0, data.limite ?? 100);
+  });
