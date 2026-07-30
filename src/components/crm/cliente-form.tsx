@@ -389,8 +389,11 @@ export function ClienteForm({
         onSalvoEmbutido?.();
         return;
       }
+      await qc.invalidateQueries({ queryKey: ["clientes"] });
+      await qc.invalidateQueries({ queryKey: ["clientes-stats"] });
       toast.success("Cliente salvo.");
       navigate({ to: "/crm/clientes/$id", params: { id: id! } });
+
 
     } catch (err: any) {
       toast.error(err?.message ?? "Falha ao salvar.");
