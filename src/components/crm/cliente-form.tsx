@@ -158,6 +158,9 @@ export function ClienteForm({
       await definirPortal({ data: { cliente_id: v.id, ativo } });
       toast.success(ativo ? "Acesso ao portal habilitado." : "Acesso ao portal desabilitado.");
       qc.invalidateQueries({ queryKey: ["cliente", v.id] });
+      qc.invalidateQueries({ queryKey: ["clientes"] });
+      qc.invalidateQueries({ queryKey: ["clientes-stats"] });
+
     } catch (err: any) {
       setPortal(!ativo);
       toast.error(err?.message ?? "Não foi possível salvar o acesso.");
@@ -386,8 +389,11 @@ export function ClienteForm({
         onSalvoEmbutido?.();
         return;
       }
+      await qc.invalidateQueries({ queryKey: ["clientes"] });
+      await qc.invalidateQueries({ queryKey: ["clientes-stats"] });
       toast.success("Cliente salvo.");
       navigate({ to: "/crm/clientes/$id", params: { id: id! } });
+
 
     } catch (err: any) {
       toast.error(err?.message ?? "Falha ao salvar.");
