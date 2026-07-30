@@ -140,7 +140,7 @@ export const obterLeitura = createServerFn({ method: "GET" })
     const { data: leitura, error } = await supabase
       .from("scan_ia_leituras")
       .select(
-        "id, arquivo_url, tipo_documento, status, erro, created_at, correspondente_id, criador_id",
+        "id, arquivo_url, tipo_documento, tipo_documento_sugerido, tipo_confirmado, cliente_id, status, erro, created_at, correspondente_id, criador_id",
       )
       .eq("id", data.id)
       .maybeSingle();
@@ -167,10 +167,27 @@ export const obterLeitura = createServerFn({ method: "GET" })
       criadorNome = perfil?.nome ?? null;
     }
 
+    let clienteNome: string | null = null;
+    let clienteDocumento: string | null = null;
+    if (leitura.cliente_id) {
+      const { data: cli } = await supabase
+        .from("clientes")
+        .select("nome, documento")
+        .eq("id", leitura.cliente_id)
+        .maybeSingle();
+      clienteNome = cli?.nome ?? null;
+      clienteDocumento = cli?.documento ?? null;
+    }
+
     return {
       id: leitura.id,
       arquivo_url: leitura.arquivo_url,
       tipo_documento: leitura.tipo_documento,
+      tipo_documento_sugerido: leitura.tipo_documento_sugerido ?? null,
+      tipo_confirmado: !!leitura.tipo_confirmado,
+      cliente_id: leitura.cliente_id ?? null,
+      cliente_nome: clienteNome,
+      cliente_documento: clienteDocumento,
       status: leitura.status,
       erro: leitura.erro,
       created_at: leitura.created_at,
@@ -181,14 +198,14 @@ export const obterLeitura = createServerFn({ method: "GET" })
     };
   });
 
-/** Registra a leitura após o upload do arquivo no bucket. */
+/** Registra a leitura após o upload do arquivo no bucket. O tipo é OPCIONAL — em branco, a IA identifica. */
 export const criarLeitura = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { arquivo_url: string; tipo_documento: string }) =>
+  .inputValidator((d: { arquivo_url: string; tipo_documento?: string | null }) =>
     z
       .object({
         arquivo_url: z.string().min(1),
-        tipo_documento: z.string().min(1).max(120),
+        tipo_documento: z.string().max(120).nullable().optional(),
       })
       .parse(d),
   )
@@ -197,12 +214,15 @@ export const criarLeitura = createServerFn({ method: "POST" })
     const corr = await correspondenteDoUsuario(supabase, userId);
     if (!corr) throw new Error("Sem correspondente.");
 
+    const tipoInformado = (data.tipo_documento ?? "").trim() || null;
+
     const { data: inserida, error } = await supabase
       .from("scan_ia_leituras")
       .insert({
         correspondente_id: corr,
         arquivo_url: data.arquivo_url,
-        tipo_documento: data.tipo_documento,
+        tipo_documento: tipoInformado,
+        tipo_confirmado: false,
         status: "pendente",
         criador_id: userId,
       })
@@ -212,20 +232,6 @@ export const criarLeitura = createServerFn({ method: "POST" })
     return { id: inserida.id };
   });
 
-const CAMPOS_ESPERADOS = [
-  "nome_completo",
-  "cpf_cnpj",
-  "rg",
-  "data_nascimento",
-  "estado_civil",
-  "renda_mensal",
-  "endereco",
-  "cep",
-  "telefone",
-  "email",
-  "valor_imovel",
-  "numero_documento",
-];
 
 /** Processa a leitura com IA (OCR + extração estruturada de campos). */
 export const processarLeitura = createServerFn({ method: "POST" })
