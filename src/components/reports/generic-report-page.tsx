@@ -14,6 +14,7 @@ import { MonthlyComparison } from "@/components/reports/monthly-comparison";
 import { runReport } from "@/lib/relatorios/reports.functions";
 import { resolverDrillGrafico } from "@/lib/relatorios/chart-drill";
 import { ESCOPO_LABEL, PERIODO_LABEL, type ReportFiltros, type ReportKpi } from "@/lib/relatorios/shared";
+import { useRealtimeInvalidate } from "@/hooks/use-realtime-invalidate";
 
 
 /** Página completa de relatório reutilizada por todas as rotas de /relatorios/*. */
@@ -41,8 +42,12 @@ export function GenericReportPage({
   const { data, isLoading, isError } = useQuery({
     queryKey: ["report", codigo, filtros],
     queryFn: () => run({ data: { codigo, filtros } }),
-    staleTime: 60_000,
+    staleTime: 15_000,
+    refetchOnWindowFocus: true,
   });
+
+  // Mantém KPIs (ticket médio, volumes, contratos) sincronizados em tempo real.
+  useRealtimeInvalidate(`report-${codigo}`, [["report", codigo]]);
 
   const [kpiAberto, setKpiAberto] = useState<ReportKpi | null>(null);
   const linhasKpi = useMemo(() => {
