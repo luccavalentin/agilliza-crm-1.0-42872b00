@@ -32,6 +32,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { VisualizadorArquivo } from "@/components/comum/visualizador-arquivo";
 import { cn } from "@/lib/utils";
 
+const EMOJIS_RAPIDOS = ["👍", "❤️", "😊", "🙏"];
+
 function fileParaBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
