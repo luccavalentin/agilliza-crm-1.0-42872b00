@@ -18,13 +18,6 @@ import { getPanelDrilldown } from "@/lib/relatorios/paineis.functions";
 import type { ReportFiltros } from "@/lib/relatorios/shared";
 import agillizaSymbol from "@/assets/brand/agilliza-symbol-oficial.png";
 
-const toneClasses: Record<string, string> = {
-  brand: "bg-primary/10 text-primary",
-  success: "bg-success/10 text-success",
-  warning: "bg-warning/10 text-warning",
-  danger: "bg-destructive/10 text-destructive",
-  neutral: "bg-muted text-muted-foreground",
-};
 
 export interface DrilldownContext {
   metrica: string;
