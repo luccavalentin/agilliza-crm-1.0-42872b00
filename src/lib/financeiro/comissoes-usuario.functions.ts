@@ -14,9 +14,28 @@ export const TIPOS_VINCULO_COMISSAO = [
 export type TipoVinculoComissao = (typeof TIPOS_VINCULO_COMISSAO)[number]["valor"];
 
 export const GATILHOS_COMISSAO = [
+  { valor: "rascunho", rotulo: "Proposta em rascunho" },
+  { valor: "enviada_banco", rotulo: "Enviada ao banco" },
+  { valor: "em_analise_credito", rotulo: "Em análise de crédito" },
+  { valor: "credito_aprovado", rotulo: "Crédito aprovado" },
+  { valor: "credito_recusado", rotulo: "Crédito recusado" },
+  { valor: "checklist_documentacao", rotulo: "Checklist de documentação" },
+  { valor: "cadastro_complementar", rotulo: "Cadastro complementar" },
+  { valor: "aguardando_documentos", rotulo: "Aguardando documentos" },
+  { valor: "dossie_completo", rotulo: "Dossiê completo" },
+  { valor: "formularios", rotulo: "Formulários" },
+  { valor: "envio_documentos_banco", rotulo: "Envio de documentos ao banco" },
+  { valor: "vistoria_agendamento", rotulo: "Vistoria agendada" },
+  { valor: "engenharia_vistoria", rotulo: "Engenharia / vistoria" },
+  { valor: "vistoria_concluida", rotulo: "Vistoria concluída" },
+  { valor: "analise_juridica", rotulo: "Análise jurídica" },
+  { valor: "emissao_contrato", rotulo: "Emissão de contrato" },
   { valor: "contrato_emitido", rotulo: "Contrato emitido" },
+  { valor: "registrado", rotulo: "Registrado em cartório" },
+  { valor: "cancelada", rotulo: "Proposta cancelada" },
   { valor: "manual", rotulo: "Manual" },
 ] as const;
+
 
 export const BASES_CALCULO = [
   { valor: "valor_contrato", rotulo: "% do valor do contrato" },
@@ -139,10 +158,11 @@ export const salvarRegraComissaoUsuario = createServerFn({ method: "POST" })
           "analista",
           "outro",
         ]),
-        gatilho: z.enum([
-          "contrato_emitido",
-          "manual",
-        ]),
+        gatilho: z
+          .string()
+          .min(1)
+          .refine((v) => GATILHOS_COMISSAO.some((g) => g.valor === v), "Gatilho inválido"),
+
         base_calculo: z.enum(["valor_contrato", "percentual_repasse"]),
         percentual: z.number().min(0).max(100),
         banco_nome: z.string().nullable().optional(),
