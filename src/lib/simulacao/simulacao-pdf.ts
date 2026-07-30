@@ -913,9 +913,13 @@ export async function baixarSimulacoesDetalhadasAgrupadasZipPDF(
   const nomesUsados = new Set<string>();
 
   for (const g of gruposValidos) {
+    // Renda do nome do arquivo é calculada UMA vez por simulação/tabela
+    // (considerando todos os bancos do grupo) para que os PDFs da mesma
+    // tabela não saiam com rendas diferentes entre si.
+    const rendaGrupo = rendaNecessaria(g.simulacao, g.bancos);
     for (const banco of g.bancos) {
       try {
-        const base = `${nomeDescritivo(g.simulacao, [banco])}.pdf`;
+        const base = `${nomeDescritivo(g.simulacao, [banco], rendaGrupo)}.pdf`;
         const filename = nomeArquivoUnico(base, nomesUsados);
         const { doc } = criarDocSimulacaoDetalhada({
           simulacao: g.simulacao,
@@ -923,6 +927,7 @@ export async function baixarSimulacoesDetalhadasAgrupadasZipPDF(
           filePrefix: filename.replace(/\.pdf$/i, ""),
         });
         baixarBlob(doc.output("blob"), filename);
+
         total += 1;
         // Intervalo entre downloads: o Chromium ignora/renomeia arquivos
         // quando múltiplos <a download> são disparados no mesmo tick.
