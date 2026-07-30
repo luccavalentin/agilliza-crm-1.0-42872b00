@@ -913,9 +913,13 @@ export async function baixarSimulacoesDetalhadasAgrupadasZipPDF(
   const nomesUsados = new Set<string>();
 
   for (const g of gruposValidos) {
+    // Renda do nome do arquivo é calculada UMA vez por simulação/tabela
+    // (considerando todos os bancos do grupo) para que os PDFs da mesma
+    // tabela não saiam com rendas diferentes entre si.
+    const rendaGrupo = rendaNecessaria(g.simulacao, g.bancos);
     for (const banco of g.bancos) {
       try {
-        const base = `${nomeDescritivo(g.simulacao, [banco])}.pdf`;
+        const base = `${nomeDescritivo(g.simulacao, [banco], rendaGrupo)}.pdf`;
         const filename = nomeArquivoUnico(base, nomesUsados);
         const { doc } = criarDocSimulacaoDetalhada({
           simulacao: g.simulacao,
@@ -923,6 +927,7 @@ export async function baixarSimulacoesDetalhadasAgrupadasZipPDF(
           filePrefix: filename.replace(/\.pdf$/i, ""),
         });
         baixarBlob(doc.output("blob"), filename);
+
         total += 1;
         // Intervalo entre downloads: o Chromium ignora/renomeia arquivos
         // quando múltiplos <a download> são disparados no mesmo tick.
@@ -1008,16 +1013,19 @@ function rendaNecessaria(s: any, bancos: any[]): number | null {
  * Nome de arquivo descritivo pedido pela operação, ex.:
  * "Bradesco,Caixa-SAC-C e V 420k - Finan 350k - 420 meses - renda 28k".
  */
-export function nomeDescritivo(s: any, bancos: any[]): string {
+export function nomeDescritivo(s: any, bancos: any[], rendaOverride?: number | null): string {
   const nomes = bancos.map((b) => b?.nome_banco).filter(Boolean);
   const bancoTxt = nomes.length ? Array.from(new Set(nomes)).join(",") : "Simulacao";
   const tabela = tabelaLabel(s, bancos);
   const cev = abreviarValor(s.valor_imovel);
   const finan = abreviarValor(s.valor_financiamento);
   const prazo = s.prazo ? `${s.prazo} meses` : "-";
-  const renda = abreviarValor(rendaNecessaria(s, bancos));
+  const renda = abreviarValor(
+    rendaOverride != null && rendaOverride > 0 ? rendaOverride : rendaNecessaria(s, bancos),
+  );
   return `${bancoTxt}-${tabela}-C e V ${cev} - Finan ${finan} - ${prazo} - renda ${renda}`;
 }
+
 
 /** Remove caracteres inválidos de nome de arquivo, preservando espaços e vírgulas. */
 function sanitizarNomeArquivo(nome: string): string {
