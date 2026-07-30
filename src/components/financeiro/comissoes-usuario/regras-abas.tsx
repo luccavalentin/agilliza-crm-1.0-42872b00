@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Pencil, Trash2, Loader2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -30,6 +30,7 @@ import {
   TIPOS_VINCULO_COMISSAO,
   excluirRegraComissaoUsuario,
   listarRegrasComissaoUsuario,
+  recalcularComissoesUsuario,
   type RegraComissaoUsuario,
   type TipoVinculoComissao,
 } from "@/lib/financeiro/comissoes-usuario.functions";
@@ -62,6 +63,19 @@ export function RegrasAbas() {
     onError: (e: any) => toast.error(e?.message ?? "Falha ao excluir."),
   });
 
+  const recalcular = useMutation({
+    mutationFn: () => recalcularComissoesUsuario({ data: {} } as never),
+    onSuccess: (r: any) => {
+      toast.success(
+        r?.criados
+          ? `${r.criados} comissão(ões) gerada(s) a partir das etapas atuais.`
+          : "Nenhuma comissão pendente: tudo já está computado.",
+      );
+      qc.invalidateQueries({ queryKey: ["fin-com-usr"] });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Falha ao recalcular."),
+  });
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between gap-3">
@@ -71,10 +85,25 @@ export function RegrasAbas() {
             Configure percentuais por corretor, imobiliária, analista e demais vínculos.
           </p>
         </div>
+        <div className="flex items-center gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => recalcular.mutate()}
+          disabled={recalcular.isPending}
+        >
+          {recalcular.isPending ? (
+            <Loader2 className="mr-2 size-4 animate-spin" />
+          ) : (
+            <RefreshCw className="mr-2 size-4" />
+          )}
+          Recalcular comissões
+        </Button>
         <Button onClick={() => setDialog({ aberto: true, regra: null })} size="sm">
           <Plus className="mr-2 size-4" />
           Nova regra
         </Button>
+        </div>
       </CardHeader>
       <CardContent>
         <Tabs value={tipo} onValueChange={(v) => setTipo(v as TipoVinculoComissao)}>
