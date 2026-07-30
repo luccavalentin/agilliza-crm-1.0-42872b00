@@ -18,6 +18,9 @@ import {
   clienteListarMensagens,
   clienteEnviarMensagem,
   clienteReagirMensagem,
+  clienteEditarMensagem,
+  clienteExcluirMensagem,
+
   clienteEnviarMensagemAnexo,
   clienteMarcarLida,
   type AtendenteCliente,
@@ -273,6 +276,29 @@ export function ThreadChat({
   const [respondendo, setRespondendo] = useState<{ id: string; autor: string; texto: string } | null>(
     null,
   );
+  const [editando, setEditando] = useState<{ id: string; original: string } | null>(null);
+
+  const editarMsg = useMutation({
+    mutationFn: (p: { mensagem_id: string; mensagem: string }) =>
+      clienteEditarMensagem({ data: p }),
+    onSuccess: () => {
+      setEditando(null);
+      setTexto("");
+      qc.invalidateQueries({ queryKey: ["cliente", "mensagens", atendenteId] });
+      qc.invalidateQueries({ queryKey: ["cliente", "atendentes"] });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Não foi possível editar a mensagem."),
+  });
+
+  const excluirMsg = useMutation({
+    mutationFn: (mensagem_id: string) => clienteExcluirMensagem({ data: { mensagem_id } }),
+    onSuccess: () => {
+      toast.success("Mensagem excluída.");
+      qc.invalidateQueries({ queryKey: ["cliente", "mensagens", atendenteId] });
+      qc.invalidateQueries({ queryKey: ["cliente", "atendentes"] });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Não foi possível excluir a mensagem."),
+  });
 
   const reagir = useMutation({
     mutationFn: (p: { mensagem_id: string; emoji: string }) =>
@@ -281,6 +307,7 @@ export function ThreadChat({
       qc.invalidateQueries({ queryKey: ["cliente", "mensagens", atendenteId] }),
     onError: () => toast.error("Não foi possível registrar a reação."),
   });
+
 
   const enviar = useMutation({
     mutationFn: (mensagem: string) =>
@@ -322,10 +349,15 @@ export function ThreadChat({
 
   function submeter() {
     const v = texto.trim();
-    if (!v || enviar.isPending || enviandoAnexo) return;
+    if (!v || enviar.isPending || enviandoAnexo || editarMsg.isPending) return;
     notifyStop();
+    if (editando) {
+      editarMsg.mutate({ mensagem_id: editando.id, mensagem: v });
+      return;
+    }
     enviar.mutate(v);
   }
+
 
   function selecionar(file: File | undefined) {
     if (!file) return;
@@ -613,6 +645,40 @@ export function ThreadChat({
                         >
                           Responder
                         </button>
+                        {doCliente && !soAnexo && m.mensagem?.trim() ? (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setRespondendo(null);
+                              setEditando({
+                                id: m.id,
+                                original: (m.mensagem ?? "").slice(0, 140),
+                              });
+                              setTexto(m.mensagem ?? "");
+                            }}
+                            className="rounded-full px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground transition hover:text-primary"
+                          >
+                            Editar
+                          </button>
+                        ) : null}
+                        {doCliente ? (
+                          <button
+                            type="button"
+                            disabled={excluirMsg.isPending}
+                            onClick={() => {
+                              if (!window.confirm("Excluir esta mensagem para todos?")) return;
+                              if (editando?.id === m.id) {
+                                setEditando(null);
+                                setTexto("");
+                              }
+                              excluirMsg.mutate(m.id);
+                            }}
+                            className="rounded-full px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground transition hover:text-destructive"
+                          >
+                            Excluir
+                          </button>
+                        ) : null}
+
                       </div>
                     ) : null}
                     <span className="mt-0.5 px-1 text-[10px] text-muted-foreground">
@@ -665,7 +731,27 @@ export function ThreadChat({
 
 
 
-      {respondendo ? (
+      {editando ? (
+        <div className="flex shrink-0 items-start gap-2 border-t border-border/60 bg-amber-500/10 px-3 py-2 text-xs">
+          <div className="min-w-0 flex-1 border-l-2 border-amber-500 pl-2">
+            <span className="block font-semibold text-amber-700 dark:text-amber-400">
+              Editando mensagem
+            </span>
+            <span className="line-clamp-2 text-muted-foreground">{editando.original}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setEditando(null);
+              setTexto("");
+            }}
+            className="shrink-0 text-muted-foreground hover:text-foreground"
+            aria-label="Cancelar edição"
+          >
+            ✕
+          </button>
+        </div>
+      ) : respondendo ? (
         <div className="flex shrink-0 items-start gap-2 border-t border-border/60 bg-muted/40 px-3 py-2 text-xs">
           <div className="min-w-0 flex-1 border-l-2 border-primary/60 pl-2">
             <span className="block font-semibold text-primary">
@@ -683,6 +769,7 @@ export function ThreadChat({
           </button>
         </div>
       ) : null}
+
 
       <form
         className="flex shrink-0 items-end gap-1.5 border-t border-border/60 bg-background/95 p-2.5 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:p-3"
