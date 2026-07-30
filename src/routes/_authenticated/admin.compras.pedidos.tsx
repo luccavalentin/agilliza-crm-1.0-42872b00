@@ -32,7 +32,7 @@ import { listarCompras, criarCompra } from "@/lib/admin/compras.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/compras/pedidos")({
   head: () => ({ meta: [{ title: "Pedidos de Compras — Agilliza" }] }),
-  beforeLoad: () => assertModuloPermitido("admin.compras"),
+  beforeLoad: () => assertModuloPermitido("admin.compras.pedidos", ["admin.compras"]),
   component: Pagina,
 });
 

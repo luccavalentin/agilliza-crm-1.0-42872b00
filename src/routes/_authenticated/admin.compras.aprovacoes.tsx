@@ -32,7 +32,7 @@ import { listarCompras, decidirCompra, type CompraLinha } from "@/lib/admin/comp
 export const Route = createFileRoute("/_authenticated/admin/compras/aprovacoes")({
   head: () => ({ meta: [{ title: "Aprovação de Compras — Agilliza" }] }),
   beforeLoad: async () => {
-    assertModuloPermitido("admin.compras");
+    assertModuloPermitido("admin.compras.aprovacoes", ["admin.compras"]);
     const sessao = await getMinhaSessao();
     const pode = ["admin", "correspondente", "gestor"].some((r) =>
       (sessao.roles ?? []).includes(r as never),

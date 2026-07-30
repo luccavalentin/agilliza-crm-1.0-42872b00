@@ -259,7 +259,7 @@ export function ListaConversas({ hook }: Props) {
                         )}
                       </div>
                     </button>
-                    <div className="absolute right-1.5 top-1/2 z-10 flex -translate-y-1/2 items-center rounded-md bg-card/95 shadow-sm backdrop-blur-sm">
+                    <div className="absolute right-1.5 top-1/2 z-10 flex -translate-y-1/2 items-center rounded-md border border-border/70 bg-card/95 opacity-0 shadow-sm backdrop-blur-sm transition-opacity focus-within:opacity-100 group-hover:opacity-100 max-sm:opacity-100">
                       <ItemAcoesMenu
                         clienteId={c.cliente_id}
                         nome={c.nome}

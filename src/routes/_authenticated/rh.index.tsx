@@ -14,14 +14,11 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
-} from "recharts";
 import { assertModuloPermitido } from "@/lib/route-guards";
 import { obterKpisRh } from "@/lib/rh/dashboard.functions";
 import { listarFuncionarios } from "@/lib/rh/funcionarios.functions";
 import { ReportKpiCard, type KpiTone } from "@/components/financeiro/kpi-card";
-import { PanelHeader, SectionTitle, PanelCard } from "@/components/common/dashboard";
+import { PanelHeader, SectionTitle } from "@/components/common/dashboard";
 import { Button } from "@/components/ui/button";
 import { formatBRL } from "@/lib/financeiro/format";
 import { KpiDrilldownDialog, type KpiDrillItem } from "@/components/reports/kpi-drilldown-dialog";
@@ -35,18 +32,13 @@ export const Route = createFileRoute("/_authenticated/rh/")({
   ),
 });
 
-function mesLabel(iso: string) {
-  const [y, m] = iso.split("-");
-  return `${m}/${y.slice(2)}`;
-}
-
 type KpiRhKey = "ativos" | "afastados" | "ferias" | "total" | "custo";
 
 function Pagina() {
   const fn = useServerFn(obterKpisRh);
   const listarFn = useServerFn(listarFuncionarios);
   const [drill, setDrill] = useState<KpiRhKey | null>(null);
-  const { data, isLoading, dataUpdatedAt } = useQuery({
+  const { data, dataUpdatedAt } = useQuery({
     queryKey: ["rh-kpis"],
     queryFn: () => fn(),
   });
@@ -137,17 +129,6 @@ function Pagina() {
     [data],
   );
 
-  const admissoes = (data?.admissoesUltimos12 ?? []).map((r) => ({ ...r, label: mesLabel(r.mes) }));
-  const desligamentos = (data?.desligamentosUltimos12 ?? []).map((r) => ({
-    ...r,
-    label: mesLabel(r.mes),
-  }));
-  const evolucao = admissoes.map((a, i) => ({
-    label: a.label,
-    admissoes: a.total,
-    desligamentos: desligamentos[i]?.total ?? 0,
-  }));
-
   const atualizado = dataUpdatedAt
     ? new Date(dataUpdatedAt).toLocaleTimeString("pt-BR", {
         timeZone: "America/Sao_Paulo",
@@ -201,53 +182,6 @@ function Pagina() {
       </div>
 
 
-      <SectionTitle>Movimentação do quadro</SectionTitle>
-      <PanelCard titulo="Admissões vs. desligamentos" subtitulo="Últimos 12 meses">
-        <div className="h-72 w-full">
-          {isLoading ? (
-            <p className="text-sm text-muted-foreground">Carregando…</p>
-          ) : (
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={evolucao}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="label" tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
-                <YAxis tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" width={40} allowDecimals={false} />
-                <Tooltip
-                  contentStyle={{
-                    background: "hsl(var(--card))",
-                    border: "1px solid hsl(var(--border))",
-                    borderRadius: 8,
-                  }}
-                />
-                <Legend />
-                <Bar dataKey="admissoes" name="Admissões" fill="var(--chart-3)" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="desligamentos" name="Desligamentos" fill="var(--chart-5)" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          )}
-        </div>
-      </PanelCard>
-
-      <SectionTitle>Distribuição por departamento</SectionTitle>
-      <PanelCard titulo="Quadro por departamento" subtitulo="Excluindo desligados">
-        <div className="h-72 w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={data?.quadroPorDepartamento ?? []} layout="vertical">
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis type="number" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" allowDecimals={false} />
-              <YAxis type="category" dataKey="nome" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" width={140} />
-              <Tooltip
-                contentStyle={{
-                  background: "hsl(var(--card))",
-                  border: "1px solid hsl(var(--border))",
-                  borderRadius: 8,
-                }}
-              />
-              <Bar dataKey="total" name="Funcionários" fill="var(--chart-1)" radius={[0, 4, 4, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </PanelCard>
 
       {drill && (
         <KpiDrilldownDialog

@@ -77,8 +77,8 @@ export function SecaoOperacaoImovel({ ctx }: { ctx: SimulacaoCompletaCtx }) {
         </div>
       )}
       {f.produto === "home_equity" && (
-        <div className="rounded-lg border-l-4 border-destructive border-y border-r border-y-destructive/40 border-r-destructive/40 bg-destructive/10 px-3 py-2 text-sm leading-relaxed text-destructive-foreground dark:text-destructive-foreground">
-          <strong className="font-semibold">Home Equity temporariamente indisponível:</strong> a
+        <div className="rounded-lg border border-destructive/40 border-l-4 border-l-destructive bg-[color-mix(in_oklab,var(--destructive)_12%,var(--card))] px-3 py-2 text-sm leading-relaxed text-foreground">
+          <strong className="font-semibold text-destructive">Home Equity temporariamente indisponível:</strong> a
           API HomeFin ainda não processa simulações e propostas deste produto. Você pode registrar
           a simulação, mas o envio aos bancos não estará disponível.
         </div>
