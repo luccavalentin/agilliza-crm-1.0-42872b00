@@ -69,6 +69,7 @@ function Pagina() {
   const [aberto, setAberto] = useState(false);
   const [comparador, setComparador] = useState(false);
   const [loteSelecionado, setLoteSelecionado] = useState<string | null>(null);
+  const [filtroResultado, setFiltroResultado] = useState<FiltroLote>("divergente");
 
   const filtros = {
     periodo: periodo || null,
@@ -85,9 +86,14 @@ function Pagina() {
     queryFn: () => resumo({ data: { periodo: periodo || null } }),
   });
 
+  const resumosVisiveis = useMemo(
+    () => (banco === "todos" ? resumos : resumos.filter((r) => r.banco_nome === banco)),
+    [resumos, banco],
+  );
+
   const totais = useMemo(
     () =>
-      resumos.reduce(
+      resumosVisiveis.reduce(
         (acc, r) => ({
           total: acc.total + r.total,
           conferidas: acc.conferidas + r.conferidas,
@@ -97,14 +103,39 @@ function Pagina() {
         }),
         { total: 0, conferidas: 0, divergentes: 0, ausentes_sistema: 0, ausentes_banco: 0 },
       ),
-    [resumos],
+    [resumosVisiveis],
   );
 
   const lote = lotes.find((l) => l.id === loteSelecionado) ?? lotes[0] ?? null;
 
+  /** Lotes agrupados por banco, para leitura organizada. */
+  const lotesPorBanco = useMemo(() => {
+    const mapa = new Map<string, typeof lotes>();
+    for (const l of lotes) {
+      const atual = mapa.get(l.banco_nome) ?? [];
+      atual.push(l);
+      mapa.set(l.banco_nome, atual);
+    }
+    return Array.from(mapa.entries()).sort((a, b) => a[0].localeCompare(b[0], "pt-BR"));
+  }, [lotes]);
+
   function invalidar() {
     qc.invalidateQueries({ queryKey: ["conciliacao-lotes"] });
     qc.invalidateQueries({ queryKey: ["conciliacao-resumo"] });
+  }
+
+  const filtrosAtivos =
+    periodo !== mesAtual() ||
+    banco !== "todos" ||
+    filtroResultado !== "divergente" ||
+    loteSelecionado !== null;
+
+  function limpar() {
+    setPeriodo(mesAtual());
+    setBanco("todos");
+    setFiltroResultado("divergente");
+    setLoteSelecionado(null);
+    toast.success("Filtros limpos.");
   }
 
   async function remover(id: string) {
@@ -118,13 +149,29 @@ function Pagina() {
     }
   }
 
-  const kpis = [
-    { label: "Linhas conciliadas", valor: totais.total, tone: "bg-muted-foreground/40" },
-    { label: "Conferidas", valor: totais.conferidas, tone: "bg-emerald-500" },
-    { label: "Divergentes", valor: totais.divergentes, tone: "bg-amber-500" },
-    { label: "Ausentes no sistema", valor: totais.ausentes_sistema, tone: "bg-red-500" },
-    { label: "Ausentes no banco", valor: totais.ausentes_banco, tone: "bg-sky-500" },
+  const kpis: { label: string; valor: number; tone: string; filtro: FiltroLote }[] = [
+    {
+      label: "Linhas conciliadas",
+      valor: totais.total,
+      tone: "bg-muted-foreground/40",
+      filtro: "todos",
+    },
+    { label: "Conferidas", valor: totais.conferidas, tone: "bg-emerald-500", filtro: "conferido" },
+    { label: "Divergentes", valor: totais.divergentes, tone: "bg-amber-500", filtro: "divergente" },
+    {
+      label: "Ausentes no sistema",
+      valor: totais.ausentes_sistema,
+      tone: "bg-red-500",
+      filtro: "ausente_no_sistema",
+    },
+    {
+      label: "Ausentes no banco",
+      valor: totais.ausentes_banco,
+      tone: "bg-sky-500",
+      filtro: "ausente_no_banco",
+    },
   ];
+
 
   return (
     <div className="space-y-6 p-4 md:p-6">
