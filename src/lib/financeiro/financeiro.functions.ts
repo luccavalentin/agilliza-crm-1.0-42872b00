@@ -612,7 +612,7 @@ export const atualizarConta = createServerFn({ method: "POST" })
     const atualRow = atual as Record<string, any>;
 
 
-    const pago = Number(atual.valor_pago) || 0;
+    const pago = Number(atualRow.valor_pago) || 0;
     if (pago > data.valor)
       throw new Error("O valor não pode ser menor do que o total já baixado nesta conta.");
 
@@ -644,12 +644,12 @@ export const atualizarConta = createServerFn({ method: "POST" })
     );
     await registrarAuditoria(supabase, correspondente_id, `conta_${data.tipo}`, data.id, "editada", {
       antes: {
-        descricao: atual.descricao,
-        valor: Number(atual.valor),
-        vencimento: atual.vencimento,
-        contraparte: atual[contraCol] ?? null,
-        categoria_id: atual.categoria_id ?? null,
-        cost_center_id: atual.cost_center_id ?? null,
+        descricao: atualRow.descricao,
+        valor: Number(atualRow.valor),
+        vencimento: atualRow.vencimento,
+        contraparte: atualRow[contraCol] ?? null,
+        categoria_id: atualRow.categoria_id ?? null,
+        cost_center_id: atualRow.cost_center_id ?? null,
       },
       depois: patch,
     });
