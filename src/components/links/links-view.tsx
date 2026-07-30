@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { LinkIcon, Plus, Pencil, Trash2, ExternalLink, Search, Loader2 } from "lucide-react";
+import { LinkIcon, Plus, Pencil, Trash2, ExternalLink, Search, Loader2, Tags } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
