@@ -215,59 +215,111 @@ function Pagina() {
             Banco
           </label>
           <Select value={banco} onValueChange={setBanco}>
-            <SelectTrigger className="h-9 w-48">
+            <SelectTrigger className="h-9 w-56">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="todos">Todos os bancos</SelectItem>
+              <SelectItem value="todos">
+                <span className="flex items-center gap-2">
+                  <FileSpreadsheet className="h-4 w-4 opacity-60" />
+                  Todos os bancos
+                </span>
+              </SelectItem>
               {BANCOS_CONCILIACAO.map((b) => (
                 <SelectItem key={b.id} value={b.label}>
-                  {b.label}
+                  <span className="flex items-center gap-2">
+                    <BancoLogo nome={b.label} size="sm" />
+                    {b.label}
+                  </span>
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
+        {filtrosAtivos && (
+          <Button variant="ghost" className="h-9" onClick={limpar}>
+            <Eraser className="h-4 w-4" />
+            Limpar filtros
+          </Button>
+        )}
       </div>
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
-        {kpis.map((k) => (
-          <Card key={k.label} className="relative overflow-hidden p-4">
-            <span className={`absolute inset-y-0 left-0 w-[2px] ${k.tone}`} />
-            <div className="font-mono text-2xl font-semibold tabular-nums">{k.valor}</div>
-            <div className="text-[11px] uppercase tracking-wide text-muted-foreground">
-              {k.label}
-            </div>
-          </Card>
-        ))}
-      </div>
-
-      {resumos.length > 0 && (
-        <div className="grid gap-3 md:grid-cols-3">
-          {resumos.map((r) => (
-            <Card key={r.banco_nome} className="p-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">{r.banco_nome}</span>
-                <span className="font-mono text-sm tabular-nums">
-                  {r.percentual_conferido}%
-                </span>
-              </div>
-              <div className="mt-2 h-1.5 w-full overflow-hidden rounded bg-muted">
-                <div
-                  className="h-full bg-emerald-500"
-                  style={{ width: `${Math.min(100, r.percentual_conferido)}%` }}
-                />
-              </div>
-              <div className="mt-2 text-xs text-muted-foreground">
-                {r.total} linhas · {r.divergentes} divergentes · {r.ausentes_sistema} ausentes no
-                sistema
+        {kpis.map((k) => {
+          const ativo = filtroResultado === k.filtro;
+          return (
+            <Card
+              key={k.label}
+              role="button"
+              tabIndex={0}
+              onClick={() => setFiltroResultado(k.filtro)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  setFiltroResultado(k.filtro);
+                }
+              }}
+              className={`relative cursor-pointer overflow-hidden p-4 transition hover:-translate-y-0.5 hover:shadow-md ${
+                ativo ? "border-primary ring-1 ring-primary/30" : ""
+              }`}
+              title={`Ver ${k.label.toLowerCase()}`}
+            >
+              <span className={`absolute inset-y-0 left-0 w-[2px] ${k.tone}`} />
+              <div className="font-mono text-2xl font-semibold tabular-nums">{k.valor}</div>
+              <div className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                {k.label}
               </div>
             </Card>
-          ))}
-        </div>
+          );
+        })}
+      </div>
+
+      {resumosVisiveis.length > 0 && (
+        <section className="space-y-2">
+          <h2 className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
+            Por banco
+          </h2>
+          <div className="grid gap-3 md:grid-cols-3">
+            {resumosVisiveis.map((r) => (
+              <Card
+                key={r.banco_nome}
+                role="button"
+                tabIndex={0}
+                onClick={() => setBanco(banco === r.banco_nome ? "todos" : r.banco_nome)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setBanco(banco === r.banco_nome ? "todos" : r.banco_nome);
+                  }
+                }}
+                className={`cursor-pointer p-4 transition hover:-translate-y-0.5 hover:shadow-md ${
+                  banco === r.banco_nome ? "border-primary ring-1 ring-primary/30" : ""
+                }`}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className="flex items-center gap-2 text-sm font-medium">
+                    <BancoLogo nome={r.banco_nome} size="md" />
+                    {r.banco_nome}
+                  </span>
+                  <span className="font-mono text-sm tabular-nums">{r.percentual_conferido}%</span>
+                </div>
+                <div className="mt-2 h-1.5 w-full overflow-hidden rounded bg-muted">
+                  <div
+                    className="h-full bg-emerald-500"
+                    style={{ width: `${Math.min(100, r.percentual_conferido)}%` }}
+                  />
+                </div>
+                <div className="mt-2 text-xs text-muted-foreground">
+                  {r.total} linhas · {r.divergentes} divergentes · {r.ausentes_sistema} ausentes no
+                  sistema
+                </div>
+              </Card>
+            ))}
+          </div>
+        </section>
       )}
 
-      <section className="space-y-2">
+      <section className="space-y-3">
         <h2 className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
           Lotes enviados
         </h2>
@@ -279,42 +331,58 @@ function Pagina() {
             </p>
           </Card>
         ) : (
-          <div className="flex flex-wrap gap-2">
-            {lotes.map((l) => {
-              const ativo = lote?.id === l.id;
-              return (
-                <button
-                  key={l.id}
-                  type="button"
-                  onClick={() => setLoteSelecionado(l.id)}
-                  className={`group flex items-center gap-3 rounded-lg border px-3 py-2 text-left transition ${
-                    ativo ? "border-primary bg-primary/5" : "hover:bg-muted/50"
-                  }`}
-                >
-                  <div>
-                    <div className="text-sm font-medium">
-                      {l.banco_nome} · {fmtPeriodo(l.periodo_referencia)}
-                    </div>
-                    <div className="text-[11px] text-muted-foreground">
-                      {l.total_linhas} linhas · {l.total_divergentes} divergentes ·{" "}
-                      {new Date(l.enviado_em).toLocaleString("pt-BR")}
-                    </div>
-                  </div>
-                  <Trash2
-                    className="h-3.5 w-3.5 opacity-0 transition group-hover:opacity-60 hover:!opacity-100"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      void remover(l.id);
-                    }}
-                  />
-                </button>
-              );
-            })}
+          <div className="space-y-3">
+            {lotesPorBanco.map(([nomeBanco, lista]) => (
+              <div key={nomeBanco} className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <BancoLogo nome={nomeBanco} size="sm" />
+                  <span className="text-xs font-medium">{nomeBanco}</span>
+                  <span className="text-[11px] text-muted-foreground">
+                    {lista.length} lote(s)
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {lista.map((l) => {
+                    const ativo = lote?.id === l.id;
+                    return (
+                      <button
+                        key={l.id}
+                        type="button"
+                        onClick={() => setLoteSelecionado(l.id)}
+                        className={`group flex items-center gap-3 rounded-lg border px-3 py-2 text-left transition ${
+                          ativo ? "border-primary bg-primary/5" : "hover:bg-muted/50"
+                        }`}
+                      >
+                        <div>
+                          <div className="text-sm font-medium">
+                            {fmtPeriodo(l.periodo_referencia)}
+                          </div>
+                          <div className="text-[11px] text-muted-foreground">
+                            {l.total_linhas} linhas · {l.total_divergentes} divergentes ·{" "}
+                            {new Date(l.enviado_em).toLocaleString("pt-BR")}
+                          </div>
+                        </div>
+                        <Trash2
+                          className="h-3.5 w-3.5 opacity-0 transition group-hover:opacity-60 hover:!opacity-100"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            void remover(l.id);
+                          }}
+                        />
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </section>
 
-      {lote && <LoteDetalhe lote={lote} />}
+      {lote && (
+        <LoteDetalhe lote={lote} filtro={filtroResultado} onFiltroChange={setFiltroResultado} />
+      )}
+
 
       <ComparadorPlanilhasDialog open={comparador} onOpenChange={setComparador} />
 
