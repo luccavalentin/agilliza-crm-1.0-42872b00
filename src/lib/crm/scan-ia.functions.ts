@@ -390,14 +390,32 @@ export const processarLeitura = createServerFn({ method: "POST" })
         `PASSO 2 — Faça OCR de TODAS as páginas (inclusive digitalizações, carimbos e textos em coluna) ` +
         `e extraia SOMENTE os campos previstos para o tipo que você classificou:\n${mapaTipos}\n` +
         `REGRAS PARA MATRÍCULA DE IMÓVEL (matricula_imovel): leia o cabeçalho (número da matrícula, ` +
-        `cartório/oficial de registro de imóveis e comarca), a descrição do imóvel (tipo, logradouro, número, ` +
-        `complemento/apartamento/torre, bairro, cidade, UF, áreas: terreno, construída, privativa e fração ideal, ` +
-        `contribuinte/inscrição imobiliária) e TODOS os atos R./AV. até o final. ` +
+        `cartório/oficial de registro de imóveis, comarca, data de abertura da matrícula, data da última ` +
+        `atualização/certidão e transcrição anterior de origem), a descrição do imóvel (tipo, logradouro, número, ` +
+        `complemento/apartamento/torre, bairro, cidade, UF, áreas: terreno, construída, privativa, comum e fração ideal, ` +
+        `vagas de garagem, confrontações, contribuinte/inscrição imobiliária e inscrição de IPTU) e TODOS os atos ` +
+        `R./AV. desde o primeiro até o último, em ordem. ` +
         `O proprietário é o do ATO MAIS RECENTE de aquisição, com CPF, estado civil, cônjuge e regime de bens quando citados. ` +
-        `Em onus_gravames descreva em texto corrido os ônus vigentes (hipoteca, alienação fiduciária, penhora, usufruto) ` +
-        `ou escreva "Nenhum ônus vigente" quando a matrícula estiver livre; em alienacao_fiduciaria descreva o credor, ` +
-        `valor e situação (ativa/cancelada). valor_imovel é o valor da última transação/avaliação declarada. ` +
+        `COMPRA E VENDA: no ato de transmissão mais recente informe forma_aquisicao (compra e venda, doação, herança, ` +
+        `permuta, adjudicação, dação em pagamento…), vendedor_nome e vendedor_cpf (transmitente/outorgante), ` +
+        `comprador_nome e comprador_cpf (adquirente/outorgado), valor_transacao (preço declarado), data_transacao ` +
+        `(data do título/escritura), data_aquisicao (data do registro) e itbi_informacao (guia, valor e data do ITBI, se citado). ` +
+        `FINANCIAMENTO E GRAVAMES — responda "Sim" ou "Não" nos campos booleanos, sempre que houver base no documento: ` +
+        `tem_hipoteca (+ hipoteca_credor), tem_alienacao_fiduciaria (+ alienacao_credor, alienacao_valor, alienacao_data ` +
+        `e alienacao_situacao = "ativa" ou "baixada/cancelada" quando houver AV. de cancelamento), ` +
+        `tem_interveniente_quitante (+ interveniente_nome — banco/credor que será quitado na operação), ` +
+        `tem_penhora, tem_usufruto, tem_indisponibilidade e outros_onus (arresto, penhora fiscal, cláusulas de ` +
+        `inalienabilidade/impenhorabilidade, litígio, servidão, promessa de compra e venda registrada). ` +
+        `Quando o gravame estiver cancelado por averbação posterior, marque o booleano como "Não" e explique em outros_onus. ` +
+        `AVERBAÇÕES: habite_se_averbado, construcao_averbada e edificacao_regularizada como "Sim"/"Não". ` +
+        `Em onus_gravames descreva em texto corrido os ônus VIGENTES ou escreva "Nenhum ônus vigente" quando a matrícula ` +
+        `estiver livre e desembaraçada; em alienacao_fiduciaria descreva credor, valor e situação. ` +
+        `Em historico_atos liste em texto corrido, na ordem, cada ato no formato "R.3 — 12/05/2019 — compra e venda: ` +
+        `Fulano vendeu para Beltrano, R$ 300.000,00", incluindo AV. de cancelamento e quaisquer datas relevantes. ` +
+        `ultimo_registro é o último ato praticado e data_registro a sua data. ` +
+        `valor_imovel é o valor da última transação/avaliação declarada e valor_venal o valor venal, se citado. ` +
         `Nunca devolva a lista de campos vazia se o documento for legível.\n` +
+
         `Responda SOMENTE com JSON no formato ` +
         `{"tipo_documento":"<um dos tipos>","confianca_tipo":<0-1>,"campos":[{"campo":"<nome>","valor":"<texto>","confianca":<0-1>}]}. ` +
         `Todo "valor" deve ser uma STRING simples (nunca objeto ou lista). ` +

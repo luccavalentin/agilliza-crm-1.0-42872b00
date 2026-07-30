@@ -118,6 +118,9 @@ export const CAMPOS_POR_TIPO: Record<TipoDocumentoScan, string[]> = {
     "cartorio",
     "comarca",
     "uf_imovel",
+    "data_abertura_matricula",
+    "data_atualizacao_matricula",
+    "transcricao_anterior",
     "proprietario",
     "cpf_proprietario",
     "estado_civil_proprietario",
@@ -134,14 +137,51 @@ export const CAMPOS_POR_TIPO: Record<TipoDocumentoScan, string[]> = {
     "area_terreno",
     "area_construida",
     "area_privativa",
+    "area_comum",
     "fracao_ideal",
+    "numero_vagas",
+    "matricula_vaga",
+    "confrontacoes",
     "inscricao_imobiliaria",
+    "inscricao_iptu",
+    "valor_venal",
     "valor_imovel",
+    // Compra e venda / transmissões
+    "forma_aquisicao",
+    "data_aquisicao",
+    "vendedor_nome",
+    "vendedor_cpf",
+    "comprador_nome",
+    "comprador_cpf",
+    "valor_transacao",
+    "data_transacao",
+    "itbi_informacao",
+    // Ônus, gravames e financiamento
     "onus_gravames",
+    "tem_hipoteca",
+    "hipoteca_credor",
+    "tem_alienacao_fiduciaria",
+    "alienacao_credor",
+    "alienacao_valor",
+    "alienacao_data",
+    "alienacao_situacao",
     "alienacao_fiduciaria",
+    "tem_interveniente_quitante",
+    "interveniente_nome",
+    "tem_penhora",
+    "tem_usufruto",
+    "tem_indisponibilidade",
+    "outros_onus",
+    // Averbações e regularidade
+    "habite_se_averbado",
+    "construcao_averbada",
+    "edificacao_regularizada",
+    // Histórico
     "data_registro",
     "ultimo_registro",
+    "historico_atos",
   ],
+
 
   iptu: ["valor_imovel", "endereco_imovel", "cep_imovel", "inscricao_imobiliaria"],
   extrato_bancario: ["nome_completo", "banco_conta", "agencia", "conta_corrente"],
@@ -206,6 +246,42 @@ export const CAMPO_LABEL: Record<string, string> = {
   fracao_ideal: "Fração ideal",
   alienacao_fiduciaria: "Alienação fiduciária",
   ultimo_registro: "Último registro / averbação",
+  data_abertura_matricula: "Data de abertura da matrícula",
+  data_atualizacao_matricula: "Data da última atualização",
+  transcricao_anterior: "Transcrição anterior (origem)",
+  area_comum: "Área comum",
+  numero_vagas: "Nº de vagas",
+  matricula_vaga: "Matrícula da vaga",
+  confrontacoes: "Confrontações",
+  inscricao_iptu: "Inscrição / cadastro IPTU",
+  valor_venal: "Valor venal",
+  forma_aquisicao: "Forma de aquisição",
+  data_aquisicao: "Data de aquisição",
+  vendedor_nome: "Vendedor (transmitente)",
+  vendedor_cpf: "CPF/CNPJ do vendedor",
+  comprador_nome: "Comprador (adquirente)",
+  comprador_cpf: "CPF/CNPJ do comprador",
+  valor_transacao: "Valor da compra e venda",
+  data_transacao: "Data da compra e venda",
+  itbi_informacao: "ITBI (guia / valor / data)",
+  tem_hipoteca: "Possui hipoteca",
+  hipoteca_credor: "Credor da hipoteca",
+  tem_alienacao_fiduciaria: "Possui alienação fiduciária",
+  alienacao_credor: "Credor da alienação fiduciária",
+  alienacao_valor: "Valor da alienação fiduciária",
+  alienacao_data: "Data da alienação fiduciária",
+  alienacao_situacao: "Situação da alienação (ativa/baixada)",
+  tem_interveniente_quitante: "Possui interveniente quitante",
+  interveniente_nome: "Interveniente quitante (credor)",
+  tem_penhora: "Possui penhora",
+  tem_usufruto: "Possui usufruto",
+  tem_indisponibilidade: "Possui indisponibilidade",
+  outros_onus: "Outros ônus / restrições",
+  habite_se_averbado: "Habite-se averbado",
+  construcao_averbada: "Construção averbada",
+  edificacao_regularizada: "Edificação regularizada",
+  historico_atos: "Histórico de atos (R. / AV.)",
+
 
   valor_imovel: "Valor do imóvel",
   banco_conta: "Banco",
@@ -223,7 +299,7 @@ export type DestinoCampo =
       coluna: string;
       formato?: "texto" | "numero" | "data" | "estado_civil" | "regime_casamento" | "documento";
     }
-  | { tipo: "matricula"; chave: string }
+  | { tipo: "matricula"; chave: string; formato?: "texto" | "data" | "booleano" }
   | { tipo: "nenhum" };
 
 /** Para onde cada campo extraído pode ir na tabela `clientes`. */
@@ -266,20 +342,78 @@ export const DESTINO_CAMPO: Record<string, DestinoCampo> = {
 
   // Matrícula (jsonb clientes.imovel_matricula — mesclado, nunca sobrescrito por inteiro)
   numero_matricula: { tipo: "matricula", chave: "numero_matricula" },
-  cartorio: { tipo: "matricula", chave: "cartorio" },
+  cartorio: { tipo: "matricula", chave: "cartorio_nome" },
   comarca: { tipo: "matricula", chave: "comarca" },
-  proprietario: { tipo: "matricula", chave: "proprietario" },
+  proprietario: { tipo: "matricula", chave: "proprietario_atual" },
   area_terreno: { tipo: "matricula", chave: "area_terreno" },
   area_construida: { tipo: "matricula", chave: "area_construida" },
   onus_gravames: { tipo: "matricula", chave: "onus_gravames" },
   data_registro: { tipo: "matricula", chave: "data_registro" },
   inscricao_imobiliaria: { tipo: "matricula", chave: "inscricao_imobiliaria" },
-  cpf_proprietario: { tipo: "matricula", chave: "cpf_proprietario" },
+  cpf_proprietario: { tipo: "matricula", chave: "proprietario_cpf" },
   estado_civil_proprietario: { tipo: "matricula", chave: "estado_civil_proprietario" },
   area_privativa: { tipo: "matricula", chave: "area_privativa" },
   fracao_ideal: { tipo: "matricula", chave: "fracao_ideal" },
-  alienacao_fiduciaria: { tipo: "matricula", chave: "alienacao_fiduciaria" },
+  alienacao_fiduciaria: { tipo: "matricula", chave: "alienacao_descricao" },
   ultimo_registro: { tipo: "matricula", chave: "ultimo_registro" },
+  data_abertura_matricula: { tipo: "matricula", chave: "data_abertura", formato: "data" },
+  data_atualizacao_matricula: { tipo: "matricula", chave: "data_atualizacao", formato: "data" },
+  transcricao_anterior: { tipo: "matricula", chave: "transcricao_anterior" },
+  area_comum: { tipo: "matricula", chave: "area_comum" },
+  numero_vagas: { tipo: "matricula", chave: "numero_vagas" },
+  matricula_vaga: { tipo: "matricula", chave: "matricula_vaga" },
+  confrontacoes: { tipo: "matricula", chave: "confrontacoes" },
+  inscricao_iptu: { tipo: "matricula", chave: "inscricao_iptu" },
+  valor_venal: { tipo: "matricula", chave: "valor_venal" },
+
+  // Compra e venda / transmissões
+  forma_aquisicao: { tipo: "matricula", chave: "aquisicao_forma" },
+  data_aquisicao: { tipo: "matricula", chave: "aquisicao_data", formato: "data" },
+  vendedor_nome: { tipo: "matricula", chave: "vendedor_nome" },
+  vendedor_cpf: { tipo: "matricula", chave: "vendedor_cpf" },
+  comprador_nome: { tipo: "matricula", chave: "comprador_nome" },
+  comprador_cpf: { tipo: "matricula", chave: "comprador_cpf" },
+  valor_transacao: { tipo: "matricula", chave: "valor_transacao" },
+  data_transacao: { tipo: "matricula", chave: "data_transacao", formato: "data" },
+  itbi_informacao: { tipo: "matricula", chave: "itbi_informacao" },
+
+  // Ônus, gravames e financiamento
+  tem_hipoteca: { tipo: "matricula", chave: "tem_hipoteca", formato: "booleano" },
+  hipoteca_credor: { tipo: "matricula", chave: "hipoteca_credor" },
+  tem_alienacao_fiduciaria: {
+    tipo: "matricula",
+    chave: "tem_alienacao_fiduciaria",
+    formato: "booleano",
+  },
+  alienacao_credor: { tipo: "matricula", chave: "alienacao_credor" },
+  alienacao_valor: { tipo: "matricula", chave: "alienacao_valor" },
+  alienacao_data: { tipo: "matricula", chave: "alienacao_data", formato: "data" },
+  alienacao_situacao: { tipo: "matricula", chave: "alienacao_situacao" },
+  tem_interveniente_quitante: {
+    tipo: "matricula",
+    chave: "tem_interveniente_quitante",
+    formato: "booleano",
+  },
+  interveniente_nome: { tipo: "matricula", chave: "interveniente_nome" },
+  tem_penhora: { tipo: "matricula", chave: "tem_penhora", formato: "booleano" },
+  tem_usufruto: { tipo: "matricula", chave: "tem_usufruto", formato: "booleano" },
+  tem_indisponibilidade: {
+    tipo: "matricula",
+    chave: "tem_indisponibilidade",
+    formato: "booleano",
+  },
+  outros_onus: { tipo: "matricula", chave: "outros_onus" },
+
+  // Averbações
+  habite_se_averbado: { tipo: "matricula", chave: "habite_se_averbado", formato: "booleano" },
+  construcao_averbada: { tipo: "matricula", chave: "construcao_averbada", formato: "booleano" },
+  edificacao_regularizada: {
+    tipo: "matricula",
+    chave: "edificacao_regularizada",
+    formato: "booleano",
+  },
+  historico_atos: { tipo: "matricula", chave: "historico_atos" },
+
   tipo_imovel: { tipo: "coluna", coluna: "imovel_tipo" },
   numero_imovel: { tipo: "coluna", coluna: "imovel_numero" },
   complemento_imovel: { tipo: "coluna", coluna: "imovel_complemento" },
@@ -367,12 +501,26 @@ export function normalizarData(valor: string): string | null {
 export function converterValor(
   campo: string,
   valor: string,
-): { ok: true; valor: string | number | null } | { ok: false; motivo: string } {
+): { ok: true; valor: string | number | boolean | null } | { ok: false; motivo: string } {
   const destino = destinoDoCampo(campo);
   const bruto = valor.trim();
   if (!bruto) return { ok: false, motivo: "Valor vazio." };
-  if (destino.tipo === "matricula") return { ok: true, valor: bruto };
+  if (destino.tipo === "matricula") {
+    if (destino.formato === "data") {
+      const d = normalizarData(bruto);
+      return { ok: true, valor: d ?? bruto };
+    }
+    if (destino.formato === "booleano") {
+      const v = semAcento(bruto);
+      const negativo = /^(nao|n|false|0|inexistente|nenhum|nenhuma|sem)\b/.test(v);
+      const positivo = /^(sim|s|true|1|existe|possui|averbad|constitu|ativa)/.test(v);
+      if (!negativo && !positivo) return { ok: true, valor: bruto };
+      return { ok: true, valor: positivo };
+    }
+    return { ok: true, valor: bruto };
+  }
   if (destino.tipo === "nenhum") return { ok: false, motivo: "Campo sem destino no cadastro." };
+
 
   switch (destino.formato) {
     case "numero": {

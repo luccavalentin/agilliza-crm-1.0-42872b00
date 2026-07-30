@@ -21,6 +21,20 @@ const UFS = [
   "MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO",
 ];
 
+/** Aceita boolean ou texto ("Sim"/"Não") vindo da leitura por IA. */
+function ehVerdadeiro(v: unknown): boolean {
+  if (typeof v === "boolean") return v;
+  if (typeof v !== "string") return false;
+  const t = v
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLowerCase();
+  if (!t) return false;
+  return !/^(nao|n|false|0|nenhum|nenhuma|inexistente|sem)\b/.test(t);
+}
+
+
 /**
  * Estrutura dos "Dados da matrícula" do imóvel — campos avaliados pelos
  * bancos ao analisar uma matrícula para fins de financiamento imobiliário
@@ -39,9 +53,19 @@ export interface MatriculaDados {
 
   proprietario_atual?: string;
   proprietario_cpf?: string;
+  estado_civil_proprietario?: string;
   aquisicao_forma?: string;
   aquisicao_data?: string;
   transcricao_anterior?: string;
+
+  // Compra e venda / transmissão
+  vendedor_nome?: string;
+  vendedor_cpf?: string;
+  comprador_nome?: string;
+  comprador_cpf?: string;
+  valor_transacao?: string;
+  data_transacao?: string;
+  itbi_informacao?: string;
 
   inscricao_imobiliaria?: string;
   inscricao_iptu?: string;
@@ -65,15 +89,26 @@ export interface MatriculaDados {
   hipoteca_credor?: string;
   tem_alienacao_fiduciaria?: boolean;
   alienacao_credor?: string;
+  alienacao_valor?: string;
+  alienacao_data?: string;
+  alienacao_situacao?: string;
+  alienacao_descricao?: string;
+  tem_interveniente_quitante?: boolean;
+  interveniente_nome?: string;
   tem_penhora?: boolean;
   tem_usufruto?: boolean;
   tem_indisponibilidade?: boolean;
   outros_onus?: string;
+  onus_gravames?: string;
 
   certidao_onus_data?: string;
   certidao_onus_valida_ate?: string;
   cnd_iptu?: boolean;
   cnd_condominio?: boolean;
+
+  data_registro?: string;
+  ultimo_registro?: string;
+  historico_atos?: string;
 
   observacoes?: string;
 }
@@ -99,6 +134,7 @@ const CAMPOS_AREA: Array<[keyof MatriculaDados, string, string?]> = [
 const ONUS_CHECKS: Array<[keyof MatriculaDados, string]> = [
   ["tem_hipoteca", "Hipoteca"],
   ["tem_alienacao_fiduciaria", "Alienação fiduciária"],
+  ["tem_interveniente_quitante", "Interveniente quitante"],
   ["tem_penhora", "Penhora"],
   ["tem_usufruto", "Usufruto"],
   ["tem_indisponibilidade", "Indisponibilidade"],
@@ -109,6 +145,7 @@ const AVERBACOES_CHECKS: Array<[keyof MatriculaDados, string]> = [
   ["construcao_averbada", "Construção averbada"],
   ["edificacao_regularizada", "Edificação regularizada"],
 ];
+
 
 export function MatriculaTab({
   clienteId,
@@ -250,8 +287,74 @@ export function MatriculaTab({
               onChange={(e) => set("aquisicao_data", e.target.value)}
             />
           </div>
+          <div>
+            <Label>Estado civil do proprietário</Label>
+            <Input
+              value={m.estado_civil_proprietario ?? ""}
+              onChange={(e) => set("estado_civil_proprietario", e.target.value)}
+            />
+          </div>
         </div>
       </section>
+
+      {/* Compra e venda */}
+      <section className="space-y-3">
+        <h4 className="text-sm font-semibold">Compra e venda / transmissão</h4>
+        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
+          <div className="sm:col-span-2">
+            <Label>Vendedor (transmitente)</Label>
+            <Input
+              value={m.vendedor_nome ?? ""}
+              onChange={(e) => set("vendedor_nome", e.target.value)}
+            />
+          </div>
+          <div>
+            <Label>CPF/CNPJ do vendedor</Label>
+            <Input
+              value={m.vendedor_cpf ?? ""}
+              onChange={(e) => set("vendedor_cpf", e.target.value)}
+            />
+          </div>
+          <div className="sm:col-span-2">
+            <Label>Comprador (adquirente)</Label>
+            <Input
+              value={m.comprador_nome ?? ""}
+              onChange={(e) => set("comprador_nome", e.target.value)}
+            />
+          </div>
+          <div>
+            <Label>CPF/CNPJ do comprador</Label>
+            <Input
+              value={m.comprador_cpf ?? ""}
+              onChange={(e) => set("comprador_cpf", e.target.value)}
+            />
+          </div>
+          <div>
+            <Label>Valor da compra e venda (R$)</Label>
+            <Input
+              inputMode="decimal"
+              value={m.valor_transacao ?? ""}
+              onChange={(e) => set("valor_transacao", e.target.value)}
+            />
+          </div>
+          <div>
+            <Label>Data da compra e venda</Label>
+            <Input
+              type="date"
+              value={m.data_transacao ?? ""}
+              onChange={(e) => set("data_transacao", e.target.value)}
+            />
+          </div>
+          <div>
+            <Label>ITBI (guia / valor / data)</Label>
+            <Input
+              value={m.itbi_informacao ?? ""}
+              onChange={(e) => set("itbi_informacao", e.target.value)}
+            />
+          </div>
+        </div>
+      </section>
+
 
       {/* Fiscal */}
       <section className="space-y-3">
@@ -314,7 +417,7 @@ export function MatriculaTab({
           {AVERBACOES_CHECKS.map(([k, l]) => (
             <label key={k} className="flex items-center gap-2 text-sm">
               <Checkbox
-                checked={Boolean(m[k])}
+                checked={ehVerdadeiro(m[k])}
                 onCheckedChange={(v) => set(k, Boolean(v) as never)}
               />
               {l}
@@ -330,7 +433,7 @@ export function MatriculaTab({
           {ONUS_CHECKS.map(([k, l]) => (
             <label key={k} className="flex items-center gap-2 text-sm">
               <Checkbox
-                checked={Boolean(m[k])}
+                checked={ehVerdadeiro(m[k])}
                 onCheckedChange={(v) => set(k, Boolean(v) as never)}
               />
               {l}
@@ -351,7 +454,53 @@ export function MatriculaTab({
             <Input
               value={m.alienacao_credor ?? ""}
               onChange={(e) => set("alienacao_credor", e.target.value)}
-              disabled={!m.tem_alienacao_fiduciaria}
+            />
+          </div>
+          <div>
+            <Label>Valor da alienação fiduciária (R$)</Label>
+            <Input
+              inputMode="decimal"
+              value={m.alienacao_valor ?? ""}
+              onChange={(e) => set("alienacao_valor", e.target.value)}
+            />
+          </div>
+          <div>
+            <Label>Data da alienação fiduciária</Label>
+            <Input
+              type="date"
+              value={m.alienacao_data ?? ""}
+              onChange={(e) => set("alienacao_data", e.target.value)}
+            />
+          </div>
+          <div>
+            <Label>Situação da alienação</Label>
+            <Input
+              value={m.alienacao_situacao ?? ""}
+              onChange={(e) => set("alienacao_situacao", e.target.value)}
+              placeholder="Ativa, baixada/cancelada…"
+            />
+          </div>
+          <div>
+            <Label>Interveniente quitante (credor a quitar)</Label>
+            <Input
+              value={m.interveniente_nome ?? ""}
+              onChange={(e) => set("interveniente_nome", e.target.value)}
+            />
+          </div>
+          <div className="sm:col-span-2">
+            <Label>Descrição da alienação fiduciária</Label>
+            <Textarea
+              rows={2}
+              value={m.alienacao_descricao ?? ""}
+              onChange={(e) => set("alienacao_descricao", e.target.value)}
+            />
+          </div>
+          <div className="sm:col-span-2">
+            <Label>Ônus vigentes (resumo)</Label>
+            <Textarea
+              rows={3}
+              value={m.onus_gravames ?? ""}
+              onChange={(e) => set("onus_gravames", e.target.value)}
             />
           </div>
           <div className="sm:col-span-2">
@@ -364,6 +513,38 @@ export function MatriculaTab({
           </div>
         </div>
       </section>
+
+      {/* Histórico de atos */}
+      <section className="space-y-3">
+        <h4 className="text-sm font-semibold">Histórico de registros e averbações</h4>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <Label>Último registro / averbação</Label>
+            <Input
+              value={m.ultimo_registro ?? ""}
+              onChange={(e) => set("ultimo_registro", e.target.value)}
+            />
+          </div>
+          <div>
+            <Label>Data do último registro</Label>
+            <Input
+              value={m.data_registro ?? ""}
+              onChange={(e) => set("data_registro", e.target.value)}
+              placeholder="dd/mm/aaaa"
+            />
+          </div>
+          <div className="sm:col-span-2">
+            <Label>Histórico de atos (R. / AV.)</Label>
+            <Textarea
+              rows={6}
+              value={m.historico_atos ?? ""}
+              onChange={(e) => set("historico_atos", e.target.value)}
+              placeholder="R.3 — 12/05/2019 — compra e venda: Fulano vendeu para Beltrano, R$ 300.000,00"
+            />
+          </div>
+        </div>
+      </section>
+
 
       {/* Certidões */}
       <section className="space-y-3">
@@ -388,14 +569,14 @@ export function MatriculaTab({
           <div className="flex flex-col justify-end gap-2">
             <label className="flex items-center gap-2 text-sm">
               <Checkbox
-                checked={Boolean(m.cnd_iptu)}
+                checked={ehVerdadeiro(m.cnd_iptu)}
                 onCheckedChange={(v) => set("cnd_iptu", Boolean(v))}
               />
               CND de IPTU disponível
             </label>
             <label className="flex items-center gap-2 text-sm">
               <Checkbox
-                checked={Boolean(m.cnd_condominio)}
+                checked={ehVerdadeiro(m.cnd_condominio)}
                 onCheckedChange={(v) => set("cnd_condominio", Boolean(v))}
               />
               Nada consta do condomínio
