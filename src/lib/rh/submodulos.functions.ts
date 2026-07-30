@@ -990,7 +990,7 @@ export interface RhHolerite {
   arquivo_nome: string;
   valor_liquido: number | null;
   /** Dados usados no cálculo (permitem reabrir o holerite para edição). */
-  entrada: Record<string, unknown> | null;
+  entrada: Record<string, string | number | boolean> | null;
   created_at: string;
 }
 
@@ -1011,7 +1011,7 @@ export const listarHolerites = createServerFn({ method: "GET" })
       .from("rh_holerites")
       .select(
         `id, funcionario_id, competencia_id, mes, ano, arquivo_path, arquivo_nome,
-         valor_liquido, created_at, rh_funcionarios(nome)`,
+         valor_liquido, entrada, created_at, rh_funcionarios(nome)`,
       )
       .order("ano", { ascending: false })
       .order("mes", { ascending: false });
@@ -1030,6 +1030,7 @@ export const listarHolerites = createServerFn({ method: "GET" })
       arquivo_path: r.arquivo_path,
       arquivo_nome: r.arquivo_nome,
       valor_liquido: r.valor_liquido !== null ? Number(r.valor_liquido) : null,
+      entrada: (r.entrada ?? null) as Record<string, string | number | boolean> | null,
       created_at: r.created_at,
     }));
   });
@@ -1046,6 +1047,7 @@ export const anexarHolerite = createServerFn({ method: "POST" })
         arquivo_path: z.string().min(1),
         arquivo_nome: z.string().min(1),
         valor_liquido: z.number().optional().nullable(),
+        entrada: z.record(z.union([z.string(), z.number(), z.boolean()])).optional().nullable(),
       })
       .parse(data),
   )
@@ -1063,6 +1065,7 @@ export const anexarHolerite = createServerFn({ method: "POST" })
           arquivo_path: data.arquivo_path,
           arquivo_nome: data.arquivo_nome,
           valor_liquido: data.valor_liquido ?? null,
+          ...(data.entrada !== undefined ? { entrada: data.entrada } : {}),
           gerado_por: context.userId,
         },
         { onConflict: "funcionario_id,ano,mes" },
