@@ -390,8 +390,6 @@ function LinkDialog({
           </div>
           <div className="space-y-1.5">
             <Label>Categoria (opcional)</Label>
-          <div className="space-y-1.5">
-            <Label>Categoria (opcional)</Label>
             <Select
               value={categoria || "__nenhuma__"}
               onValueChange={(v) => setCategoria(v === "__nenhuma__" ? "" : v)}
