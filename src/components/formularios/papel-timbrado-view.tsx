@@ -88,7 +88,7 @@ export function PapelTimbradoView() {
         icon={<FileText className="h-5 w-5" />}
         eyebrow="Documentos · Formulários"
         titulo="Papel Timbrado"
-        descricao="Escolha um dos 5 modelos institucionais, redija sua correspondência e baixe em PDF com marca d'água."
+        descricao="Escolha entre 10 modelos — 5 institucionais e 5 da linha Real (carta régia) — e baixe em PDF com marca d'água, pronto para papel cartão."
         accent={modelo.primaria}
         acoes={
           <div className="flex flex-wrap items-center gap-2">
@@ -115,7 +115,7 @@ export function PapelTimbradoView() {
             Modelos de papel timbrado
           </h2>
           <span className="text-[11px] text-muted-foreground">
-            5 variações · marca d'água inclusa
+            10 variações · marca d'água inclusa
           </span>
         </div>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
