@@ -18,6 +18,9 @@ import {
   clienteListarMensagens,
   clienteEnviarMensagem,
   clienteReagirMensagem,
+  clienteEditarMensagem,
+  clienteExcluirMensagem,
+
   clienteEnviarMensagemAnexo,
   clienteMarcarLida,
   type AtendenteCliente,
