@@ -1062,6 +1062,17 @@ export const aplicarAoCadastro = createServerFn({ method: "POST" })
         .update({ status: "aplicada" })
         .eq("id", data.leitura_id);
 
+      // Documento confirmado → vai para a Documentação do cliente.
+      const { arquivarLeituraNaDocumentacao } = await import("./scan-ia-arquivar.server");
+      const arq = await arquivarLeituraNaDocumentacao({
+        supabase,
+        userId,
+        leituraId: data.leitura_id,
+        clienteId: leitura.cliente_id,
+        tipoDocumento: leitura.tipo_documento,
+        arquivoUrl: leitura.arquivo_url,
+      });
+
       await supabase.from("scan_ia_auditoria").insert({
         correspondente_id: corr,
         leitura_id: data.leitura_id,
@@ -1074,9 +1085,18 @@ export const aplicarAoCadastro = createServerFn({ method: "POST" })
           campos_aplicados: aplicados,
           campos_descartados: descartados,
           colunas_atualizadas: Object.keys(patch),
+          documento_arquivado: arq.arquivado,
+          documento_id: arq.documento_id,
+          erro_arquivo: arq.erro,
         },
       });
 
-      return { ok: true, aplicados: aplicados.length, descartados: descartados.length };
+      return {
+        ok: true,
+        aplicados: aplicados.length,
+        descartados: descartados.length,
+        arquivado: arq.arquivado,
+        erro_arquivo: arq.erro,
+      };
     },
   );
