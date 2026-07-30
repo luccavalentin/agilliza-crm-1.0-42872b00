@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Receipt, Upload, Download, FileDown, Sparkles, Eye, RefreshCw, Pencil, Trash2 } from "lucide-react";
+import { Receipt, Upload, Download, Eye, RefreshCw, Pencil, Trash2 } from "lucide-react";
 import { assertModuloPermitido } from "@/lib/route-guards";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -223,7 +223,7 @@ function Pagina() {
             <Receipt className="h-5 w-5 text-primary" /> Holerites e recibos
           </h1>
           <p className="text-sm text-muted-foreground">
-            Monte um holerite CLT completo (proventos, descontos, INSS/IRRF/FGTS), gere em lote a partir da folha fechada ou anexe um PDF externo.
+            Monte um holerite CLT completo (proventos, descontos, INSS/IRRF/FGTS), ou anexe um PDF externo.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
