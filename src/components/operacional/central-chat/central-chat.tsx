@@ -210,7 +210,7 @@ export function CentralChatPage() {
                 </div>
               </div>
             ) : (
-              <ul className="divide-y divide-border/30">
+              <ul className="py-1">
                 {filtradas.map((r) => {
                   const t = r.th;
                   const chave = chaveConversa(t.kind, t.id);
