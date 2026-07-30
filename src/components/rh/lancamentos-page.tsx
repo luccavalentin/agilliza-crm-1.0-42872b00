@@ -150,9 +150,28 @@ export function LancamentosPage({
                   <Input
                     type="number"
                     step="0.01"
+                    inputMode="decimal"
+                    placeholder="0,00"
                     value={form.valor || ""}
-                    onChange={(e) => setForm((p) => ({ ...p, valor: Number(e.target.value) }))}
+                    onFocus={(e) => e.currentTarget.select()}
+                    onChange={(e) =>
+                      setForm((p) => ({ ...p, valor: e.target.value === "" ? 0 : Number(e.target.value) }))
+                    }
                   />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Situação</Label>
+                  <Select
+                    value={form.status}
+                    onValueChange={(v) => setForm((p) => ({ ...p, status: v as LancamentoStatus }))}
+                  >
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {(Object.keys(STATUS) as LancamentoStatus[]).map((s) => (
+                        <SelectItem key={s} value={s}>{STATUS[s].label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-1.5">
                   <Label>Competência (mês)</Label>
