@@ -529,6 +529,46 @@ function PreviewPagina({
           <div className="relative mx-6 h-px bg-border" />
         </>
       )}
+      {modelo.estilo === "real" && (
+        <div className="relative flex flex-col items-center px-6 pb-4 pt-12">
+          <img src={agillizaLogoDark} alt="Agilliza" className="h-8 w-auto" />
+          <div
+            className="mt-3 font-serif text-2xl font-bold tracking-[0.3em]"
+            style={{ color: modelo.primaria }}
+          >
+            AGILLIZA
+          </div>
+          <div
+            className="mt-1 font-serif text-[10px] tracking-[0.32em]"
+            style={{ color: modelo.metalico ?? modelo.destaque }}
+          >
+            CRÉDITO IMOBILIÁRIO
+          </div>
+          <div className="mt-4 flex w-full items-center gap-3">
+            <span
+              className="h-px flex-1"
+              style={{ background: modelo.metalico ?? modelo.destaque }}
+            />
+            <span
+              className="grid size-3.5 rotate-45 place-items-center border"
+              style={{
+                borderColor: modelo.primaria,
+                background: modelo.metalico ?? modelo.destaque,
+              }}
+            />
+            <span
+              className="h-px flex-1"
+              style={{ background: modelo.metalico ?? modelo.destaque }}
+            />
+          </div>
+          {modelo.lema && (
+            <div className="mt-2 font-serif text-[9px] italic tracking-[0.14em] text-muted-foreground">
+              {modelo.lema}
+            </div>
+          )}
+        </div>
+      )}
+
 
       {/* Corpo */}
       <div className="relative">{children}</div>
