@@ -66,6 +66,25 @@ function Pagina() {
     queryFn: () => fnHist({ data: { funcionario_id: id } }),
   });
 
+  const navigate = useNavigate();
+  const qc = useQueryClient();
+  const fnExcluir = useServerFn(excluirFuncionario);
+  const [confirmar, setConfirmar] = useState(false);
+
+  const excluir = useMutation({
+    mutationFn: () => fnExcluir({ data: { id } }),
+    onSuccess: () => {
+      toast.success("Funcionário excluído.");
+      setConfirmar(false);
+      qc.invalidateQueries({ queryKey: ["rh-funcionarios"] });
+      qc.invalidateQueries({ queryKey: ["rh-kpis"] });
+      navigate({ to: "/rh/funcionarios" });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Falha ao excluir funcionário."),
+  });
+
+
+
   async function imprimirFicha() {
     if (!q.data) return;
     try {
