@@ -305,21 +305,74 @@ function ModeloCard({
       aria-pressed={selecionado}
     >
       {/* Miniatura A4 */}
-      <div className="relative aspect-[1/1.15] w-full overflow-hidden bg-white">
+      <div
+        className="relative aspect-[1/1.15] w-full overflow-hidden"
+        style={{ background: modelo.estilo === "real" ? (modelo.fundo ?? "#FBF7EE") : "#ffffff" }}
+      >
         {/* Watermark */}
-        <span
-          className="pointer-events-none absolute inset-0 grid place-items-center"
-          aria-hidden
-        >
-          <span
-            className="rotate-[-24deg] text-[42px] font-black tracking-wider"
-            style={{ color: modelo.marcaDagua, opacity: 0.05 }}
-          >
-            AGILLIZA
+        {modelo.estilo === "real" ? (
+          <span className="pointer-events-none absolute inset-0 grid place-items-center" aria-hidden>
+            <span className="relative grid size-[74%] place-items-center">
+              <span
+                className="absolute inset-0 rounded-full border-2"
+                style={{ borderColor: modelo.marcaDagua, opacity: 0.1 }}
+              />
+              <span
+                className="absolute inset-[10%] rounded-full border"
+                style={{ borderColor: modelo.marcaDagua, opacity: 0.1 }}
+              />
+              <span
+                className="font-serif text-[56px] font-bold leading-none"
+                style={{ color: modelo.marcaDagua, opacity: 0.09 }}
+              >
+                A
+              </span>
+            </span>
           </span>
-        </span>
+        ) : (
+          <span
+            className="pointer-events-none absolute inset-0 grid place-items-center"
+            aria-hidden
+          >
+            <span
+              className="rotate-[-24deg] text-[42px] font-black tracking-wider"
+              style={{ color: modelo.marcaDagua, opacity: 0.05 }}
+            >
+              AGILLIZA
+            </span>
+          </span>
+        )}
+
+        {/* Moldura ornamental (linha Real) */}
+        {modelo.estilo === "real" && (
+          <span className="pointer-events-none absolute inset-0" aria-hidden>
+            <span
+              className="absolute inset-[6px] border"
+              style={{ borderColor: modelo.primaria }}
+            />
+            <span
+              className="absolute inset-[9px] border"
+              style={{ borderColor: modelo.metalico ?? modelo.destaque, opacity: 0.8 }}
+            />
+          </span>
+        )}
 
         {/* Cabeçalho conforme estilo */}
+        {modelo.estilo === "real" && (
+          <div className="relative flex h-[34%] flex-col items-center justify-end pb-1">
+            <img src={agillizaLogoDark} alt="" className="h-3 w-auto" />
+            <span
+              className="mt-1 font-serif text-[8px] font-bold tracking-[0.25em]"
+              style={{ color: modelo.primaria }}
+            >
+              AGILLIZA
+            </span>
+            <span
+              className="mt-1 block h-px w-[62%]"
+              style={{ background: modelo.metalico ?? modelo.destaque }}
+            />
+          </div>
+        )}
         {modelo.estilo === "faixa" && (
           <>
             <div
@@ -340,6 +393,7 @@ function ModeloCard({
             </div>
           </>
         )}
+
         {modelo.estilo === "hairline" && (
           <div className="relative flex h-[26%] items-end justify-between px-3 pb-1.5">
             <img src={agillizaLogoDark} alt="" className="h-3 w-auto" />
