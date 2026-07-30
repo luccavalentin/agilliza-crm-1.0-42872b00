@@ -1,11 +1,14 @@
 /**
- * Gera o PDF do holerite (recibo de pagamento) com identidade Agilliza.
+ * Gera o PDF do holerite (Recibo de Pagamento de Salário) no formato clássico
+ * da CLT: quadro do empregador, quadro do funcionário, tabela única com
+ * Código / Descrição / Referência / Vencimentos / Descontos, totais, líquido,
+ * bases de cálculo (INSS, FGTS, IRRF) e recibo de quitação com assinatura.
+ *
  * Client-side (jsPDF + autoTable). Retorna um Blob para upload ao Storage
  * ou download direto pelo usuário.
  */
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
-import { drawBrandHeader } from "@/lib/relatorios/report-pdf";
 import { getPdfPalette, type PdfPalette } from "@/lib/relatorios/pdf-theme";
 import { formatBRL } from "@/lib/simulacao/format";
 
@@ -52,6 +55,12 @@ export interface HoleriteInput {
   liquido: number;
 }
 
+interface Linha {
+  codigo: string;
+  desc: string;
+  ref: string;
+  valor: number;
+}
 
 function fmtCpf(cpf?: string | null): string {
   if (!cpf) return "—";
@@ -60,255 +69,325 @@ function fmtCpf(cpf?: string | null): string {
   return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9)}`;
 }
 
+/** Desenha um bloco rotulado (rótulo pequeno em cima, valor embaixo). */
+function campo(
+  doc: jsPDF,
+  P: PdfPalette,
+  x: number,
+  y: number,
+  w: number,
+  label: string,
+  value: string,
+) {
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(6.5);
+  doc.setTextColor(P.cinza);
+  doc.text(label.toUpperCase(), x + 4, y + 8);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(9);
+  doc.setTextColor(P.texto);
+  const v = doc.splitTextToSize(String(value ?? "—"), w - 8)[0] ?? "—";
+  doc.text(v, x + 4, y + 19);
+}
+
 export function gerarHoleritePdf(input: HoleriteInput): { blob: Blob; filename: string } {
   const P: PdfPalette = getPdfPalette();
   const doc = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
   const pageW = doc.internal.pageSize.getWidth();
   const pageH = doc.internal.pageSize.getHeight();
 
-  if (P.pageBg) {
-    doc.setFillColor(P.pageBg);
-    doc.rect(0, 0, pageW, pageH, "F");
-  }
-
-  const HEADER_H = 70;
+  const M = 32; // margem
+  const W = pageW - M * 2;
   const compLabel = `${MESES_LONGOS[input.competencia.mes - 1]}/${input.competencia.ano}`;
-  drawBrandHeader(
-    doc,
-    pageW,
-    HEADER_H,
-    "Holerite · Recibo de pagamento",
-    `Competência ${compLabel}`,
-  );
+  const empregador = input.correspondente_nome?.trim() || "Agilliza";
 
-  let y = HEADER_H + 26;
+  doc.setFillColor("#FFFFFF");
+  doc.rect(0, 0, pageW, pageH, "F");
 
-  // Bloco de identificação do funcionário
-  const boxX = 32;
-  const boxW = pageW - 64;
-  const boxH = 78;
-  doc.setFillColor(P.card);
+  let y = M;
+
+  // ---------------------------------------------------------------- cabeçalho
+  const headH = 46;
   doc.setDrawColor(P.borda);
-  doc.setLineWidth(0.75);
-  doc.roundedRect(boxX, y, boxW, boxH, 6, 6, "FD");
-  doc.setFillColor(P.coral);
-  doc.rect(boxX, y + 12, 3, boxH - 24, "F");
+  doc.setLineWidth(0.9);
+  doc.setFillColor(P.card);
+  doc.rect(M, y, W, headH, "FD");
+  // faixa de identidade
+  doc.setFillColor(P.azul);
+  doc.rect(M, y, 4, headH, "F");
 
-  const infos: Array<{ label: string; value: string }> = [
-    { label: "FUNCIONÁRIO", value: input.funcionario.nome },
-    { label: "MATRÍCULA", value: input.funcionario.numero ?? "—" },
-    { label: "CPF", value: fmtCpf(input.funcionario.cpf) },
-    { label: "CARGO", value: input.funcionario.cargo ?? "—" },
-    { label: "DEPARTAMENTO", value: input.funcionario.departamento ?? "—" },
-    { label: "COMPETÊNCIA", value: compLabel },
-  ];
-  const cols = 3;
-  const rows = Math.ceil(infos.length / cols);
-  const colW = (boxW - 32) / cols;
-  const rowH = (boxH - 20) / rows;
-  infos.forEach((it, i) => {
-    const cx = boxX + 16 + (i % cols) * colW;
-    const cy = y + 10 + Math.floor(i / cols) * rowH;
-    doc.setTextColor(P.cinza);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(7);
-    doc.text(it.label, cx, cy + 10);
-    doc.setTextColor(P.destaque);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(10);
-    const val = doc.splitTextToSize(String(it.value), colW - 12)[0] ?? it.value;
-    doc.text(val, cx, cy + 24);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(11);
+  doc.setTextColor(P.destaque);
+  doc.text(empregador.toUpperCase(), M + 14, y + 19);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(7.5);
+  doc.setTextColor(P.cinza);
+  doc.text("Empregador · Departamento Pessoal", M + 14, y + 31);
+  doc.text("Documento gerado eletronicamente pelo sistema Agilliza", M + 14, y + 40);
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(10.5);
+  doc.setTextColor(P.texto);
+  doc.text("RECIBO DE PAGAMENTO DE SALÁRIO", pageW - M - 12, y + 19, { align: "right" });
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+  doc.setTextColor(P.cinza);
+  doc.text(`Competência: ${compLabel}`, pageW - M - 12, y + 32, { align: "right" });
+  doc.text("Art. 464 da CLT", pageW - M - 12, y + 42, { align: "right" });
+
+  y += headH;
+
+  // ------------------------------------------------------- quadro funcionário
+  const rowH = 26;
+  doc.setDrawColor(P.borda);
+  doc.setFillColor("#FFFFFF");
+  doc.rect(M, y, W, rowH * 2, "FD");
+
+  const c1 = W * 0.16;
+  const c2 = W * 0.46;
+  const c3 = W * 0.19;
+  const c4 = W - c1 - c2 - c3;
+
+  // divisórias
+  doc.setLineWidth(0.5);
+  doc.line(M, y + rowH, M + W, y + rowH);
+  [c1, c1 + c2, c1 + c2 + c3].forEach((off) => {
+    doc.line(M + off, y, M + off, y + rowH * 2);
   });
-  y += boxH + 18;
 
-  // Monta linhas de proventos e descontos
+  campo(doc, P, M, y, c1, "Matrícula", input.funcionario.numero ?? "—");
+  campo(doc, P, M + c1, y, c2, "Nome do funcionário", input.funcionario.nome);
+  campo(doc, P, M + c1 + c2, y, c3, "CPF", fmtCpf(input.funcionario.cpf));
+  campo(doc, P, M + c1 + c2 + c3, y, c4, "Competência", compLabel);
+
+  campo(doc, P, M, y + rowH, c1, "Cód. cargo", "—");
+  campo(doc, P, M + c1, y + rowH, c2, "Cargo / Função", input.funcionario.cargo ?? "—");
+  campo(doc, P, M + c1 + c2, y + rowH, c3, "Departamento", input.funcionario.departamento ?? "—");
+  campo(doc, P, M + c1 + c2 + c3, y + rowH, c4, "Salário base", formatBRL(input.salario_base));
+
+  y += rowH * 2 + 10;
+
+  // ------------------------------------------------- linhas de verbas (CLT)
   const d = input.detalhamento;
-  const proventos: Array<{ desc: string; ref: string; valor: number }> = [];
-  const descontos: Array<{ desc: string; ref: string; valor: number }> = [];
+  const proventos: Linha[] = [];
+  const descontos: Linha[] = [];
 
   const manual = input.linhas;
   if (manual) {
-    manual.proventos.forEach((l) =>
+    manual.proventos.forEach((l, i) =>
       proventos.push({
-        desc: l.codigo ? `${l.codigo} · ${l.descricao}` : l.descricao,
-        ref: l.referencia ?? "—",
+        codigo: l.codigo ?? String(1 + i).padStart(3, "0"),
+        desc: l.descricao,
+        ref: l.referencia ?? "",
         valor: l.valor,
       }),
     );
-    manual.descontos.forEach((l) =>
+    manual.descontos.forEach((l, i) =>
       descontos.push({
-        desc: l.codigo ? `${l.codigo} · ${l.descricao}` : l.descricao,
-        ref: l.referencia ?? "—",
+        codigo: l.codigo ?? String(101 + i),
+        desc: l.descricao,
+        ref: l.referencia ?? "",
         valor: l.valor,
       }),
     );
   } else {
-  proventos.push({ desc: "Salário base", ref: "30 dias", valor: input.salario_base });
-  if ((d.beneficios_valor ?? 0) > 0) {
-    proventos.push({ desc: "Benefícios (provento)", ref: "—", valor: d.beneficios_valor ?? 0 });
+    proventos.push({ codigo: "001", desc: "Salário base", ref: "30 dias", valor: input.salario_base });
+    if ((d.beneficios_valor ?? 0) > 0) {
+      proventos.push({ codigo: "070", desc: "Benefícios (provento)", ref: "", valor: d.beneficios_valor ?? 0 });
+    }
+    if ((d.proventos_avulsos ?? 0) > 0) {
+      (input.ajustes ?? [])
+        .filter((a) => a.tipo === "provento")
+        .forEach((a, i) =>
+          proventos.push({ codigo: String(90 + i).padStart(3, "0"), desc: a.descricao, ref: "avulso", valor: a.valor }),
+        );
+    }
+    if ((d.inss ?? 0) > 0) {
+      descontos.push({ codigo: "110", desc: "I.N.S.S.", ref: "tab. progressiva", valor: d.inss ?? 0 });
+    }
+    if ((d.irrf ?? 0) > 0) {
+      descontos.push({
+        codigo: "111",
+        desc: "I.R.R.F. sobre salário",
+        ref: (d.dependentes_ir ?? 0) > 0 ? `${d.dependentes_ir} dep.` : "tab. mensal",
+        valor: d.irrf ?? 0,
+      });
+    }
+    if ((d.beneficios_desconto ?? 0) > 0) {
+      descontos.push({ codigo: "120", desc: "Benefícios (desconto)", ref: "", valor: d.beneficios_desconto ?? 0 });
+    }
+    if ((d.descontos_lancados ?? 0) > 0) {
+      descontos.push({ codigo: "190", desc: "Descontos lançados", ref: "", valor: d.descontos_lancados ?? 0 });
+    }
+    if ((d.adiantamentos ?? 0) > 0) {
+      descontos.push({ codigo: "140", desc: "Adiantamento salarial", ref: "", valor: d.adiantamentos ?? 0 });
+    }
+    if ((d.descontos_avulsos ?? 0) > 0) {
+      (input.ajustes ?? [])
+        .filter((a) => a.tipo === "desconto")
+        .forEach((a, i) =>
+          descontos.push({ codigo: String(191 + i), desc: a.descricao, ref: "avulso", valor: a.valor }),
+        );
+    }
   }
-  if ((d.proventos_avulsos ?? 0) > 0) {
-    (input.ajustes ?? [])
-      .filter((a) => a.tipo === "provento")
-      .forEach((a) => proventos.push({ desc: a.descricao, ref: "avulso", valor: a.valor }));
-  }
-  if ((d.inss ?? 0) > 0) {
-    descontos.push({ desc: "INSS", ref: "tab. progressiva", valor: d.inss ?? 0 });
-  }
-  if ((d.irrf ?? 0) > 0) {
-    descontos.push({
-      desc: "IRRF",
-      ref: (d.dependentes_ir ?? 0) > 0 ? `${d.dependentes_ir} dep.` : "tab. mensal",
-      valor: d.irrf ?? 0,
-    });
-  }
-  if ((d.beneficios_desconto ?? 0) > 0) {
-    descontos.push({ desc: "Benefícios (desconto)", ref: "—", valor: d.beneficios_desconto ?? 0 });
-  }
-  if ((d.descontos_lancados ?? 0) > 0) {
-    descontos.push({ desc: "Descontos lançados", ref: "—", valor: d.descontos_lancados ?? 0 });
-  }
-  if ((d.adiantamentos ?? 0) > 0) {
-    descontos.push({ desc: "Adiantamentos", ref: "—", valor: d.adiantamentos ?? 0 });
-  }
-  if ((d.descontos_avulsos ?? 0) > 0) {
-    (input.ajustes ?? [])
-      .filter((a) => a.tipo === "desconto")
-      .forEach((a) => descontos.push({ desc: a.descricao, ref: "avulso", valor: a.valor }));
-  }
-  }
-
 
   const totalProv = proventos.reduce((s, r) => s + r.valor, 0);
   const totalDesc = descontos.reduce((s, r) => s + r.valor, 0);
+  const liquido = Number.isFinite(input.liquido) ? input.liquido : totalProv - totalDesc;
 
-  // Tabela de proventos e descontos lado a lado (usando uma tabela única com 4 colunas)
-  const linhas = Math.max(proventos.length, descontos.length);
-  const body: any[] = [];
-  for (let i = 0; i < linhas; i++) {
-    const p = proventos[i];
-    const de = descontos[i];
-    body.push([
-      p ? p.desc : "",
-      p ? formatBRL(p.valor) : "",
-      de ? de.desc : "",
-      de ? formatBRL(de.valor) : "",
-    ]);
-  }
+  // Tabela única no padrão do holerite: vencimentos e descontos em colunas.
+  const body = [
+    ...proventos.map((l) => [l.codigo, l.desc, l.ref, formatBRL(l.valor), ""]),
+    ...descontos.map((l) => [l.codigo, l.desc, l.ref, "", formatBRL(l.valor)]),
+  ];
+  // Linhas em branco para o holerite manter a "cara" de formulário.
+  const MIN_LINHAS = 14;
+  for (let i = body.length; i < MIN_LINHAS; i++) body.push(["", "", "", "", ""]);
 
   autoTable(doc, {
     startY: y,
-    head: [["Proventos", "Valor (R$)", "Descontos", "Valor (R$)"]],
+    head: [["Cód.", "Descrição", "Referência", "Vencimentos", "Descontos"]],
     body,
     theme: "grid",
+    styles: {
+      lineColor: P.borda as any,
+      lineWidth: 0.4,
+      font: "helvetica",
+    },
     headStyles: {
       fillColor: P.azul as any,
       textColor: "#FFFFFF",
-      halign: "left",
-      fontSize: 9,
+      fontSize: 8,
       fontStyle: "bold",
+      halign: "left",
     },
-    bodyStyles: { fontSize: 9, textColor: P.destaque as any, cellPadding: 5 },
-    alternateRowStyles: { fillColor: P.card as any },
+    bodyStyles: { fontSize: 8.5, textColor: P.texto as any, cellPadding: 4, minCellHeight: 16 },
     columnStyles: {
-      0: { cellWidth: (pageW - 64) * 0.32 },
-      1: { cellWidth: (pageW - 64) * 0.18, halign: "right" },
-      2: { cellWidth: (pageW - 64) * 0.32 },
-      3: { cellWidth: (pageW - 64) * 0.18, halign: "right" },
+      0: { cellWidth: W * 0.08, halign: "center" },
+      1: { cellWidth: W * 0.42 },
+      2: { cellWidth: W * 0.16, halign: "center", textColor: P.cinza as any },
+      3: { cellWidth: W * 0.17, halign: "right" },
+      4: { cellWidth: W * 0.17, halign: "right" },
     },
-    foot: [[
-      { content: "Total de proventos", styles: { fontStyle: "bold" } },
-      { content: formatBRL(totalProv), styles: { halign: "right", fontStyle: "bold" } },
-      { content: "Total de descontos", styles: { fontStyle: "bold" } },
-      { content: formatBRL(totalDesc), styles: { halign: "right", fontStyle: "bold" } },
-    ]],
-    footStyles: {
-      fillColor: P.card as any,
-      textColor: P.destaque as any,
-      fontSize: 9,
-    },
-    margin: { left: 32, right: 32 },
+    margin: { left: M, right: M },
+    tableWidth: W,
   });
 
-  y = (doc as any).lastAutoTable.finalY + 18;
+  y = (doc as any).lastAutoTable.finalY;
 
-  // Painel líquido a receber
-  const netH = 58;
-  doc.setFillColor(P.azul);
-  doc.roundedRect(32, y, pageW - 64, netH, 6, 6, "F");
-  doc.setTextColor("#FFFFFF");
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(10);
-  doc.text("LÍQUIDO A RECEBER", 48, y + 22);
-  doc.setFontSize(20);
-  doc.text(formatBRL(input.liquido), pageW - 48, y + 32, { align: "right" });
-  doc.setFontSize(8);
-  doc.setFont("helvetica", "normal");
-  doc.text(
-    `Salário base ${formatBRL(input.salario_base)} · Proventos ${formatBRL(totalProv)} · Descontos ${formatBRL(totalDesc)}`,
-    48,
-    y + 42,
-  );
-  y += netH + 14;
-
-  // Bases de cálculo (INSS/IRRF/FGTS) — informativo, exigido em recibo CLT
-  const baseInss = (d as any).base_inss ?? Math.min(input.salario_base + (d.proventos_avulsos ?? 0), 8157.41);
-  const baseIrrf = d.base_irrf ?? 0;
-  const fgts = d.fgts ?? 0;
-  doc.setDrawColor(P.borda);
-  doc.setFillColor(P.card);
-  doc.roundedRect(32, y, pageW - 64, 34, 5, 5, "FD");
-  doc.setTextColor(P.cinza);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(7);
-  const bcols = [
-    { l: "BASE INSS", v: formatBRL(baseInss) },
-    { l: "BASE IRRF", v: formatBRL(baseIrrf) },
-    { l: "FGTS DO MÊS", v: formatBRL(fgts) },
-    { l: "FGTS ACUM. (informativo)", v: "—" },
-  ];
-  const bw = (pageW - 64) / bcols.length;
-  bcols.forEach((c, i) => {
-    const cx = 32 + i * bw + 12;
-    doc.setTextColor(P.cinza);
-    doc.setFontSize(7);
-    doc.text(c.l, cx, y + 12);
-    doc.setTextColor(P.destaque);
-    doc.setFontSize(10);
-    doc.text(c.v, cx, y + 26);
-  });
-  y += 34 + 12;
-
-
-
-  // Assinaturas
-  const assinY = pageH - 130;
+  // --------------------------------------------------- totais + valor líquido
+  const totH = 30;
   doc.setDrawColor(P.borda);
   doc.setLineWidth(0.6);
-  doc.line(48, assinY, 240, assinY);
-  doc.line(pageW - 240, assinY, pageW - 48, assinY);
+  doc.setFillColor(P.card);
+  doc.rect(M, y, W, totH, "FD");
+
+  const colTot = W * 0.17;
+  const xVenc = M + W - colTot * 2;
+  const xDesc = M + W - colTot;
+  doc.line(xVenc, y, xVenc, y + totH);
+  doc.line(xDesc, y, xDesc, y + totH);
+
+  doc.setFont("helvetica", "bold");
   doc.setFontSize(8);
   doc.setTextColor(P.cinza);
+  doc.text("TOTAL DE VENCIMENTOS", xVenc + colTot - 6, y + 11, { align: "right" });
+  doc.text("TOTAL DE DESCONTOS", xDesc + colTot - 6, y + 11, { align: "right" });
+  doc.setFontSize(10);
+  doc.setTextColor(P.texto);
+  doc.text(formatBRL(totalProv), xVenc + colTot - 6, y + 24, { align: "right" });
+  doc.text(formatBRL(totalDesc), xDesc + colTot - 6, y + 24, { align: "right" });
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(8);
+  doc.setTextColor(P.cinza);
+  doc.text("MÊS DE REFERÊNCIA", M + 8, y + 11);
+  doc.setFontSize(10);
+  doc.setTextColor(P.texto);
+  doc.text(compLabel, M + 8, y + 24);
+
+  y += totH;
+
+  // faixa do líquido
+  const netH = 32;
+  doc.setFillColor(P.azul);
+  doc.rect(M, y, W, netH, "F");
+  doc.setTextColor("#FFFFFF");
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(9);
+  doc.text("VALOR LÍQUIDO A RECEBER", M + 8, y + 20);
+  doc.setFontSize(15);
+  doc.text(formatBRL(liquido), M + W - 8, y + 22, { align: "right" });
+
+  y += netH + 10;
+
+  // ------------------------------------------------------ bases de cálculo
+  const baseInss = d.base_inss ?? 0;
+  const baseIrrf = d.base_irrf ?? 0;
+  const fgts = d.fgts ?? 0;
+  const basesH = 34;
+  doc.setDrawColor(P.borda);
+  doc.setLineWidth(0.6);
+  doc.setFillColor("#FFFFFF");
+  doc.rect(M, y, W, basesH, "FD");
+
+  const bases = [
+    { l: "Salário base", v: formatBRL(input.salario_base) },
+    { l: "Base INSS", v: formatBRL(baseInss) },
+    { l: "Base FGTS", v: formatBRL(baseInss) },
+    { l: "FGTS do mês", v: formatBRL(fgts) },
+    { l: "Base IRRF", v: formatBRL(baseIrrf) },
+    { l: "Faixa IRRF", v: (d.dependentes_ir ?? 0) > 0 ? `${d.dependentes_ir} dep.` : "tab. mensal" },
+  ];
+  const bw = W / bases.length;
+  bases.forEach((b, i) => {
+    const bx = M + i * bw;
+    if (i > 0) doc.line(bx, y, bx, y + basesH);
+    campo(doc, P, bx, y + 3, bw, b.l, b.v);
+  });
+
+  y += basesH + 16;
+
+  // ------------------------------------------------------------- quitação
   doc.setFont("helvetica", "normal");
-  doc.text("Assinatura do funcionário", 48, assinY + 12);
-  doc.text("Assinatura da empresa", pageW - 240, assinY + 12);
-  doc.setFontSize(7);
+  doc.setFontSize(7.5);
+  doc.setTextColor(P.cinza);
   doc.text(
-    "Declaro ter recebido a importância líquida discriminada acima referente à competência informada.",
-    48,
-    assinY - 12,
-    { maxWidth: pageW - 96 },
+    "Declaro ter recebido a importância líquida discriminada neste recibo, referente à competência acima, " +
+      "estando quitadas as verbas nele especificadas nos termos do art. 464 da CLT.",
+    M,
+    y,
+    { maxWidth: W },
   );
 
-  // Rodapé institucional
-  const footY = pageH - 32;
+  const assinY = Math.max(y + 60, pageH - 110);
   doc.setDrawColor(P.borda);
-  doc.line(32, footY - 12, pageW - 32, footY - 12);
-  doc.setFontSize(7);
+  doc.setLineWidth(0.6);
+  doc.line(M + 16, assinY, M + W * 0.42, assinY);
+  doc.line(M + W * 0.58, assinY, M + W - 16, assinY);
+  doc.setFontSize(7.5);
   doc.setTextColor(P.cinza);
-  const emitido = new Date().toLocaleString("pt-BR");
-  doc.text(`Agilliza · Recibo de pagamento — Emitido em ${emitido}`, 32, footY);
-  doc.text("Documento gerado eletronicamente", pageW - 32, footY, { align: "right" });
+  doc.text("Assinatura do funcionário", M + 16, assinY + 11);
+  doc.text(
+    `Data: ____/____/${input.competencia.ano}`,
+    M + 16,
+    assinY + 24,
+  );
+  doc.text(`${empregador} — Assinatura do empregador`, M + W * 0.58, assinY + 11);
+
+  // ---------------------------------------------------------------- rodapé
+  const footY = pageH - 28;
+  doc.setDrawColor(P.borda);
+  doc.line(M, footY - 12, pageW - M, footY - 12);
+  doc.setFontSize(6.5);
+  doc.setTextColor(P.cinza);
+  doc.text(
+    `Recibo de pagamento de salário · ${empregador} · Emitido em ${new Date().toLocaleString("pt-BR")}`,
+    M,
+    footY,
+  );
+  doc.text("Via do funcionário", pageW - M, footY, { align: "right" });
 
   const blob = doc.output("blob");
   const mm = String(input.competencia.mes).padStart(2, "0");
