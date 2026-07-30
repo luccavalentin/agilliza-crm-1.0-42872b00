@@ -86,7 +86,7 @@ export const listarLeituras = createServerFn({ method: "GET" })
     const { data, error } = await supabase
       .from("scan_ia_leituras")
       .select(
-        "id, tipo_documento, status, erro, cliente_id, proposta_id, created_at, criador_id, scan_ia_campos_extraidos(count)",
+        "id, tipo_documento, tipo_documento_sugerido, tipo_confirmado, status, erro, cliente_id, proposta_id, created_at, criador_id, scan_ia_campos_extraidos(count)",
       )
       .eq("correspondente_id", corr)
       .order("created_at", { ascending: false })
@@ -104,18 +104,29 @@ export const listarLeituras = createServerFn({ method: "GET" })
       nomes = new Map((perfis ?? []).map((p: any) => [p.id, p.nome]));
     }
 
+    const clienteIds = [...new Set(linhas.map((r: any) => r.cliente_id).filter(Boolean))];
+    let clientes = new Map<string, string | null>();
+    if (clienteIds.length > 0) {
+      const { data: cs } = await supabase.from("clientes").select("id, nome").in("id", clienteIds);
+      clientes = new Map((cs ?? []).map((c: any) => [c.id, c.nome]));
+    }
+
     return linhas.map((r: any) => ({
       id: r.id,
       tipo_documento: r.tipo_documento,
+      tipo_documento_sugerido: r.tipo_documento_sugerido ?? null,
+      tipo_confirmado: !!r.tipo_confirmado,
       status: r.status,
       erro: r.erro,
       cliente_id: r.cliente_id,
+      cliente_nome: r.cliente_id ? (clientes.get(r.cliente_id) ?? null) : null,
       proposta_id: r.proposta_id,
       created_at: r.created_at,
       total_campos: r.scan_ia_campos_extraidos?.[0]?.count ?? 0,
       criador_id: r.criador_id ?? null,
       criador_nome: r.criador_id ? (nomes.get(r.criador_id) ?? null) : null,
     }));
+
   });
 
 export const obterLeitura = createServerFn({ method: "GET" })
