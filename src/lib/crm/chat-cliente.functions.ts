@@ -49,13 +49,35 @@ async function resolverAnexosChat<T extends { anexo_url: string | null }>(
   // Gera todas as signed URLs em batch (1 request). Falhas individuais viram null.
   const mapa = new Map<string, string>();
   if (caminhos.size > 0) {
+    const pendentes = Array.from(caminhos);
     const { data: assinadas } = await supabase.storage
       .from("cliente-documentos")
-      .createSignedUrls(Array.from(caminhos), 3600);
+      .createSignedUrls(pendentes, 3600);
     for (const s of (assinadas ?? []) as Array<{ path: string | null; signedUrl: string | null }>) {
       if (s.path && s.signedUrl) mapa.set(s.path, s.signedUrl);
     }
+    // Fallback: se o storage negar a assinatura para o usuário (RLS de
+    // storage.objects), assina no servidor para que NENHUM anexo do chat
+    // deixe de ser entregue a quem já tem acesso à conversa.
+    const faltando = pendentes.filter((p) => !mapa.has(p));
+    if (faltando.length > 0) {
+      try {
+        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        const { data: adminAssinadas } = await supabaseAdmin.storage
+          .from("cliente-documentos")
+          .createSignedUrls(faltando, 3600);
+        for (const s of (adminAssinadas ?? []) as Array<{
+          path: string | null;
+          signedUrl: string | null;
+        }>) {
+          if (s.path && s.signedUrl) mapa.set(s.path, s.signedUrl);
+        }
+      } catch {
+        // mantém null — o anexo aparece como indisponível
+      }
+    }
   }
+
 
   return lista.map((m) => {
     let anexoUrl: string | null = m.anexo_url ?? null;
@@ -110,55 +132,24 @@ export const listarConversasCliente = createServerFn({ method: "GET" })
   .inputValidator((d?: { ver_todos?: boolean }) =>
     z.object({ ver_todos: z.boolean().optional() }).parse(d ?? {}),
   )
-  .handler(async ({ data, context }): Promise<ConversaCliente[]> => {
+  .handler(async ({ context }): Promise<ConversaCliente[]> => {
     const { supabase, userId } = context;
-    const gestor = data.ver_todos ? await ehGestor(supabase, userId) : false;
 
     const colunas =
       "cliente_id, atendente_id, mensagem, remetente_tipo, lida_em, criada_em";
 
-    let rows: any[] = [];
-    if (gestor) {
-      const { data: r, error } = await supabase
-        .from("cliente_app_mensagens")
-        .select(colunas)
-        .order("criada_em", { ascending: false })
-        .limit(3000);
-      if (error) throw new Error(error.message);
-      rows = r ?? [];
-    } else {
-      // Threads próprias (dono) + threads compartilhadas (participante convidado).
-      const { data: minhas, error: e1 } = await supabase
-        .from("cliente_app_mensagens")
-        .select(colunas)
-        .eq("atendente_id", userId)
-        .order("criada_em", { ascending: false })
-        .limit(3000);
-      if (e1) throw new Error(e1.message);
-      rows = minhas ?? [];
+    // Busca TODAS as threads visíveis pela RLS (mesmo correspondente). O
+    // filtro final por escopo de dados do cliente é aplicado mais abaixo, de
+    // modo que nenhuma mensagem enviada pelo cliente fique invisível só
+    // porque foi direcionada a outro atendente.
+    const { data: r, error } = await supabase
+      .from("cliente_app_mensagens")
+      .select(colunas)
+      .order("criada_em", { ascending: false })
+      .limit(3000);
+    if (error) throw new Error(error.message);
+    const rows: any[] = r ?? [];
 
-      const { data: participa } = await supabase
-        .from("crm_chat_participantes")
-        .select("cliente_id, atendente_id")
-        .eq("usuario_id", userId);
-      const threadsCompart = (participa ?? []) as {
-        cliente_id: string;
-        atendente_id: string;
-      }[];
-      if (threadsCompart.length > 0) {
-        // Uma única query com .or() no lugar do N+1 anterior.
-        const filtroOr = threadsCompart
-          .map((t) => `and(cliente_id.eq.${t.cliente_id},atendente_id.eq.${t.atendente_id})`)
-          .join(",");
-        const { data: r } = await supabase
-          .from("cliente_app_mensagens")
-          .select(colunas)
-          .or(filtroOr)
-          .order("criada_em", { ascending: false })
-          .limit(3000);
-        rows = rows.concat(r ?? []);
-      }
-    }
 
 
     // Agrupa por thread (cliente + atendente).
@@ -291,8 +282,9 @@ export const listarChatCliente = createServerFn({ method: "GET" })
   )
   .handler(async ({ data, context }): Promise<ChatMensagem[]> => {
     const { supabase, userId } = context;
-    // Atendente comum só vê a própria thread; gestores e participantes
-    // convidados podem abrir a thread de outro atendente.
+    // Pode abrir a thread de outro atendente quem participa do chat, quem é
+    // gestor ou quem tem acesso ao cliente pelo escopo de dados. Assim uma
+    // mensagem enviada pelo cliente nunca fica "presa" na caixa de outro.
     let atendente = userId;
     if (data.atendente_id && data.atendente_id !== userId) {
       const { data: participa } = await supabase.rpc("usuario_participa_chat", {
@@ -300,9 +292,18 @@ export const listarChatCliente = createServerFn({ method: "GET" })
         _cliente_id: data.cliente_id,
         _atendente_id: data.atendente_id,
       });
-      const permitido = Boolean(participa) || (await ehGestor(supabase, userId));
+      let permitido = Boolean(participa);
+      if (!permitido) {
+        const { data: acesso } = await supabase.rpc("usuario_tem_acesso_cliente", {
+          _user_id: userId,
+          _cliente_id: data.cliente_id,
+        });
+        permitido = Boolean(acesso);
+      }
+      if (!permitido) permitido = await ehGestor(supabase, userId);
       atendente = permitido ? data.atendente_id : userId;
     }
+
 
     const { data: rows, error } = await supabase
       .from("cliente_app_mensagens")
