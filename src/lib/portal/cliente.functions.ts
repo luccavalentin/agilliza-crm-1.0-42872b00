@@ -573,6 +573,27 @@ export const clienteExcluirMensagem = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+/** Oculta (exclui da lista do cliente) uma conversa inteira. */
+export const clienteExcluirConversa = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) =>
+    z
+      .object({ atendente_id: z.string().uuid(), ocultar: z.boolean().optional() })
+      .parse(d),
+  )
+  .handler(async ({ data }): Promise<{ ok: boolean }> => {
+    const sess = requireClienteSession();
+    const { portalDb } = await import("./portal-db.server");
+    const { data: r, error } = await portalDb().rpc("portal_ocultar_conversa", {
+      _cid: sess.cid,
+      _atendente: data.atendente_id,
+      _ocultar: data.ocultar ?? true,
+    } as any);
+    if (error) throw new Error("Não foi possível excluir a conversa.");
+    if (!(r as any)?.ok) throw new Error((r as any)?.error ?? "Não foi possível excluir a conversa.");
+    return { ok: true };
+  });
+
+
 
 // Enviar mensagem com anexo (foto/documento) — upload em base64
 const enviarAnexoSchema = z.object({
