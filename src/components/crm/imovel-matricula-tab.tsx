@@ -440,7 +440,53 @@ export function MatriculaTab({
             <Input
               value={m.alienacao_credor ?? ""}
               onChange={(e) => set("alienacao_credor", e.target.value)}
-              disabled={!m.tem_alienacao_fiduciaria}
+            />
+          </div>
+          <div>
+            <Label>Valor da alienação fiduciária (R$)</Label>
+            <Input
+              inputMode="decimal"
+              value={m.alienacao_valor ?? ""}
+              onChange={(e) => set("alienacao_valor", e.target.value)}
+            />
+          </div>
+          <div>
+            <Label>Data da alienação fiduciária</Label>
+            <Input
+              type="date"
+              value={m.alienacao_data ?? ""}
+              onChange={(e) => set("alienacao_data", e.target.value)}
+            />
+          </div>
+          <div>
+            <Label>Situação da alienação</Label>
+            <Input
+              value={m.alienacao_situacao ?? ""}
+              onChange={(e) => set("alienacao_situacao", e.target.value)}
+              placeholder="Ativa, baixada/cancelada…"
+            />
+          </div>
+          <div>
+            <Label>Interveniente quitante (credor a quitar)</Label>
+            <Input
+              value={m.interveniente_nome ?? ""}
+              onChange={(e) => set("interveniente_nome", e.target.value)}
+            />
+          </div>
+          <div className="sm:col-span-2">
+            <Label>Descrição da alienação fiduciária</Label>
+            <Textarea
+              rows={2}
+              value={m.alienacao_descricao ?? ""}
+              onChange={(e) => set("alienacao_descricao", e.target.value)}
+            />
+          </div>
+          <div className="sm:col-span-2">
+            <Label>Ônus vigentes (resumo)</Label>
+            <Textarea
+              rows={3}
+              value={m.onus_gravames ?? ""}
+              onChange={(e) => set("onus_gravames", e.target.value)}
             />
           </div>
           <div className="sm:col-span-2">
@@ -453,6 +499,38 @@ export function MatriculaTab({
           </div>
         </div>
       </section>
+
+      {/* Histórico de atos */}
+      <section className="space-y-3">
+        <h4 className="text-sm font-semibold">Histórico de registros e averbações</h4>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <Label>Último registro / averbação</Label>
+            <Input
+              value={m.ultimo_registro ?? ""}
+              onChange={(e) => set("ultimo_registro", e.target.value)}
+            />
+          </div>
+          <div>
+            <Label>Data do último registro</Label>
+            <Input
+              value={m.data_registro ?? ""}
+              onChange={(e) => set("data_registro", e.target.value)}
+              placeholder="dd/mm/aaaa"
+            />
+          </div>
+          <div className="sm:col-span-2">
+            <Label>Histórico de atos (R. / AV.)</Label>
+            <Textarea
+              rows={6}
+              value={m.historico_atos ?? ""}
+              onChange={(e) => set("historico_atos", e.target.value)}
+              placeholder="R.3 — 12/05/2019 — compra e venda: Fulano vendeu para Beltrano, R$ 300.000,00"
+            />
+          </div>
+        </div>
+      </section>
+
 
       {/* Certidões */}
       <section className="space-y-3">
