@@ -49,13 +49,35 @@ async function resolverAnexosChat<T extends { anexo_url: string | null }>(
   // Gera todas as signed URLs em batch (1 request). Falhas individuais viram null.
   const mapa = new Map<string, string>();
   if (caminhos.size > 0) {
+    const pendentes = Array.from(caminhos);
     const { data: assinadas } = await supabase.storage
       .from("cliente-documentos")
-      .createSignedUrls(Array.from(caminhos), 3600);
+      .createSignedUrls(pendentes, 3600);
     for (const s of (assinadas ?? []) as Array<{ path: string | null; signedUrl: string | null }>) {
       if (s.path && s.signedUrl) mapa.set(s.path, s.signedUrl);
     }
+    // Fallback: se o storage negar a assinatura para o usuário (RLS de
+    // storage.objects), assina no servidor para que NENHUM anexo do chat
+    // deixe de ser entregue a quem já tem acesso à conversa.
+    const faltando = pendentes.filter((p) => !mapa.has(p));
+    if (faltando.length > 0) {
+      try {
+        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        const { data: adminAssinadas } = await supabaseAdmin.storage
+          .from("cliente-documentos")
+          .createSignedUrls(faltando, 3600);
+        for (const s of (adminAssinadas ?? []) as Array<{
+          path: string | null;
+          signedUrl: string | null;
+        }>) {
+          if (s.path && s.signedUrl) mapa.set(s.path, s.signedUrl);
+        }
+      } catch {
+        // mantém null — o anexo aparece como indisponível
+      }
+    }
   }
+
 
   return lista.map((m) => {
     let anexoUrl: string | null = m.anexo_url ?? null;
