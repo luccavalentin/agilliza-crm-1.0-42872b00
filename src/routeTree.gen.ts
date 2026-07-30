@@ -88,6 +88,7 @@ import { Route as AuthenticatedCrmScanIaRouteImport } from './routes/_authentica
 import { Route as AuthenticatedCrmParceirosRouteImport } from './routes/_authenticated/crm.parceiros'
 import { Route as AuthenticatedCrmPainelRouteImport } from './routes/_authenticated/crm.painel'
 import { Route as AuthenticatedCrmDocumentosRouteImport } from './routes/_authenticated/crm.documentos'
+import { Route as AuthenticatedCrmConsultorIaRouteImport } from './routes/_authenticated/crm.consultor-ia'
 import { Route as AuthenticatedCrmClientesRouteImport } from './routes/_authenticated/crm.clientes'
 import { Route as AuthenticatedCrmChatRouteImport } from './routes/_authenticated/crm.chat'
 import { Route as AuthenticatedContaSegurancaRouteImport } from './routes/_authenticated/conta.seguranca'
@@ -98,6 +99,7 @@ import { Route as AuthenticatedAdminPessoasRouteImport } from './routes/_authent
 import { Route as AuthenticatedAdminParametrosRouteImport } from './routes/_authenticated/admin.parametros'
 import { Route as AuthenticatedAdminNotificacoesRouteImport } from './routes/_authenticated/admin.notificacoes'
 import { Route as AuthenticatedAdminIntegracoesRouteImport } from './routes/_authenticated/admin.integracoes'
+import { Route as AuthenticatedAdminConsultorIaBaseRouteImport } from './routes/_authenticated/admin.consultor-ia-base'
 import { Route as AuthenticatedAdminBancosRouteImport } from './routes/_authenticated/admin.bancos'
 import { Route as AuthenticatedAdminBackupRouteImport } from './routes/_authenticated/admin.backup'
 import { Route as AuthenticatedAdminAuditoriaRouteImport } from './routes/_authenticated/admin.auditoria'
@@ -567,6 +569,12 @@ const AuthenticatedCrmDocumentosRoute =
     path: '/documentos',
     getParentRoute: () => AuthenticatedCrmRoute,
   } as any)
+const AuthenticatedCrmConsultorIaRoute =
+  AuthenticatedCrmConsultorIaRouteImport.update({
+    id: '/consultor-ia',
+    path: '/consultor-ia',
+    getParentRoute: () => AuthenticatedCrmRoute,
+  } as any)
 const AuthenticatedCrmClientesRoute =
   AuthenticatedCrmClientesRouteImport.update({
     id: '/clientes',
@@ -624,6 +632,12 @@ const AuthenticatedAdminIntegracoesRoute =
   AuthenticatedAdminIntegracoesRouteImport.update({
     id: '/admin/integracoes',
     path: '/admin/integracoes',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminConsultorIaBaseRoute =
+  AuthenticatedAdminConsultorIaBaseRouteImport.update({
+    id: '/admin/consultor-ia-base',
+    path: '/admin/consultor-ia-base',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedAdminBancosRoute =
@@ -795,6 +809,7 @@ export interface FileRoutesByFullPath {
   '/admin/auditoria': typeof AuthenticatedAdminAuditoriaRoute
   '/admin/backup': typeof AuthenticatedAdminBackupRoute
   '/admin/bancos': typeof AuthenticatedAdminBancosRoute
+  '/admin/consultor-ia-base': typeof AuthenticatedAdminConsultorIaBaseRoute
   '/admin/integracoes': typeof AuthenticatedAdminIntegracoesRoute
   '/admin/notificacoes': typeof AuthenticatedAdminNotificacoesRoute
   '/admin/parametros': typeof AuthenticatedAdminParametrosRoute
@@ -805,6 +820,7 @@ export interface FileRoutesByFullPath {
   '/conta/seguranca': typeof AuthenticatedContaSegurancaRoute
   '/crm/chat': typeof AuthenticatedCrmChatRoute
   '/crm/clientes': typeof AuthenticatedCrmClientesRoute
+  '/crm/consultor-ia': typeof AuthenticatedCrmConsultorIaRoute
   '/crm/documentos': typeof AuthenticatedCrmDocumentosRoute
   '/crm/painel': typeof AuthenticatedCrmPainelRoute
   '/crm/parceiros': typeof AuthenticatedCrmParceirosRoute
@@ -906,6 +922,7 @@ export interface FileRoutesByTo {
   '/admin/auditoria': typeof AuthenticatedAdminAuditoriaRoute
   '/admin/backup': typeof AuthenticatedAdminBackupRoute
   '/admin/bancos': typeof AuthenticatedAdminBancosRoute
+  '/admin/consultor-ia-base': typeof AuthenticatedAdminConsultorIaBaseRoute
   '/admin/integracoes': typeof AuthenticatedAdminIntegracoesRoute
   '/admin/notificacoes': typeof AuthenticatedAdminNotificacoesRoute
   '/admin/parametros': typeof AuthenticatedAdminParametrosRoute
@@ -916,6 +933,7 @@ export interface FileRoutesByTo {
   '/conta/seguranca': typeof AuthenticatedContaSegurancaRoute
   '/crm/chat': typeof AuthenticatedCrmChatRoute
   '/crm/clientes': typeof AuthenticatedCrmClientesRoute
+  '/crm/consultor-ia': typeof AuthenticatedCrmConsultorIaRoute
   '/crm/documentos': typeof AuthenticatedCrmDocumentosRoute
   '/crm/painel': typeof AuthenticatedCrmPainelRoute
   '/crm/parceiros': typeof AuthenticatedCrmParceirosRoute
@@ -1021,6 +1039,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/auditoria': typeof AuthenticatedAdminAuditoriaRoute
   '/_authenticated/admin/backup': typeof AuthenticatedAdminBackupRoute
   '/_authenticated/admin/bancos': typeof AuthenticatedAdminBancosRoute
+  '/_authenticated/admin/consultor-ia-base': typeof AuthenticatedAdminConsultorIaBaseRoute
   '/_authenticated/admin/integracoes': typeof AuthenticatedAdminIntegracoesRoute
   '/_authenticated/admin/notificacoes': typeof AuthenticatedAdminNotificacoesRoute
   '/_authenticated/admin/parametros': typeof AuthenticatedAdminParametrosRoute
@@ -1031,6 +1050,7 @@ export interface FileRoutesById {
   '/_authenticated/conta/seguranca': typeof AuthenticatedContaSegurancaRoute
   '/_authenticated/crm/chat': typeof AuthenticatedCrmChatRoute
   '/_authenticated/crm/clientes': typeof AuthenticatedCrmClientesRoute
+  '/_authenticated/crm/consultor-ia': typeof AuthenticatedCrmConsultorIaRoute
   '/_authenticated/crm/documentos': typeof AuthenticatedCrmDocumentosRoute
   '/_authenticated/crm/painel': typeof AuthenticatedCrmPainelRoute
   '/_authenticated/crm/parceiros': typeof AuthenticatedCrmParceirosRoute
@@ -1136,6 +1156,7 @@ export interface FileRouteTypes {
     | '/admin/auditoria'
     | '/admin/backup'
     | '/admin/bancos'
+    | '/admin/consultor-ia-base'
     | '/admin/integracoes'
     | '/admin/notificacoes'
     | '/admin/parametros'
@@ -1146,6 +1167,7 @@ export interface FileRouteTypes {
     | '/conta/seguranca'
     | '/crm/chat'
     | '/crm/clientes'
+    | '/crm/consultor-ia'
     | '/crm/documentos'
     | '/crm/painel'
     | '/crm/parceiros'
@@ -1247,6 +1269,7 @@ export interface FileRouteTypes {
     | '/admin/auditoria'
     | '/admin/backup'
     | '/admin/bancos'
+    | '/admin/consultor-ia-base'
     | '/admin/integracoes'
     | '/admin/notificacoes'
     | '/admin/parametros'
@@ -1257,6 +1280,7 @@ export interface FileRouteTypes {
     | '/conta/seguranca'
     | '/crm/chat'
     | '/crm/clientes'
+    | '/crm/consultor-ia'
     | '/crm/documentos'
     | '/crm/painel'
     | '/crm/parceiros'
@@ -1361,6 +1385,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/auditoria'
     | '/_authenticated/admin/backup'
     | '/_authenticated/admin/bancos'
+    | '/_authenticated/admin/consultor-ia-base'
     | '/_authenticated/admin/integracoes'
     | '/_authenticated/admin/notificacoes'
     | '/_authenticated/admin/parametros'
@@ -1371,6 +1396,7 @@ export interface FileRouteTypes {
     | '/_authenticated/conta/seguranca'
     | '/_authenticated/crm/chat'
     | '/_authenticated/crm/clientes'
+    | '/_authenticated/crm/consultor-ia'
     | '/_authenticated/crm/documentos'
     | '/_authenticated/crm/painel'
     | '/_authenticated/crm/parceiros'
@@ -2012,6 +2038,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCrmDocumentosRouteImport
       parentRoute: typeof AuthenticatedCrmRoute
     }
+    '/_authenticated/crm/consultor-ia': {
+      id: '/_authenticated/crm/consultor-ia'
+      path: '/consultor-ia'
+      fullPath: '/crm/consultor-ia'
+      preLoaderRoute: typeof AuthenticatedCrmConsultorIaRouteImport
+      parentRoute: typeof AuthenticatedCrmRoute
+    }
     '/_authenticated/crm/clientes': {
       id: '/_authenticated/crm/clientes'
       path: '/clientes'
@@ -2080,6 +2113,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/integracoes'
       fullPath: '/admin/integracoes'
       preLoaderRoute: typeof AuthenticatedAdminIntegracoesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/consultor-ia-base': {
+      id: '/_authenticated/admin/consultor-ia-base'
+      path: '/admin/consultor-ia-base'
+      fullPath: '/admin/consultor-ia-base'
+      preLoaderRoute: typeof AuthenticatedAdminConsultorIaBaseRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/admin/bancos': {
@@ -2249,6 +2289,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedCrmRouteChildren {
   AuthenticatedCrmChatRoute: typeof AuthenticatedCrmChatRoute
   AuthenticatedCrmClientesRoute: typeof AuthenticatedCrmClientesRoute
+  AuthenticatedCrmConsultorIaRoute: typeof AuthenticatedCrmConsultorIaRoute
   AuthenticatedCrmDocumentosRoute: typeof AuthenticatedCrmDocumentosRoute
   AuthenticatedCrmPainelRoute: typeof AuthenticatedCrmPainelRoute
   AuthenticatedCrmParceirosRoute: typeof AuthenticatedCrmParceirosRoute
@@ -2261,6 +2302,7 @@ interface AuthenticatedCrmRouteChildren {
 const AuthenticatedCrmRouteChildren: AuthenticatedCrmRouteChildren = {
   AuthenticatedCrmChatRoute: AuthenticatedCrmChatRoute,
   AuthenticatedCrmClientesRoute: AuthenticatedCrmClientesRoute,
+  AuthenticatedCrmConsultorIaRoute: AuthenticatedCrmConsultorIaRoute,
   AuthenticatedCrmDocumentosRoute: AuthenticatedCrmDocumentosRoute,
   AuthenticatedCrmPainelRoute: AuthenticatedCrmPainelRoute,
   AuthenticatedCrmParceirosRoute: AuthenticatedCrmParceirosRoute,
@@ -2363,6 +2405,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminAuditoriaRoute: typeof AuthenticatedAdminAuditoriaRoute
   AuthenticatedAdminBackupRoute: typeof AuthenticatedAdminBackupRoute
   AuthenticatedAdminBancosRoute: typeof AuthenticatedAdminBancosRoute
+  AuthenticatedAdminConsultorIaBaseRoute: typeof AuthenticatedAdminConsultorIaBaseRoute
   AuthenticatedAdminIntegracoesRoute: typeof AuthenticatedAdminIntegracoesRoute
   AuthenticatedAdminNotificacoesRoute: typeof AuthenticatedAdminNotificacoesRoute
   AuthenticatedAdminParametrosRoute: typeof AuthenticatedAdminParametrosRoute
@@ -2430,6 +2473,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminAuditoriaRoute: AuthenticatedAdminAuditoriaRoute,
   AuthenticatedAdminBackupRoute: AuthenticatedAdminBackupRoute,
   AuthenticatedAdminBancosRoute: AuthenticatedAdminBancosRoute,
+  AuthenticatedAdminConsultorIaBaseRoute:
+    AuthenticatedAdminConsultorIaBaseRoute,
   AuthenticatedAdminIntegracoesRoute: AuthenticatedAdminIntegracoesRoute,
   AuthenticatedAdminNotificacoesRoute: AuthenticatedAdminNotificacoesRoute,
   AuthenticatedAdminParametrosRoute: AuthenticatedAdminParametrosRoute,

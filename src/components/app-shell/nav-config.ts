@@ -37,6 +37,8 @@ import {
   ClipboardList,
   Link as LinkIcon,
   Percent,
+  Sparkles,
+  BookOpen,
 } from "lucide-react";
 
 /** Permissão exigida por um item (chave = `${modulo}:view`). */
@@ -84,6 +86,12 @@ export const navInterno: NavGroup[] = [
         perm: { modulo: "crm.clientes" },
       },
       { label: "Scan IA", icon: ScanLine, to: "/crm/scan-ia", perm: { modulo: "crm.scan_ia" } },
+      {
+        label: "Consultor IA",
+        icon: Sparkles,
+        to: "/crm/consultor-ia",
+        perm: { modulo: "crm.scan_ia" },
+      },
       {
         label: "Documentos Gerais",
         icon: FolderTree,
@@ -502,6 +510,12 @@ export const navInterno: NavGroup[] = [
             icon: Cpu,
             to: "/admin/apis-ia",
             perm: { modulo: "admin.integracoes" },
+          },
+          {
+            label: "Base do Consultor IA",
+            icon: BookOpen,
+            to: "/admin/consultor-ia-base",
+            perm: { modulo: "admin.parametros" },
           },
           {
             label: "Backup",

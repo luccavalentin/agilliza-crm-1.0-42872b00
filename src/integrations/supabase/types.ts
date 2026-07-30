@@ -2015,6 +2015,146 @@ export type Database = {
         }
         Relationships: []
       }
+      consultor_ia_base: {
+        Row: {
+          ativo: boolean
+          atualizado_por: string | null
+          categoria: string
+          conteudo: string
+          correspondente_id: string | null
+          created_at: string
+          criado_por: string | null
+          id: string
+          tags: string[]
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          atualizado_por?: string | null
+          categoria: string
+          conteudo: string
+          correspondente_id?: string | null
+          created_at?: string
+          criado_por?: string | null
+          id?: string
+          tags?: string[]
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          atualizado_por?: string | null
+          categoria?: string
+          conteudo?: string
+          correspondente_id?: string | null
+          created_at?: string
+          criado_por?: string | null
+          id?: string
+          tags?: string[]
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      consultor_ia_conversas: {
+        Row: {
+          correspondente_id: string | null
+          created_at: string
+          id: string
+          titulo: string
+          updated_at: string
+          usuario_id: string
+        }
+        Insert: {
+          correspondente_id?: string | null
+          created_at?: string
+          id?: string
+          titulo?: string
+          updated_at?: string
+          usuario_id?: string
+        }
+        Update: {
+          correspondente_id?: string | null
+          created_at?: string
+          id?: string
+          titulo?: string
+          updated_at?: string
+          usuario_id?: string
+        }
+        Relationships: []
+      }
+      consultor_ia_mensagens: {
+        Row: {
+          avaliacao: string | null
+          conteudo: string
+          conversa_id: string
+          created_at: string
+          fontes_usadas: Json
+          id: string
+          papel: string
+          sem_resposta: boolean
+        }
+        Insert: {
+          avaliacao?: string | null
+          conteudo: string
+          conversa_id: string
+          created_at?: string
+          fontes_usadas?: Json
+          id?: string
+          papel: string
+          sem_resposta?: boolean
+        }
+        Update: {
+          avaliacao?: string | null
+          conteudo?: string
+          conversa_id?: string
+          created_at?: string
+          fontes_usadas?: Json
+          id?: string
+          papel?: string
+          sem_resposta?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consultor_ia_mensagens_conversa_id_fkey"
+            columns: ["conversa_id"]
+            isOneToOne: false
+            referencedRelation: "consultor_ia_conversas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      consultor_ia_sugestoes: {
+        Row: {
+          correspondente_id: string | null
+          created_at: string
+          id: string
+          observacao: string | null
+          pergunta: string
+          status: string
+          usuario_id: string
+        }
+        Insert: {
+          correspondente_id?: string | null
+          created_at?: string
+          id?: string
+          observacao?: string | null
+          pergunta: string
+          status?: string
+          usuario_id?: string
+        }
+        Update: {
+          correspondente_id?: string | null
+          created_at?: string
+          id?: string
+          observacao?: string | null
+          pergunta?: string
+          status?: string
+          usuario_id?: string
+        }
+        Relationships: []
+      }
       crm_chat_cliente_etiquetas: {
         Row: {
           cliente_id: string
