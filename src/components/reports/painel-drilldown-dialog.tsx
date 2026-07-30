@@ -10,22 +10,13 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { BancoLogo } from "@/components/bancos/banco-logo";
-import { cn } from "@/lib/utils";
 import { getPanelDrilldown } from "@/lib/relatorios/paineis.functions";
 import type { ReportFiltros } from "@/lib/relatorios/shared";
 import agillizaSymbol from "@/assets/brand/agilliza-symbol-oficial.png";
 
-const toneClasses: Record<string, string> = {
-  brand: "bg-primary/10 text-primary",
-  success: "bg-success/10 text-success",
-  warning: "bg-warning/10 text-warning",
-  danger: "bg-destructive/10 text-destructive",
-  neutral: "bg-muted text-muted-foreground",
-};
 
 export interface DrilldownContext {
   metrica: string;
@@ -68,13 +59,20 @@ export function PainelDrilldownDialog({
           <DialogTitle className="text-[15px] font-semibold tracking-tight text-foreground">
             {data?.titulo ?? contexto?.metrica ?? "Detalhamento"}
           </DialogTitle>
-          {(data?.subtitulo || data?.descricao) && (
-            <DialogDescription className="text-[13px] leading-relaxed text-muted-foreground">
-              {data?.subtitulo}
-              {data?.subtitulo && data?.descricao ? " · " : ""}
-              {data?.descricao}
-            </DialogDescription>
-          )}
+          {(() => {
+            const ehCalculo = (t?: string) =>
+              !!t && /[÷×]|\bdividid|\bmultiplic|\bfórmula|\bformula|\bsobre o total de\b/i.test(t);
+            const subtitulo = ehCalculo(data?.subtitulo) ? undefined : data?.subtitulo;
+            const descricao = ehCalculo(data?.descricao) ? undefined : data?.descricao;
+            if (!subtitulo && !descricao) return null;
+            return (
+              <DialogDescription className="text-[13px] leading-relaxed text-muted-foreground">
+                {subtitulo}
+                {subtitulo && descricao ? " · " : ""}
+                {descricao}
+              </DialogDescription>
+            );
+          })()}
           {(data?.valor || contexto?.valorAtual) && (
             <div className="mt-3 flex items-baseline gap-2.5">
               <span className="font-mono text-[34px] font-semibold leading-none tabular-nums text-foreground">
@@ -87,31 +85,7 @@ export function PainelDrilldownDialog({
               )}
             </div>
           )}
-          {data?.formula && data.formula.length > 0 && (
-            <div className="mt-3 flex flex-wrap items-center gap-1.5">
-              {data.formula.map((f, i) => (
-                <span key={i} className="inline-flex items-center gap-1.5">
-                  {i > 0 && (
-                    <span className="text-xs text-muted-foreground">
-                      {i === data.formula!.length - 1 ? "=" : "÷"}
-                    </span>
-                  )}
-                  <Badge
-                    variant="outline"
-                    className={cn(
-                      "gap-1.5 rounded-md border-transparent px-2 py-1 font-mono text-xs tabular-nums",
-                      toneClasses[f.tone ?? "neutral"],
-                    )}
-                  >
-                    <span className="text-[10px] font-medium uppercase tracking-wide opacity-80">
-                      {f.label}
-                    </span>
-                    <span className="font-semibold">{f.valor}</span>
-                  </Badge>
-                </span>
-              ))}
-            </div>
-          )}
+
         </DialogHeader>
 
         <ScrollArea className="min-h-0 flex-1">
