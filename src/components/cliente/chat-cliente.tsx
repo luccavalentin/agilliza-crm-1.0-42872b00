@@ -20,6 +20,7 @@ import {
   clienteEnviarMensagem,
   clienteReagirMensagem,
   clienteEditarMensagem,
+  clienteExcluirMensagem,
   clienteExcluirConversa,
 
   clienteEnviarMensagemAnexo,
@@ -33,6 +34,12 @@ import { TypingIndicator } from "@/components/shared/typing-indicator";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { VisualizadorArquivo } from "@/components/comum/visualizador-arquivo";
 import { cn } from "@/lib/utils";
 
