@@ -123,7 +123,13 @@ export function ChatClienteTab({
         <span className="hidden sm:inline">Soltar chat</span>
       </button>
 
-      <ChatClienteConversa clienteId={clienteId} info={info} acoes={acoes} />
+      <ChatClienteConversa
+        clienteId={clienteId}
+        info={info}
+        atendenteId={atendenteId}
+        atendenteNome={atendenteNome}
+        acoes={acoes}
+      />
     </div>
   );
 }

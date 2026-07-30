@@ -18,7 +18,7 @@ export const Route = createFileRoute("/_authenticated/crm/chat")({
 
 function Pagina() {
   const hook = useChatConversas();
-  const { conversas, alvoAtual, etiquetas, etiquetasCliente, verTodos, selecionado, abrirConversa } = hook;
+  const { conversas, filtradas, alvoAtual, etiquetas, etiquetasCliente, selecionado, abrirConversa } = hook;
 
   const search = Route.useSearch();
   const autoAbertoRef = useRef<string | null>(null);
@@ -38,13 +38,15 @@ function Pagina() {
     const ehDesktop =
       typeof window !== "undefined" &&
       window.matchMedia("(min-width: 1024px)").matches;
-    if (ehDesktop && !selecionado && (conversas?.length ?? 0) > 0) {
-      abrirConversa(conversas![0].cliente_id, conversas![0].atendente_id);
+    // Usa a lista JÁ filtrada (sem conversas ocultas/arquivadas). Selecionar
+    // uma conversa oculta fazia o painel fechar e reabrir em laço.
+    if (ehDesktop && !selecionado && filtradas.length > 0) {
+      abrirConversa(filtradas[0].cliente_id, filtradas[0].atendente_id);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [conversas, selecionado, search.c]);
+  }, [conversas, filtradas, selecionado, search.c]);
 
-  const somenteLeituraAtual = !!alvoAtual && !alvoAtual.minha && verTodos;
+  const somenteLeituraAtual = !!alvoAtual && !alvoAtual.minha && !alvoAtual.participo;
   const acoesGestao =
     alvoAtual && !somenteLeituraAtual ? (
       <MaisAcoesGestao
