@@ -65,7 +65,7 @@ export function KpiDrilldownDialog({
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl gap-0 overflow-hidden border-border/60 p-0 shadow-2xl">
+      <DialogContent className="flex max-h-[85vh] max-w-2xl flex-col gap-0 overflow-hidden border-border/60 p-0 shadow-2xl">
         <img
           src={agillizaSymbol}
           alt=""
@@ -73,7 +73,7 @@ export function KpiDrilldownDialog({
           draggable={false}
           className="pointer-events-none absolute left-1/2 top-1/2 h-[320px] w-auto -translate-x-1/2 -translate-y-1/2 select-none opacity-[0.035] dark:opacity-[0.06]"
         />
-        <DialogHeader className="relative space-y-1 border-b border-border/60 bg-gradient-to-br from-primary/[0.06] via-background to-background px-7 pt-6 pb-5">
+        <DialogHeader className="relative shrink-0 space-y-1 border-b border-border/60 bg-gradient-to-br from-primary/[0.06] via-background to-background px-7 pt-6 pb-5">
           <span className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
           <div className="flex items-center gap-3">
             {Icon && (
@@ -108,7 +108,7 @@ export function KpiDrilldownDialog({
           )}
         </DialogHeader>
 
-        <ScrollArea className="max-h-[62vh]">
+        <ScrollArea className="min-h-0 flex-1">
           <div className="px-3 py-2">
             {isLoading ? (
               <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">
@@ -174,7 +174,7 @@ export function KpiDrilldownDialog({
         </ScrollArea>
 
         {linkAbrir && (
-          <div className="flex items-center justify-end gap-2 border-t border-border/60 bg-muted/30 px-6 py-3">
+          <div className="flex shrink-0 items-center justify-end gap-2 border-t border-border/60 bg-muted/30 px-6 py-3">
             <Button asChild size="sm" variant="outline" className="h-8 rounded-lg">
               <Link to={linkAbrir} onClick={() => onOpenChange(false)}>
                 <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
