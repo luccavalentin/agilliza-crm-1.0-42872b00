@@ -23,6 +23,7 @@ import {
 } from "@/lib/portal/cliente.functions";
 import { useIncomingChatSound } from "@/hooks/use-chat-sound";
 import { useChatTyping } from "@/hooks/use-chat-typing";
+import { useChatPresence } from "@/hooks/use-chat-presence";
 import { TypingIndicator } from "@/components/shared/typing-indicator";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -264,6 +265,7 @@ export function ThreadChat({
 
 
   const { peerTyping, notifyTyping, notifyStop } = useChatTyping(atendenteId, "cliente");
+  const { peerOnline } = useChatPresence(atendenteId, "cliente");
 
   const enviar = useMutation({
     mutationFn: (mensagem: string) =>
@@ -375,19 +377,40 @@ export function ThreadChat({
                 {iniciais(atendente.nome)}
               </AvatarFallback>
             </Avatar>
-            <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-card bg-emerald-500" />
+            <span
+              className={cn(
+                "absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-card",
+                peerOnline ? "bg-emerald-500" : "bg-muted-foreground/50",
+              )}
+            />
           </div>
           <div className="min-w-0 flex-1 leading-tight">
             <p className="truncate text-sm font-semibold uppercase tracking-wide text-foreground sm:text-base">
               {atendente.nome}
             </p>
-            <span className="flex min-w-0 items-center gap-1.5 text-xs text-emerald-600">
+            <span
+              className={cn(
+                "flex min-w-0 items-center gap-1.5 text-xs",
+                peerOnline ? "text-emerald-600" : "text-muted-foreground",
+              )}
+            >
               <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400/70" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+                {peerOnline && (
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400/70" />
+                )}
+                <span
+                  className={cn(
+                    "relative inline-flex h-2 w-2 rounded-full",
+                    peerOnline ? "bg-emerald-500" : "bg-muted-foreground/50",
+                  )}
+                />
               </span>
               <span className="truncate">
-                {peerTyping ? "digitando…" : "Atendimento ativo"}
+                {peerTyping
+                  ? "digitando…"
+                  : peerOnline
+                    ? "Atendimento ativo"
+                    : "Atendente indisponível no momento"}
               </span>
             </span>
           </div>

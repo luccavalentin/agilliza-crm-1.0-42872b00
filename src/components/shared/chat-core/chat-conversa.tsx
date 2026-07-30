@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useIncomingChatSound } from "@/hooks/use-chat-sound";
 import { useChatTyping } from "@/hooks/use-chat-typing";
+import { useChatPresence } from "@/hooks/use-chat-presence";
 import { supabase } from "@/integrations/supabase/client";
 import { ChatClienteHeader } from "@/components/crm/chat-cliente/chat-header";
 import { ListaMensagens } from "@/components/crm/chat-cliente/lista-mensagens";
@@ -98,6 +99,9 @@ export function ChatConversaCore({ adapter }: { adapter: ChatAdapter }) {
     adapter.typing.id,
     adapter.typing.myRole,
   );
+  // Marca presença nesta conversa enquanto ela está aberta — é o que o outro
+  // lado usa para saber que o atendimento está de fato ativo.
+  useChatPresence(adapter.typing.id, adapter.typing.myRole);
 
   useEffect(() => {
     if (!buscaAberta) fimRef.current?.scrollIntoView({ behavior: "smooth" });
