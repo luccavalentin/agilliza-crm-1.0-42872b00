@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { BancoLogo } from "@/components/bancos/banco-logo";
 import {
   TIPOS_VINCULO_COMISSAO,
   cancelarComissaoUsuario,
@@ -189,7 +190,16 @@ export function LancamentosComissoesUsuario() {
                     <TableCell className="capitalize">
                       {r.tipo_vinculo.replace("_", " ")}
                     </TableCell>
-                    <TableCell>{r.banco_nome ?? "—"}</TableCell>
+                    <TableCell>
+                      {r.banco_nome ? (
+                        <span className="flex items-center gap-2">
+                          <BancoLogo nome={r.banco_nome} size="xs" />
+                          {r.banco_nome}
+                        </span>
+                      ) : (
+                        "—"
+                      )}
+                    </TableCell>
                     <TableCell className="text-right">{brl(r.valor_base)}</TableCell>
                     <TableCell className="text-right">
                       {r.percentual.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}%
