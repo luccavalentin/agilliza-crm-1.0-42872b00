@@ -52,6 +52,8 @@ export interface RegraComissaoUsuario {
 export interface ComissaoUsuarioLancamento {
   id: string;
   proposta_id: string;
+  simulacao_id?: string | null;
+
   numero_proposta: string | null;
   nome_cliente: string | null;
   usuario_id: string;
