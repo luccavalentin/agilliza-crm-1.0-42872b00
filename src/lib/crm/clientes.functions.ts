@@ -1651,6 +1651,13 @@ export const excluirCliente = createServerFn({ method: "POST" })
         .is("deleted_at", null);
     }
 
+    // Revoga o acesso ao portal do cliente excluído.
+    await supabaseAdmin
+      .from("cliente_portal_acessos")
+      .update({ ativo: false, revogado_por: userId, revogado_em: agora } as any)
+      .eq("cliente_id", cid)
+      .eq("ativo", true);
+
     // Soft delete do próprio cliente.
     const { error } = await supabaseAdmin
       .from("clientes")
