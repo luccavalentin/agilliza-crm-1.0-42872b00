@@ -35,10 +35,20 @@ export interface HoleriteInput {
     inss?: number;
     irrf?: number;
     base_irrf?: number;
+    base_inss?: number;
     fgts?: number;
     dependentes_ir?: number;
   };
   ajustes?: Array<{ tipo: "provento" | "desconto"; descricao: string; valor: number }>;
+  /**
+   * Linhas explícitas de proventos/descontos (holerite manual do DP).
+   * Quando informado, substitui a montagem automática a partir de
+   * `detalhamento`, permitindo códigos e referências no padrão CLT.
+   */
+  linhas?: {
+    proventos: Array<{ codigo?: string; descricao: string; referencia?: string; valor: number }>;
+    descontos: Array<{ codigo?: string; descricao: string; referencia?: string; valor: number }>;
+  };
   liquido: number;
 }
 
@@ -116,6 +126,23 @@ export function gerarHoleritePdf(input: HoleriteInput): { blob: Blob; filename: 
   const proventos: Array<{ desc: string; ref: string; valor: number }> = [];
   const descontos: Array<{ desc: string; ref: string; valor: number }> = [];
 
+  const manual = input.linhas;
+  if (manual) {
+    manual.proventos.forEach((l) =>
+      proventos.push({
+        desc: l.codigo ? `${l.codigo} · ${l.descricao}` : l.descricao,
+        ref: l.referencia ?? "—",
+        valor: l.valor,
+      }),
+    );
+    manual.descontos.forEach((l) =>
+      descontos.push({
+        desc: l.codigo ? `${l.codigo} · ${l.descricao}` : l.descricao,
+        ref: l.referencia ?? "—",
+        valor: l.valor,
+      }),
+    );
+  } else {
   proventos.push({ desc: "Salário base", ref: "30 dias", valor: input.salario_base });
   if ((d.beneficios_valor ?? 0) > 0) {
     proventos.push({ desc: "Benefícios (provento)", ref: "—", valor: d.beneficios_valor ?? 0 });
@@ -148,6 +175,7 @@ export function gerarHoleritePdf(input: HoleriteInput): { blob: Blob; filename: 
     (input.ajustes ?? [])
       .filter((a) => a.tipo === "desconto")
       .forEach((a) => descontos.push({ desc: a.descricao, ref: "avulso", valor: a.valor }));
+  }
   }
 
 
@@ -224,7 +252,7 @@ export function gerarHoleritePdf(input: HoleriteInput): { blob: Blob; filename: 
   y += netH + 14;
 
   // Bases de cálculo (INSS/IRRF/FGTS) — informativo, exigido em recibo CLT
-  const baseInss = Math.min(input.salario_base + (d.proventos_avulsos ?? 0), 8157.41);
+  const baseInss = (d as any).base_inss ?? Math.min(input.salario_base + (d.proventos_avulsos ?? 0), 8157.41);
   const baseIrrf = d.base_irrf ?? 0;
   const fgts = d.fgts ?? 0;
   doc.setDrawColor(P.borda);
