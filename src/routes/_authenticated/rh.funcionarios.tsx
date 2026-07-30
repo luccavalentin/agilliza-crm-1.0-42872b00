@@ -163,8 +163,28 @@ function Pagina() {
                   <p className="text-xs tabular-nums text-muted-foreground">
                     {formatBRL(f.salario_atual)} · Admissão {new Date(f.data_admissao).toLocaleDateString("pt-BR")}
                   </p>
+                  <div className="flex justify-end gap-1 pt-1" onClick={(e) => e.stopPropagation()}>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      title="Editar"
+                      onClick={() => navigate({ to: "/rh/funcionarios/$id", params: { id: f.id } })}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      title="Excluir"
+                      className="text-destructive hover:text-destructive"
+                      onClick={() => setParaExcluir({ id: f.id, nome: f.nome })}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
+
             ))}
           </div>
 
