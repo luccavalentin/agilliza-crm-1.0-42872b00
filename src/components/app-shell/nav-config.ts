@@ -37,6 +37,8 @@ import {
   ClipboardList,
   Link as LinkIcon,
   Percent,
+  Sparkles,
+  BookOpen,
 } from "lucide-react";
 
 /** Permissão exigida por um item (chave = `${modulo}:view`). */
