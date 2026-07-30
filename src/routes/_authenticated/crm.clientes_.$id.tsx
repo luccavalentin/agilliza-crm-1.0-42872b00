@@ -198,7 +198,12 @@ function Pagina() {
         </TabsContent>
 
         <TabsContent value="mensagens" className="mt-4">
+          <AppClienteAcesso
+            clienteId={id}
+            ativo={Boolean((c as any)?.portal_acesso_ativo)}
+          />
           <div className="h-[68dvh] max-h-[680px] min-h-[420px]">
+
             <ChatClienteInstagram
               clienteId={id}
               info={{
