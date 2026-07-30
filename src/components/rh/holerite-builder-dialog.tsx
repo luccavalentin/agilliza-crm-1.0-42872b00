@@ -69,8 +69,13 @@ function CampoNum({
         type="number"
         step={passo}
         min={0}
-        value={Number.isFinite(value) ? value : 0 || ""}
-        onChange={(ev) => onChange(Number(ev.target.value))}
+        placeholder="0"
+        value={Number.isFinite(value) && value !== 0 ? value : ""}
+        onChange={(ev) => {
+          const t = ev.target.value;
+          onChange(t === "" ? 0 : Number(t));
+        }}
+        onFocus={(ev) => ev.currentTarget.select()}
         className="tabular-nums"
       />
     </div>
