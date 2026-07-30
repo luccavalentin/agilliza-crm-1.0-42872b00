@@ -519,14 +519,28 @@ export const processarLeitura = createServerFn({ method: "POST" })
         ...CAMPOS_ESPERADOS,
       ]);
 
+      // O modelo às vezes devolve objeto/lista (ex.: ônus com vários atos) — achata em texto.
+      const comoTexto = (v: unknown): string => {
+        if (v == null) return "";
+        if (typeof v === "string") return v.trim();
+        if (typeof v === "number" || typeof v === "boolean") return String(v);
+        if (Array.isArray(v)) return v.map(comoTexto).filter(Boolean).join(" | ");
+        return Object.entries(v as Record<string, unknown>)
+          .filter(([, val]) => val != null && val !== "")
+          .map(([k, val]) => `${k.replace(/_/g, " ")}: ${comoTexto(val)}`)
+          .join("; ");
+      };
+
       const campos = (parsed.campos ?? [])
         .filter((c) => c && c.campo && c.valor != null && permitidos.has(String(c.campo)))
         .map((c) => ({
           leitura_id: data.id,
           campo: String(c.campo).slice(0, 120),
-          valor: String(c.valor).slice(0, 2000),
+          valor: comoTexto(c.valor).slice(0, 2000),
           confianca: Math.max(0, Math.min(1, Number(c.confianca) || 0)),
-        }));
+        }))
+        .filter((c) => c.valor.length > 0);
+
 
       // Substitui campos anteriores
       await supabase.from("scan_ia_campos_extraidos").delete().eq("leitura_id", data.id);
