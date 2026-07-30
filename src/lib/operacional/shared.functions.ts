@@ -61,6 +61,7 @@ export const buscarClientesOpcoes = createServerFn({ method: "GET" })
     let query = supabase
       .from("clientes")
       .select("id, nome, numero_cliente")
+      .is("deleted_at", null)
       .order("created_at", { ascending: false })
       .limit(20);
     const q = data.q?.trim();

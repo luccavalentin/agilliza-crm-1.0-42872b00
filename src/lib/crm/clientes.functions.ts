@@ -711,6 +711,7 @@ export const listarPainel = createServerFn({ method: "GET" })
              cliente_parceiros!cliente_parceiros_cliente_id_fkey(tipo_vinculo, parceiro:profiles!cliente_parceiros_parceiro_id_fkey(nome))`),
       )
       .eq("ativo", true)
+      .is("deleted_at", null)
       .is("contrato_arquivado_em", null);
     if (soMinhas) {
       const partes: string[] = [
@@ -1650,10 +1651,23 @@ export const excluirCliente = createServerFn({ method: "POST" })
         .is("deleted_at", null);
     }
 
+    // Revoga o acesso ao portal do cliente excluído.
+    await supabaseAdmin
+      .from("cliente_portal_acessos")
+      .update({ ativo: false, revogado_por: userId, revogado_em: agora } as any)
+      .eq("cliente_id", cid)
+      .eq("ativo", true);
+
     // Soft delete do próprio cliente.
     const { error } = await supabaseAdmin
       .from("clientes")
-      .update({ deleted_at: agora, deleted_by: userId, deleted_motivo: motivo } as any)
+      .update({
+        deleted_at: agora,
+        deleted_by: userId,
+        deleted_motivo: motivo,
+        ativo: false,
+        portal_acesso_ativo: false,
+      } as any)
       .eq("id", cid)
       .eq("correspondente_id", correspondenteId);
     if (error) throw error;
