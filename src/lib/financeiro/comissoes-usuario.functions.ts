@@ -52,6 +52,8 @@ export interface RegraComissaoUsuario {
 export interface ComissaoUsuarioLancamento {
   id: string;
   proposta_id: string;
+  simulacao_id?: string | null;
+
   numero_proposta: string | null;
   nome_cliente: string | null;
   usuario_id: string;
@@ -259,7 +261,12 @@ export const listarComissoesUsuario = createServerFn({ method: "GET" })
     if (error) throw new Error(error.message);
 
     const userIds = Array.from(new Set((rows ?? []).map((r: any) => r.usuario_id)));
-    const propIds = Array.from(new Set((rows ?? []).map((r: any) => r.proposta_id)));
+    const propIds = Array.from(
+      new Set((rows ?? []).map((r: any) => r.proposta_id).filter(Boolean)),
+    );
+    const simIds = Array.from(
+      new Set((rows ?? []).map((r: any) => r.simulacao_id).filter(Boolean)),
+    );
     const payIds = Array.from(
       new Set((rows ?? []).map((r: any) => r.payable_id).filter(Boolean)),
     );
@@ -277,6 +284,14 @@ export const listarComissoesUsuario = createServerFn({ method: "GET" })
         .in("id", propIds);
       (pp ?? []).forEach((p: any) => props.set(p.id, p.nome_cliente));
     }
+    if (simIds.length) {
+      const { data: ss } = await supabase
+        .from("simulacoes")
+        .select("id, nome_cliente")
+        .in("id", simIds);
+      (ss ?? []).forEach((s: any) => props.set(s.id, s.nome_cliente));
+    }
+
     const pays = new Map<
       string,
       { vencimento: string | null; data_pagamento: string | null }
@@ -293,9 +308,11 @@ export const listarComissoesUsuario = createServerFn({ method: "GET" })
 
     return (rows ?? []).map((r: any) => ({
       id: r.id,
-      proposta_id: r.proposta_id,
+      proposta_id: r.proposta_id ?? r.simulacao_id,
+      simulacao_id: r.simulacao_id ?? null,
       numero_proposta: r.numero_proposta,
-      nome_cliente: props.get(r.proposta_id) ?? null,
+      nome_cliente: props.get(r.proposta_id ?? r.simulacao_id) ?? null,
+
       usuario_id: r.usuario_id,
       usuario_nome: nomes.get(r.usuario_id) ?? null,
       tipo_vinculo: r.tipo_vinculo,
@@ -391,6 +408,8 @@ export interface UsuarioComissionavel {
   nome: string | null;
   email: string | null;
   tipo_pessoa: string | null;
+  /** Papéis (roles) do usuário — base para inferir o tipo de vínculo. */
+  papeis: string[];
 }
 
 export const listarUsuariosComissionaveis = createServerFn({ method: "GET" })
@@ -404,8 +423,30 @@ export const listarUsuariosComissionaveis = createServerFn({ method: "GET" })
       .eq("correspondente_id", corr)
       .order("nome", { ascending: true });
     if (error) throw new Error(error.message);
-    return (data ?? []) as UsuarioComissionavel[];
+
+    const ids = (data ?? []).map((p: any) => p.id);
+    const papeis = new Map<string, string[]>();
+    if (ids.length) {
+      const { data: roles } = await supabase
+        .from("user_roles")
+        .select("user_id, role")
+        .in("user_id", ids);
+      (roles ?? []).forEach((r: any) => {
+        const arr = papeis.get(r.user_id) ?? [];
+        arr.push(String(r.role));
+        papeis.set(r.user_id, arr);
+      });
+    }
+
+    return (data ?? []).map((p: any) => ({
+      id: p.id,
+      nome: p.nome,
+      email: p.email,
+      tipo_pessoa: p.tipo_pessoa,
+      papeis: papeis.get(p.id) ?? [],
+    }));
   });
+
 
 // Bancos disponíveis (para o filtro do formulário)
 export const listarBancosComissao = createServerFn({ method: "GET" })

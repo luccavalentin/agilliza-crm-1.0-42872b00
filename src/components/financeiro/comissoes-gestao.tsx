@@ -333,31 +333,26 @@ export function SecaoRegrasComissao() {
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label>Tipo</Label>
-                <Select
-                  value={form.tipo}
-                  onValueChange={(v) => setForm((f) => ({ ...f, tipo: v as ComissaoTipo }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="percentual">Percentual (%)</SelectItem>
-                    <SelectItem value="fixo">Valor fixo (R$)</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Input value="Percentual (%)" readOnly disabled />
+                <p className="text-xs text-muted-foreground">
+                  Os repasses são sempre calculados em percentual.
+                </p>
               </div>
               <div className="space-y-1.5">
-                <Label>{form.tipo === "percentual" ? "Percentual (%)" : "Valor (R$)"}</Label>
+                <Label>Percentual (%)</Label>
                 <Input
                   type="number"
                   min={0}
-                  step={form.tipo === "percentual" ? 0.1 : 100}
+                  max={100}
+                  step={0.1}
                   placeholder="0"
                   value={form.valor || ""}
-                  onChange={(e) => setForm((f) => ({ ...f, valor: e.target.value === "" ? 0 : Number(e.target.value) }))}
+                  onChange={(e) => setForm((f) => ({ ...f, tipo: "percentual", valor: e.target.value === "" ? 0 : Number(e.target.value) }))}
                 />
               </div>
             </div>
+
+
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label>% Parceiro</Label>

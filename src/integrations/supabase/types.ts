@@ -1758,8 +1758,9 @@ export type Database = {
           payable_id: string | null
           percentual: number
           produto: string | null
-          proposta_id: string
+          proposta_id: string | null
           regra_id: string | null
+          simulacao_id: string | null
           status: Database["public"]["Enums"]["comissao_usuario_status"]
           tipo_vinculo: Database["public"]["Enums"]["comissao_tipo_vinculo"]
           updated_at: string
@@ -1779,8 +1780,9 @@ export type Database = {
           payable_id?: string | null
           percentual?: number
           produto?: string | null
-          proposta_id: string
+          proposta_id?: string | null
           regra_id?: string | null
+          simulacao_id?: string | null
           status?: Database["public"]["Enums"]["comissao_usuario_status"]
           tipo_vinculo?: Database["public"]["Enums"]["comissao_tipo_vinculo"]
           updated_at?: string
@@ -1800,8 +1802,9 @@ export type Database = {
           payable_id?: string | null
           percentual?: number
           produto?: string | null
-          proposta_id?: string
+          proposta_id?: string | null
           regra_id?: string | null
+          simulacao_id?: string | null
           status?: Database["public"]["Enums"]["comissao_usuario_status"]
           tipo_vinculo?: Database["public"]["Enums"]["comissao_tipo_vinculo"]
           updated_at?: string
@@ -1829,6 +1832,13 @@ export type Database = {
             columns: ["regra_id"]
             isOneToOne: false
             referencedRelation: "comissao_regras_usuario"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comissoes_usuario_simulacao_id_fkey"
+            columns: ["simulacao_id"]
+            isOneToOne: false
+            referencedRelation: "simulacoes"
             referencedColumns: ["id"]
           },
           {
@@ -7192,6 +7202,10 @@ export type Database = {
       calcular_comissoes_usuario_proposta:
         | { Args: { _prop_id: string }; Returns: number }
         | { Args: { _gatilho?: string; _prop_id: string }; Returns: number }
+      calcular_comissoes_usuario_simulacao: {
+        Args: { _sim_id: string }
+        Returns: number
+      }
       can_view_global_reports: { Args: { _user_id: string }; Returns: boolean }
       can_view_team_reports: { Args: { _user_id: string }; Returns: boolean }
       cliente_cadastro_esta_completo: {
@@ -7415,6 +7429,10 @@ export type Database = {
       }
       usuario_participa_chat: {
         Args: { _atendente_id: string; _cliente_id: string; _uid: string }
+        Returns: boolean
+      }
+      usuario_participa_registro: {
+        Args: { _ids: string[]; _uid: string }
         Returns: boolean
       }
       usuario_pode_admin: { Args: { _user_id: string }; Returns: boolean }
