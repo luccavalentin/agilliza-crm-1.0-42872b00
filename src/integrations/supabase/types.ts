@@ -7202,6 +7202,10 @@ export type Database = {
       }
       portal_visao_geral: { Args: { _cid: string }; Returns: Json }
       purgar_conversas_pos_contrato: { Args: never; Returns: number }
+      recalcular_comissoes_usuario_correspondente: {
+        Args: { _corr: string }
+        Returns: number
+      }
       registrar_auditoria:
         | {
             Args: {
