@@ -428,7 +428,8 @@ function Pagina() {
               <h2 className="text-sm font-semibold">4. Aplicar ao cadastro</h2>
               <p className="text-xs text-muted-foreground">
                 A revisão é obrigatória: você decide campo a campo o que entra no cadastro do
-                cliente. Nada é gravado automaticamente.
+                cliente. Nada é gravado automaticamente. Ao confirmar, o arquivo original também é
+                arquivado na aba <strong>Documentos</strong> do cliente.
               </p>
               {!podeAplicar ? (
                 <p className="text-xs text-warning">
@@ -439,10 +440,32 @@ function Pagina() {
                       : "Nenhum campo extraído."}
                 </p>
               ) : null}
-              <Button disabled={!podeAplicar} onClick={() => setAplicarAberto(true)}>
-                Aplicar ao cadastro
-              </Button>
+              <div className="flex flex-wrap gap-2">
+                <Button disabled={!podeAplicar} onClick={() => setAplicarAberto(true)}>
+                  Aplicar ao cadastro
+                </Button>
+                <Button
+                  variant="outline"
+                  disabled={!d.cliente_id || arquivar.isPending}
+                  onClick={() => arquivar.mutate()}
+                >
+                  <FileText className="mr-2 h-4 w-4" />
+                  {arquivar.isPending ? "Arquivando…" : "Só arquivar em Documentos"}
+                </Button>
+                {d.cliente_id ? (
+                  <Button asChild variant="ghost">
+                    <Link
+                      to="/crm/clientes/$id"
+                      params={{ id: d.cliente_id }}
+                      search={{ tab: "documentos" } as never}
+                    >
+                      Ver documentação do cliente
+                    </Link>
+                  </Button>
+                ) : null}
+              </div>
             </div>
+
           </div>
         </div>
       )}
