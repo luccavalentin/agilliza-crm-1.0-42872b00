@@ -134,7 +134,7 @@ export const listarConversasCliente = createServerFn({ method: "GET" })
   .inputValidator((d?: { ver_todos?: boolean }) =>
     z.object({ ver_todos: z.boolean().optional() }).parse(d ?? {}),
   )
-  .handler(async ({ context }): Promise<ConversaCliente[]> => {
+  .handler(async ({ data, context }): Promise<ConversaCliente[]> => {
     const { supabase, userId } = context;
 
     const colunas =
