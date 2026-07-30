@@ -285,18 +285,20 @@ export function useChatConversas() {
       : null;
 
   const contadores = useMemo(() => {
-    const lista = (conversas ?? []).filter((c) => !arquivada(c.cliente_id));
+    const visiveis = (conversas ?? []).filter(
+      (c) => !ocultaCliente(c.cliente_id, c.ultima_em),
+    );
+    const lista = visiveis.filter((c) => !arquivada(c.cliente_id));
     return {
       nao_lidas: lista.filter((c) => c.nao_lidas > 0).length,
       sla: lista.filter((c) =>
         slaEstourado(c.cliente_id, c.ultimo_remetente, c.ultima_em),
       ).length,
       lembrete: lista.filter((c) => lembreteDevido(c.cliente_id)).length,
-      arquivadas: (conversas ?? []).filter((c) => arquivada(c.cliente_id))
-        .length,
+      arquivadas: visiveis.filter((c) => arquivada(c.cliente_id)).length,
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [conversas, metasCliente, tickMinuto]);
+  }, [conversas, metasCliente, estadoPorCliente, tickMinuto]);
 
   return {
     // estado
