@@ -51,13 +51,13 @@ const Toaster = ({ ...props }: ToasterProps) => {
       toastOptions={{
         classNames: {
           toast:
-            "group toast pointer-events-auto group-[.toaster]:w-full group-[.toaster]:bg-background group-[.toaster]:text-foreground group-[.toaster]:border group-[.toaster]:border-border/60 group-[.toaster]:shadow-[0_18px_40px_-24px_hsl(var(--foreground)/0.35)] group-[.toaster]:rounded-xl group-[.toaster]:px-4 group-[.toaster]:py-3.5 group-[.toaster]:gap-3.5 group-[.toaster]:items-start",
+            "group toast pointer-events-auto group-[.toaster]:w-full group-[.toaster]:bg-background group-[.toaster]:text-foreground group-[.toaster]:border group-[.toaster]:border-border/60 group-[.toaster]:shadow-[0_18px_40px_-24px_hsl(var(--foreground)/0.35)] group-[.toaster]:rounded-xl group-[.toaster]:px-4 group-[.toaster]:py-3.5 group-[.toaster]:gap-3.5 group-[.toaster]:items-center",
           content: "group-[.toast]:gap-1",
           title:
             "group-[.toast]:font-semibold group-[.toast]:text-[0.875rem] group-[.toast]:leading-snug group-[.toast]:tracking-[-0.01em]",
           description:
             "group-[.toast]:text-muted-foreground group-[.toast]:text-[0.8rem] group-[.toast]:leading-relaxed",
-          icon: "group-[.toast]:m-0 group-[.toast]:mt-0.5",
+          icon: "group-[.toast]:!m-0 group-[.toast]:!h-10 group-[.toast]:!w-10 group-[.toast]:shrink-0 group-[.toast]:items-center group-[.toast]:justify-center",
           closeButton:
             "group-[.toast]:bg-background group-[.toast]:border-border group-[.toast]:text-muted-foreground",
           actionButton:
