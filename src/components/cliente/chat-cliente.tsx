@@ -273,6 +273,29 @@ export function ThreadChat({
   const [respondendo, setRespondendo] = useState<{ id: string; autor: string; texto: string } | null>(
     null,
   );
+  const [editando, setEditando] = useState<{ id: string; original: string } | null>(null);
+
+  const editarMsg = useMutation({
+    mutationFn: (p: { mensagem_id: string; mensagem: string }) =>
+      clienteEditarMensagem({ data: p }),
+    onSuccess: () => {
+      setEditando(null);
+      setTexto("");
+      qc.invalidateQueries({ queryKey: ["cliente", "mensagens", atendenteId] });
+      qc.invalidateQueries({ queryKey: ["cliente", "atendentes"] });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Não foi possível editar a mensagem."),
+  });
+
+  const excluirMsg = useMutation({
+    mutationFn: (mensagem_id: string) => clienteExcluirMensagem({ data: { mensagem_id } }),
+    onSuccess: () => {
+      toast.success("Mensagem excluída.");
+      qc.invalidateQueries({ queryKey: ["cliente", "mensagens", atendenteId] });
+      qc.invalidateQueries({ queryKey: ["cliente", "atendentes"] });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Não foi possível excluir a mensagem."),
+  });
 
   const reagir = useMutation({
     mutationFn: (p: { mensagem_id: string; emoji: string }) =>
@@ -281,6 +304,7 @@ export function ThreadChat({
       qc.invalidateQueries({ queryKey: ["cliente", "mensagens", atendenteId] }),
     onError: () => toast.error("Não foi possível registrar a reação."),
   });
+
 
   const enviar = useMutation({
     mutationFn: (mensagem: string) =>
