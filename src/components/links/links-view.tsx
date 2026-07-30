@@ -198,7 +198,10 @@ export function LinksView() {
             </CardContent>
           </Card>
         ) : (
-          filtrados.map((l) => (
+          filtrados.map((l) => {
+            const meta = l.categoria ? catPorNome.get(l.categoria.toLowerCase()) : undefined;
+            const CatIcon = meta ? iconeCategoria(meta.icone) : ExternalLink;
+            return (
             <div
               key={l.id}
               className="group flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card p-4 transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-[0_10px_30px_-15px_hsl(var(--primary)/0.5)]"
@@ -209,18 +212,28 @@ export function LinksView() {
                 rel="noopener noreferrer"
                 className="flex min-w-0 flex-1 items-center gap-3"
               >
-                <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/20 transition-transform group-hover:scale-105">
-                  <ExternalLink className="h-4 w-4" />
+                <span
+                  className={cn(
+                    "grid size-10 shrink-0 place-items-center rounded-xl ring-1 transition-transform group-hover:scale-105",
+                    classeCategoria(meta?.cor),
+                  )}
+                >
+                  <CatIcon className="h-4 w-4" />
                 </span>
                 <div className="min-w-0">
                   <p className="flex items-center gap-2 truncate font-semibold text-foreground group-hover:text-primary">
                     {l.titulo}
                     {l.categoria && (
-                      <Badge variant="secondary" className="shrink-0 font-normal">
+                      <Badge
+                        variant="secondary"
+                        className={cn("shrink-0 gap-1 font-normal", meta && classeCategoria(meta.cor))}
+                      >
+                        <CatIcon className="h-3 w-3" />
                         {l.categoria}
                       </Badge>
                     )}
                   </p>
+
                   <p className="truncate text-xs text-muted-foreground">
                     {l.descricao ? `${l.descricao} · ` : ""}
                     {hostname(l.url)}
