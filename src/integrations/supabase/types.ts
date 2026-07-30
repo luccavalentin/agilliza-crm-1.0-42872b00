@@ -5977,6 +5977,7 @@ export type Database = {
           competencia_id: string | null
           correspondente_id: string
           created_at: string
+          entrada: Json | null
           funcionario_id: string
           gerado_por: string | null
           id: string
@@ -5991,6 +5992,7 @@ export type Database = {
           competencia_id?: string | null
           correspondente_id: string
           created_at?: string
+          entrada?: Json | null
           funcionario_id: string
           gerado_por?: string | null
           id?: string
@@ -6005,6 +6007,7 @@ export type Database = {
           competencia_id?: string | null
           correspondente_id?: string
           created_at?: string
+          entrada?: Json | null
           funcionario_id?: string
           gerado_por?: string | null
           id?: string
