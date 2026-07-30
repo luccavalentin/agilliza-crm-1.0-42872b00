@@ -1583,7 +1583,7 @@ export type Database = {
           correspondente_id: string
           created_at: string
           criador_id: string | null
-          gatilho: Database["public"]["Enums"]["comissao_gatilho"]
+          gatilho: string
           id: string
           observacao: string | null
           percentual: number
@@ -1601,7 +1601,7 @@ export type Database = {
           correspondente_id: string
           created_at?: string
           criador_id?: string | null
-          gatilho?: Database["public"]["Enums"]["comissao_gatilho"]
+          gatilho?: string
           id?: string
           observacao?: string | null
           percentual: number
@@ -1619,7 +1619,7 @@ export type Database = {
           correspondente_id?: string
           created_at?: string
           criador_id?: string | null
-          gatilho?: Database["public"]["Enums"]["comissao_gatilho"]
+          gatilho?: string
           id?: string
           observacao?: string | null
           percentual?: number
@@ -1727,7 +1727,7 @@ export type Database = {
           base_calculo: Database["public"]["Enums"]["comissao_base_calculo"]
           correspondente_id: string
           created_at: string
-          gatilho: Database["public"]["Enums"]["comissao_gatilho"]
+          gatilho: string
           id: string
           numero_proposta: string | null
           observacao: string | null
@@ -1748,7 +1748,7 @@ export type Database = {
           base_calculo?: Database["public"]["Enums"]["comissao_base_calculo"]
           correspondente_id: string
           created_at?: string
-          gatilho?: Database["public"]["Enums"]["comissao_gatilho"]
+          gatilho?: string
           id?: string
           numero_proposta?: string | null
           observacao?: string | null
@@ -1769,7 +1769,7 @@ export type Database = {
           base_calculo?: Database["public"]["Enums"]["comissao_base_calculo"]
           correspondente_id?: string
           created_at?: string
-          gatilho?: Database["public"]["Enums"]["comissao_gatilho"]
+          gatilho?: string
           id?: string
           numero_proposta?: string | null
           observacao?: string | null
@@ -7025,10 +7025,9 @@ export type Database = {
         Args: { _prop_id: string }
         Returns: string
       }
-      calcular_comissoes_usuario_proposta: {
-        Args: { _prop_id: string }
-        Returns: number
-      }
+      calcular_comissoes_usuario_proposta:
+        | { Args: { _prop_id: string }; Returns: number }
+        | { Args: { _gatilho?: string; _prop_id: string }; Returns: number }
       can_view_global_reports: { Args: { _user_id: string }; Returns: boolean }
       can_view_team_reports: { Args: { _user_id: string }; Returns: boolean }
       cliente_cadastro_esta_completo: {
