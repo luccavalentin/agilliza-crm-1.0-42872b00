@@ -423,7 +423,11 @@ async function resolverAnexos(
         criada_em: m.criada_em,
         editada_em: m.editada_em ?? null,
         excluida_em: m.excluida_em ?? null,
+        responde_a: m.responde_a ?? null,
+        citacao: m.citacao ?? null,
+        reacoes: (m.reacoes as ReacaoCliente[] | null) ?? [],
       } as MensagemCliente;
+
     }),
   );
 }
