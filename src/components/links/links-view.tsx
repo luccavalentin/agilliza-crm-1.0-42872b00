@@ -47,15 +47,28 @@ function hostname(url: string): string {
 
 export function LinksView() {
   const listar = useServerFn(listarLinks);
+  const listarCats = useServerFn(listarCategoriasLinks);
   const excluirFn = useServerFn(excluirLink);
   const qc = useQueryClient();
 
   const { data, isLoading } = useQuery({ queryKey: ["links"], queryFn: () => listar() });
+  const { data: categorias } = useQuery({
+    queryKey: ["links-categorias"],
+    queryFn: () => listarCats(),
+  });
+
+  const catPorNome = useMemo(() => {
+    const m = new Map<string, { icone: string; cor: string }>();
+    (categorias ?? []).forEach((c) => m.set(c.nome.toLowerCase(), { icone: c.icone, cor: c.cor }));
+    return m;
+  }, [categorias]);
 
   const [busca, setBusca] = useState("");
   const [criando, setCriando] = useState(false);
+  const [gerenciandoCats, setGerenciandoCats] = useState(false);
   const [editando, setEditando] = useState<LinkUtil | null>(null);
   const [excluindo, setExcluindo] = useState<LinkUtil | null>(null);
+
 
   const filtrados = useMemo(() => {
     const termo = busca.trim().toLowerCase();
