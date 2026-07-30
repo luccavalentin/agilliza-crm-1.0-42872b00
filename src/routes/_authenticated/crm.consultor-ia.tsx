@@ -28,9 +28,9 @@ import {
 } from "@/components/ui/dialog";
 import { Markdown } from "@/components/ui/markdown";
 import { assertModuloPermitido } from "@/lib/route-guards";
+import { supabase } from "@/integrations/supabase/client";
 import {
   avaliarRespostaConsultor,
-  consultarAssistenteIA,
   excluirConversaConsultor,
   listarConversasConsultor,
   listarMensagensConsultor,
@@ -87,16 +87,68 @@ function ConsultorIaPage() {
     enabled: !!fonteAberta,
   });
 
-  const perguntar = useMutation({
-    mutationFn: (texto: string) =>
-      consultarAssistenteIA({ data: { conversa_id: conversaId, pergunta: texto } }),
-    onSuccess: async (res) => {
-      setConversaId(res.conversa_id);
-      await qc.invalidateQueries({ queryKey: ["consultor-ia-mensagens", res.conversa_id] });
+  const [streaming, setStreaming] = useState(false);
+  const [parcial, setParcial] = useState("");
+  const [perguntaPendente, setPerguntaPendente] = useState<string | null>(null);
+
+  async function perguntarStream(texto: string) {
+    setStreaming(true);
+    setParcial("");
+    setPerguntaPendente(texto);
+    try {
+      const { data: sessao } = await supabase.auth.getSession();
+      const token = sessao.session?.access_token;
+      if (!token) throw new Error("Sessão expirada. Entre novamente.");
+
+      const resp = await fetch("/api/consultor-ia/stream", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ conversa_id: conversaId, pergunta: texto }),
+      });
+      if (!resp.ok || !resp.body) throw new Error("Falha ao consultar a IA.");
+
+      const reader = resp.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let idConversa = conversaId;
+      let erro: string | null = null;
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const linhas = buffer.split("\n");
+        buffer = linhas.pop() ?? "";
+        for (const linha of linhas) {
+          if (!linha.trim()) continue;
+          let ev: any;
+          try {
+            ev = JSON.parse(linha);
+          } catch {
+            continue;
+          }
+          if (ev.tipo === "conversa") {
+            idConversa = ev.conversa_id;
+            if (!conversaId) setConversaId(ev.conversa_id);
+          } else if (ev.tipo === "texto") {
+            setParcial(ev.texto);
+          } else if (ev.tipo === "erro") {
+            erro = ev.mensagem;
+          }
+        }
+      }
+
+      if (erro) throw new Error(erro);
+      await qc.invalidateQueries({ queryKey: ["consultor-ia-mensagens", idConversa] });
       await qc.invalidateQueries({ queryKey: ["consultor-ia-conversas"] });
-    },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "Falha ao consultar a IA."),
-  });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Falha ao consultar a IA.");
+    } finally {
+      setStreaming(false);
+      setParcial("");
+      setPerguntaPendente(null);
+    }
+  }
 
   const avaliar = useMutation({
     mutationFn: (v: { mensagem_id: string; avaliacao: "util" | "nao_util" }) =>
@@ -129,15 +181,15 @@ function ConsultorIaPage() {
 
   useEffect(() => {
     fimRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [mensagens?.length, perguntar.isPending]);
+  }, [mensagens?.length, parcial, streaming]);
 
   const lista = useMemo(() => mensagens ?? [], [mensagens]);
 
   function enviar(texto?: string) {
     const t = (texto ?? pergunta).trim();
-    if (!t || perguntar.isPending) return;
+    if (!t || streaming) return;
     setPergunta("");
-    perguntar.mutate(t);
+    void perguntarStream(t);
   }
 
   return (
@@ -203,7 +255,7 @@ function ConsultorIaPage() {
 
         <section className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-border/60 bg-card">
           <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4">
-            {!conversaId && !perguntar.isPending ? (
+            {!conversaId && !streaming ? (
               <div className="mx-auto max-w-xl py-8 text-center">
                 <Lightbulb className="mx-auto mb-3 size-8 text-primary" />
                 <p className="text-sm font-medium">Como posso ajudar?</p>
@@ -308,10 +360,29 @@ function ConsultorIaPage() {
               ),
             )}
 
-            {perguntar.isPending ? (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Loader2 className="size-4 animate-spin" />
-                Consultando a base de conhecimento…
+            {perguntaPendente ? (
+              <div className="flex justify-end">
+                <div className="max-w-[85%] rounded-2xl rounded-br-sm bg-primary px-3.5 py-2 text-sm text-primary-foreground">
+                  {perguntaPendente}
+                </div>
+              </div>
+            ) : null}
+
+            {streaming ? (
+              <div className="flex justify-start">
+                <div className="max-w-[90%] rounded-2xl rounded-bl-sm border border-border/60 bg-muted/40 px-3.5 py-2.5 text-sm">
+                  {parcial ? (
+                    <>
+                      <Markdown conteudo={parcial} />
+                      <span className="ml-0.5 inline-block h-4 w-[2px] animate-pulse bg-primary align-text-bottom" />
+                    </>
+                  ) : (
+                    <span className="flex items-center gap-2 text-muted-foreground">
+                      <Loader2 className="size-4 animate-spin" />
+                      Consultando a base…
+                    </span>
+                  )}
+                </div>
               </div>
             ) : null}
             <div ref={fimRef} />
@@ -328,9 +399,9 @@ function ConsultorIaPage() {
                 }
               }}
               placeholder="Pergunte ao consultor…"
-              disabled={perguntar.isPending}
+              disabled={streaming}
             />
-            <Button onClick={() => enviar()} disabled={perguntar.isPending || !pergunta.trim()}>
+            <Button onClick={() => enviar()} disabled={streaming || !pergunta.trim()}>
               <Send className="size-4" />
             </Button>
           </div>
