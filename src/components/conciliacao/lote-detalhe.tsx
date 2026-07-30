@@ -38,11 +38,24 @@ function fmtData(v: string | null) {
   return `${d}/${m}/${a}`;
 }
 
+export type FiltroLote = "todos" | ResultadoConciliacao;
+
 /** Detalhamento de um lote: abas por resultado, busca e export XLSX. */
-export function LoteDetalhe({ lote }: { lote: ConciliacaoLote }) {
+export function LoteDetalhe({
+  lote,
+  filtro,
+  onFiltroChange,
+}: {
+  lote: ConciliacaoLote;
+  filtro?: FiltroLote;
+  onFiltroChange?: (v: FiltroLote) => void;
+}) {
   const listar = useServerFn(listarItensConciliacao);
-  const [aba, setAba] = useState<"todos" | ResultadoConciliacao>("divergente");
+  const [abaLocal, setAbaLocal] = useState<FiltroLote>("divergente");
+  const aba = filtro ?? abaLocal;
+  const setAba = (v: FiltroLote) => (onFiltroChange ? onFiltroChange(v) : setAbaLocal(v));
   const [busca, setBusca] = useState("");
+
 
   const { data: itens = [], isLoading } = useQuery({
     queryKey: ["conciliacao-itens", lote.id],
