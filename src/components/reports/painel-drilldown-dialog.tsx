@@ -138,17 +138,18 @@ export function PainelDrilldownDialog({
               <ul className="space-y-1 py-1">
                 {data.itens.map((it, idx) => {
                   const conteudo = (
-                    <div className="group relative isolate overflow-hidden rounded-xl border border-transparent px-4 py-3 transition-all duration-300 hover:border-border/60 hover:bg-gradient-to-r hover:from-muted/50 hover:to-transparent hover:shadow-sm">
+                    <div className="group relative isolate overflow-hidden rounded-xl border border-transparent px-3 py-3 transition-all duration-300 hover:border-border/60 hover:bg-gradient-to-r hover:from-muted/50 hover:to-transparent hover:shadow-sm sm:px-4">
                       {it.banco && (
                         <div
                           aria-hidden
-                          className="pointer-events-none absolute -right-3 top-1/2 -translate-y-1/2 opacity-[0.06] transition-opacity duration-300 group-hover:opacity-[0.11]"
+                          className="pointer-events-none absolute -right-3 top-1/2 hidden -translate-y-1/2 opacity-[0.06] transition-opacity duration-300 group-hover:opacity-[0.11] sm:block"
                         >
                           <BancoLogo nome={it.banco} size="xl" className="scale-[2.2] ring-0" />
                         </div>
                       )}
-                      <div className="relative grid grid-cols-[auto_minmax(0,1fr)_auto_auto] items-center gap-3.5">
-                        <BancoLogo nome={it.banco ?? null} size="lg" />
+                      <div className="relative grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2.5 sm:grid-cols-[auto_minmax(0,1fr)_auto_auto] sm:gap-3.5">
+                        <BancoLogo nome={it.banco ?? null} size="lg" className="shrink-0" />
+
                         <div className="min-w-0">
                           <p className="truncate text-[13.5px] font-semibold leading-tight tracking-tight text-foreground">
                             {it.label}
