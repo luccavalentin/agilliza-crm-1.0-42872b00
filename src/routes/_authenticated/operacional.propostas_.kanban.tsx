@@ -515,22 +515,25 @@ function Pagina() {
                 </div>
               </div>
               <div className="flex flex-1 flex-col gap-2 overflow-y-auto p-2 [scrollbar-width:thin]">
-                {excedente > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setBuscaPasta("");
-                      setPastaAberta(col.destino);
-                    }}
-                    className="group flex shrink-0 items-center justify-between gap-2 rounded-xl border border-dashed border-border bg-background/60 px-3 py-2.5 text-xs font-medium text-muted-foreground shadow-sm transition hover:border-primary/40 hover:bg-primary/5 hover:text-foreground"
-                  >
-                    <span className="flex items-center gap-2">
-                      <FolderOpen className="h-4 w-4 text-primary" />
-                      Ver mais {excedente} {excedente === 1 ? "proposta" : "propostas"}
-                    </span>
-                    <Search className="h-3.5 w-3.5 opacity-70 group-hover:opacity-100" />
-                  </button>
-                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setBuscaPasta("");
+                    setPastaAberta(col.destino);
+                  }}
+                  className="group flex shrink-0 items-center justify-between gap-2 rounded-xl border border-dashed border-border bg-background/60 px-3 py-2.5 text-xs font-medium text-muted-foreground shadow-sm transition hover:border-primary/40 hover:bg-primary/5 hover:text-foreground"
+                >
+                  <span className="flex items-center gap-2">
+                    <FolderOpen className="h-4 w-4 text-primary" />
+                    {excedente > 0
+                      ? `Ver mais ${excedente} ${excedente === 1 ? "proposta" : "propostas"}`
+                      : cards.length > 0
+                        ? "Abrir e pesquisar"
+                        : "Pesquisar nesta etapa"}
+                  </span>
+                  <Search className="h-3.5 w-3.5 opacity-70 group-hover:opacity-100" />
+                </button>
+
                 {visiveis.map((c) => renderCard(c, cfg))}
                 {cards.length === 0 && (
                   <p className="px-1 py-6 text-center text-xs text-muted-foreground">Vazio</p>
