@@ -42,6 +42,8 @@ import {
 /** Permissão exigida por um item (chave = `${modulo}:view`). */
 export interface NavPerm {
   modulo: string;
+  /** Módulos legados equivalentes (mantêm acesso após desmembramentos). */
+  equivalentes?: string[];
 }
 
 export interface NavItem {
@@ -462,13 +464,13 @@ export const navInterno: NavGroup[] = [
         label: "Pedidos de Compras",
         icon: ShoppingCart,
         to: "/admin/compras/pedidos",
-        perm: { modulo: "admin.compras.pedidos" },
+        perm: { modulo: "admin.compras.pedidos", equivalentes: ["admin.compras"] },
       },
       {
         label: "Aprovação de Compras",
         icon: ShoppingCart,
         to: "/admin/compras/aprovacoes",
-        perm: { modulo: "admin.compras.aprovacoes" },
+        perm: { modulo: "admin.compras.aprovacoes", equivalentes: ["admin.compras"] },
       },
     ],
   },
