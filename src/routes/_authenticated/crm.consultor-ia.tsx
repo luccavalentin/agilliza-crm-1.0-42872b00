@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/dialog";
 import { Markdown } from "@/components/ui/markdown";
 import { assertModuloPermitido } from "@/lib/route-guards";
+import { BasePerguntasRespondidas } from "@/components/consultor-ia/base-perguntas";
 import { supabase } from "@/integrations/supabase/client";
 import {
   avaliarRespostaConsultor,
@@ -193,7 +194,7 @@ function ConsultorIaPage() {
   }
 
   return (
-    <div className="flex h-full flex-col gap-4">
+    <div className="flex min-h-full flex-col gap-4">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="flex items-center gap-2 text-xl font-semibold">
@@ -216,7 +217,7 @@ function ConsultorIaPage() {
         </Button>
       </header>
 
-      <div className="grid min-h-0 flex-1 gap-4 lg:grid-cols-[260px_minmax(0,1fr)]">
+      <div className="grid min-h-[520px] flex-1 gap-4 lg:grid-cols-[260px_minmax(0,1fr)]">
         <aside className="hidden min-h-0 flex-col rounded-xl border border-border/60 bg-card lg:flex">
           <p className="border-b border-border/60 px-3 py-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
             Conversas
@@ -407,6 +408,14 @@ function ConsultorIaPage() {
           </div>
         </section>
       </div>
+
+      <BasePerguntasRespondidas
+        onReperguntar={(p) => {
+          setConversaId(null);
+          enviar(p);
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }}
+      />
 
       <Dialog open={!!fonteAberta} onOpenChange={(o) => !o && setFonteAberta(null)}>
         <DialogContent className="max-h-[80vh] overflow-y-auto sm:max-w-2xl">
