@@ -7099,6 +7099,10 @@ export type Database = {
         Returns: Json
       }
       portal_cliente_sessao: { Args: { _cid: string }; Returns: Json }
+      portal_editar_mensagem: {
+        Args: { _cid: string; _mensagem_id: string; _texto: string }
+        Returns: Json
+      }
       portal_enviar_mensagem: {
         Args: {
           _anexo: string
@@ -7111,6 +7115,10 @@ export type Database = {
         Returns: Json
       }
       portal_excluir_app_cliente: { Args: { _cid: string }; Returns: Json }
+      portal_excluir_mensagem: {
+        Args: { _cid: string; _mensagem_id: string }
+        Returns: Json
+      }
       portal_listar_atendentes: { Args: { _cid: string }; Returns: Json }
       portal_listar_mensagens: {
         Args: { _atendente: string; _cid: string }
