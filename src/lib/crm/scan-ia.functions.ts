@@ -774,13 +774,31 @@ export const criarClienteParaLeitura = createServerFn({ method: "POST" })
 
     const { data: existente } = await supabase
       .from("clientes")
-      .select("id")
+      .select("id, deleted_at")
       .eq("correspondente_id", corr)
       .eq("documento", documento)
       .maybeSingle();
 
     let clienteId = existente?.id ?? null;
     let reaproveitado = !!existente;
+
+    // Se o cadastro com esse documento estava excluído (soft delete), ele é
+    // restaurado — caso contrário o "cliente criado" pela IA ficaria invisível
+    // no CRM, que filtra registros excluídos.
+    if (existente?.id && existente.deleted_at) {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      await supabaseAdmin
+        .from("clientes")
+        .update({
+          deleted_at: null,
+          deleted_by: null,
+          deleted_motivo: null,
+          ativo: true,
+          nome: data.nome.trim(),
+          responsavel_id: userId,
+        })
+        .eq("id", existente.id);
+    }
 
     if (!clienteId) {
       const { data: novo, error } = await supabase
