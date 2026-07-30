@@ -6,6 +6,7 @@
  * constar na aba Documentos do cliente (com tipo, versão e trilha).
  */
 import { rotuloTipo } from "./scan-ia-tipos";
+import { TIPOS_DOCUMENTO_POR_CATEGORIA } from "./documento-tipos";
 
 type Categoria =
   | "comprador"
@@ -15,10 +16,33 @@ type Categoria =
   | "imovel"
   | "outros";
 
-const CATEGORIA_POR_TIPO: Record<string, Categoria> = {
-  matricula_imovel: "imovel",
-  iptu: "imovel",
+const T = TIPOS_DOCUMENTO_POR_CATEGORIA;
+
+/**
+ * Mapa Scan IA → item do checklist do cliente.
+ * `tipo` precisa ser EXATAMENTE o rótulo usado no checklist, senão o item
+ * não aparece como "enviado" nem fica marcado.
+ */
+const DESTINO_CHECKLIST: Record<
+  string,
+  { categoria: Categoria; tipo: string; itemKey?: string }
+> = {
+  rg: { categoria: "comprador", tipo: T.comprador[0], itemKey: "c_doc_id" },
+  cnh: { categoria: "comprador", tipo: T.comprador[0], itemKey: "c_doc_id" },
+  cpf: { categoria: "comprador", tipo: T.comprador[0], itemKey: "c_doc_id" },
+  comprovante_residencia: {
+    categoria: "comprador",
+    tipo: T.comprador[1],
+    itemKey: "c_comp_end",
+  },
+  certidao_casamento: { categoria: "comprador", tipo: T.comprador[2], itemKey: "c_cert_ec" },
+  certidao_nascimento: { categoria: "comprador", tipo: T.comprador[2], itemKey: "c_cert_ec" },
+  comprovante_renda: { categoria: "comprador", tipo: T.comprador[4], itemKey: "fgts_irpf" },
+  extrato_bancario: { categoria: "comprador", tipo: T.comprador[6], itemKey: "fgts_extrato" },
+  matricula_imovel: { categoria: "imovel", tipo: T.imovel[0], itemKey: "i_matricula" },
+  iptu: { categoria: "imovel", tipo: T.imovel[1], itemKey: "i_iptu" },
 };
+
 
 export interface ResultadoArquivamento {
   arquivado: boolean;
@@ -70,8 +94,9 @@ export async function arquivarLeituraNaDocumentacao(params: {
       .upload(path, buffer, { contentType, upsert: true });
     if (upErr) throw upErr;
 
-    const categoria: Categoria = CATEGORIA_POR_TIPO[tipoDocumento ?? ""] ?? "comprador";
-    const tipo = tipoDocumento ?? "outro";
+    const destino = DESTINO_CHECKLIST[tipoDocumento ?? ""];
+    const categoria: Categoria = destino?.categoria ?? "comprador";
+    const tipo = destino?.tipo ?? rotuloTipo(tipoDocumento);
 
     const { count } = await supabase
       .from("cliente_documentos")
@@ -92,12 +117,33 @@ export async function arquivarLeituraNaDocumentacao(params: {
         mime_type: contentType,
         tamanho_bytes: buffer.byteLength,
         versao: (count ?? 0) + 1,
-        status: "recebido",
+        status: "aprovado",
+        aprovado_por: userId,
+        aprovado_em: new Date().toISOString(),
         enviado_por: userId,
       })
       .select("id")
       .single();
     if (insErr) throw insErr;
+
+    // Marca o item correspondente no checklist do cliente (risca o item).
+    if (destino?.itemKey) {
+      const { data: cli } = await supabase
+        .from("clientes")
+        .select("documentos_checklist")
+        .eq("id", clienteId)
+        .maybeSingle();
+      const atual =
+        cli?.documentos_checklist && typeof cli.documentos_checklist === "object"
+          ? (cli.documentos_checklist as Record<string, any>)
+          : {};
+      if (atual[destino.itemKey] !== true) {
+        await supabase
+          .from("clientes")
+          .update({ documentos_checklist: { ...atual, [destino.itemKey]: true } })
+          .eq("id", clienteId);
+      }
+    }
 
     await supabase.from("cliente_historico").insert({
       cliente_id: clienteId,
@@ -105,6 +151,7 @@ export async function arquivarLeituraNaDocumentacao(params: {
       descricao: `Documento do Scan IA arquivado na documentação: ${nomeArquivo}`,
       ator_id: userId,
     });
+
 
     return { arquivado: true, ja_existia: false, documento_id: inserido.id, erro: null };
   } catch (e: any) {
