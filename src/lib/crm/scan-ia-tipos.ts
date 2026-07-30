@@ -299,7 +299,7 @@ export type DestinoCampo =
       coluna: string;
       formato?: "texto" | "numero" | "data" | "estado_civil" | "regime_casamento" | "documento";
     }
-  | { tipo: "matricula"; chave: string }
+  | { tipo: "matricula"; chave: string; formato?: "texto" | "data" | "booleano" }
   | { tipo: "nenhum" };
 
 /** Para onde cada campo extraído pode ir na tabela `clientes`. */
