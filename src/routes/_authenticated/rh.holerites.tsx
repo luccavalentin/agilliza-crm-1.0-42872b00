@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Receipt, Upload, Download, FileDown, Sparkles, Eye, RefreshCw } from "lucide-react";
+import { Receipt, Upload, Download, FileDown, Sparkles, Eye, RefreshCw, Pencil, Trash2 } from "lucide-react";
 import { assertModuloPermitido } from "@/lib/route-guards";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -37,8 +37,10 @@ import { FuncionarioPicker } from "@/components/rh/funcionario-picker";
 import { YearPicker } from "@/components/rh/year-picker";
 import {
   anexarHolerite,
+  excluirHolerite,
   gerarUrlAssinada,
   listarHolerites,
+  type RhHolerite,
 } from "@/lib/rh/submodulos.functions";
 import { listarItensFolha, listarAjustes } from "@/lib/rh/folha.functions";
 import { gerarHoleritePdf } from "@/lib/rh/holerite-pdf";
@@ -63,6 +65,9 @@ function Pagina() {
   const fnUrl = useServerFn(gerarUrlAssinada);
   const fnListarItens = useServerFn(listarItensFolha);
   const fnListarAjustes = useServerFn(listarAjustes);
+  const fnExcluir = useServerFn(excluirHolerite);
+
+  const [emEdicao, setEmEdicao] = useState<RhHolerite | null>(null);
 
 
 
@@ -193,6 +198,19 @@ function Pagina() {
     onError: (e: any) => toast.error(e?.message ?? "Falha ao recalcular."),
   });
 
+
+  const excluir = useMutation({
+    mutationFn: async (row: RhHolerite) => {
+      await supabase.storage.from("rh-documentos").remove([row.arquivo_path]);
+      await fnExcluir({ data: { id: row.id } });
+    },
+    onSuccess: () => {
+      toast.success("Holerite excluído.");
+      qc.invalidateQueries({ queryKey: ["rh-holerites"] });
+      qc.invalidateQueries({ queryKey: ["rh-ficha-hol"] });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Falha ao excluir."),
+  });
 
   // Gera holerites em PDF para toda uma competência já fechada
   const [openGerar, setOpenGerar] = useState(false);
@@ -452,6 +470,14 @@ function Pagina() {
                     <TableCell>{h.valor_liquido !== null ? formatBRL(h.valor_liquido) : "—"}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          title="Editar holerite"
+                          onClick={() => setEmEdicao(h)}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
                         <Button size="icon" variant="ghost" title="Visualizar" onClick={() => abrir(h.arquivo_path)}>
                           <Eye className="h-4 w-4" />
                         </Button>
@@ -466,6 +492,20 @@ function Pagina() {
                           disabled={regerar.isPending}
                         >
                           <RefreshCw className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          title="Excluir holerite"
+                          className="text-destructive"
+                          onClick={() => {
+                            if (confirm("Excluir este holerite? O PDF também será removido.")) {
+                              excluir.mutate(h);
+                            }
+                          }}
+                          disabled={excluir.isPending}
+                        >
+                          <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
                     </TableCell>
@@ -484,6 +524,24 @@ function Pagina() {
           </div>
         </CardContent>
       </Card>
+
+      {emEdicao && (
+        <HoleriteBuilderDialog
+          key={emEdicao.id}
+          trigger={null}
+          open
+          onOpenChange={(v) => {
+            if (!v) setEmEdicao(null);
+          }}
+          edicao={{
+            id: emEdicao.id,
+            funcionario_id: emEdicao.funcionario_id,
+            mes: emEdicao.mes,
+            ano: emEdicao.ano,
+            entrada: emEdicao.entrada,
+          }}
+        />
+      )}
     </div>
   );
 }
