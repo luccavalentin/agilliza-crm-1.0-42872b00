@@ -336,8 +336,18 @@ export const atualizarFuncionario = createServerFn({ method: "POST" })
       email_corporativo: rest.email_corporativo || null,
     };
 
-    const { error } = await supabase.from("rh_funcionarios").update(payload).eq("id", id);
+    const { data: atualizados, error } = await supabase
+      .from("rh_funcionarios")
+      .update(payload)
+      .eq("id", id)
+      .select("id");
     if (error) throw new Error(error.message);
+    if (!atualizados || atualizados.length === 0) {
+      throw new Error(
+        "Você não tem permissão para editar este funcionário (permissão 'RH · Funcionários · editar').",
+      );
+    }
+
 
     const { registrarAuditoria } = await import("@/lib/admin/audit.server");
     await registrarAuditoria({
