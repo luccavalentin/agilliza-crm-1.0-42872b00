@@ -1,13 +1,27 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import {
+  CAMPOS_ESPERADOS,
+  CAMPOS_POR_TIPO,
+  TIPOS_DOCUMENTO,
+  camposEsperadosDoTipo,
+  converterValor,
+  destinoDoCampo,
+  ehTipoConhecido,
+  faixaConfianca,
+  rotuloCampo,
+} from "./scan-ia-tipos";
 
 export interface LeituraLista {
   id: string;
   tipo_documento: string | null;
+  tipo_documento_sugerido: string | null;
+  tipo_confirmado: boolean;
   status: string;
   erro: string | null;
   cliente_id: string | null;
+  cliente_nome: string | null;
   proposta_id: string | null;
   created_at: string;
   total_campos: number;
@@ -26,6 +40,11 @@ export interface LeituraDetalhe {
   id: string;
   arquivo_url: string;
   tipo_documento: string | null;
+  tipo_documento_sugerido: string | null;
+  tipo_confirmado: boolean;
+  cliente_id: string | null;
+  cliente_nome: string | null;
+  cliente_documento: string | null;
   status: string;
   erro: string | null;
   created_at: string;
@@ -34,6 +53,7 @@ export interface LeituraDetalhe {
   criador_id: string | null;
   criador_nome: string | null;
 }
+
 
 async function correspondenteDoUsuario(
   supabase: { from: (t: string) => any },
