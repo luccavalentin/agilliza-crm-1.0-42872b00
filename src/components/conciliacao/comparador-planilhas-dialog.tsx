@@ -208,6 +208,7 @@ export function ComparadorPlanilhasDialog({
       }
       setItens(resultado);
       setAba("todos");
+      setEtapas([]);
       toast.success(
         comSistema
           ? "Planilhas cruzadas entre si e contra o sistema."
@@ -324,6 +325,7 @@ export function ComparadorPlanilhasDialog({
         `${controle.arquivos.length} planilha(s) do meu controle`,
         `${banco.arquivos.length} relatório(s) de banco`,
         `Visão: ${aba === "todos" ? "Todos" : RESULTADO_COMPARATIVO_LABEL[aba]}`,
+        `Etapas: ${etapas.length ? etapas.map((e) => ETAPA_COMPARATIVO_LABEL[e]).join(", ") : "Todas"}`,
         `${alvo.length} registros`,
       ],
       kpis: [
