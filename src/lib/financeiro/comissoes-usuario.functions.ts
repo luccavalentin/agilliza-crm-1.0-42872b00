@@ -224,6 +224,20 @@ export const excluirRegraComissaoUsuario = createServerFn({ method: "POST" })
 
 // ---------- LANÇAMENTOS ----------
 
+export const recalcularComissoesUsuario = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const corr = await corrDoUsuario(supabase, userId);
+    const { data, error } = await supabase.rpc(
+      "recalcular_comissoes_usuario_correspondente" as never,
+      { _corr: corr } as never,
+    );
+    if (error) throw new Error(error.message);
+    return { criados: Number(data ?? 0) };
+  });
+
+
 export const listarComissoesUsuario = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
