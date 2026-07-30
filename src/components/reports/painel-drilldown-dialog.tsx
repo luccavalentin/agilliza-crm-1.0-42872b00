@@ -54,9 +54,9 @@ export function PainelDrilldownDialog({
           draggable={false}
           className="pointer-events-none absolute left-1/2 top-1/2 h-[320px] w-auto -translate-x-1/2 -translate-y-1/2 select-none opacity-[0.035] dark:opacity-[0.06]"
         />
-        <DialogHeader className="relative shrink-0 space-y-1 border-b border-border/60 bg-gradient-to-br from-primary/[0.06] via-background to-background px-7 pt-6 pb-5">
+        <DialogHeader className="relative shrink-0 space-y-1 border-b border-border/60 bg-gradient-to-br from-primary/[0.06] via-background to-background px-4 pt-5 pb-4 sm:px-7 sm:pt-6 sm:pb-5">
           <span className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
-          <DialogTitle className="text-[15px] font-semibold tracking-tight text-foreground">
+          <DialogTitle className="pr-8 text-sm font-semibold tracking-tight text-foreground sm:text-[15px]">
             {data?.titulo ?? contexto?.metrica ?? "Detalhamento"}
           </DialogTitle>
           {(() => {
@@ -66,27 +66,58 @@ export function PainelDrilldownDialog({
             const descricao = ehCalculo(data?.descricao) ? undefined : data?.descricao;
             if (!subtitulo && !descricao) return null;
             return (
-              <DialogDescription className="text-[13px] leading-relaxed text-muted-foreground">
+              <DialogDescription className="text-xs leading-relaxed text-muted-foreground sm:text-[13px]">
                 {subtitulo}
                 {subtitulo && descricao ? " · " : ""}
                 {descricao}
               </DialogDescription>
             );
           })()}
-          {(data?.valor || contexto?.valorAtual) && (
-            <div className="mt-3 flex items-baseline gap-2.5">
-              <span className="font-mono text-[34px] font-semibold leading-none tabular-nums text-foreground">
-                {data?.valor ?? contexto?.valorAtual}
-              </span>
-              {data?.total && data.total !== data.valor && (
-                <span className="text-xs text-muted-foreground">
-                  Volume total <span className="font-mono font-medium text-foreground/80">{data.total}</span>
-                </span>
-              )}
+          {data?.formula && data.formula.length > 0 ? (
+            <div className="mt-3 flex flex-wrap items-stretch gap-2">
+              {data.formula.map((f, i) => {
+                const tone =
+                  f.tone === "success"
+                    ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
+                    : f.tone === "warning"
+                      ? "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400"
+                      : f.tone === "danger"
+                        ? "border-destructive/30 bg-destructive/10 text-destructive"
+                        : f.tone === "brand"
+                          ? "border-primary/30 bg-primary/10 text-primary"
+                          : "border-border/60 bg-muted/50 text-foreground";
+                return (
+                  <div
+                    key={`${f.label}-${i}`}
+                    className={`min-w-0 flex-1 basis-[130px] rounded-xl border px-3 py-2 ${tone}`}
+                  >
+                    <p className="truncate text-[10px] font-semibold uppercase tracking-wide opacity-80">
+                      {f.label}
+                    </p>
+                    <p className="font-mono text-xl font-semibold leading-tight tabular-nums sm:text-2xl">
+                      {f.valor}
+                    </p>
+                  </div>
+                );
+              })}
             </div>
+          ) : (
+            (data?.valor || contexto?.valorAtual) && (
+              <div className="mt-3 flex flex-wrap items-baseline gap-2.5">
+                <span className="font-mono text-[26px] font-semibold leading-none tabular-nums text-foreground sm:text-[34px]">
+                  {data?.valor ?? contexto?.valorAtual}
+                </span>
+                {data?.total && data.total !== data.valor && (
+                  <span className="text-xs text-muted-foreground">
+                    Volume total{" "}
+                    <span className="font-mono font-medium text-foreground/80">{data.total}</span>
+                  </span>
+                )}
+              </div>
+            )
           )}
-
         </DialogHeader>
+
 
         <ScrollArea className="min-h-0 flex-1">
           <div className="px-3 py-2">
