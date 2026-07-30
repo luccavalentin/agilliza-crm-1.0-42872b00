@@ -645,6 +645,40 @@ export function ThreadChat({
                         >
                           Responder
                         </button>
+                        {doCliente && !soAnexo && m.mensagem?.trim() ? (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setRespondendo(null);
+                              setEditando({
+                                id: m.id,
+                                original: (m.mensagem ?? "").slice(0, 140),
+                              });
+                              setTexto(m.mensagem ?? "");
+                            }}
+                            className="rounded-full px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground transition hover:text-primary"
+                          >
+                            Editar
+                          </button>
+                        ) : null}
+                        {doCliente ? (
+                          <button
+                            type="button"
+                            disabled={excluirMsg.isPending}
+                            onClick={() => {
+                              if (!window.confirm("Excluir esta mensagem para todos?")) return;
+                              if (editando?.id === m.id) {
+                                setEditando(null);
+                                setTexto("");
+                              }
+                              excluirMsg.mutate(m.id);
+                            }}
+                            className="rounded-full px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground transition hover:text-destructive"
+                          >
+                            Excluir
+                          </button>
+                        ) : null}
+
                       </div>
                     ) : null}
                     <span className="mt-0.5 px-1 text-[10px] text-muted-foreground">
