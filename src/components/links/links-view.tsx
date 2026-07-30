@@ -108,7 +108,7 @@ export function LinksView() {
   });
 
   const totalLinks = (data ?? []).length;
-  const totalCategorias = new Set((data ?? []).map((l) => l.categoria).filter(Boolean)).size;
+  const totalCategorias = ((categorias ?? []) as LinkCategoria[]).length;
 
   return (
     <div className="mx-auto w-full max-w-none space-y-5 p-4 md:p-6">
@@ -118,10 +118,16 @@ export function LinksView() {
         titulo="Links úteis"
         descricao="Repositório central de links. Busque e clique para abrir em nova aba."
         acoes={
-          <Button onClick={() => setCriando(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Novo link
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="outline" onClick={() => setGerenciandoCats(true)}>
+              <Tags className="mr-2 h-4 w-4" />
+              Categorias
+            </Button>
+            <Button onClick={() => setCriando(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Novo link
+            </Button>
+          </div>
         }
       />
 
@@ -132,15 +138,42 @@ export function LinksView() {
           icon={<LinkIcon className="h-5 w-5 text-primary" />}
           tint="bg-primary/10 text-primary"
         />
-        <OpStat
-          label="Categorias"
-          value={totalCategorias}
-          icon={<Search className="h-5 w-5 text-primary" />}
-          tint="bg-primary/10 text-primary"
-        />
+        <button type="button" onClick={() => setGerenciandoCats(true)} className="text-left">
+          <OpStat
+            label="Categorias"
+            value={totalCategorias}
+            icon={<Tags className="h-5 w-5 text-primary" />}
+            tint="bg-primary/10 text-primary"
+          />
+        </button>
       </div>
 
+      {((categorias ?? []) as LinkCategoria[]).length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {((categorias ?? []) as LinkCategoria[]).map((c) => {
+            const Icon = iconeCategoria(c.icone);
+            const ativo = busca.trim().toLowerCase() === c.nome.toLowerCase();
+            return (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => setBusca(ativo ? "" : c.nome)}
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium ring-1 transition-all hover:scale-[1.03]",
+                  classeCategoria(c.cor),
+                  ativo && "ring-2",
+                )}
+              >
+                <Icon className="h-3.5 w-3.5" />
+                {c.nome}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       <div className="relative">
+
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           value={busca}
