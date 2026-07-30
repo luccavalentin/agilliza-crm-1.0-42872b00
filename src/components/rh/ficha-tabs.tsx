@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Link } from "@tanstack/react-router";
-import { Calculator, Download, ExternalLink, Eye, Trash2, Upload } from "lucide-react";
+import { Calculator, Download, ExternalLink, Eye, Pencil, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { HoleriteBuilderDialog } from "@/components/rh/holerite-builder-dialog";
