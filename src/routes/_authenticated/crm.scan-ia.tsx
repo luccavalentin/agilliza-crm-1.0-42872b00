@@ -5,8 +5,14 @@ import { toast } from "sonner";
 import { ScanLine, UploadCloud, FileText, RefreshCw, ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -19,6 +25,11 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { assertModuloPermitido } from "@/lib/route-guards";
 import { ConfirmDelete } from "@/components/shared/confirm-delete";
+import {
+  TIPOS_DOCUMENTO,
+  TIPO_DOCUMENTO_LABEL,
+  rotuloTipo,
+} from "@/lib/crm/scan-ia-tipos";
 import {
   contextoScanIa,
   listarLeituras,
@@ -38,6 +49,7 @@ const STATUS_TONE: Record<string, "default" | "secondary" | "destructive" | "out
   processando: "outline",
   concluida: "default",
   revisada: "default",
+  aplicada: "default",
   erro: "destructive",
 };
 
@@ -126,13 +138,23 @@ function Pagina() {
 
       <div className="space-y-3 rounded-lg border border-border bg-card p-4">
         <div className="grid gap-2 sm:max-w-sm">
-          <Label htmlFor="tipo-doc">Tipo de documento</Label>
-          <Input
-            id="tipo-doc"
-            placeholder="Ex.: RG, CNH, comprovante de renda…"
-            value={tipo}
-            onChange={(e) => setTipo(e.target.value)}
-          />
+          <Label htmlFor="tipo-doc">Tipo de documento (opcional)</Label>
+          <Select value={tipo} onValueChange={setTipo}>
+            <SelectTrigger id="tipo-doc">
+              <SelectValue placeholder="Deixe em branco para a IA detectar" />
+            </SelectTrigger>
+            <SelectContent>
+              {TIPOS_DOCUMENTO.map((t) => (
+                <SelectItem key={t} value={t}>
+                  {TIPO_DOCUMENTO_LABEL[t]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground">
+            A IA classifica o documento sozinha; o tipo final é sempre confirmado por você na tela
+            de revisão.
+          </p>
         </div>
 
         <button
@@ -205,7 +227,15 @@ function Pagina() {
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-foreground">
-                      {l.tipo_documento ?? "—"}
+                      {rotuloTipo(l.tipo_documento ?? l.tipo_documento_sugerido)}
+                      {!l.tipo_confirmado ? (
+                        <span className="ml-1 text-xs font-normal text-muted-foreground">
+                          (sugerido pela IA)
+                        </span>
+                      ) : null}
+                    </p>
+                    <p className="truncate text-xs text-muted-foreground">
+                      {l.cliente_nome ?? "Sem cliente vinculado"}
                     </p>
                     <p className="mt-0.5 text-xs text-muted-foreground">
                       {new Date(l.created_at).toLocaleString("pt-BR")}
@@ -252,6 +282,7 @@ function Pagina() {
             <TableHeader>
               <TableRow>
                 <TableHead>Documento</TableHead>
+                <TableHead>Cliente</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-center">Campos</TableHead>
                 <TableHead>Enviado por</TableHead>
@@ -262,7 +293,17 @@ function Pagina() {
             <TableBody>
               {leituras.data!.map((l) => (
                 <TableRow key={l.id}>
-                  <TableCell className="font-medium">{l.tipo_documento ?? "—"}</TableCell>
+                  <TableCell className="font-medium">
+                    {rotuloTipo(l.tipo_documento ?? l.tipo_documento_sugerido)}
+                    {!l.tipo_confirmado ? (
+                      <span className="ml-1 text-xs font-normal text-muted-foreground">
+                        (sugerido)
+                      </span>
+                    ) : null}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {l.cliente_nome ?? "—"}
+                  </TableCell>
                   <TableCell>
                     <StatusBadge status={l.status} />
                     {l.status === "erro" && l.erro ? (
