@@ -164,21 +164,22 @@ export function PainelDrilldownDialog({
                         </div>
                         <div className="flex flex-col items-end gap-0.5">
                           {it.valor && (
-                            <span className="font-mono text-sm font-semibold tabular-nums text-foreground">
+                            <span className="font-mono text-xs font-semibold tabular-nums text-foreground sm:text-sm">
                               {it.valor}
                             </span>
                           )}
                           {it.data && (
-                            <span className="text-[10.5px] font-medium uppercase tracking-wider tabular-nums text-muted-foreground/80">
+                            <span className="text-[10px] font-medium uppercase tracking-wider tabular-nums text-muted-foreground/80 sm:text-[10.5px]">
                               {it.data}
                             </span>
                           )}
                         </div>
                         {it.to ? (
-                          <ChevronRight className="h-4 w-4 text-muted-foreground/30 transition-all duration-300 group-hover:translate-x-1 group-hover:text-primary" />
+                          <ChevronRight className="hidden h-4 w-4 text-muted-foreground/30 transition-all duration-300 group-hover:translate-x-1 group-hover:text-primary sm:block" />
                         ) : (
-                          <span className="w-4" />
+                          <span className="hidden w-4 sm:block" />
                         )}
+
                       </div>
                     </div>
                   );
