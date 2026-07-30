@@ -391,6 +391,8 @@ export interface UsuarioComissionavel {
   nome: string | null;
   email: string | null;
   tipo_pessoa: string | null;
+  /** Papéis (roles) do usuário — base para inferir o tipo de vínculo. */
+  papeis: string[];
 }
 
 export const listarUsuariosComissionaveis = createServerFn({ method: "GET" })
@@ -404,8 +406,30 @@ export const listarUsuariosComissionaveis = createServerFn({ method: "GET" })
       .eq("correspondente_id", corr)
       .order("nome", { ascending: true });
     if (error) throw new Error(error.message);
-    return (data ?? []) as UsuarioComissionavel[];
+
+    const ids = (data ?? []).map((p: any) => p.id);
+    const papeis = new Map<string, string[]>();
+    if (ids.length) {
+      const { data: roles } = await supabase
+        .from("user_roles")
+        .select("user_id, role")
+        .in("user_id", ids);
+      (roles ?? []).forEach((r: any) => {
+        const arr = papeis.get(r.user_id) ?? [];
+        arr.push(String(r.role));
+        papeis.set(r.user_id, arr);
+      });
+    }
+
+    return (data ?? []).map((p: any) => ({
+      id: p.id,
+      nome: p.nome,
+      email: p.email,
+      tipo_pessoa: p.tipo_pessoa,
+      papeis: papeis.get(p.id) ?? [],
+    }));
   });
+
 
 // Bancos disponíveis (para o filtro do formulário)
 export const listarBancosComissao = createServerFn({ method: "GET" })
