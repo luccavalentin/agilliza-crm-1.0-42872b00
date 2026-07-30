@@ -559,7 +559,11 @@ export const processarLeitura = createServerFn({ method: "POST" })
         .from("scan_ia_leituras")
         .update({
           status: "concluida",
-          erro: null,
+          erro:
+            campos.length === 0
+              ? "A IA não conseguiu extrair campos deste documento. Verifique a qualidade da digitalização ou tente reprocessar."
+              : null,
+
           tipo_documento_sugerido: tipoSugerido,
         })
         .eq("id", data.id);
