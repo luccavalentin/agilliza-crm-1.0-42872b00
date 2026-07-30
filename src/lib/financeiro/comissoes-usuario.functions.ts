@@ -306,9 +306,11 @@ export const listarComissoesUsuario = createServerFn({ method: "GET" })
 
     return (rows ?? []).map((r: any) => ({
       id: r.id,
-      proposta_id: r.proposta_id,
+      proposta_id: r.proposta_id ?? r.simulacao_id,
+      simulacao_id: r.simulacao_id ?? null,
       numero_proposta: r.numero_proposta,
-      nome_cliente: props.get(r.proposta_id) ?? null,
+      nome_cliente: props.get(r.proposta_id ?? r.simulacao_id) ?? null,
+
       usuario_id: r.usuario_id,
       usuario_nome: nomes.get(r.usuario_id) ?? null,
       tipo_vinculo: r.tipo_vinculo,
