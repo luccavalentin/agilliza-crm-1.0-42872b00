@@ -512,9 +512,17 @@ export function FichaHolerites({ funcionarioId }: { funcionarioId: string }) {
       titulo="Holerites"
       atalho={{ to: "/rh/holerites", label: "Ver todos" }}
       acao={
+        <div className="flex flex-wrap gap-2">
+        <HoleriteBuilderDialog
+          trigger={
+            <Button size="sm">
+              <Calculator className="mr-2 h-3.5 w-3.5" /> Gerar holerite
+            </Button>
+          }
+        />
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button size="sm">
+            <Button size="sm" variant="outline">
               <Upload className="mr-2 h-3.5 w-3.5" /> Anexar holerite
             </Button>
           </DialogTrigger>
@@ -573,6 +581,7 @@ export function FichaHolerites({ funcionarioId }: { funcionarioId: string }) {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+        </div>
       }
     >
       <Table>
