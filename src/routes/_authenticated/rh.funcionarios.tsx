@@ -52,7 +52,23 @@ function Pagina() {
       }),
   });
 
+  const qc = useQueryClient();
+  const fnExcluir = useServerFn(excluirFuncionario);
+  const [paraExcluir, setParaExcluir] = useState<{ id: string; nome: string } | null>(null);
+
+  const excluir = useMutation({
+    mutationFn: (id: string) => fnExcluir({ data: { id } }),
+    onSuccess: () => {
+      toast.success("Funcionário excluído.");
+      setParaExcluir(null);
+      qc.invalidateQueries({ queryKey: ["rh-funcionarios"] });
+      qc.invalidateQueries({ queryKey: ["rh-kpis"] });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Falha ao excluir funcionário."),
+  });
+
   const total = data?.length ?? 0;
+
 
   return (
     <div className="mx-auto w-full max-w-[1600px] space-y-5 p-3 sm:p-4 md:p-6">
