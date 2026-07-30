@@ -85,6 +85,12 @@ export const navInterno: NavGroup[] = [
       },
       { label: "Scan IA", icon: ScanLine, to: "/crm/scan-ia", perm: { modulo: "crm.scan_ia" } },
       {
+        label: "Consultor IA",
+        icon: Sparkles,
+        to: "/crm/consultor-ia",
+        perm: { modulo: "crm.scan_ia" },
+      },
+      {
         label: "Documentos Gerais",
         icon: FolderTree,
         to: "/crm/documentos",
