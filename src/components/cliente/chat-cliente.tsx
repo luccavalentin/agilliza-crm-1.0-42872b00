@@ -665,7 +665,27 @@ export function ThreadChat({
 
 
 
-      {respondendo ? (
+      {editando ? (
+        <div className="flex shrink-0 items-start gap-2 border-t border-border/60 bg-amber-500/10 px-3 py-2 text-xs">
+          <div className="min-w-0 flex-1 border-l-2 border-amber-500 pl-2">
+            <span className="block font-semibold text-amber-700 dark:text-amber-400">
+              Editando mensagem
+            </span>
+            <span className="line-clamp-2 text-muted-foreground">{editando.original}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setEditando(null);
+              setTexto("");
+            }}
+            className="shrink-0 text-muted-foreground hover:text-foreground"
+            aria-label="Cancelar edição"
+          >
+            ✕
+          </button>
+        </div>
+      ) : respondendo ? (
         <div className="flex shrink-0 items-start gap-2 border-t border-border/60 bg-muted/40 px-3 py-2 text-xs">
           <div className="min-w-0 flex-1 border-l-2 border-primary/60 pl-2">
             <span className="block font-semibold text-primary">
@@ -683,6 +703,7 @@ export function ThreadChat({
           </button>
         </div>
       ) : null}
+
 
       <form
         className="flex shrink-0 items-end gap-1.5 border-t border-border/60 bg-background/95 p-2.5 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:p-3"
