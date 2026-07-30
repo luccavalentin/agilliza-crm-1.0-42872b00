@@ -166,30 +166,33 @@ function aplicarFiltrosPessoa(query: any, filtros: ReportFiltros, cols: string, 
   const temCol = (c: string) => `,${cols.replace(/\s/g, "")},`.includes(`,${c},`);
   const naoVazio = (a?: string[]) => Array.isArray(a) && a.length > 0;
 
-  if (temCol("analista_id") && naoVazio(filtros.analistas))
-    query = query.in("analista_id", filtros.analistas);
-  if (temCol("comercial_id") && naoVazio(filtros.comerciais))
-    query = query.in("comercial_id", filtros.comerciais);
+  /**
+   * Filtra por pessoa considerando a coluna específica E o responsável genérico.
+   * Muitos registros (principalmente simulações) só têm `usuario_responsavel_id`
+   * preenchido — filtrar apenas por `analista_id` devolvia zero resultados.
+   */
+  const filtrarPessoa = (colEspecifica: string, ids: string[]) => {
+    const colunas = [
+      ...(temCol(colEspecifica) ? [colEspecifica] : []),
+      ...(colResp && colResp !== colEspecifica ? [colResp] : []),
+    ];
+    if (colunas.length === 0 || ids.length === 0) return;
+    const lista = `(${ids.filter(Boolean).join(",")})`;
+    query = query.or(colunas.map((c) => `${c}.in.${lista}`).join(","));
+  };
+
+  if (naoVazio(filtros.analistas)) filtrarPessoa("analista_id", filtros.analistas!);
+  if (naoVazio(filtros.comerciais)) filtrarPessoa("comercial_id", filtros.comerciais!);
 
   const parceiros = [...(filtros.corretores ?? []), ...(filtros.imobiliarias ?? [])];
-  if (temCol("parceiro_id") && parceiros.length > 0)
-    query = query.in("parceiro_id", parceiros);
+  if (parceiros.length > 0) filtrarPessoa("parceiro_id", parceiros);
 
   if (temCol("nome_banco") && naoVazio(filtros.bancos))
     query = query.in("nome_banco", filtros.bancos);
 
-  // Fallback: relatórios que só têm a coluna de responsável recebem a união dos ids.
-  if (colResp && !temCol("analista_id") && !temCol("comercial_id") && !temCol("parceiro_id")) {
-    const uniao = [
-      ...(filtros.analistas ?? []),
-      ...(filtros.comerciais ?? []),
-      ...(filtros.corretores ?? []),
-      ...(filtros.imobiliarias ?? []),
-    ];
-    if (uniao.length > 0) query = query.in(colResp, uniao);
-  }
   return query;
 }
+
 
 const statusEhFiltroSimulacao = (status?: string) => status === "rascunho" || status === "simulacao";
 
