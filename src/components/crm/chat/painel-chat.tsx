@@ -17,7 +17,7 @@ type Props = {
  * atual) segue vindo do hook `useChatConversas`.
  */
 export function PainelChat({ hook, acoes }: Props) {
-  const { alvoAtual, selecionado, setSelecionado, verTodos } = hook;
+  const { alvoAtual, selecionado, setSelecionado } = hook;
 
   return (
     <div
@@ -37,10 +37,9 @@ export function PainelChat({ hook, acoes }: Props) {
       {alvoAtual ? (
         <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-2 overflow-hidden">
           {(() => {
-            // Só é leitura quando um gestor abre a thread de outro atendente
-            // (modo "Todos os atendentes"). Participantes convidados — que
-            // aparecem na lista mesmo fora do modo gestor — podem responder.
-            const somenteLeitura = !alvoAtual.minha && verTodos;
+            // Só é leitura quando a thread não é minha e eu não fui incluído
+            // como participante. Convidados conversam na mesma conversa.
+            const somenteLeitura = !alvoAtual.minha && !alvoAtual.participo;
             const podeGerir = !somenteLeitura && !!alvoAtual.atendente_id;
             return (
               <>

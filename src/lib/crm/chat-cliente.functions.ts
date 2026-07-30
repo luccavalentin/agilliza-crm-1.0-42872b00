@@ -103,6 +103,8 @@ export interface ConversaCliente {
   atendente_nome: string | null;
   /** true quando a conversa é do próprio usuário logado. */
   minha: boolean;
+  /** true quando o usuário foi convidado para a thread (pode responder). */
+  participo: boolean;
   nome: string;
   documento: string | null;
   etapa_codigo: string | null;
@@ -132,7 +134,7 @@ export const listarConversasCliente = createServerFn({ method: "GET" })
   .inputValidator((d?: { ver_todos?: boolean }) =>
     z.object({ ver_todos: z.boolean().optional() }).parse(d ?? {}),
   )
-  .handler(async ({ context }): Promise<ConversaCliente[]> => {
+  .handler(async ({ data, context }): Promise<ConversaCliente[]> => {
     const { supabase, userId } = context;
 
     const colunas =
@@ -195,7 +197,21 @@ export const listarConversasCliente = createServerFn({ method: "GET" })
     }
 
     // Mantém apenas conversas de clientes visíveis pelo escopo (RLS).
-    return threads
+
+    // Threads em que o usuário foi convidado (participante) — ele pode ler
+    // E responder na mesma conversa, sem abrir uma nova.
+    const participacoes = new Set<string>();
+    {
+      const { data: parts } = await supabase
+        .from("crm_chat_participantes")
+        .select("cliente_id, atendente_id")
+        .eq("usuario_id", userId);
+      for (const p of parts ?? [])
+        participacoes.add(`${(p as any).cliente_id}::${(p as any).atendente_id ?? ""}`);
+    }
+
+    // Mantém apenas conversas de clientes visíveis pelo escopo (RLS).
+    const lista = threads
       .filter((t) => info.has(t.cliente_id))
       .map((t) => {
         const c = info.get(t.cliente_id);
@@ -204,6 +220,7 @@ export const listarConversasCliente = createServerFn({ method: "GET" })
           atendente_id: t.atendente_id,
           atendente_nome: t.atendente_id ? (nomesAtend.get(t.atendente_id) ?? null) : null,
           minha: t.atendente_id === userId,
+          participo: participacoes.has(`${t.cliente_id}::${t.atendente_id ?? ""}`),
           nome: c?.nome ?? "Cliente",
           documento: c?.documento ?? null,
           etapa_codigo: c?.cliente_pipeline?.pipeline_stages?.codigo ?? null,
@@ -215,6 +232,29 @@ export const listarConversasCliente = createServerFn({ method: "GET" })
         };
       })
       .sort((a, b) => (a.ultima_em < b.ultima_em ? 1 : -1));
+
+    // Visão supervisora: mostra cada thread (por atendente) separadamente.
+    if (data.ver_todos && (await ehGestor(supabase, userId))) return lista;
+
+    // Visão normal: uma única conversa contínua por cliente. Prioriza a
+    // thread do próprio usuário; depois aquelas em que ele foi incluído;
+    // por fim a mais recente com acesso pelo escopo de dados.
+    const porCliente = new Map<string, ConversaCliente>();
+    for (const c of lista) {
+      const peso = c.minha ? 3 : c.participo ? 2 : 1;
+      const atual = porCliente.get(c.cliente_id);
+      const pesoAtual = atual ? (atual.minha ? 3 : atual.participo ? 2 : 1) : 0;
+      if (!atual || peso > pesoAtual) {
+        // Consolida não lidas do cliente em uma linha só.
+        const naoLidas = lista
+          .filter((x) => x.cliente_id === c.cliente_id)
+          .reduce((s, x) => s + x.nao_lidas, 0);
+        porCliente.set(c.cliente_id, { ...c, nao_lidas: naoLidas });
+      }
+    }
+    return Array.from(porCliente.values()).sort((a, b) =>
+      a.ultima_em < b.ultima_em ? 1 : -1,
+    );
   });
 
 export interface ClienteApp {

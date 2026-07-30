@@ -283,6 +283,7 @@ export function useChatConversas() {
         atendente_id: conversaAtual.atendente_id,
         atendente_nome: conversaAtual.atendente_nome,
         minha: conversaAtual.minha,
+        participo: conversaAtual.participo,
       }
     : clienteAppAtual
       ? {
@@ -293,6 +294,7 @@ export function useChatConversas() {
           atendente_id: null as string | null,
           atendente_nome: null as string | null,
           minha: true,
+          participo: true,
         }
       : null;
 
