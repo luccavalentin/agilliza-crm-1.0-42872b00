@@ -3258,6 +3258,36 @@ export type Database = {
         }
         Relationships: []
       }
+      links_categorias: {
+        Row: {
+          cor: string
+          created_at: string
+          criado_por: string | null
+          icone: string
+          id: string
+          nome: string
+          updated_at: string
+        }
+        Insert: {
+          cor?: string
+          created_at?: string
+          criado_por?: string | null
+          icone?: string
+          id?: string
+          nome: string
+          updated_at?: string
+        }
+        Update: {
+          cor?: string
+          created_at?: string
+          criado_por?: string | null
+          icone?: string
+          id?: string
+          nome?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       links_uteis: {
         Row: {
           categoria: string | null
