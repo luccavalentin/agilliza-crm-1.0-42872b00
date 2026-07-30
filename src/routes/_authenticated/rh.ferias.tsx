@@ -36,6 +36,8 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FuncionarioPicker } from "@/components/rh/funcionario-picker";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ControleFeriasPanel } from "@/components/rh/controle-ferias-panel";
 import { listarFerias, salvarFerias, type FeriasStatus } from "@/lib/rh/submodulos.functions";
 
 const STATUS: Record<FeriasStatus, { label: string; tone: string }> = {
@@ -106,7 +108,8 @@ function Pagina() {
             <Plane className="h-5 w-5 text-primary" /> Férias
           </h1>
           <p className="text-sm text-muted-foreground">
-            Períodos aquisitivos, planejamento e execução das férias.
+            Períodos aquisitivos calculados automaticamente pela data de admissão (CLT),
+            planejamento e execução das férias.
           </p>
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
@@ -226,6 +229,27 @@ function Pagina() {
         </Dialog>
       </div>
 
+      <Tabs defaultValue="controle" className="space-y-3">
+        <TabsList>
+          <TabsTrigger value="controle">Controle CLT</TabsTrigger>
+          <TabsTrigger value="programacoes">Programações</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="controle" className="space-y-3">
+          <ControleFeriasPanel
+            onProgramar={(f, periodo) => {
+              setForm((p) => ({
+                ...p,
+                funcionario_id: f.funcionario_id,
+                periodo_aquisitivo_inicio: periodo.inicio,
+                periodo_aquisitivo_fim: periodo.fim,
+              }));
+              setOpen(true);
+            }}
+          />
+        </TabsContent>
+
+        <TabsContent value="programacoes">
       <Card>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
@@ -274,6 +298,8 @@ function Pagina() {
           </div>
         </CardContent>
       </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

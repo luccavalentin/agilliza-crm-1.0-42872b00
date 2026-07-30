@@ -11,6 +11,10 @@ import {
   AlertTriangle,
   FileClock,
   Wallet,
+  CalendarClock,
+  CalendarCheck2,
+  Clock3,
+  Repeat,
   type LucideIcon,
 } from "lucide-react";
 
@@ -182,6 +186,73 @@ function Pagina() {
       </div>
 
 
+
+      <SectionTitle>Férias (CLT) e tempo de casa</SectionTitle>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <ReportKpiCard
+          titulo="Com férias vencidas"
+          valor={String(data?.feriasVencidas ?? 0)}
+          icon={AlertTriangle}
+          tone="danger"
+          sub="Risco de pagamento em dobro"
+          to="/rh/ferias"
+        />
+        <ReportKpiCard
+          titulo="Vencem em 90 dias"
+          valor={String(data?.feriasAVencer90 ?? 0)}
+          icon={CalendarClock}
+          tone="warning"
+          sub="Programar concessão"
+          to="/rh/ferias"
+        />
+        <ReportKpiCard
+          titulo="Saldo de dias"
+          valor={String(data?.feriasSaldoDias ?? 0)}
+          icon={CalendarCheck2}
+          tone="brand"
+          sub="Adquiridos e não gozados"
+          to="/rh/ferias"
+        />
+        <ReportKpiCard
+          titulo="Provisão de férias"
+          valor={formatBRL(data?.feriasProvisao ?? 0)}
+          icon={Wallet}
+          tone="brand"
+          sub="Valor provisionado"
+          to="/rh/ferias"
+        />
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <ReportKpiCard
+          titulo="Tempo médio de casa"
+          valor={`${Math.floor((data?.tempoMedioCasaMeses ?? 0) / 12)}a ${(data?.tempoMedioCasaMeses ?? 0) % 12}m`}
+          icon={Clock3}
+          tone="brand"
+          sub="Média do quadro ativo"
+        />
+        <ReportKpiCard
+          titulo="Admissões no mês"
+          valor={String(data?.admissoesMes ?? 0)}
+          icon={UserPlus}
+          tone="success"
+          to="/rh/funcionarios"
+        />
+        <ReportKpiCard
+          titulo="Desligamentos no mês"
+          valor={String(data?.desligamentosMes ?? 0)}
+          icon={UserMinus}
+          tone="danger"
+          to="/rh/funcionarios"
+        />
+        <ReportKpiCard
+          titulo="Turnover do mês"
+          valor={`${(data?.turnoverMes ?? 0).toLocaleString("pt-BR")}%`}
+          icon={Repeat}
+          tone="warning"
+          sub="Movimentação do quadro"
+        />
+      </div>
 
       {drill && (
         <KpiDrilldownDialog
