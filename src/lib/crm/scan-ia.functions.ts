@@ -464,7 +464,12 @@ export const processarLeitura = createServerFn({ method: "POST" })
                   ],
                 },
               ],
-              generationConfig: { temperature: temperatura, responseMimeType: "application/json" },
+              generationConfig: {
+                temperature: temperatura,
+                responseMimeType: "application/json",
+                maxOutputTokens: 8192,
+              },
+
             }),
           },
         );
