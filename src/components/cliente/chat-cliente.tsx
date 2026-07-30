@@ -111,6 +111,7 @@ const ALTURA_PADRAO = "h-[calc(100dvh-10.5rem)] min-h-[24rem] sm:h-[calc(100dvh-
 
 export function ChatCliente({ altura = ALTURA_PADRAO }: { altura?: string }) {
   const [atendenteSel, setAtendenteSel] = useState<AtendenteCliente | null>(null);
+  const qcLista = useQueryClient();
 
   const { data: atendentes } = useQuery({
     queryKey: ["cliente", "atendentes"],
