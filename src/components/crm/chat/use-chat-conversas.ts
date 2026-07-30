@@ -248,6 +248,18 @@ export function useChatConversas() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conversas, busca, etiquetaFiltro, filtro, etiquetasCliente, metasCliente, estadoPorCliente, tickMinuto]);
 
+  // Se a conversa aberta foi excluída (oculta), fecha o painel.
+  useEffect(() => {
+    if (!selecionado) return;
+    const conv = (conversas ?? []).find((c) => c.cliente_id === selecionado);
+    if (ocultaCliente(selecionado, conv?.ultima_em ?? null)) {
+      setSelecionado(null);
+      setAtendenteSel(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selecionado, estadoPorCliente, conversas]);
+
+
   const novosClientes = useMemo(() => {
     if (termoBusca.length < 2) return [];
     const jaEmConversa = new Set((conversas ?? []).map((c) => c.cliente_id));
