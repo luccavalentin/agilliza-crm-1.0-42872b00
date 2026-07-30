@@ -207,7 +207,7 @@ export function ListaConversas({ hook }: Props) {
                   >
                     <button
                       onClick={() => abrirConversa(c.cliente_id, c.atendente_id)}
-                      className="crm-focus-ring flex flex-1 items-start gap-3 rounded-xl px-2.5 py-2.5 text-left"
+                      className="crm-focus-ring flex min-w-0 flex-1 items-start gap-3 rounded-xl py-2.5 pl-2.5 pr-[4.5rem] text-left"
                     >
                       <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary/80 to-primary/50 text-xs font-semibold text-primary-foreground">
                         {iniciais(c.nome)}
@@ -259,7 +259,7 @@ export function ListaConversas({ hook }: Props) {
                         )}
                       </div>
                     </button>
-                    <div className="flex items-center pr-1.5 pt-2">
+                    <div className="absolute right-1.5 top-1/2 z-10 flex -translate-y-1/2 items-center rounded-md bg-card/95 shadow-sm backdrop-blur-sm">
                       <ItemAcoesMenu
                         clienteId={c.cliente_id}
                         nome={c.nome}
