@@ -570,3 +570,426 @@ export const excluirLeitura = createServerFn({ method: "POST" })
     if (error) throw error;
     return { ok: true };
   });
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * VALIDAÇÃO HUMANA OBRIGATÓRIA
+ * Nada abaixo grava dado da IA no cadastro sem uma decisão explícita do usuário.
+ * ──────────────────────────────────────────────────────────────────────────── */
+
+/** Confirma (humano) o tipo efetivo do documento. */
+export const confirmarTipoDocumento = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { leitura_id: string; tipo: string }) =>
+    z.object({ leitura_id: z.string().uuid(), tipo: z.enum(TIPOS_DOCUMENTO) }).parse(d),
+  )
+  .handler(async ({ data, context }): Promise<{ ok: true }> => {
+    const { supabase, userId } = context;
+    const corr = await correspondenteDoUsuario(supabase, userId);
+    if (!corr) throw new Error("Sem correspondente.");
+
+    const { data: leitura } = await supabase
+      .from("scan_ia_leituras")
+      .select("id, correspondente_id, tipo_documento, tipo_documento_sugerido")
+      .eq("id", data.leitura_id)
+      .maybeSingle();
+    if (!leitura || leitura.correspondente_id !== corr) throw new Error("Leitura não encontrada.");
+
+    const { error } = await supabase
+      .from("scan_ia_leituras")
+      .update({ tipo_documento: data.tipo, tipo_confirmado: true })
+      .eq("id", data.leitura_id);
+    if (error) throw error;
+
+    await supabase.from("scan_ia_auditoria").insert({
+      correspondente_id: corr,
+      leitura_id: data.leitura_id,
+      ator_id: userId,
+      acao: "tipo_confirmado",
+      dados: {
+        tipo_anterior: leitura.tipo_documento,
+        tipo_sugerido_ia: leitura.tipo_documento_sugerido,
+        tipo_confirmado_pelo_usuario: data.tipo,
+      },
+    });
+    return { ok: true };
+  });
+
+/** Vincula (ou desvincula) a leitura a um cliente já cadastrado. */
+export const vincularClienteLeitura = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { leitura_id: string; cliente_id: string | null }) =>
+    z
+      .object({ leitura_id: z.string().uuid(), cliente_id: z.string().uuid().nullable() })
+      .parse(d),
+  )
+  .handler(async ({ data, context }): Promise<{ ok: true }> => {
+    const { supabase, userId } = context;
+    const corr = await correspondenteDoUsuario(supabase, userId);
+    if (!corr) throw new Error("Sem correspondente.");
+
+    const { data: leitura } = await supabase
+      .from("scan_ia_leituras")
+      .select("id, correspondente_id")
+      .eq("id", data.leitura_id)
+      .maybeSingle();
+    if (!leitura || leitura.correspondente_id !== corr) throw new Error("Leitura não encontrada.");
+
+    if (data.cliente_id) {
+      const { data: cli } = await supabase
+        .from("clientes")
+        .select("id")
+        .eq("id", data.cliente_id)
+        .maybeSingle();
+      if (!cli) throw new Error("Cliente não encontrado.");
+    }
+
+    const { error } = await supabase
+      .from("scan_ia_leituras")
+      .update({ cliente_id: data.cliente_id })
+      .eq("id", data.leitura_id);
+    if (error) throw error;
+
+    await supabase.from("scan_ia_auditoria").insert({
+      correspondente_id: corr,
+      leitura_id: data.leitura_id,
+      ator_id: userId,
+      acao: "cliente_vinculado",
+      dados: { cliente_id: data.cliente_id },
+    });
+    return { ok: true };
+  });
+
+/**
+ * Cria um cliente novo a partir da leitura. Nome e documento vêm do formulário
+ * revisado pelo operador (não direto da IA) — os demais campos só entram depois,
+ * pelo modal de "Aplicar ao cadastro".
+ */
+export const criarClienteParaLeitura = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { leitura_id: string; nome: string; documento: string }) =>
+    z
+      .object({
+        leitura_id: z.string().uuid(),
+        nome: z.string().trim().min(3).max(200),
+        documento: z.string().trim().min(11).max(20),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }): Promise<{ cliente_id: string; reaproveitado: boolean }> => {
+    const { supabase, userId } = context;
+    const corr = await correspondenteDoUsuario(supabase, userId);
+    if (!corr) throw new Error("Sem correspondente.");
+
+    const { data: leitura } = await supabase
+      .from("scan_ia_leituras")
+      .select("id, correspondente_id")
+      .eq("id", data.leitura_id)
+      .maybeSingle();
+    if (!leitura || leitura.correspondente_id !== corr) throw new Error("Leitura não encontrada.");
+
+    const documento = data.documento.replace(/\D/g, "");
+    if (documento.length !== 11 && documento.length !== 14) {
+      throw new Error("Informe um CPF (11 dígitos) ou CNPJ (14 dígitos) válido.");
+    }
+
+    const { data: existente } = await supabase
+      .from("clientes")
+      .select("id")
+      .eq("correspondente_id", corr)
+      .eq("documento", documento)
+      .maybeSingle();
+
+    let clienteId = existente?.id ?? null;
+    let reaproveitado = !!existente;
+
+    if (!clienteId) {
+      const { data: novo, error } = await supabase
+        .from("clientes")
+        .insert({
+          correspondente_id: corr,
+          numero_cliente: "",
+          nome: data.nome.trim(),
+          documento,
+          tipo_pessoa: documento.length === 14 ? "pj" : "pf",
+          criador_id: userId,
+          responsavel_id: userId,
+        })
+        .select("id")
+        .single();
+      if (error) throw error;
+      clienteId = novo.id;
+      reaproveitado = false;
+    }
+
+    await supabase
+      .from("scan_ia_leituras")
+      .update({ cliente_id: clienteId })
+      .eq("id", data.leitura_id);
+
+    await supabase.from("scan_ia_auditoria").insert({
+      correspondente_id: corr,
+      leitura_id: data.leitura_id,
+      ator_id: userId,
+      acao: reaproveitado ? "cliente_vinculado" : "cliente_criado",
+      dados: { cliente_id: clienteId, nome: data.nome.trim(), documento },
+    });
+
+    return { cliente_id: clienteId!, reaproveitado };
+  });
+
+export interface PreviaCampoAplicacao {
+  campo_id: string;
+  campo: string;
+  rotulo: string;
+  valor: string;
+  confianca: number;
+  faixa: "alta" | "media" | "revisar";
+  aplicavel: boolean;
+  motivo_nao_aplicavel: string | null;
+  destino: string;
+  valor_atual: string | null;
+  conflito: boolean;
+}
+
+export interface PreviaAplicacao {
+  cliente_id: string | null;
+  cliente_nome: string | null;
+  tipo_documento: string | null;
+  tipo_confirmado: boolean;
+  campos: PreviaCampoAplicacao[];
+}
+
+function textoValorAtual(v: unknown): string | null {
+  if (v === null || v === undefined || v === "") return null;
+  if (typeof v === "number") return String(v);
+  if (typeof v === "object") return JSON.stringify(v);
+  return String(v);
+}
+
+/** Monta a prévia do modal de aplicação: valor da IA x valor atual do cadastro. */
+export const previaAplicacao = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { leitura_id: string }) =>
+    z.object({ leitura_id: z.string().uuid() }).parse(d),
+  )
+  .handler(async ({ data, context }): Promise<PreviaAplicacao> => {
+    const { supabase, userId } = context;
+    const corr = await correspondenteDoUsuario(supabase, userId);
+    if (!corr) throw new Error("Sem correspondente.");
+
+    const { data: leitura } = await supabase
+      .from("scan_ia_leituras")
+      .select("id, correspondente_id, cliente_id, tipo_documento, tipo_confirmado")
+      .eq("id", data.leitura_id)
+      .maybeSingle();
+    if (!leitura || leitura.correspondente_id !== corr) throw new Error("Leitura não encontrada.");
+
+    const { data: campos } = await supabase
+      .from("scan_ia_campos_extraidos")
+      .select("id, campo, valor, confianca")
+      .eq("leitura_id", data.leitura_id)
+      .order("campo", { ascending: true });
+
+    let cliente: Record<string, any> | null = null;
+    if (leitura.cliente_id) {
+      const { data: c } = await supabase
+        .from("clientes")
+        .select("*")
+        .eq("id", leitura.cliente_id)
+        .maybeSingle();
+      cliente = (c as any) ?? null;
+    }
+
+    const lista: PreviaCampoAplicacao[] = (campos ?? []).map((c: any) => {
+      const valor = String(c.valor ?? "");
+      const destino = destinoDoCampo(c.campo);
+      const conv = converterValor(c.campo, valor);
+      const confianca = Number(c.confianca ?? 0);
+
+      let valorAtual: string | null = null;
+      if (cliente) {
+        if (destino.tipo === "coluna") valorAtual = textoValorAtual(cliente[destino.coluna]);
+        else if (destino.tipo === "matricula") {
+          const m = (cliente.imovel_matricula ?? {}) as Record<string, unknown>;
+          valorAtual = textoValorAtual(m?.[destino.chave]);
+        }
+      }
+
+      const novoTexto = conv.ok ? textoValorAtual(conv.valor) : null;
+      const conflito = !!valorAtual && !!novoTexto && valorAtual !== novoTexto;
+
+      return {
+        campo_id: c.id,
+        campo: c.campo,
+        rotulo: rotuloCampo(c.campo),
+        valor,
+        confianca,
+        faixa: faixaConfianca(confianca),
+        aplicavel: conv.ok,
+        motivo_nao_aplicavel: conv.ok ? null : conv.motivo,
+        destino:
+          destino.tipo === "coluna"
+            ? destino.coluna
+            : destino.tipo === "matricula"
+              ? `imovel_matricula.${destino.chave}`
+              : "—",
+        valor_atual: valorAtual,
+        conflito,
+      };
+    });
+
+    return {
+      cliente_id: leitura.cliente_id ?? null,
+      cliente_nome: cliente?.nome ?? null,
+      tipo_documento: leitura.tipo_documento ?? null,
+      tipo_confirmado: !!leitura.tipo_confirmado,
+      campos: lista,
+    };
+  });
+
+/**
+ * Aplica ao cadastro do cliente APENAS os campos que o usuário marcou, com a
+ * escolha explícita feita em cada conflito. Registra a trilha completa.
+ */
+export const aplicarAoCadastro = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    (d: {
+      leitura_id: string;
+      decisoes: Array<{ campo_id: string; aplicar: boolean; escolha?: "manter" | "substituir" }>;
+    }) =>
+      z
+        .object({
+          leitura_id: z.string().uuid(),
+          decisoes: z.array(
+            z.object({
+              campo_id: z.string().uuid(),
+              aplicar: z.boolean(),
+              escolha: z.enum(["manter", "substituir"]).optional(),
+            }),
+          ),
+        })
+        .parse(d),
+  )
+  .handler(
+    async ({
+      data,
+      context,
+    }): Promise<{ ok: boolean; aplicados: number; descartados: number }> => {
+      const { supabase, userId } = context;
+      const corr = await correspondenteDoUsuario(supabase, userId);
+      if (!corr) throw new Error("Sem correspondente.");
+
+      const { data: leitura } = await supabase
+        .from("scan_ia_leituras")
+        .select("id, correspondente_id, cliente_id, tipo_documento, tipo_confirmado")
+        .eq("id", data.leitura_id)
+        .maybeSingle();
+      if (!leitura || leitura.correspondente_id !== corr)
+        throw new Error("Leitura não encontrada.");
+      if (!leitura.cliente_id) throw new Error("Vincule um cliente antes de aplicar.");
+      if (!leitura.tipo_confirmado)
+        throw new Error("Confirme o tipo do documento antes de aplicar.");
+
+      const { data: campos } = await supabase
+        .from("scan_ia_campos_extraidos")
+        .select("id, campo, valor, confianca")
+        .eq("leitura_id", data.leitura_id);
+
+      const { data: clienteAtual } = await supabase
+        .from("clientes")
+        .select("*")
+        .eq("id", leitura.cliente_id)
+        .maybeSingle();
+      if (!clienteAtual) throw new Error("Cliente não encontrado.");
+
+      const porId = new Map((campos ?? []).map((c: any) => [c.id, c]));
+      const patch: Record<string, any> = {};
+      const matriculaPatch: Record<string, unknown> = {};
+      const aplicados: any[] = [];
+      const descartados: any[] = [];
+
+      for (const dec of data.decisoes) {
+        const campo = porId.get(dec.campo_id);
+        if (!campo) continue;
+
+        const valor = String(campo.valor ?? "");
+        const destino = destinoDoCampo(campo.campo);
+        const conv = converterValor(campo.campo, valor);
+
+        let valorAtual: unknown = null;
+        if (destino.tipo === "coluna") valorAtual = (clienteAtual as any)[destino.coluna];
+        else if (destino.tipo === "matricula") {
+          const m = ((clienteAtual as any).imovel_matricula ?? {}) as Record<string, unknown>;
+          valorAtual = m?.[destino.chave];
+        }
+        const temAtual = valorAtual !== null && valorAtual !== undefined && valorAtual !== "";
+        const novoTexto = conv.ok ? textoValorAtual(conv.valor) : null;
+        const conflito = temAtual && !!novoTexto && textoValorAtual(valorAtual) !== novoTexto;
+
+        const registro = {
+          campo: campo.campo,
+          rotulo: rotuloCampo(campo.campo),
+          valor_documento: valor,
+          valor_anterior: textoValorAtual(valorAtual),
+          confianca: Number(campo.confianca ?? 0),
+          conflito,
+          escolha: dec.escolha ?? null,
+        };
+
+        if (!dec.aplicar || !conv.ok) {
+          descartados.push({ ...registro, motivo: conv.ok ? "nao_marcado" : conv.motivo });
+          continue;
+        }
+        if (conflito && dec.escolha !== "substituir") {
+          // Sem escolha explícita de substituição, o valor atual prevalece.
+          descartados.push({ ...registro, motivo: "conflito_mantido" });
+          continue;
+        }
+
+        if (destino.tipo === "coluna") patch[destino.coluna] = conv.valor;
+        else if (destino.tipo === "matricula") matriculaPatch[destino.chave] = conv.valor;
+        else {
+          descartados.push({ ...registro, motivo: "sem_destino" });
+          continue;
+        }
+        aplicados.push(registro);
+      }
+
+      if (Object.keys(matriculaPatch).length > 0) {
+        const atual = ((clienteAtual as any).imovel_matricula ?? {}) as Record<string, unknown>;
+        // Mescla — nunca sobrescreve o jsonb inteiro.
+        patch.imovel_matricula = { ...atual, ...matriculaPatch };
+      }
+
+      if (Object.keys(patch).length > 0) {
+        const { error: upErr } = await supabase
+          .from("clientes")
+          .update(patch)
+          .eq("id", leitura.cliente_id);
+        if (upErr) throw upErr;
+      }
+
+      await supabase
+        .from("scan_ia_leituras")
+        .update({ status: "aplicada" })
+        .eq("id", data.leitura_id);
+
+      await supabase.from("scan_ia_auditoria").insert({
+        correspondente_id: corr,
+        leitura_id: data.leitura_id,
+        ator_id: userId,
+        acao: "aplicada_ao_cadastro",
+        dados: {
+          cliente_id: leitura.cliente_id,
+          tipo_documento: leitura.tipo_documento,
+          validado_por_humano: true,
+          campos_aplicados: aplicados,
+          campos_descartados: descartados,
+          colunas_atualizadas: Object.keys(patch),
+        },
+      });
+
+      return { ok: true, aplicados: aplicados.length, descartados: descartados.length };
+    },
+  );
