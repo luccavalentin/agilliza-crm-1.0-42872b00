@@ -390,14 +390,35 @@ function LinkDialog({
           </div>
           <div className="space-y-1.5">
             <Label>Categoria (opcional)</Label>
-            <Input
-              value={categoria}
-              onChange={(e) => setCategoria(e.target.value)}
-              placeholder="Ex.: Bancos, Cartórios, Ferramentas"
-            />
-          </div>
           <div className="space-y-1.5">
-            <Label>Descrição (opcional)</Label>
+            <Label>Categoria (opcional)</Label>
+            <Select
+              value={categoria || "__nenhuma__"}
+              onValueChange={(v) => setCategoria(v === "__nenhuma__" ? "" : v)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione uma categoria" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__nenhuma__">Sem categoria</SelectItem>
+                {categorias.map((c) => {
+                  const Icon = iconeCategoria(c.icone);
+                  return (
+                    <SelectItem key={c.id} value={c.nome}>
+                      <span className="flex items-center gap-2">
+                        <Icon className="h-4 w-4" />
+                        {c.nome}
+                      </span>
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              Gerencie as categorias e seus ícones no botão "Categorias".
+            </p>
+          </div>
+
             <Textarea
               value={descricao}
               onChange={(e) => setDescricao(e.target.value)}
