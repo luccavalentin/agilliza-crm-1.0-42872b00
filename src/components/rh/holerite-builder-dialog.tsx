@@ -224,16 +224,21 @@ export function HoleriteBuilderDialog({
       return { anexado };
     },
 
-    onSuccess: () => {
-      toast.success(
-        editando
-          ? "Holerite atualizado, PDF substituído e baixado."
-          : "Holerite gerado, anexado à ficha e baixado.",
-      );
+    onSuccess: (res) => {
+      if (res?.anexado) {
+        toast.success(
+          editando
+            ? "Holerite atualizado, PDF substituído e baixado."
+            : "Holerite gerado, anexado à ficha e baixado.",
+        );
+      } else {
+        toast.success("Holerite gerado e baixado.");
+      }
       qc.invalidateQueries({ queryKey: ["rh-holerites"] });
       qc.invalidateQueries({ queryKey: ["rh-ficha-hol"] });
       setOpen(false);
     },
+
     onError: (err: any) => toast.error(err?.message ?? "Falha ao gerar o holerite."),
   });
 
