@@ -1,6 +1,9 @@
 import { useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { signalIncomingChat } from "@/components/shared/chat-alert-store";
+import {
+  signalIncomingChat,
+  pedirPermissaoNotificacao,
+} from "@/components/shared/chat-alert-store";
 import {
   abrirChatFlutuante,
   abrirDemandaChatFlutuante,
@@ -21,6 +24,7 @@ export function ChatAlertWatcher({ meuId }: Props) {
   const vistos = useRef<Set<string>>(new Set());
 
   useEffect(() => {
+    pedirPermissaoNotificacao();
     const canalCliente = supabase
       .channel("chat:alerta-global-cliente")
       .on(
@@ -40,8 +44,10 @@ export function ChatAlertWatcher({ meuId }: Props) {
           if (!row?.id || row.remetente_tipo === "time") return;
           if (vistos.current.has(row.id)) return;
           vistos.current.add(row.id);
-          signalIncomingChat(row.id);
-          if (!row.cliente_id) return;
+          if (!row.cliente_id) {
+            signalIncomingChat(row.id);
+            return;
+          }
           if (row.atendente_id && meuId && row.atendente_id !== meuId) return;
 
           const { data: cli } = await supabase
@@ -50,6 +56,10 @@ export function ChatAlertWatcher({ meuId }: Props) {
             .eq("id", row.cliente_id)
             .maybeSingle();
           const nome = (cli?.nome as string | null) ?? "Cliente";
+          signalIncomingChat(row.id, {
+            titulo: `Nova mensagem · ${nome}`,
+            corpo: "Você recebeu uma mensagem no chat do cliente.",
+          });
 
           abrirChatFlutuante(
             row.cliente_id,
@@ -79,7 +89,6 @@ export function ChatAlertWatcher({ meuId }: Props) {
           if (meuId && row.autor_id === meuId) return;
           if (vistos.current.has(row.id)) return;
           vistos.current.add(row.id);
-          signalIncomingChat(row.id);
 
           const [{ data: dem }, { data: autor }] = await Promise.all([
             supabase
@@ -99,6 +108,10 @@ export function ChatAlertWatcher({ meuId }: Props) {
           const titulo = (dem?.titulo as string | null) ?? null;
           const interlocutorNome = (autor?.nome as string | null) ?? null;
           const interlocutorFoto = (autor?.foto_url as string | null) ?? null;
+          signalIncomingChat(row.id, {
+            titulo: `Nova mensagem · Demanda ${numero}`,
+            corpo: interlocutorNome ?? titulo ?? undefined,
+          });
 
           abrirDemandaChatFlutuante(
             row.demanda_id,

@@ -7,7 +7,6 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { useChatFlash, stopFlash } from "@/components/shared/chat-alert-store";
 import type { NavGroup, NavItem } from "./nav-config";
 
-const ROTA_CHAT = "/crm/chat";
 const ROTAS_CHAT = ["/crm/chat", "/operacional/chats"];
 const ehRotaChat = (to?: string | null) => !!to && ROTAS_CHAT.includes(to);
 
