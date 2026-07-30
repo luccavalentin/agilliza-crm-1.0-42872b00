@@ -336,8 +336,18 @@ export const atualizarFuncionario = createServerFn({ method: "POST" })
       email_corporativo: rest.email_corporativo || null,
     };
 
-    const { error } = await supabase.from("rh_funcionarios").update(payload).eq("id", id);
+    const { data: atualizados, error } = await supabase
+      .from("rh_funcionarios")
+      .update(payload)
+      .eq("id", id)
+      .select("id");
     if (error) throw new Error(error.message);
+    if (!atualizados || atualizados.length === 0) {
+      throw new Error(
+        "Você não tem permissão para editar este funcionário (permissão 'RH · Funcionários · editar').",
+      );
+    }
+
 
     const { registrarAuditoria } = await import("@/lib/admin/audit.server");
     await registrarAuditoria({
@@ -415,6 +425,53 @@ export const desligarFuncionario = createServerFn({ method: "POST" })
     });
     return { ok: true };
   });
+
+/**
+ * Exclui definitivamente um funcionário e todos os registros vinculados
+ * (documentos, dependentes, férias, benefícios, holerites, lançamentos…).
+ * As FKs estão em ON DELETE CASCADE, então o próprio banco cuida do vínculo.
+ */
+export const excluirFuncionario = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
+  .handler(async ({ data, context }): Promise<{ ok: true }> => {
+    const { supabase, userId } = context;
+    const correspondenteId = await correspondenteDoUsuario(supabase, userId);
+    if (!correspondenteId) throw new Error("Ecossistema não identificado.");
+
+    const { data: alvo, error: errBusca } = await supabase
+      .from("rh_funcionarios")
+      .select("id, nome, numero")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (errBusca) throw new Error(errBusca.message);
+    if (!alvo) throw new Error("Funcionário não encontrado.");
+
+    const { data: removidos, error } = await supabase
+      .from("rh_funcionarios")
+      .delete()
+      .eq("id", data.id)
+      .select("id");
+    if (error) throw new Error(error.message);
+    if (!removidos || removidos.length === 0) {
+      throw new Error(
+        "Você não tem permissão para excluir funcionários (permissão 'RH · Funcionários · excluir').",
+      );
+    }
+
+    const { registrarAuditoria } = await import("@/lib/admin/audit.server");
+    await registrarAuditoria({
+      supabase,
+      userId,
+      correspondenteId,
+      acao: "rh.funcionario.excluir",
+      entidade: "rh_funcionarios",
+      entidadeId: data.id,
+      payloadAnterior: { nome: (alvo as any).nome, numero: (alvo as any).numero },
+    });
+    return { ok: true };
+  });
+
 
 // ------------ Dependentes ------------------------------------------------
 

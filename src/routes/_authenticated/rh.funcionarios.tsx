@@ -1,19 +1,31 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
-import { Users, UserPlus, Search } from "lucide-react";
+import { toast } from "sonner";
+import { Users, UserPlus, Search, Pencil, Trash2 } from "lucide-react";
 import { assertModuloPermitido } from "@/lib/route-guards";
-import { listarFuncionarios } from "@/lib/rh/funcionarios.functions";
+import { listarFuncionarios, excluirFuncionario } from "@/lib/rh/funcionarios.functions";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { StatusFuncionarioBadge } from "@/components/rh/status-badge";
 import { formatBRL } from "@/lib/financeiro/format";
+
 
 export const Route = createFileRoute("/_authenticated/rh/funcionarios")({
   head: () => ({ meta: [{ title: "Funcionários — Agilliza" }] }),
@@ -40,7 +52,23 @@ function Pagina() {
       }),
   });
 
+  const qc = useQueryClient();
+  const fnExcluir = useServerFn(excluirFuncionario);
+  const [paraExcluir, setParaExcluir] = useState<{ id: string; nome: string } | null>(null);
+
+  const excluir = useMutation({
+    mutationFn: (id: string) => fnExcluir({ data: { id } }),
+    onSuccess: () => {
+      toast.success("Funcionário excluído.");
+      setParaExcluir(null);
+      qc.invalidateQueries({ queryKey: ["rh-funcionarios"] });
+      qc.invalidateQueries({ queryKey: ["rh-kpis"] });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Falha ao excluir funcionário."),
+  });
+
   const total = data?.length ?? 0;
+
 
   return (
     <div className="mx-auto w-full max-w-[1600px] space-y-5 p-3 sm:p-4 md:p-6">
@@ -135,8 +163,28 @@ function Pagina() {
                   <p className="text-xs tabular-nums text-muted-foreground">
                     {formatBRL(f.salario_atual)} · Admissão {new Date(f.data_admissao).toLocaleDateString("pt-BR")}
                   </p>
+                  <div className="flex justify-end gap-1 pt-1" onClick={(e) => e.stopPropagation()}>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      title="Editar"
+                      onClick={() => navigate({ to: "/rh/funcionarios/$id", params: { id: f.id } })}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      title="Excluir"
+                      className="text-destructive hover:text-destructive"
+                      onClick={() => setParaExcluir({ id: f.id, nome: f.nome })}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
+
             ))}
           </div>
 
@@ -151,6 +199,7 @@ function Pagina() {
                   <th className="px-4 py-2 text-left">Status</th>
                   <th className="px-4 py-2 text-left">Admissão</th>
                   <th className="px-4 py-2 text-right">Salário atual</th>
+                  <th className="px-4 py-2 text-right">Ações</th>
                 </tr>
               </thead>
               <tbody>
@@ -171,13 +220,62 @@ function Pagina() {
                       {new Date(f.data_admissao).toLocaleDateString("pt-BR")}
                     </td>
                     <td className="px-4 py-2 text-right tabular-nums">{formatBRL(f.salario_atual)}</td>
+                    <td className="px-4 py-2 text-right" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex justify-end gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          title="Editar"
+                          onClick={() => navigate({ to: "/rh/funcionarios/$id", params: { id: f.id } })}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          title="Excluir"
+                          className="text-destructive hover:text-destructive"
+                          onClick={() => setParaExcluir({ id: f.id, nome: f.nome })}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
+
         </>
       )}
+
+      <AlertDialog open={!!paraExcluir} onOpenChange={(o) => !o && setParaExcluir(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir funcionário</AlertDialogTitle>
+            <AlertDialogDescription>
+              {paraExcluir?.nome} será excluído definitivamente, junto com documentos,
+              dependentes, férias, benefícios, holerites e lançamentos vinculados apenas
+              a ele. Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={excluir.isPending}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={excluir.isPending}
+              onClick={(e) => {
+                e.preventDefault();
+                if (paraExcluir) excluir.mutate(paraExcluir.id);
+              }}
+            >
+              {excluir.isPending ? "Excluindo…" : "Excluir"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
+
 }

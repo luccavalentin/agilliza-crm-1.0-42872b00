@@ -1,14 +1,17 @@
-import { createFileRoute, useParams } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { createFileRoute, useParams, useNavigate } from "@tanstack/react-router";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, Printer } from "lucide-react";
+import { useState } from "react";
+import { Loader2, Printer, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { assertModuloPermitido } from "@/lib/route-guards";
 import {
   obterFuncionario,
   listarHistoricoFuncionario,
   listarDependentes,
+  excluirFuncionario,
 } from "@/lib/rh/funcionarios.functions";
+
 import { FuncionarioForm, ABA_CLASS } from "@/components/rh/funcionario-form";
 import {
   FichaDocumentos,
@@ -28,6 +31,17 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TabsContent, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
 import { gerarFichaFuncionarioPdf } from "@/lib/rh/ficha-pdf";
 
 export const Route = createFileRoute("/_authenticated/rh/funcionarios_/$id")({
@@ -51,6 +65,25 @@ function Pagina() {
     queryKey: ["rh-funcionario-historico", id],
     queryFn: () => fnHist({ data: { funcionario_id: id } }),
   });
+
+  const navigate = useNavigate();
+  const qc = useQueryClient();
+  const fnExcluir = useServerFn(excluirFuncionario);
+  const [confirmar, setConfirmar] = useState(false);
+
+  const excluir = useMutation({
+    mutationFn: () => fnExcluir({ data: { id } }),
+    onSuccess: () => {
+      toast.success("Funcionário excluído.");
+      setConfirmar(false);
+      qc.invalidateQueries({ queryKey: ["rh-funcionarios"] });
+      qc.invalidateQueries({ queryKey: ["rh-kpis"] });
+      navigate({ to: "/rh/funcionarios" });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Falha ao excluir funcionário."),
+  });
+
+
 
   async function imprimirFicha() {
     if (!q.data) return;
@@ -182,13 +215,51 @@ function Pagina() {
         abasExtras={abasExtras}
         conteudoExtra={conteudoExtra}
         acoes={
-          <Button variant="outline" onClick={imprimirFicha} className="shrink-0">
-            <Printer className="mr-2 h-4 w-4" />
-            <span className="hidden sm:inline">Imprimir ficha (PDF)</span>
-            <span className="sm:hidden">Ficha</span>
-          </Button>
+          <>
+            <Button variant="outline" onClick={imprimirFicha} className="shrink-0">
+              <Printer className="mr-2 h-4 w-4" />
+              <span className="hidden sm:inline">Imprimir ficha (PDF)</span>
+              <span className="sm:hidden">Ficha</span>
+            </Button>
+            <Button
+              variant="outline"
+              className="shrink-0 border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
+              onClick={() => setConfirmar(true)}
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              <span className="hidden sm:inline">Excluir funcionário</span>
+              <span className="sm:hidden">Excluir</span>
+            </Button>
+          </>
         }
       />
+
+      <AlertDialog open={confirmar} onOpenChange={setConfirmar}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir funcionário</AlertDialogTitle>
+            <AlertDialogDescription>
+              {q.data.nome} será excluído definitivamente, junto com documentos, dependentes,
+              férias, benefícios, holerites e lançamentos vinculados apenas a ele.
+              Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={excluir.isPending}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={excluir.isPending}
+              onClick={(e) => {
+                e.preventDefault();
+                excluir.mutate();
+              }}
+            >
+              {excluir.isPending ? "Excluindo…" : "Excluir"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
+
