@@ -193,15 +193,21 @@ function Pagina() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Button variant="outline" onClick={() => setComparador(true)}>
+          {/* Destaque: cruzar planilhas com o sistema é a ação principal da tela. */}
+          <Button
+            size="lg"
+            onClick={() => setComparador(true)}
+            className="shadow-md transition-transform hover:scale-[1.02]"
+          >
             <GitCompare className="h-4 w-4" />
-            Comparativo de planilhas e dados
+            Cruzar planilhas com o sistema
           </Button>
-          <Button onClick={() => setAberto(true)}>
+          <Button variant="outline" onClick={() => setAberto(true)}>
             <Plus className="h-4 w-4" />
             Novo comparativo
           </Button>
         </div>
+
       </header>
 
       <div className="flex flex-wrap items-end gap-3">
