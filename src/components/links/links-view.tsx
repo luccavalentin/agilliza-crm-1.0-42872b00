@@ -40,6 +40,7 @@ import {
 import { OpHero, OpStat } from "@/components/operacional/ui";
 import { CategoriasLinksDialog } from "@/components/links/categorias-dialog";
 import { iconeCategoria, classeCategoria } from "@/lib/links/categorias-icones";
+import { logoUrlDoBanco } from "@/components/bancos/banco-logo";
 import { cn } from "@/lib/utils";
 import {
   Select,
@@ -201,6 +202,7 @@ export function LinksView() {
           filtrados.map((l) => {
             const meta = l.categoria ? catPorNome.get(l.categoria.toLowerCase()) : undefined;
             const CatIcon = meta ? iconeCategoria(meta.icone) : ExternalLink;
+            const bancoLogo = logoUrlDoBanco(`${l.titulo} ${l.url}`);
             return (
             <div
               key={l.id}
@@ -214,12 +216,17 @@ export function LinksView() {
               >
                 <span
                   className={cn(
-                    "grid size-10 shrink-0 place-items-center rounded-xl ring-1 transition-transform group-hover:scale-105",
-                    classeCategoria(meta?.cor),
+                    "grid size-10 shrink-0 place-items-center overflow-hidden rounded-xl ring-1 transition-transform group-hover:scale-105",
+                    bancoLogo ? "bg-white ring-border" : classeCategoria(meta?.cor),
                   )}
                 >
-                  <CatIcon className="h-4 w-4" />
+                  {bancoLogo ? (
+                    <img src={bancoLogo} alt="" className="h-6 w-6 object-contain" loading="lazy" />
+                  ) : (
+                    <CatIcon className="h-4 w-4" />
+                  )}
                 </span>
+
                 <div className="min-w-0">
                   <p className="flex items-center gap-2 truncate font-semibold text-foreground group-hover:text-primary">
                     {l.titulo}
