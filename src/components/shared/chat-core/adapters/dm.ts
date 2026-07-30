@@ -87,12 +87,23 @@ export function useAdaptadorDm({
         notaInterna: false,
         tarefa: false,
         retorno: false,
-        anexo: false,
+        anexo: true,
         respostasRapidas: false,
         audio: false,
       },
 
       renderHeader,
+
+      uploadAnexo: async (file: File) => {
+        const ext = file.name.split(".").pop()?.toLowerCase() || "bin";
+        const path = `${conversaId}/${Date.now()}-${crypto.randomUUID()}.${ext}`;
+        const { error } = await supabase.storage
+          .from("chat-anexos")
+          .upload(path, file, { contentType: file.type || undefined, upsert: false });
+        if (error) throw error;
+        nomesAnexo.set(path, file.name);
+        return path;
+      },
 
       listar: async () => {
         const raw = await listarFn({ data: { conversa_id: conversaId } });
@@ -104,7 +115,9 @@ export function useAdaptadorDm({
           mensagem: m.texto ?? "",
           anexo_url: m.anexo_url,
           anexo_nome: m.anexo_nome,
-          anexo_is_imagem: false,
+          anexo_is_imagem: m.anexo_nome
+            ? IMG_EXT.test(m.anexo_nome)
+            : !!m.anexo_url && IMG_EXT.test(String(m.anexo_url).split("?")[0]),
           lida_em: null,
           criada_em: m.created_at,
           editada_em: m.editada_em ?? null,
@@ -121,8 +134,11 @@ export function useAdaptadorDm({
             conversa_id: conversaId,
             texto: p.mensagem ?? "",
             responde_a: p.responde_a ?? null,
+            anexo_path: p.anexo_path ?? null,
+            anexo_nome: p.anexo_path ? (nomesAnexo.get(p.anexo_path) ?? null) : null,
           },
         });
+
         qc.invalidateQueries({ queryKey: ["threads-central"] });
       },
       editar: (p) => editarFn({ data: { id: p.id, texto: p.mensagem } }),
