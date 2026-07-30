@@ -57,6 +57,14 @@ export const CAMPOS_ESPERADOS = [
   "estado_civil",
   "renda_mensal",
   "endereco",
+  "endereco_completo",
+  "endereco_logradouro",
+  "endereco_numero",
+  "endereco_complemento",
+  "endereco_bairro",
+  "endereco_cidade",
+  "endereco_uf",
+  "endereco_cep",
   "cep",
   "telefone",
   "email",
@@ -98,13 +106,47 @@ export const CAMPOS_POR_TIPO: Record<TipoDocumentoScan, string[]> = {
   ],
   cpf: ["nome_completo", "cpf_cnpj", "data_nascimento", "nome_mae"],
   comprovante_renda: ["nome_completo", "profissao", "empresa", "renda_mensal"],
-  comprovante_residencia: ["endereco", "cep", "bairro", "cidade", "uf"],
+  comprovante_residencia: [
+    "endereco_titular",
+    "endereco_completo",
+    "endereco_logradouro",
+    "endereco_numero",
+    "endereco_complemento",
+    "endereco_bairro",
+    "endereco_cidade",
+    "endereco_uf",
+    "endereco_cep",
+    // Compatibilidade com leituras antigas/prompts customizados.
+    "endereco",
+    "cep",
+    "bairro",
+    "cidade",
+    "uf",
+  ],
   certidao_casamento: [
+    "nome_completo",
+    "cpf_cnpj",
+    "data_nascimento",
+    "naturalidade",
+    "nacionalidade",
+    "nome_mae",
+    "nome_pai",
     "nome_conjuge",
     "cpf_conjuge",
     "data_nascimento_conjuge",
+    "conjuge_naturalidade",
+    "conjuge_nacionalidade",
+    "conjuge_nome_mae",
+    "conjuge_profissao",
     "regime_casamento",
     "estado_civil",
+    "data_casamento",
+    "matricula_certidao",
+    "cartorio_certidao",
+    "livro_certidao",
+    "folha_certidao",
+    "termo_certidao",
+    "observacoes_certidao",
   ],
   certidao_nascimento: [
     "nome_completo",
@@ -188,6 +230,11 @@ export const CAMPOS_POR_TIPO: Record<TipoDocumentoScan, string[]> = {
   outro: CAMPOS_ESPERADOS,
 };
 
+/** União de todos os campos que o Scan IA pode aceitar em qualquer documento legível. */
+export const TODOS_CAMPOS_EXTRAIVEIS = Array.from(
+  new Set([...CAMPOS_ESPERADOS, ...Object.values(CAMPOS_POR_TIPO).flat()]),
+);
+
 export function camposEsperadosDoTipo(tipo: string | null | undefined): string[] {
   return ehTipoConhecido(tipo) ? CAMPOS_POR_TIPO[tipo] : CAMPOS_ESPERADOS;
 }
@@ -213,6 +260,15 @@ export const CAMPO_LABEL: Record<string, string> = {
   renda_mensal: "Renda mensal",
   estado_civil: "Estado civil",
   endereco: "Endereço",
+  endereco_titular: "Titular do comprovante de endereço",
+  endereco_completo: "Endereço completo",
+  endereco_logradouro: "Logradouro",
+  endereco_numero: "Número do endereço",
+  endereco_complemento: "Complemento do endereço",
+  endereco_bairro: "Bairro",
+  endereco_cidade: "Cidade",
+  endereco_uf: "UF",
+  endereco_cep: "CEP",
   cep: "CEP",
   bairro: "Bairro",
   cidade: "Cidade",
@@ -222,7 +278,18 @@ export const CAMPO_LABEL: Record<string, string> = {
   nome_conjuge: "Nome do cônjuge",
   cpf_conjuge: "CPF do cônjuge",
   data_nascimento_conjuge: "Data de nascimento do cônjuge",
+  conjuge_naturalidade: "Naturalidade do cônjuge",
+  conjuge_nacionalidade: "Nacionalidade do cônjuge",
+  conjuge_nome_mae: "Nome da mãe do cônjuge",
+  conjuge_profissao: "Profissão do cônjuge",
   regime_casamento: "Regime de casamento",
+  data_casamento: "Data do casamento",
+  matricula_certidao: "Matrícula da certidão",
+  cartorio_certidao: "Cartório da certidão",
+  livro_certidao: "Livro da certidão",
+  folha_certidao: "Folha da certidão",
+  termo_certidao: "Termo da certidão",
+  observacoes_certidao: "Observações da certidão",
   numero_matricula: "Número da matrícula",
   cartorio: "Cartório",
   comarca: "Comarca",
@@ -299,6 +366,11 @@ export type DestinoCampo =
       coluna: string;
       formato?: "texto" | "numero" | "data" | "estado_civil" | "regime_casamento" | "documento";
     }
+  | {
+      tipo: "endereco";
+      coluna: "cep" | "logradouro" | "numero" | "complemento" | "bairro" | "cidade" | "uf";
+      formato?: "texto" | "documento";
+    }
   | { tipo: "matricula"; chave: string; formato?: "texto" | "data" | "booleano" }
   | { tipo: "nenhum" };
 
@@ -332,7 +404,25 @@ export const DESTINO_CAMPO: Record<string, DestinoCampo> = {
   nome_conjuge: { tipo: "coluna", coluna: "conjuge_nome" },
   cpf_conjuge: { tipo: "coluna", coluna: "conjuge_cpf", formato: "documento" },
   data_nascimento_conjuge: { tipo: "coluna", coluna: "conjuge_data_nascimento", formato: "data" },
+  conjuge_nacionalidade: { tipo: "coluna", coluna: "conjuge_nacionalidade" },
+  conjuge_nome_mae: { tipo: "coluna", coluna: "conjuge_nome_mae" },
+  conjuge_profissao: { tipo: "coluna", coluna: "conjuge_profissao" },
   regime_casamento: { tipo: "coluna", coluna: "regime_casamento", formato: "regime_casamento" },
+
+  // Endereço principal do cliente (tabela cliente_enderecos)
+  endereco: { tipo: "endereco", coluna: "logradouro" },
+  endereco_completo: { tipo: "endereco", coluna: "logradouro" },
+  endereco_logradouro: { tipo: "endereco", coluna: "logradouro" },
+  endereco_numero: { tipo: "endereco", coluna: "numero" },
+  endereco_complemento: { tipo: "endereco", coluna: "complemento" },
+  endereco_bairro: { tipo: "endereco", coluna: "bairro" },
+  endereco_cidade: { tipo: "endereco", coluna: "cidade" },
+  endereco_uf: { tipo: "endereco", coluna: "uf" },
+  endereco_cep: { tipo: "endereco", coluna: "cep", formato: "documento" },
+  cep: { tipo: "endereco", coluna: "cep", formato: "documento" },
+  bairro: { tipo: "endereco", coluna: "bairro" },
+  cidade: { tipo: "endereco", coluna: "cidade" },
+  uf: { tipo: "endereco", coluna: "uf" },
 
   // Imóvel
   valor_imovel: { tipo: "coluna", coluna: "imovel_valor", formato: "numero" },
@@ -419,14 +509,16 @@ export const DESTINO_CAMPO: Record<string, DestinoCampo> = {
   complemento_imovel: { tipo: "coluna", coluna: "imovel_complemento" },
   bairro_imovel: { tipo: "coluna", coluna: "imovel_bairro" },
   cidade_imovel: { tipo: "coluna", coluna: "imovel_cidade" },
-
-
-  // Sem coluna correspondente no cadastro do cliente (endereço pessoal fica em outra tabela)
-  endereco: { tipo: "nenhum" },
-  cep: { tipo: "nenhum" },
-  bairro: { tipo: "nenhum" },
-  cidade: { tipo: "nenhum" },
-  uf: { tipo: "nenhum" },
+  // Dados informativos sem destino direto no cadastro atual.
+  endereco_titular: { tipo: "nenhum" },
+  conjuge_naturalidade: { tipo: "nenhum" },
+  data_casamento: { tipo: "nenhum" },
+  matricula_certidao: { tipo: "nenhum" },
+  cartorio_certidao: { tipo: "nenhum" },
+  livro_certidao: { tipo: "nenhum" },
+  folha_certidao: { tipo: "nenhum" },
+  termo_certidao: { tipo: "nenhum" },
+  observacoes_certidao: { tipo: "nenhum" },
 };
 
 export function destinoDoCampo(campo: string): DestinoCampo {
@@ -505,6 +597,14 @@ export function converterValor(
   const destino = destinoDoCampo(campo);
   const bruto = valor.trim();
   if (!bruto) return { ok: false, motivo: "Valor vazio." };
+  if (destino.tipo === "endereco") {
+    if (destino.formato === "documento") {
+      const d = bruto.replace(/\D+/g, "");
+      return d ? { ok: true, valor: d } : { ok: false, motivo: "Documento inválido." };
+    }
+    if (destino.coluna === "uf") return { ok: true, valor: bruto.slice(0, 2).toUpperCase() };
+    return { ok: true, valor: bruto };
+  }
   if (destino.tipo === "matricula") {
     if (destino.formato === "data") {
       const d = normalizarData(bruto);

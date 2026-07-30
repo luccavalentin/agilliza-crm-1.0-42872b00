@@ -100,7 +100,7 @@ function Pagina() {
       if (upErr) throw upErr;
 
       const { id } = await criarLeitura({
-        data: { arquivo_url: path, tipo_documento: tipo.trim() || "documento" },
+        data: { arquivo_url: path, tipo_documento: tipo.trim() || null },
       });
       toast.success("Arquivo enviado. Processando com IA…");
       setTipo("");

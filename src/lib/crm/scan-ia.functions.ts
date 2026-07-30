@@ -5,6 +5,7 @@ import {
   valoresEquivalentes,
   CAMPOS_ESPERADOS,
   CAMPOS_POR_TIPO,
+  TODOS_CAMPOS_EXTRAIVEIS,
   TIPOS_DOCUMENTO,
   camposEsperadosDoTipo,
   converterValor,
@@ -388,7 +389,17 @@ export const processarLeitura = createServerFn({ method: "POST" })
           ? `O operador informou o tipo como "${tipoInformado}", mas classifique de forma independente pelo conteúdo real.\n`
           : "") +
         `PASSO 2 — Faça OCR de TODAS as páginas (inclusive digitalizações, carimbos e textos em coluna) ` +
-        `e extraia SOMENTE os campos previstos para o tipo que você classificou:\n${mapaTipos}\n` +
+        `e extraia os campos previstos para o tipo que você classificou:\n${mapaTipos}\n` +
+        `REGRA GERAL — o Scan IA deve entender qualquer documento de cadastro que ajude em alguma etapa: ` +
+        `documentos pessoais, certidões, comprovantes de residência, comprovantes de renda, extratos, IPTU, matrícula, ` +
+        `declarações, contas de consumo e documentos complementares. Se o documento legível contiver dado cadastral útil, ` +
+        `não responda lista vazia: classifique no tipo mais próximo e extraia todos os campos úteis permitidos. ` +
+        `Para documentos não previstos, use "outro" e os campos genéricos aplicáveis. ` +
+        `Em comprovante_residencia/contas de consumo extraia endereco_titular, endereco_completo, endereco_logradouro, ` +
+        `endereco_numero, endereco_complemento, endereco_bairro, endereco_cidade, endereco_uf e endereco_cep quando existirem; ` +
+        `se só houver uma linha de endereço completa, devolva endereco_completo. ` +
+        `Em certidao_casamento extraia os dados dos dois cônjuges, CPF quando houver, datas/naturalidade/nacionalidade, ` +
+        `filiação, estado_civil = "casado", regime_casamento quando escrito ou inferível, data_casamento, matrícula/termo/livro/folha, cartório e observações/averbações relevantes.\n` +
         `REGRAS PARA MATRÍCULA DE IMÓVEL (matricula_imovel): leia o cabeçalho (número da matrícula, ` +
         `cartório/oficial de registro de imóveis, comarca, data de abertura da matrícula, data da última ` +
         `atualização/certidão e transcrição anterior de origem), a descrição do imóvel (tipo, logradouro, número, ` +
@@ -419,7 +430,7 @@ export const processarLeitura = createServerFn({ method: "POST" })
         `Responda SOMENTE com JSON no formato ` +
         `{"tipo_documento":"<um dos tipos>","confianca_tipo":<0-1>,"campos":[{"campo":"<nome>","valor":"<texto>","confianca":<0-1>}]}. ` +
         `Todo "valor" deve ser uma STRING simples (nunca objeto ou lista). ` +
-        `Use exatamente os nomes de campo listados para o tipo. Para valores monetários, mantenha o formato numérico. ` +
+        `Use exatamente os nomes de campo listados acima. Para valores monetários, mantenha o formato numérico. ` +
         `Datas em dd/mm/aaaa. A confiança deve refletir a legibilidade e a certeza da extração. ` +
         `Não invente valores: se um campo não existir no documento, não o inclua.`;
       const prompt = promptSistema ? `${promptSistema}\n\n${instrucaoBase}` : instrucaoBase;
@@ -539,6 +550,7 @@ export const processarLeitura = createServerFn({ method: "POST" })
       const permitidos = new Set([
         ...camposEsperadosDoTipo(tipoSugerido),
         ...(tipoInformado ? camposEsperadosDoTipo(tipoInformado) : []),
+        ...TODOS_CAMPOS_EXTRAIVEIS,
         ...CAMPOS_ESPERADOS,
       ]);
 
@@ -555,12 +567,18 @@ export const processarLeitura = createServerFn({ method: "POST" })
       };
 
       const campos = (parsed.campos ?? [])
-        .filter((c) => c && c.campo && c.valor != null && permitidos.has(String(c.campo)))
+        .flatMap((c) =>
+          normalizarCampoExtraido(String(c?.campo ?? ""), comoTexto(c?.valor)).map((n) => ({
+            bruto: c,
+            ...n,
+          })),
+        )
+        .filter((c) => c.campo && c.valor && permitidos.has(c.campo))
         .map((c) => ({
           leitura_id: data.id,
-          campo: String(c.campo).slice(0, 120),
-          valor: comoTexto(c.valor).slice(0, 2000),
-          confianca: Math.max(0, Math.min(1, Number(c.confianca) || 0)),
+          campo: c.campo.slice(0, 120),
+          valor: c.valor.slice(0, 2000),
+          confianca: Math.max(0, Math.min(1, Number(c.bruto?.confianca) || 0)),
         }))
         .filter((c) => c.valor.length > 0);
 
@@ -917,6 +935,26 @@ function textoValorAtual(v: unknown): string | null {
   return String(v);
 }
 
+function normalizarCampoExtraido(campo: string, valor: string): Array<{ campo: string; valor: string }> {
+  const c = campo.trim();
+  const v = valor.trim();
+  if (c === "endereco_completo" || c === "endereco") {
+    const cep = v.match(/\b\d{5}[-\s]?\d{3}\b/);
+    const linha = cep ? v.replace(cep[0], "").trim().replace(/[,-]\s*$/, "") : v;
+    return cep
+      ? [
+          { campo: c, valor: linha },
+          { campo: "endereco_cep", valor: cep[0] },
+        ]
+      : [{ campo: c, valor: v }];
+  }
+  if (c === "cep") return [{ campo: "endereco_cep", valor: v }];
+  if (c === "bairro") return [{ campo: "endereco_bairro", valor: v }];
+  if (c === "cidade") return [{ campo: "endereco_cidade", valor: v }];
+  if (c === "uf") return [{ campo: "endereco_uf", valor: v }];
+  return [{ campo: c, valor: v }];
+}
+
 /** Monta a prévia do modal de aplicação: valor da IA x valor atual do cadastro. */
 export const previaAplicacao = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -942,6 +980,7 @@ export const previaAplicacao = createServerFn({ method: "GET" })
       .order("campo", { ascending: true });
 
     let cliente: Record<string, any> | null = null;
+    let enderecoPrincipal: Record<string, any> | null = null;
     if (leitura.cliente_id) {
       const { data: c } = await supabase
         .from("clientes")
@@ -949,6 +988,13 @@ export const previaAplicacao = createServerFn({ method: "GET" })
         .eq("id", leitura.cliente_id)
         .maybeSingle();
       cliente = (c as any) ?? null;
+      const { data: end } = await supabase
+        .from("cliente_enderecos")
+        .select("*")
+        .eq("cliente_id", leitura.cliente_id)
+        .eq("principal", true)
+        .maybeSingle();
+      enderecoPrincipal = (end as any) ?? null;
     }
 
     const lista: PreviaCampoAplicacao[] = (campos ?? []).map((c: any) => {
@@ -960,6 +1006,9 @@ export const previaAplicacao = createServerFn({ method: "GET" })
       let valorAtual: string | null = null;
       if (cliente) {
         if (destino.tipo === "coluna") valorAtual = textoValorAtual(cliente[destino.coluna]);
+        else if (destino.tipo === "endereco") {
+          valorAtual = textoValorAtual(enderecoPrincipal?.[destino.coluna]);
+        }
         else if (destino.tipo === "matricula") {
           const m = (cliente.imovel_matricula ?? {}) as Record<string, unknown>;
           valorAtual = textoValorAtual(m?.[destino.chave]);
@@ -981,6 +1030,8 @@ export const previaAplicacao = createServerFn({ method: "GET" })
         destino:
           destino.tipo === "coluna"
             ? destino.coluna
+            : destino.tipo === "endereco"
+              ? `endereco_principal.${destino.coluna}`
             : destino.tipo === "matricula"
               ? `imovel_matricula.${destino.chave}`
               : "—",
@@ -1062,9 +1113,17 @@ export const aplicarAoCadastro = createServerFn({ method: "POST" })
         .maybeSingle();
       if (!clienteAtual) throw new Error("Cliente não encontrado.");
 
+      const { data: enderecoAtual } = await supabase
+        .from("cliente_enderecos")
+        .select("*")
+        .eq("cliente_id", leitura.cliente_id)
+        .eq("principal", true)
+        .maybeSingle();
+
       const porId = new Map((campos ?? []).map((c: any) => [c.id, c]));
       const patch: Record<string, any> = {};
       const matriculaPatch: Record<string, unknown> = {};
+      const enderecoPatch: Record<string, unknown> = {};
       const aplicados: any[] = [];
       const descartados: any[] = [];
 
@@ -1078,6 +1137,7 @@ export const aplicarAoCadastro = createServerFn({ method: "POST" })
 
         let valorAtual: unknown = null;
         if (destino.tipo === "coluna") valorAtual = (clienteAtual as any)[destino.coluna];
+        else if (destino.tipo === "endereco") valorAtual = (enderecoAtual as any)?.[destino.coluna];
         else if (destino.tipo === "matricula") {
           const m = ((clienteAtual as any).imovel_matricula ?? {}) as Record<string, unknown>;
           valorAtual = m?.[destino.chave];
@@ -1107,6 +1167,7 @@ export const aplicarAoCadastro = createServerFn({ method: "POST" })
         }
 
         if (destino.tipo === "coluna") patch[destino.coluna] = conv.valor;
+        else if (destino.tipo === "endereco") enderecoPatch[destino.coluna] = conv.valor;
         else if (destino.tipo === "matricula") matriculaPatch[destino.chave] = conv.valor;
         else {
           descartados.push({ ...registro, motivo: "sem_destino" });
@@ -1127,6 +1188,23 @@ export const aplicarAoCadastro = createServerFn({ method: "POST" })
           .update(patch as never)
           .eq("id", leitura.cliente_id);
         if (upErr) throw upErr;
+      }
+
+      if (Object.keys(enderecoPatch).length > 0) {
+        const payload = { ...enderecoPatch, principal: true };
+        const enderecoId = (enderecoAtual as any)?.id;
+        if (enderecoId) {
+          const { error: endErr } = await supabase
+            .from("cliente_enderecos")
+            .update(payload)
+            .eq("id", enderecoId);
+          if (endErr) throw endErr;
+        } else {
+          const { error: endErr } = await supabase
+            .from("cliente_enderecos")
+            .insert({ cliente_id: leitura.cliente_id, ...payload });
+          if (endErr) throw endErr;
+        }
       }
 
       await supabase
@@ -1157,6 +1235,7 @@ export const aplicarAoCadastro = createServerFn({ method: "POST" })
           campos_aplicados: aplicados,
           campos_descartados: descartados,
           colunas_atualizadas: Object.keys(patch),
+          endereco_atualizado: Object.keys(enderecoPatch),
           documento_arquivado: arq.arquivado,
           documento_id: arq.documento_id,
           erro_arquivo: arq.erro,
