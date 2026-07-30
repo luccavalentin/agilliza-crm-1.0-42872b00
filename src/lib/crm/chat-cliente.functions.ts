@@ -103,6 +103,8 @@ export interface ConversaCliente {
   atendente_nome: string | null;
   /** true quando a conversa é do próprio usuário logado. */
   minha: boolean;
+  /** true quando o usuário foi convidado para a thread (pode responder). */
+  participo: boolean;
   nome: string;
   documento: string | null;
   etapa_codigo: string | null;
