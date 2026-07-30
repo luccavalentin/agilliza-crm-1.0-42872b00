@@ -60,7 +60,12 @@ export function ChatConversaCore({ adapter }: { adapter: ChatAdapter }) {
   const { data: mensagens, isLoading } = useQuery({
     queryKey,
     queryFn: () => adapter.listar(),
+    // Fallback: garante entrega de mensagens, respostas e reações mesmo que
+    // algum evento realtime se perca.
+    refetchInterval: 4000,
+    refetchIntervalInBackground: false,
   });
+
 
   useEffect(() => {
     if (somenteLeitura) return;

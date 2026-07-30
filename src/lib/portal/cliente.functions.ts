@@ -51,6 +51,17 @@ export interface DocumentoCliente {
   status: string;
 }
 
+export interface ReacaoCliente {
+  emoji: string;
+  count: number;
+  mine: boolean;
+}
+
+export interface CitacaoCliente {
+  autor: string;
+  texto: string;
+}
+
 export interface MensagemCliente {
   id: string;
   remetente_tipo: string;
@@ -62,7 +73,11 @@ export interface MensagemCliente {
   criada_em: string;
   editada_em: string | null;
   excluida_em: string | null;
+  responde_a: string | null;
+  citacao: CitacaoCliente | null;
+  reacoes: ReacaoCliente[];
 }
+
 
 export interface NotificacaoCliente {
   id: string;
@@ -423,7 +438,11 @@ async function resolverAnexos(
         criada_em: m.criada_em,
         editada_em: m.editada_em ?? null,
         excluida_em: m.excluida_em ?? null,
+        responde_a: m.responde_a ?? null,
+        citacao: m.citacao ?? null,
+        reacoes: (m.reacoes as ReacaoCliente[] | null) ?? [],
       } as MensagemCliente;
+
     }),
   );
 }
@@ -473,6 +492,7 @@ const enviarMsgSchema = z.object({
   atendente_id: z.string().uuid(),
   mensagem: z.string().trim().min(1).max(2000),
   anexo_url: z.string().url().max(1000).optional(),
+  responde_a: z.string().uuid().optional().nullable(),
 });
 
 export const clienteEnviarMensagem = createServerFn({ method: "POST" })
@@ -487,10 +507,34 @@ export const clienteEnviarMensagem = createServerFn({ method: "POST" })
       _atendente: data.atendente_id,
       _msg: data.mensagem,
       _anexo: data.anexo_url ?? null,
+      _responde_a: data.responde_a ?? null,
     } as any);
     if (error || !nova) throw new Error("Não foi possível enviar a mensagem.");
     return (await resolverAnexos(db, [nova]))[0];
   });
+
+/** Toggle de reação (emoji) do cliente numa mensagem da própria conversa. */
+export const clienteReagirMensagem = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        mensagem_id: z.string().uuid(),
+        emoji: z.string().trim().min(1).max(8),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data }): Promise<{ ok: boolean }> => {
+    const sess = requireClienteSession();
+    const { portalDb } = await import("./portal-db.server");
+    const { data: r, error } = await portalDb().rpc("portal_reagir_mensagem", {
+      _cid: sess.cid,
+      _mensagem_id: data.mensagem_id,
+      _emoji: data.emoji,
+    } as any);
+    if (error) throw new Error("Não foi possível registrar a reação.");
+    return { ok: Boolean((r as any)?.ok) };
+  });
+
 
 // Enviar mensagem com anexo (foto/documento) — upload em base64
 const enviarAnexoSchema = z.object({

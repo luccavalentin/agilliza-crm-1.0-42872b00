@@ -7099,16 +7099,28 @@ export type Database = {
         Returns: Json
       }
       portal_cliente_sessao: { Args: { _cid: string }; Returns: Json }
-      portal_enviar_mensagem: {
-        Args: {
-          _anexo: string
-          _atendente: string
-          _cid: string
-          _corr: string
-          _msg: string
-        }
-        Returns: Json
-      }
+      portal_enviar_mensagem:
+        | {
+            Args: {
+              _anexo: string
+              _atendente: string
+              _cid: string
+              _corr: string
+              _msg: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              _anexo: string
+              _atendente: string
+              _cid: string
+              _corr: string
+              _msg: string
+              _responde_a?: string
+            }
+            Returns: Json
+          }
       portal_excluir_app_cliente: { Args: { _cid: string }; Returns: Json }
       portal_listar_atendentes: { Args: { _cid: string }; Returns: Json }
       portal_listar_mensagens: {
@@ -7126,6 +7138,10 @@ export type Database = {
       }
       portal_meus_documentos: { Args: { _cid: string }; Returns: Json }
       portal_minhas_propostas: { Args: { _cid: string }; Returns: Json }
+      portal_reagir_mensagem: {
+        Args: { _cid: string; _emoji: string; _mensagem_id: string }
+        Returns: Json
+      }
       portal_registrar_consentimento_lgpd: {
         Args: { _cid: string; _ip: string; _ua: string; _versao: string }
         Returns: Json
