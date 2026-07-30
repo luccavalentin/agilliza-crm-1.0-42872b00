@@ -51,6 +51,17 @@ export interface DocumentoCliente {
   status: string;
 }
 
+export interface ReacaoCliente {
+  emoji: string;
+  count: number;
+  mine: boolean;
+}
+
+export interface CitacaoCliente {
+  autor: string;
+  texto: string;
+}
+
 export interface MensagemCliente {
   id: string;
   remetente_tipo: string;
@@ -62,7 +73,11 @@ export interface MensagemCliente {
   criada_em: string;
   editada_em: string | null;
   excluida_em: string | null;
+  responde_a: string | null;
+  citacao: CitacaoCliente | null;
+  reacoes: ReacaoCliente[];
 }
+
 
 export interface NotificacaoCliente {
   id: string;
