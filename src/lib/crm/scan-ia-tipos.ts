@@ -200,7 +200,7 @@ export type DestinoCampo =
 /** Para onde cada campo extraído pode ir na tabela `clientes`. */
 export const DESTINO_CAMPO: Record<string, DestinoCampo> = {
   nome_completo: { tipo: "coluna", coluna: "nome" },
-  cpf_cnpj: { tipo: "coluna", coluna: "documento" },
+  cpf_cnpj: { tipo: "coluna", coluna: "documento", formato: "documento" },
   rg: { tipo: "coluna", coluna: "numero_documento" },
   numero_documento: { tipo: "coluna", coluna: "numero_documento" },
   tipo_documento_identidade: { tipo: "coluna", coluna: "tipo_documento_identidade" },
@@ -218,21 +218,21 @@ export const DESTINO_CAMPO: Record<string, DestinoCampo> = {
   renda_mensal: { tipo: "coluna", coluna: "renda_total_declarada", formato: "numero" },
   estado_civil: { tipo: "coluna", coluna: "estado_civil", formato: "estado_civil" },
   email: { tipo: "coluna", coluna: "email" },
-  telefone: { tipo: "coluna", coluna: "telefone_celular" },
+  telefone: { tipo: "coluna", coluna: "telefone_celular", formato: "documento" },
   banco_conta: { tipo: "coluna", coluna: "banco_conta" },
   agencia: { tipo: "coluna", coluna: "agencia" },
   conta_corrente: { tipo: "coluna", coluna: "conta_corrente" },
 
   // Cônjuge
   nome_conjuge: { tipo: "coluna", coluna: "conjuge_nome" },
-  cpf_conjuge: { tipo: "coluna", coluna: "conjuge_cpf" },
+  cpf_conjuge: { tipo: "coluna", coluna: "conjuge_cpf", formato: "documento" },
   data_nascimento_conjuge: { tipo: "coluna", coluna: "conjuge_data_nascimento", formato: "data" },
   regime_casamento: { tipo: "coluna", coluna: "regime_casamento", formato: "regime_casamento" },
 
   // Imóvel
   valor_imovel: { tipo: "coluna", coluna: "imovel_valor", formato: "numero" },
   endereco_imovel: { tipo: "coluna", coluna: "imovel_logradouro" },
-  cep_imovel: { tipo: "coluna", coluna: "imovel_cep" },
+  cep_imovel: { tipo: "coluna", coluna: "imovel_cep", formato: "documento" },
   uf_imovel: { tipo: "coluna", coluna: "imovel_uf" },
 
   // Matrícula (jsonb clientes.imovel_matricula — mesclado, nunca sobrescrito por inteiro)
@@ -342,6 +342,10 @@ export function converterValor(
       const d = normalizarData(bruto);
       return d === null ? { ok: false, motivo: "Data inválida." } : { ok: true, valor: d };
     }
+    case "documento": {
+      const d = bruto.replace(/\D+/g, "");
+      return d ? { ok: true, valor: d } : { ok: false, motivo: "Documento inválido." };
+    }
     case "estado_civil": {
       const e = normalizarEstadoCivil(bruto);
       return e === null ? { ok: false, motivo: "Estado civil não reconhecido." } : { ok: true, valor: e };
@@ -368,3 +372,25 @@ export const CONFIANCA_LABEL: Record<"alta" | "media" | "revisar", string> = {
   media: "Média",
   revisar: "Revisar",
 };
+
+/**
+ * Comparação tolerante para detectar conflito real entre o valor já cadastrado
+ * e o valor extraído: ignora pontuação, acentos, espaços e caixa. Ex.: o CPF
+ * "429.914.268-37" é o MESMO valor de "42991426837" — não é conflito.
+ */
+export function valoresEquivalentes(a: string | null | undefined, b: string | null | undefined): boolean {
+  const norm = (v: string | null | undefined) => {
+    const t = String(v ?? "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .trim();
+    if (!t) return "";
+    const digitos = t.replace(/\D+/g, "");
+    // Valores essencialmente numéricos (documentos, telefones, CEP, datas):
+    // compara apenas os dígitos.
+    if (digitos.length >= 6 && t.replace(/[^a-z]/g, "").length === 0) return digitos;
+    return t.replace(/[^a-z0-9]+/g, " ").replace(/\s+/g, " ").trim();
+  };
+  return norm(a) === norm(b);
+}
