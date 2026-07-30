@@ -274,6 +274,18 @@ export const DESTINO_CAMPO: Record<string, DestinoCampo> = {
   onus_gravames: { tipo: "matricula", chave: "onus_gravames" },
   data_registro: { tipo: "matricula", chave: "data_registro" },
   inscricao_imobiliaria: { tipo: "matricula", chave: "inscricao_imobiliaria" },
+  cpf_proprietario: { tipo: "matricula", chave: "cpf_proprietario" },
+  estado_civil_proprietario: { tipo: "matricula", chave: "estado_civil_proprietario" },
+  area_privativa: { tipo: "matricula", chave: "area_privativa" },
+  fracao_ideal: { tipo: "matricula", chave: "fracao_ideal" },
+  alienacao_fiduciaria: { tipo: "matricula", chave: "alienacao_fiduciaria" },
+  ultimo_registro: { tipo: "matricula", chave: "ultimo_registro" },
+  tipo_imovel: { tipo: "coluna", coluna: "imovel_tipo" },
+  numero_imovel: { tipo: "coluna", coluna: "imovel_numero" },
+  complemento_imovel: { tipo: "coluna", coluna: "imovel_complemento" },
+  bairro_imovel: { tipo: "coluna", coluna: "imovel_bairro" },
+  cidade_imovel: { tipo: "coluna", coluna: "imovel_cidade" },
+
 
   // Sem coluna correspondente no cadastro do cliente (endereço pessoal fica em outra tabela)
   endereco: { tipo: "nenhum" },
