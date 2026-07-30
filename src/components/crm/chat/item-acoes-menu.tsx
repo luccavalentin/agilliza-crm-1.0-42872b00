@@ -151,7 +151,23 @@ export function ItemAcoesMenu({
 
   return (
     <>
+      {/* Atalho de exclusão: aparece assim que o mouse passa sobre o item. */}
+      <Button
+        variant="ghost"
+        size="icon"
+        className="size-7 shrink-0 text-muted-foreground opacity-0 transition-opacity hover:text-destructive focus-visible:opacity-100 group-hover:opacity-100"
+        onClick={(e) => {
+          e.stopPropagation();
+          e.preventDefault();
+          setOpenDel(true);
+        }}
+        aria-label="Excluir conversa"
+        title="Excluir conversa"
+      >
+        <Trash2 className="size-4" />
+      </Button>
       <DropdownMenu open={openMenu} onOpenChange={setOpenMenu}>
+
         <DropdownMenuTrigger asChild>
           <Button
             variant="ghost"
