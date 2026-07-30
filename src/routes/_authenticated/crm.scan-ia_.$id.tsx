@@ -22,6 +22,7 @@ import {
   confirmarTipoDocumento,
   vincularClienteLeitura,
   criarClienteParaLeitura,
+  arquivarDocumentoDaLeitura,
 } from "@/lib/crm/scan-ia.functions";
 import {
   CONFIANCA_LABEL,
@@ -141,6 +142,19 @@ function Pagina() {
       qc.invalidateQueries({ queryKey: ["scan-ia-previa", id] });
     },
     onError: (e: any) => toast.error(e?.message ?? "Falha ao criar cliente."),
+  });
+
+  const arquivar = useMutation({
+    mutationFn: () => arquivarDocumentoDaLeitura({ data: { leitura_id: id } }),
+    onSuccess: (r) => {
+      toast.success(
+        r.ja_existia
+          ? "Este documento já estava na documentação do cliente."
+          : "Documento arquivado na aba Documentos do cliente.",
+      );
+      qc.invalidateQueries({ queryKey: ["cliente-docs"] });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Falha ao arquivar documento."),
   });
 
   const d = leitura.data;
@@ -454,11 +468,7 @@ function Pagina() {
                 </Button>
                 {d.cliente_id ? (
                   <Button asChild variant="ghost">
-                    <Link
-                      to="/crm/clientes/$id"
-                      params={{ id: d.cliente_id }}
-                      search={{ tab: "documentos" } as never}
-                    >
+                    <Link to="/crm/clientes/$id" params={{ id: d.cliente_id }}>
                       Ver documentação do cliente
                     </Link>
                   </Button>
