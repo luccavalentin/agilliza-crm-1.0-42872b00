@@ -88,7 +88,7 @@ export function PapelTimbradoView() {
         icon={<FileText className="h-5 w-5" />}
         eyebrow="Documentos · Formulários"
         titulo="Papel Timbrado"
-        descricao="Escolha um dos 5 modelos institucionais, redija sua correspondência e baixe em PDF com marca d'água."
+        descricao="Escolha entre 10 modelos — 5 institucionais e 5 da linha Real (carta régia) — e baixe em PDF com marca d'água, pronto para papel cartão."
         accent={modelo.primaria}
         acoes={
           <div className="flex flex-wrap items-center gap-2">
@@ -115,7 +115,7 @@ export function PapelTimbradoView() {
             Modelos de papel timbrado
           </h2>
           <span className="text-[11px] text-muted-foreground">
-            5 variações · marca d'água inclusa
+            10 variações · marca d'água inclusa
           </span>
         </div>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
@@ -305,21 +305,74 @@ function ModeloCard({
       aria-pressed={selecionado}
     >
       {/* Miniatura A4 */}
-      <div className="relative aspect-[1/1.15] w-full overflow-hidden bg-white">
+      <div
+        className="relative aspect-[1/1.15] w-full overflow-hidden"
+        style={{ background: modelo.estilo === "real" ? (modelo.fundo ?? "#FBF7EE") : "#ffffff" }}
+      >
         {/* Watermark */}
-        <span
-          className="pointer-events-none absolute inset-0 grid place-items-center"
-          aria-hidden
-        >
-          <span
-            className="rotate-[-24deg] text-[42px] font-black tracking-wider"
-            style={{ color: modelo.marcaDagua, opacity: 0.05 }}
-          >
-            AGILLIZA
+        {modelo.estilo === "real" ? (
+          <span className="pointer-events-none absolute inset-0 grid place-items-center" aria-hidden>
+            <span className="relative grid size-[74%] place-items-center">
+              <span
+                className="absolute inset-0 rounded-full border-2"
+                style={{ borderColor: modelo.marcaDagua, opacity: 0.1 }}
+              />
+              <span
+                className="absolute inset-[10%] rounded-full border"
+                style={{ borderColor: modelo.marcaDagua, opacity: 0.1 }}
+              />
+              <span
+                className="font-serif text-[56px] font-bold leading-none"
+                style={{ color: modelo.marcaDagua, opacity: 0.09 }}
+              >
+                A
+              </span>
+            </span>
           </span>
-        </span>
+        ) : (
+          <span
+            className="pointer-events-none absolute inset-0 grid place-items-center"
+            aria-hidden
+          >
+            <span
+              className="rotate-[-24deg] text-[42px] font-black tracking-wider"
+              style={{ color: modelo.marcaDagua, opacity: 0.05 }}
+            >
+              AGILLIZA
+            </span>
+          </span>
+        )}
+
+        {/* Moldura ornamental (linha Real) */}
+        {modelo.estilo === "real" && (
+          <span className="pointer-events-none absolute inset-0" aria-hidden>
+            <span
+              className="absolute inset-[6px] border"
+              style={{ borderColor: modelo.primaria }}
+            />
+            <span
+              className="absolute inset-[9px] border"
+              style={{ borderColor: modelo.metalico ?? modelo.destaque, opacity: 0.8 }}
+            />
+          </span>
+        )}
 
         {/* Cabeçalho conforme estilo */}
+        {modelo.estilo === "real" && (
+          <div className="relative flex h-[34%] flex-col items-center justify-end pb-1">
+            <img src={agillizaLogoDark} alt="" className="h-3 w-auto" />
+            <span
+              className="mt-1 font-serif text-[8px] font-bold tracking-[0.25em]"
+              style={{ color: modelo.primaria }}
+            >
+              AGILLIZA
+            </span>
+            <span
+              className="mt-1 block h-px w-[62%]"
+              style={{ background: modelo.metalico ?? modelo.destaque }}
+            />
+          </div>
+        )}
         {modelo.estilo === "faixa" && (
           <>
             <div
@@ -340,6 +393,7 @@ function ModeloCard({
             </div>
           </>
         )}
+
         {modelo.estilo === "hairline" && (
           <div className="relative flex h-[26%] items-end justify-between px-3 pb-1.5">
             <img src={agillizaLogoDark} alt="" className="h-3 w-auto" />
@@ -441,22 +495,90 @@ function PreviewPagina({
   modelo: PapelTimbradoModelo;
   children: React.ReactNode;
 }) {
+  const ehReal = modelo.estilo === "real";
   return (
     <div
-      className="relative overflow-hidden rounded-xl border border-border bg-white"
+      className="relative overflow-hidden rounded-xl border border-border"
       style={{
+        background: ehReal ? (modelo.fundo ?? "#FBF7EE") : "#ffffff",
         boxShadow: `0 20px 48px -24px ${modelo.primaria}55, 0 2px 6px -2px rgba(0,0,0,0.08)`,
+        padding: ehReal ? 14 : undefined,
       }}
     >
-      {/* Marca d'água central */}
-      <span className="pointer-events-none absolute inset-0 grid select-none place-items-center overflow-hidden">
-        <span
-          className="rotate-[-24deg] whitespace-nowrap text-[120px] font-black tracking-[0.05em]"
-          style={{ color: modelo.marcaDagua, opacity: 0.05 }}
-        >
-          AGILLIZA
+      {/* Moldura ornamental (linha Real) */}
+      {ehReal && (
+        <span className="pointer-events-none absolute inset-0" aria-hidden>
+          <span
+            className="absolute inset-[10px] border-[1.5px]"
+            style={{ borderColor: modelo.primaria }}
+          />
+          <span
+            className="absolute inset-[15px] border"
+            style={{ borderColor: modelo.metalico ?? modelo.destaque, opacity: 0.9 }}
+          />
+          <span
+            className="absolute inset-[19px] border"
+            style={{ borderColor: modelo.metalico ?? modelo.destaque, opacity: 0.45 }}
+          />
+          {[
+            "left-[8px] top-[8px]",
+            "right-[8px] top-[8px]",
+            "left-[8px] bottom-[8px]",
+            "right-[8px] bottom-[8px]",
+          ].map((pos) => (
+            <span
+              key={pos}
+              className={cn("absolute size-2 rotate-45", pos)}
+              style={{ background: modelo.metalico ?? modelo.destaque }}
+            />
+          ))}
         </span>
-      </span>
+      )}
+
+      {/* Marca d'água central */}
+      {ehReal ? (
+        <span
+          className="pointer-events-none absolute inset-0 grid select-none place-items-center overflow-hidden"
+          aria-hidden
+        >
+          <span className="relative grid size-[300px] place-items-center">
+            <span
+              className="absolute inset-0 rounded-full border-[3px]"
+              style={{ borderColor: modelo.marcaDagua, opacity: 0.08 }}
+            />
+            <span
+              className="absolute inset-[10px] rounded-full border"
+              style={{ borderColor: modelo.marcaDagua, opacity: 0.08 }}
+            />
+            <span
+              className="absolute inset-[38px] rounded-full border"
+              style={{ borderColor: modelo.marcaDagua, opacity: 0.08 }}
+            />
+            <span
+              className="font-serif text-[170px] font-bold leading-none"
+              style={{ color: modelo.marcaDagua, opacity: 0.07 }}
+            >
+              A
+            </span>
+            <span
+              className="absolute bottom-6 font-serif text-[11px] tracking-[0.34em]"
+              style={{ color: modelo.marcaDagua, opacity: 0.1 }}
+            >
+              AGILLIZA
+            </span>
+          </span>
+        </span>
+      ) : (
+        <span className="pointer-events-none absolute inset-0 grid select-none place-items-center overflow-hidden">
+          <span
+            className="rotate-[-24deg] whitespace-nowrap text-[120px] font-black tracking-[0.05em]"
+            style={{ color: modelo.marcaDagua, opacity: 0.05 }}
+          >
+            AGILLIZA
+          </span>
+        </span>
+      )}
+
 
       {/* Cabeçalho conforme estilo */}
       {modelo.estilo === "faixa" && (
@@ -529,6 +651,46 @@ function PreviewPagina({
           <div className="relative mx-6 h-px bg-border" />
         </>
       )}
+      {modelo.estilo === "real" && (
+        <div className="relative flex flex-col items-center px-6 pb-4 pt-12">
+          <img src={agillizaLogoDark} alt="Agilliza" className="h-8 w-auto" />
+          <div
+            className="mt-3 font-serif text-2xl font-bold tracking-[0.3em]"
+            style={{ color: modelo.primaria }}
+          >
+            AGILLIZA
+          </div>
+          <div
+            className="mt-1 font-serif text-[10px] tracking-[0.32em]"
+            style={{ color: modelo.metalico ?? modelo.destaque }}
+          >
+            CRÉDITO IMOBILIÁRIO
+          </div>
+          <div className="mt-4 flex w-full items-center gap-3">
+            <span
+              className="h-px flex-1"
+              style={{ background: modelo.metalico ?? modelo.destaque }}
+            />
+            <span
+              className="grid size-3.5 rotate-45 place-items-center border"
+              style={{
+                borderColor: modelo.primaria,
+                background: modelo.metalico ?? modelo.destaque,
+              }}
+            />
+            <span
+              className="h-px flex-1"
+              style={{ background: modelo.metalico ?? modelo.destaque }}
+            />
+          </div>
+          {modelo.lema && (
+            <div className="mt-2 font-serif text-[9px] italic tracking-[0.14em] text-muted-foreground">
+              {modelo.lema}
+            </div>
+          )}
+        </div>
+      )}
+
 
       {/* Corpo */}
       <div className="relative">{children}</div>
