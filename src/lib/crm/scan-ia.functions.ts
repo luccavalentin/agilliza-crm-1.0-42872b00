@@ -312,15 +312,25 @@ export const processarLeitura = createServerFn({ method: "POST" })
       const base64 = bytes.toString("base64");
       const mime = (blob as Blob).type || "application/pdf";
 
+      const mapaTipos = Object.entries(CAMPOS_POR_TIPO)
+        .map(([t, cs]) => `- ${t}: ${cs.join(", ")}`)
+        .join("\n");
+      const tipoInformado = (leitura.tipo_documento ?? "").trim();
+
       const instrucaoBase =
-        `Tipo do documento: "${leitura.tipo_documento ?? "desconhecido"}". ` +
-        `Faça OCR e extraia os campos a seguir quando presentes: ${CAMPOS_ESPERADOS.join(", ")}. ` +
+        `Você analisa documentos brasileiros para um correspondente bancário.\n` +
+        `PASSO 1 — Classifique o documento em EXATAMENTE um destes tipos: ${TIPOS_DOCUMENTO.join(", ")}.\n` +
+        (tipoInformado
+          ? `O operador informou o tipo como "${tipoInformado}", mas classifique de forma independente pelo conteúdo real.\n`
+          : "") +
+        `PASSO 2 — Faça OCR e extraia SOMENTE os campos previstos para o tipo que você classificou:\n${mapaTipos}\n` +
         `Responda SOMENTE com JSON no formato ` +
-        `{"campos":[{"campo":"<nome>","valor":"<texto>","confianca":<0-1>}]}. ` +
-        `Use exatamente os nomes de campo listados. Para valores monetários, mantenha o formato numérico. ` +
-        `A confiança deve refletir a legibilidade e a certeza da extração. ` +
+        `{"tipo_documento":"<um dos tipos>","confianca_tipo":<0-1>,"campos":[{"campo":"<nome>","valor":"<texto>","confianca":<0-1>}]}. ` +
+        `Use exatamente os nomes de campo listados para o tipo. Para valores monetários, mantenha o formato numérico. ` +
+        `Datas em dd/mm/aaaa. A confiança deve refletir a legibilidade e a certeza da extração. ` +
         `Não invente valores: se um campo não existir no documento, não o inclua.`;
       const prompt = promptSistema ? `${promptSistema}\n\n${instrucaoBase}` : instrucaoBase;
+
 
       let resp: Response;
       if (provedor === "openai") {
