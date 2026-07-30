@@ -390,12 +390,14 @@ export function gerarPapelTimbradoPDF(dados: PapelTimbradoDados = {}, filename?:
   const [rCinza, gCinza, bCinza] = [107, 114, 128];
   const [rBorda, gBorda, bBorda] = [228, 230, 239];
 
-  // Página 1
-  drawWatermark(doc, pageW, pageH, modelo.marcaDagua);
-  drawHeader(doc, pageW, modelo);
+  const ehReal = modelo.estilo === "real";
+  const margem = ehReal ? MARGEM_REAL : MARGEM;
 
-  let y = HEADER_H + 44;
-  const largura = pageW - MARGEM * 2;
+  // Página 1
+  let y = drawPagina(doc, pageW, pageH, modelo);
+  const largura = pageW - margem * 2;
+  const fonteCorpo = ehReal ? "times" : "helvetica";
+
 
   const linhaCabecalho = [dados.cidade?.trim(), dados.data?.trim()].filter(Boolean).join(", ");
   if (linhaCabecalho) {
