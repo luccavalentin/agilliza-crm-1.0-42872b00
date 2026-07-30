@@ -472,11 +472,30 @@ export function ThreadChat({
               <Button variant="outline" size="icon" className="h-9 w-9 rounded-full" aria-label="Ligar">
                 <Phone className="h-4 w-4" />
               </Button>
-              <Button variant="outline" size="icon" className="h-9 w-9 rounded-full" aria-label="Mais opções">
-                <MoreVertical className="h-4 w-4" />
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="icon" className="h-9 w-9 rounded-full" aria-label="Mais opções">
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-52">
+                  <DropdownMenuItem
+                    className="text-destructive focus:text-destructive"
+                    disabled={excluirConversa.isPending}
+                    onSelect={(e) => {
+                      e.preventDefault();
+                      if (!window.confirm("Excluir esta conversa da sua lista?")) return;
+                      excluirConversa.mutate();
+                    }}
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Excluir conversa
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           )}
+
         </div>
       )}
 
