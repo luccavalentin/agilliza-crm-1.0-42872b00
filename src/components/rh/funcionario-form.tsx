@@ -1,3 +1,4 @@
+import type React from "react";
 import { useState } from "react";
 import { z } from "zod";
 import { useNavigate } from "@tanstack/react-router";
@@ -96,12 +97,29 @@ const CONTRATO_LABEL: Record<TipoContrato, string> = {
   aprendiz: "Aprendiz",
 };
 
+/** Classe padrão das abas da ficha (usada também pelas abas extras da página). */
+export const ABA_CLASS =
+  "shrink-0 whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-medium transition-colors data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm sm:text-sm";
+
 function toEmpty<T extends string | number | null | undefined>(v: T): string {
   return v === null || v === undefined ? "" : String(v);
 }
 
 /** Formulário completo do funcionário (usado em Novo e Editar). */
-export function FuncionarioForm({ inicial }: { inicial?: Funcionario | null }) {
+export function FuncionarioForm({
+  inicial,
+  abasExtras,
+  conteudoExtra,
+  acoes,
+}: {
+  inicial?: Funcionario | null;
+  /** <TabsTrigger> adicionais renderizados na mesma barra de abas. */
+  abasExtras?: React.ReactNode;
+  /** <TabsContent> adicionais renderizados dentro do mesmo <Tabs>. */
+  conteudoExtra?: React.ReactNode;
+  /** Ações extras exibidas ao lado do botão Salvar. */
+  acoes?: React.ReactNode;
+}) {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const criar = useServerFn(criarFuncionario);
@@ -267,8 +285,8 @@ export function FuncionarioForm({ inicial }: { inicial?: Funcionario | null }) {
 
   return (
     <div className="mx-auto w-full max-w-[1400px] space-y-4 p-3 sm:p-4 md:p-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-4">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 sm:flex sm:flex-wrap sm:justify-between">
+        <div className="flex min-w-0 items-center gap-3 sm:gap-4">
           {inicial?.id && (
             <FuncionarioFoto
               funcionarioId={inicial.id}
@@ -276,14 +294,14 @@ export function FuncionarioForm({ inicial }: { inicial?: Funcionario | null }) {
               fotoPath={(inicial as any).foto_url ?? null}
             />
           )}
-        <div>
+        <div className="min-w-0">
           <button
             onClick={() => navigate({ to: "/rh/funcionarios" })}
             className="mb-2 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="h-3.5 w-3.5" /> Voltar
           </button>
-          <h1 className="text-xl font-semibold text-foreground md:text-2xl">
+          <h1 className="truncate text-lg font-semibold text-foreground sm:text-xl md:text-2xl">
             {inicial ? `Editar · ${inicial.nome}` : "Novo funcionário"}
           </h1>
           {inicial?.numero && (
@@ -291,10 +309,13 @@ export function FuncionarioForm({ inicial }: { inicial?: Funcionario | null }) {
           )}
         </div>
         </div>
-        <Button onClick={salvar} disabled={mut.isPending}>
+        <div className="flex flex-wrap items-center gap-2">
+          {acoes}
+          <Button onClick={salvar} disabled={mut.isPending}>
           {mut.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-          Salvar
-        </Button>
+            Salvar
+          </Button>
+        </div>
       </div>
 
       <Card className="border-primary/30 bg-primary/5">
@@ -400,12 +421,17 @@ export function FuncionarioForm({ inicial }: { inicial?: Funcionario | null }) {
       </Card>
 
       <Tabs value={tab} onValueChange={setTab}>
-        <TabsList className="flex flex-wrap">
-          <TabsTrigger value="pessoal">Dados pessoais</TabsTrigger>
-          <TabsTrigger value="endereco">Endereço</TabsTrigger>
-          <TabsTrigger value="profissional">Profissional</TabsTrigger>
-          <TabsTrigger value="bancario">Bancário</TabsTrigger>
-        </TabsList>
+        {/* Barra única de navegação da ficha: cadastro + submódulos.
+            Em telas pequenas rola horizontalmente; a partir de lg quebra em linhas. */}
+        <div className="sticky top-0 z-20 -mx-3 bg-background/85 px-3 py-2 backdrop-blur supports-[backdrop-filter]:bg-background/70 sm:-mx-4 sm:px-4 md:-mx-6 md:px-6">
+          <TabsList className="flex h-auto w-full justify-start gap-1 overflow-x-auto rounded-xl border border-border/60 bg-muted/50 p-1 [scrollbar-width:none] lg:flex-wrap lg:overflow-visible [&::-webkit-scrollbar]:hidden">
+            <TabsTrigger value="pessoal" className={ABA_CLASS}>Dados pessoais</TabsTrigger>
+            <TabsTrigger value="endereco" className={ABA_CLASS}>Endereço</TabsTrigger>
+            <TabsTrigger value="profissional" className={ABA_CLASS}>Profissional</TabsTrigger>
+            <TabsTrigger value="bancario" className={ABA_CLASS}>Bancário</TabsTrigger>
+            {abasExtras}
+          </TabsList>
+        </div>
 
         <TabsContent value="pessoal" className="mt-4">
           <Card>
@@ -837,6 +863,8 @@ export function FuncionarioForm({ inicial }: { inicial?: Funcionario | null }) {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {conteudoExtra}
       </Tabs>
     </div>
   );
