@@ -989,6 +989,8 @@ export interface RhHolerite {
   arquivo_path: string;
   arquivo_nome: string;
   valor_liquido: number | null;
+  /** Dados usados no cálculo (permitem reabrir o holerite para edição). */
+  entrada: Record<string, unknown> | null;
   created_at: string;
 }
 
