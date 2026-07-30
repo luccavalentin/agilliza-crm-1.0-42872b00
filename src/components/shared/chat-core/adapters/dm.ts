@@ -94,9 +94,10 @@ export function useAdaptadorDm({
         tarefa: false,
         retorno: false,
         anexo: true,
-        respostasRapidas: false,
-        audio: false,
+        respostasRapidas: true,
+        audio: true,
       },
+
 
       renderHeader,
 

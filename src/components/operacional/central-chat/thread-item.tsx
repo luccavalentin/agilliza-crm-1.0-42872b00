@@ -60,32 +60,42 @@ export function ThreadItem({
   return (
     <div
       className={cn(
-        "group relative flex w-full items-center gap-3 px-3 py-2.5 transition-colors",
-        "hover:bg-muted/60",
-        selecionado && "bg-primary/8 hover:bg-primary/10",
+        "group relative mx-1.5 my-0.5 flex w-[calc(100%-0.75rem)] items-center gap-2.5 rounded-2xl px-2.5 py-2 transition-[background-color,box-shadow] duration-200",
+        "hover:bg-muted/50",
+        selecionado && "bg-primary/[0.07] hover:bg-primary/10",
       )}
     >
+      {/* Barra de destaque da conversa ativa */}
+      <span
+        className={cn(
+          "absolute left-0 top-1/2 h-7 w-[3px] -translate-y-1/2 rounded-r-full bg-primary transition-opacity",
+          selecionado ? "opacity-100" : "opacity-0",
+        )}
+        aria-hidden
+      />
+
       <button
         type="button"
+        data-depth="off"
         onClick={onClick}
-        className="flex flex-1 items-center gap-3 text-left focus:outline-none"
+        className="flex min-w-0 flex-1 items-center gap-2.5 rounded-xl bg-transparent text-left shadow-none outline-none transition-none focus-visible:ring-2 focus-visible:ring-primary/40"
       >
         <div className="relative shrink-0">
           <Avatar
             className={cn(
-              "size-11 ring-2 ring-offset-2 ring-offset-background",
+              "size-10 ring-1 ring-offset-2 ring-offset-background",
               RING_BY_KIND[thread.kind],
             )}
           >
             {thread.avatar_url && <AvatarImage src={thread.avatar_url} alt={nomePrincipal} />}
-            <AvatarFallback className="bg-gradient-to-br from-muted to-muted/60 text-xs font-semibold text-foreground/80">
+            <AvatarFallback className="bg-muted text-[11px] font-semibold text-foreground/70">
               {iniciais(nomePrincipal)}
             </AvatarFallback>
           </Avatar>
           {/* pontinho de tipo no canto inferior */}
           <span
             className={cn(
-              "absolute -bottom-0.5 -right-0.5 size-3 rounded-full ring-2 ring-background",
+              "absolute -bottom-0.5 -right-0.5 size-2.5 rounded-full ring-2 ring-background",
               DOT_BY_KIND[thread.kind],
             )}
             aria-hidden
@@ -96,7 +106,7 @@ export function ThreadItem({
           <div className="flex items-center gap-1.5">
             <p
               className={cn(
-                "truncate text-[14px] leading-tight text-foreground",
+                "truncate text-[13.5px] leading-tight text-foreground",
                 naoLidas > 0 ? "font-semibold" : "font-medium",
               )}
             >
@@ -107,8 +117,8 @@ export function ThreadItem({
             {arquivado && <Archive className="size-3 shrink-0 text-muted-foreground" />}
             <span
               className={cn(
-                "ml-auto shrink-0 text-[11px] tabular-nums",
-                naoLidas > 0 ? "font-semibold text-primary" : "text-muted-foreground",
+                "ml-auto shrink-0 text-[10.5px] tabular-nums",
+                naoLidas > 0 ? "font-semibold text-primary" : "text-muted-foreground/80",
               )}
             >
               {tempoRelativo(thread.ultima_em)}
@@ -116,7 +126,7 @@ export function ThreadItem({
           </div>
           <p
             className={cn(
-              "mt-0.5 truncate text-[13px]",
+              "mt-0.5 truncate text-[12.5px] leading-snug",
               naoLidas > 0 ? "text-foreground/85" : "text-muted-foreground",
             )}
           >
@@ -130,23 +140,26 @@ export function ThreadItem({
         </div>
       </button>
 
-      <div className="flex flex-col items-end gap-1.5">
+      <div className="flex shrink-0 flex-col items-end gap-1">
         {naoLidas > 0 && (
-          <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-primary px-1.5 text-[10.5px] font-bold tabular-nums text-primary-foreground shadow-sm">
+          <span className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-bold tabular-nums text-primary-foreground">
             {naoLidas > 99 ? "99+" : naoLidas}
           </span>
         )}
-        <ConversaMenuAcoes
-          chatTipo={thread.kind as ChatTipo}
-          chatId={thread.id}
-          arquivado={arquivado}
-          fixado={fixado}
-          apelidoAtual={apelido}
-          nomeReferencia={nomeBase}
-          etiquetaIds={etiquetaIds}
-          compact
-        />
+        <div className="opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100 data-[aberto=true]:opacity-100">
+          <ConversaMenuAcoes
+            chatTipo={thread.kind as ChatTipo}
+            chatId={thread.id}
+            arquivado={arquivado}
+            fixado={fixado}
+            apelidoAtual={apelido}
+            nomeReferencia={nomeBase}
+            etiquetaIds={etiquetaIds}
+            compact
+          />
+        </div>
       </div>
     </div>
   );
 }
+
