@@ -158,10 +158,11 @@ export const salvarRegraComissaoUsuario = createServerFn({ method: "POST" })
           "analista",
           "outro",
         ]),
-        gatilho: z.enum([
-          "contrato_emitido",
-          "manual",
-        ]),
+        gatilho: z
+          .string()
+          .min(1)
+          .refine((v) => GATILHOS_COMISSAO.some((g) => g.valor === v), "Gatilho inválido"),
+
         base_calculo: z.enum(["valor_contrato", "percentual_repasse"]),
         percentual: z.number().min(0).max(100),
         banco_nome: z.string().nullable().optional(),
