@@ -954,7 +954,13 @@ export const aplicarAoCadastro = createServerFn({ method: "POST" })
     async ({
       data,
       context,
-    }): Promise<{ ok: boolean; aplicados: number; descartados: number }> => {
+    }): Promise<{
+      ok: boolean;
+      aplicados: number;
+      descartados: number;
+      arquivado: boolean;
+      erro_arquivo: string | null;
+    }> => {
       const { supabase, userId } = context;
       const corr = await correspondenteDoUsuario(supabase, userId);
       if (!corr) throw new Error("Sem correspondente.");
