@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { FileSpreadsheet, Plus, Trash2, GitCompare } from "lucide-react";
+import { FileSpreadsheet, Plus, Trash2, GitCompare, Eraser } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -14,15 +14,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { BancoLogo } from "@/components/bancos/banco-logo";
 import { NovaConciliacaoDialog } from "@/components/conciliacao/nova-conciliacao-dialog";
 import { ComparadorPlanilhasDialog } from "@/components/conciliacao/comparador-planilhas-dialog";
-import { LoteDetalhe } from "@/components/conciliacao/lote-detalhe";
+import { LoteDetalhe, type FiltroLote } from "@/components/conciliacao/lote-detalhe";
 import {
   excluirLoteConciliacao,
   listarLotesConciliacao,
   resumoConciliacao,
 } from "@/lib/conciliacao/conciliacao.functions";
 import { BANCOS_CONCILIACAO } from "@/lib/conciliacao/bancos";
+
 
 export const Route = createFileRoute("/_authenticated/relatorios/comparativos")({
   head: () => ({
