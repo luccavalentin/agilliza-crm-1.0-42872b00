@@ -65,7 +65,7 @@ export function KpiDrilldownDialog({
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[85vh] max-w-2xl flex-col gap-0 overflow-hidden border-border/60 p-0 shadow-2xl">
+      <DialogContent className="flex max-h-[88vh] w-[calc(100vw-1.5rem)] max-w-2xl flex-col gap-0 overflow-hidden border-border/60 p-0 shadow-2xl sm:max-h-[85vh]">
         <img
           src={agillizaSymbol}
           alt=""
