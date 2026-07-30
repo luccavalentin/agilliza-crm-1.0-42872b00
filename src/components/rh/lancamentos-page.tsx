@@ -149,7 +149,7 @@ export function LancamentosPage({
                   <Input
                     type="number"
                     step="0.01"
-                    value={form.valor}
+                    value={form.valor || ""}
                     onChange={(e) => setForm((p) => ({ ...p, valor: Number(e.target.value) }))}
                   />
                 </div>

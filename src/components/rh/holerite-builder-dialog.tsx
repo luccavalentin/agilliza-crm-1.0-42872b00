@@ -69,7 +69,7 @@ function CampoNum({
         type="number"
         step={passo}
         min={0}
-        value={Number.isFinite(value) ? value : 0}
+        value={Number.isFinite(value) ? value : 0 || ""}
         onChange={(ev) => onChange(Number(ev.target.value))}
         className="tabular-nums"
       />
