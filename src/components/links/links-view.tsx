@@ -312,13 +312,16 @@ export function LinksView() {
 
 function LinkDialog({
   link,
+  categorias,
   onClose,
   onDone,
 }: {
   link?: LinkUtil;
+  categorias: LinkCategoria[];
   onClose: () => void;
   onDone: () => void;
 }) {
+
   const criar = useServerFn(criarLink);
   const atualizar = useServerFn(atualizarLink);
   const [titulo, setTitulo] = useState(link?.titulo ?? "");
