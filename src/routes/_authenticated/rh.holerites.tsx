@@ -42,6 +42,7 @@ import {
 } from "@/lib/rh/submodulos.functions";
 import { listarItensFolha, listarAjustes } from "@/lib/rh/folha.functions";
 import { gerarHoleritePdf } from "@/lib/rh/holerite-pdf";
+import { HoleriteBuilderDialog } from "@/components/rh/holerite-builder-dialog";
 import { formatBRL } from "@/lib/financeiro/format";
 
 const MESES = [
@@ -282,10 +283,11 @@ function Pagina() {
             <Receipt className="h-5 w-5 text-primary" /> Holerites e recibos
           </h1>
           <p className="text-sm text-muted-foreground">
-            Gere holerites automaticamente a partir da folha fechada, ou anexe um PDF externo.
+            Monte um holerite CLT completo (proventos, descontos, INSS/IRRF/FGTS), gere em lote a partir da folha fechada ou anexe um PDF externo.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <HoleriteBuilderDialog />
           <Dialog open={openGerar} onOpenChange={setOpenGerar}>
             <DialogTrigger asChild>
               <Button variant="outline">
