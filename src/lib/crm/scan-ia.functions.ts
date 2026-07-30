@@ -710,7 +710,7 @@ export const criarClienteParaLeitura = createServerFn({ method: "POST" })
           numero_cliente: "",
           nome: data.nome.trim(),
           documento,
-          tipo_pessoa: documento.length === 14 ? "pj" : "pf",
+          tipo_pessoa: documento.length === 14 ? "PJ" : "PF",
           criador_id: userId,
           responsavel_id: userId,
         })
@@ -965,7 +965,7 @@ export const aplicarAoCadastro = createServerFn({ method: "POST" })
       if (Object.keys(patch).length > 0) {
         const { error: upErr } = await supabase
           .from("clientes")
-          .update(patch)
+          .update(patch as never)
           .eq("id", leitura.cliente_id);
         if (upErr) throw upErr;
       }
