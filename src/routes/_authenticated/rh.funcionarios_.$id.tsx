@@ -173,9 +173,13 @@ function Pagina() {
           <TabsContent value="salarios" className="mt-4">
             <FichaAlteracoesSalariais funcionarioId={id} />
           </TabsContent>
+          <TabsContent value="previa" className="mt-4">
+            <FichaPreviaFolha funcionarioId={id} />
+          </TabsContent>
           <TabsContent value="holerites" className="mt-4">
             <FichaHolerites funcionarioId={id} />
           </TabsContent>
+
         </Tabs>
       </div>
     </div>
