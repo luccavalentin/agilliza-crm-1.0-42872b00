@@ -7,13 +7,6 @@ import { FileSpreadsheet, Plus, Trash2, GitCompare, Eraser } from "lucide-react"
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { BancoLogo } from "@/components/bancos/banco-logo";
 import { NovaConciliacaoDialog } from "@/components/conciliacao/nova-conciliacao-dialog";
 import { ComparadorPlanilhasDialog } from "@/components/conciliacao/comparador-planilhas-dialog";
@@ -26,7 +19,6 @@ import {
   resumoConciliacao,
 } from "@/lib/conciliacao/conciliacao.functions";
 import { BANCOS_CONCILIACAO } from "@/lib/conciliacao/bancos";
-
 
 export const Route = createFileRoute("/_authenticated/relatorios/comparativos")({
   head: () => ({
@@ -88,7 +80,8 @@ function Pagina() {
 
   /** Lotes efetivamente considerados no detalhamento/exportação. */
   const lotesAtivos = useMemo(
-    () => (lotesSelecionados.length ? lotes.filter((l) => lotesSelecionados.includes(l.id)) : lotes),
+    () =>
+      lotesSelecionados.length ? lotes.filter((l) => lotesSelecionados.includes(l.id)) : lotes,
     [lotes, lotesSelecionados],
   );
 
@@ -186,7 +179,6 @@ function Pagina() {
     },
   ];
 
-
   return (
     <div className="space-y-6 p-4 md:p-6">
       <header className="flex flex-wrap items-end justify-between gap-4">
@@ -196,8 +188,8 @@ function Pagina() {
           </p>
           <h1 className="text-2xl font-semibold tracking-tight">Comparativo de dados</h1>
           <p className="text-sm text-muted-foreground">
-            Faça o upload do relatório oficial do banco. O sistema cruza contra as
-            propostas existentes e aponta divergências — sem criar ou alterar nada.
+            Faça o upload do relatório oficial do banco. O sistema cruza contra as propostas
+            existentes e aponta divergências — sem criar ou alterar nada.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -225,9 +217,7 @@ function Pagina() {
           />
         </div>
         <div className="space-y-1">
-          <label className="text-[11px] uppercase tracking-wide text-muted-foreground">
-            Banco
-          </label>
+          <label className="text-[11px] uppercase tracking-wide text-muted-foreground">Banco</label>
           <MultiSelect
             className="w-64"
             placeholder="Todos os bancos"
@@ -378,9 +368,7 @@ function Pagina() {
                 <div className="flex items-center gap-2">
                   <BancoLogo nome={nomeBanco} size="sm" />
                   <span className="text-xs font-medium">{nomeBanco}</span>
-                  <span className="text-[11px] text-muted-foreground">
-                    {lista.length} lote(s)
-                  </span>
+                  <span className="text-[11px] text-muted-foreground">{lista.length} lote(s)</span>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {lista.map((l) => {
@@ -434,7 +422,6 @@ function Pagina() {
           periodoLabel={fmtPeriodo(periodo || mesAtual())}
         />
       )}
-
 
       <ComparadorPlanilhasDialog open={comparador} onOpenChange={setComparador} />
 

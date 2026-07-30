@@ -185,9 +185,7 @@ export function ComparativoConsolidado({
         { rotulo: "Lotes considerados", valor: lotes.length },
         {
           rotulo: "Resultados filtrados",
-          valor: resultados.length
-            ? resultados.map((r) => RESULTADO_LABEL[r]).join(", ")
-            : "Todos",
+          valor: resultados.length ? resultados.map((r) => RESULTADO_LABEL[r]).join(", ") : "Todos",
         },
         {
           rotulo: "Etapas filtradas",
@@ -340,11 +338,11 @@ export function ComparativoConsolidado({
             <button
               key={e}
               type="button"
-              onClick={() =>
-                setEtapas(ativo ? etapas.filter((x) => x !== e) : [...etapas, e])
-              }
+              onClick={() => setEtapas(ativo ? etapas.filter((x) => x !== e) : [...etapas, e])}
               className={`rounded-full border px-2.5 py-1 text-[11px] transition ${
-                ativo ? ETAPA_COMPARATIVO_TONE[e] : "border-border text-muted-foreground hover:bg-muted"
+                ativo
+                  ? ETAPA_COMPARATIVO_TONE[e]
+                  : "border-border text-muted-foreground hover:bg-muted"
               }`}
             >
               {ETAPA_COMPARATIVO_LABEL[e]} ({contagemEtapa.get(e)})
@@ -416,7 +414,9 @@ export function ComparativoConsolidado({
                   </TableCell>
                   <TableCell className="text-sm">{i.status_banco ?? "—"}</TableCell>
                   <TableCell className="text-sm">
-                    {i.status_sistema ? (SITUACAO_LABEL[i.status_sistema] ?? i.status_sistema) : "—"}
+                    {i.status_sistema
+                      ? (SITUACAO_LABEL[i.status_sistema] ?? i.status_sistema)
+                      : "—"}
                   </TableCell>
                   <TableCell className="text-right font-mono text-xs tabular-nums">
                     {fmtValor(i.valor_financiamento_banco)}
