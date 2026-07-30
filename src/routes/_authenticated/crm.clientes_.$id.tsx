@@ -39,6 +39,8 @@ import { ResumoTab } from "@/components/crm/cliente-detalhe/resumo-tab";
 import { NegociosTab } from "@/components/crm/cliente-detalhe/negocios-tab";
 import { HistoricoTab } from "@/components/crm/cliente-detalhe/historico-tab";
 import { clienteParaFormInicial } from "@/components/crm/cliente-detalhe/form-mapper";
+import { AppClienteAcesso } from "@/components/crm/cliente-detalhe/app-cliente-acesso";
+
 
 export const Route = createFileRoute("/_authenticated/crm/clientes_/$id")({
   head: () => ({ meta: [{ title: "Cliente — Agilliza" }] }),
