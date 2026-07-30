@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { GATILHOS_COMISSAO as LISTA_GATILHOS } from "@/lib/financeiro/comissoes-gatilhos";
 
 export const TIPOS_VINCULO_COMISSAO = [
   { valor: "corretor", rotulo: "Corretor" },
@@ -149,7 +150,7 @@ export const salvarRegraComissaoUsuario = createServerFn({ method: "POST" })
         gatilho: z
           .string()
           .min(1)
-          .refine((v) => GATILHOS_COMISSAO.some((g) => g.valor === v), "Gatilho inválido"),
+          .refine((v) => LISTA_GATILHOS.some((g) => g.valor === v), "Gatilho inválido"),
 
         base_calculo: z.enum(["valor_contrato", "percentual_repasse"]),
         percentual: z.number().min(0).max(100),
