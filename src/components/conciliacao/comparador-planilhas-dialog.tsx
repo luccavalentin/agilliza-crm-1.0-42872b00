@@ -296,24 +296,47 @@ export function ComparadorPlanilhasDialog({
     const porResultado = (r: ResultadoComparativo) =>
       linhas.filter((l) => l.resultado === RESULTADO_COMPARATIVO_LABEL[r]);
 
-    baixarXlsx(`agilliza-comparativo-planilhas-${new Date().toISOString().slice(0, 10)}`, [
-      abaResumo("Comparativo de planilhas", [
-        { rotulo: "Gerado em", valor: new Date().toLocaleString("pt-BR") },
-        { rotulo: "Planilhas do meu controle", valor: controle.arquivos.length },
-        { rotulo: "Planilhas de bancos", valor: banco.arquivos.length },
-        { rotulo: "Registros comparados", valor: itens.length },
-        { rotulo: "Coincidentes", valor: contagens.igual ?? 0 },
-        { rotulo: "Divergentes", valor: contagens.divergente ?? 0 },
-        { rotulo: "Só no meu controle", valor: contagens.so_controle ?? 0 },
-        { rotulo: "Só no relatório do banco", valor: contagens.so_banco ?? 0 },
-      ]),
-      { nome: "Todos", colunas, linhas },
-      { nome: "Divergentes", colunas, linhas: porResultado("divergente") },
-      { nome: "Só meu controle", colunas, linhas: porResultado("so_controle") },
-      { nome: "Só banco", colunas, linhas: porResultado("so_banco") },
-      { nome: "Coincidentes", colunas, linhas: porResultado("igual") },
-    ]);
+    // Uma aba por banco/relatório de origem, para leitura organizada.
+    const bancosDetectados = Array.from(
+      new Set(
+        linhas
+          .map((l) => (l.arquivoBanco ? String(l.arquivoBanco) : ""))
+          .filter((v): v is string => !!v),
+      ),
+    ).slice(0, 12);
+
+    void baixarXlsx(
+      `agilliza-comparativo-planilhas-${new Date().toISOString().slice(0, 10)}`,
+      [
+        abaResumo("Comparativo de planilhas", [
+          { rotulo: "Gerado em", valor: new Date().toLocaleString("pt-BR") },
+          { rotulo: "Planilhas do meu controle", valor: controle.arquivos.length },
+          { rotulo: "Planilhas de bancos", valor: banco.arquivos.length },
+          { rotulo: "Registros comparados", valor: itens.length },
+          { rotulo: "Coincidentes", valor: contagens.igual ?? 0 },
+          { rotulo: "Divergentes", valor: contagens.divergente ?? 0 },
+          { rotulo: "Só no meu controle", valor: contagens.so_controle ?? 0 },
+          { rotulo: "Só no relatório do banco", valor: contagens.so_banco ?? 0 },
+        ]),
+        { nome: "Todos", colunas, linhas, subtitulo: `${linhas.length} registro(s)` },
+        { nome: "Divergentes", colunas, linhas: porResultado("divergente") },
+        { nome: "Só meu controle", colunas, linhas: porResultado("so_controle") },
+        { nome: "Só banco", colunas, linhas: porResultado("so_banco") },
+        { nome: "Coincidentes", colunas, linhas: porResultado("igual") },
+        ...bancosDetectados.map((arquivo) => {
+          const ls = linhas.filter((l) => l.arquivoBanco === arquivo);
+          return {
+            nome: arquivo.replace(/\.[a-z]+$/i, "").slice(0, 28),
+            colunas,
+            linhas: ls,
+            subtitulo: `Origem: ${arquivo} · ${ls.length} registro(s)`,
+          };
+        }),
+      ],
+      "Comparativo de planilhas e dados",
+    );
   }
+
 
   function exportarPdf(modo: ModoSaida) {
     if (!itens?.length) return;

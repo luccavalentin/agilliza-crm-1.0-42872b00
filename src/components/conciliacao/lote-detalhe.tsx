@@ -38,11 +38,24 @@ function fmtData(v: string | null) {
   return `${d}/${m}/${a}`;
 }
 
+export type FiltroLote = "todos" | ResultadoConciliacao;
+
 /** Detalhamento de um lote: abas por resultado, busca e export XLSX. */
-export function LoteDetalhe({ lote }: { lote: ConciliacaoLote }) {
+export function LoteDetalhe({
+  lote,
+  filtro,
+  onFiltroChange,
+}: {
+  lote: ConciliacaoLote;
+  filtro?: FiltroLote;
+  onFiltroChange?: (v: FiltroLote) => void;
+}) {
   const listar = useServerFn(listarItensConciliacao);
-  const [aba, setAba] = useState<"todos" | ResultadoConciliacao>("divergente");
+  const [abaLocal, setAbaLocal] = useState<FiltroLote>("divergente");
+  const aba = filtro ?? abaLocal;
+  const setAba = (v: FiltroLote) => (onFiltroChange ? onFiltroChange(v) : setAbaLocal(v));
   const [busca, setBusca] = useState("");
+
 
   const { data: itens = [], isLoading } = useQuery({
     queryKey: ["conciliacao-itens", lote.id],
@@ -108,13 +121,16 @@ export function LoteDetalhe({ lote }: { lote: ConciliacaoLote }) {
     ];
     const por = (r: ResultadoConciliacao) =>
       linhas.filter((l) => l.resultado === RESULTADO_LABEL[r]);
+    const periodo = lote.periodo_referencia.slice(0, 7);
+    const subtitulo = (nome: string, qtd: number) =>
+      `${lote.banco_nome} · ${periodo} · ${nome} · ${qtd} registro(s)`;
 
-    baixarXlsx(
-      `agilliza-comparativo-${lote.banco_nome.toLowerCase()}-${lote.periodo_referencia.slice(0, 7)}`,
+    void baixarXlsx(
+      `agilliza-comparativo-${lote.banco_nome.toLowerCase()}-${periodo}`,
       [
         abaResumo("Comparativo de dados", [
           { rotulo: "Banco", valor: lote.banco_nome },
-          { rotulo: "Mês de referência", valor: lote.periodo_referencia.slice(0, 7) },
+          { rotulo: "Mês de referência", valor: periodo },
           { rotulo: "Arquivo importado", valor: lote.nome_arquivo },
           { rotulo: "Processado em", valor: new Date(lote.enviado_em).toLocaleString("pt-BR") },
           { rotulo: "Linhas comparadas", valor: lote.total_linhas },
@@ -123,14 +139,36 @@ export function LoteDetalhe({ lote }: { lote: ConciliacaoLote }) {
           { rotulo: "Ausentes no sistema", valor: lote.total_ausentes_sistema },
           { rotulo: "Ausentes no banco", valor: lote.total_ausentes_banco },
         ]),
-        { nome: "Todos", colunas, linhas },
-        { nome: "Divergentes", colunas, linhas: por("divergente") },
-        { nome: "Ausentes no sistema", colunas, linhas: por("ausente_no_sistema") },
-        { nome: "Ausentes no banco", colunas, linhas: por("ausente_no_banco") },
-        { nome: "Conferidas", colunas, linhas: por("conferido") },
+        { nome: "Todos", colunas, linhas, subtitulo: subtitulo("Todos", linhas.length) },
+        {
+          nome: "Divergentes",
+          colunas,
+          linhas: por("divergente"),
+          subtitulo: subtitulo("Divergentes", por("divergente").length),
+        },
+        {
+          nome: "Ausentes no sistema",
+          colunas,
+          linhas: por("ausente_no_sistema"),
+          subtitulo: subtitulo("Ausentes no sistema", por("ausente_no_sistema").length),
+        },
+        {
+          nome: "Ausentes no banco",
+          colunas,
+          linhas: por("ausente_no_banco"),
+          subtitulo: subtitulo("Ausentes no banco", por("ausente_no_banco").length),
+        },
+        {
+          nome: "Conferidas",
+          colunas,
+          linhas: por("conferido"),
+          subtitulo: subtitulo("Conferidas", por("conferido").length),
+        },
       ],
+      `Comparativo de dados — ${lote.banco_nome}`,
     );
   }
+
 
   function exportarPdf(modo: ModoSaida) {
     const alvo = filtrados.length ? filtrados : itens;
