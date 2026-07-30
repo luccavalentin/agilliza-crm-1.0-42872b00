@@ -60,7 +60,7 @@ function ConfiguracoesPage() {
           Configurações do RH
         </h1>
         <p className="text-xs text-muted-foreground">
-          Cargos, departamentos e catálogo de benefícios.
+          Cargos, departamentos, catálogo de benefícios e as regras CLT aplicadas pelo sistema.
         </p>
       </div>
 
@@ -69,6 +69,7 @@ function ConfiguracoesPage() {
           <TabsTrigger value="cargos">Cargos</TabsTrigger>
           <TabsTrigger value="departamentos">Departamentos</TabsTrigger>
           <TabsTrigger value="beneficios">Tipos de benefícios</TabsTrigger>
+          <TabsTrigger value="regras">Regras CLT</TabsTrigger>
         </TabsList>
 
         <TabsContent value="cargos" className="mt-4">
@@ -79,6 +80,9 @@ function ConfiguracoesPage() {
         </TabsContent>
         <TabsContent value="beneficios" className="mt-4">
           <BeneficiosTab />
+        </TabsContent>
+        <TabsContent value="regras" className="mt-4">
+          <RegrasCltTab />
         </TabsContent>
       </Tabs>
     </div>
@@ -523,5 +527,61 @@ function BeneficiosTab() {
         </DialogContent>
       </Dialog>
     </Card>
+  );
+}
+
+function RegrasCltTab() {
+  const regras: { titulo: string; itens: string[] }[] = [
+    {
+      titulo: "Férias",
+      itens: [
+        "Os períodos aquisitivos são gerados automaticamente a cada 12 meses contados da data de admissão registrada na ficha do funcionário.",
+        "O prazo para conceder as férias termina 12 meses após o fim do período aquisitivo; após esse prazo o período é sinalizado como vencido.",
+        "Os dias de direito seguem as faltas injustificadas do período: até 5 faltas, 30 dias; de 6 a 14, 24 dias; de 15 a 23, 18 dias; de 24 a 32, 12 dias; acima disso, sem direito.",
+        "O abono pecuniário é limitado a 1/3 do período (até 10 dias).",
+        "A provisão exibida nos painéis considera o saldo adquirido, o período proporcional em formação e o terço constitucional.",
+        "Alertas de vencimento são disparados quando faltam 90 dias ou menos para o limite de concessão.",
+      ],
+    },
+    {
+      titulo: "Folha e holerite",
+      itens: [
+        "INSS progressivo por faixas e IRRF com dedução por dependente, conforme tabelas vigentes de 2025.",
+        "FGTS de 8% é depósito do empregador e não é descontado do colaborador.",
+        "Vale-transporte limitado a 6% do salário base.",
+        "Horas extras a 50% em dias úteis e 100% em domingos e feriados; adicional noturno de 20%.",
+        "Faltas injustificadas geram desconto do dia e do descanso semanal remunerado correspondente.",
+      ],
+    },
+    {
+      titulo: "Admissão e contrato",
+      itens: [
+        "A data de admissão é obrigatória no cadastro e passa a valer como marco de todos os cálculos de tempo de serviço.",
+        "O contrato de experiência é acompanhado pelo campo de fim de experiência, com mudança automática de status ao término.",
+        "O checklist documental CLT é criado automaticamente para cada novo funcionário.",
+      ],
+    },
+  ];
+
+  return (
+    <div className="grid gap-3 lg:grid-cols-3">
+      {regras.map((g) => (
+        <Card key={g.titulo}>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">{g.titulo}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ul className="space-y-2">
+              {g.itens.map((t) => (
+                <li key={t} className="flex gap-2 text-xs leading-relaxed text-muted-foreground">
+                  <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
+                  <span>{t}</span>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
   );
 }
