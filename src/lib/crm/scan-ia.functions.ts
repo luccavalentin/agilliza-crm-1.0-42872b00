@@ -387,13 +387,25 @@ export const processarLeitura = createServerFn({ method: "POST" })
         (tipoInformado
           ? `O operador informou o tipo como "${tipoInformado}", mas classifique de forma independente pelo conteúdo real.\n`
           : "") +
-        `PASSO 2 — Faça OCR e extraia SOMENTE os campos previstos para o tipo que você classificou:\n${mapaTipos}\n` +
+        `PASSO 2 — Faça OCR de TODAS as páginas (inclusive digitalizações, carimbos e textos em coluna) ` +
+        `e extraia SOMENTE os campos previstos para o tipo que você classificou:\n${mapaTipos}\n` +
+        `REGRAS PARA MATRÍCULA DE IMÓVEL (matricula_imovel): leia o cabeçalho (número da matrícula, ` +
+        `cartório/oficial de registro de imóveis e comarca), a descrição do imóvel (tipo, logradouro, número, ` +
+        `complemento/apartamento/torre, bairro, cidade, UF, áreas: terreno, construída, privativa e fração ideal, ` +
+        `contribuinte/inscrição imobiliária) e TODOS os atos R./AV. até o final. ` +
+        `O proprietário é o do ATO MAIS RECENTE de aquisição, com CPF, estado civil, cônjuge e regime de bens quando citados. ` +
+        `Em onus_gravames descreva em texto corrido os ônus vigentes (hipoteca, alienação fiduciária, penhora, usufruto) ` +
+        `ou escreva "Nenhum ônus vigente" quando a matrícula estiver livre; em alienacao_fiduciaria descreva o credor, ` +
+        `valor e situação (ativa/cancelada). valor_imovel é o valor da última transação/avaliação declarada. ` +
+        `Nunca devolva a lista de campos vazia se o documento for legível.\n` +
         `Responda SOMENTE com JSON no formato ` +
         `{"tipo_documento":"<um dos tipos>","confianca_tipo":<0-1>,"campos":[{"campo":"<nome>","valor":"<texto>","confianca":<0-1>}]}. ` +
+        `Todo "valor" deve ser uma STRING simples (nunca objeto ou lista). ` +
         `Use exatamente os nomes de campo listados para o tipo. Para valores monetários, mantenha o formato numérico. ` +
         `Datas em dd/mm/aaaa. A confiança deve refletir a legibilidade e a certeza da extração. ` +
         `Não invente valores: se um campo não existir no documento, não o inclua.`;
       const prompt = promptSistema ? `${promptSistema}\n\n${instrucaoBase}` : instrucaoBase;
+
 
 
       let resp: Response;
@@ -452,7 +464,12 @@ export const processarLeitura = createServerFn({ method: "POST" })
                   ],
                 },
               ],
-              generationConfig: { temperature: temperatura, responseMimeType: "application/json" },
+              generationConfig: {
+                temperature: temperatura,
+                responseMimeType: "application/json",
+                maxOutputTokens: 8192,
+              },
+
             }),
           },
         );
@@ -507,14 +524,28 @@ export const processarLeitura = createServerFn({ method: "POST" })
         ...CAMPOS_ESPERADOS,
       ]);
 
+      // O modelo às vezes devolve objeto/lista (ex.: ônus com vários atos) — achata em texto.
+      const comoTexto = (v: unknown): string => {
+        if (v == null) return "";
+        if (typeof v === "string") return v.trim();
+        if (typeof v === "number" || typeof v === "boolean") return String(v);
+        if (Array.isArray(v)) return v.map(comoTexto).filter(Boolean).join(" | ");
+        return Object.entries(v as Record<string, unknown>)
+          .filter(([, val]) => val != null && val !== "")
+          .map(([k, val]) => `${k.replace(/_/g, " ")}: ${comoTexto(val)}`)
+          .join("; ");
+      };
+
       const campos = (parsed.campos ?? [])
         .filter((c) => c && c.campo && c.valor != null && permitidos.has(String(c.campo)))
         .map((c) => ({
           leitura_id: data.id,
           campo: String(c.campo).slice(0, 120),
-          valor: String(c.valor).slice(0, 2000),
+          valor: comoTexto(c.valor).slice(0, 2000),
           confianca: Math.max(0, Math.min(1, Number(c.confianca) || 0)),
-        }));
+        }))
+        .filter((c) => c.valor.length > 0);
+
 
       // Substitui campos anteriores
       await supabase.from("scan_ia_campos_extraidos").delete().eq("leitura_id", data.id);
@@ -528,7 +559,11 @@ export const processarLeitura = createServerFn({ method: "POST" })
         .from("scan_ia_leituras")
         .update({
           status: "concluida",
-          erro: null,
+          erro:
+            campos.length === 0
+              ? "A IA não conseguiu extrair campos deste documento. Verifique a qualidade da digitalização ou tente reprocessar."
+              : null,
+
           tipo_documento_sugerido: tipoSugerido,
         })
         .eq("id", data.id);
