@@ -81,12 +81,19 @@ function Pagina() {
     queryKey: ["clientes", filtros],
     queryFn: () => listar({ data: filtros }),
     placeholderData: keepPreviousData,
+    staleTime: 0,
+    refetchOnMount: "always",
   });
 
+  // KPIs precisam refletir imediatamente inclusões/exclusões feitas em outras
+  // telas (novo cliente, ficha, portal). Por isso não usam cache "morno".
   const { data: kpis } = useQuery({
     queryKey: ["clientes-stats", escopo],
     queryFn: () => stats({ data: { escopo } }),
+    staleTime: 0,
+    refetchOnMount: "always",
   });
+
 
   const { data: etapas } = useQuery({
     queryKey: ["pipeline-etapas"],
