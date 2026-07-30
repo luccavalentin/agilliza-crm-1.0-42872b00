@@ -92,7 +92,7 @@ export function HoleriteBuilderDialog({
   const fnAnexar = useServerFn(anexarHolerite);
 
   const [open, setOpen] = useState(false);
-  const [funcionarioId, setFuncionarioId] = useState<string | null>(null);
+  const [funcionarioId, setFuncionarioId] = useState<string | null>(funcionarioFixo ?? null);
   const [mes, setMes] = useState(hoje.getMonth() + 1);
   const [ano, setAno] = useState(hoje.getFullYear());
   const [e, setE] = useState<HoleriteEntrada>({ ...ENTRADA_PADRAO });
