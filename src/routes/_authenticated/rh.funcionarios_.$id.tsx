@@ -182,13 +182,51 @@ function Pagina() {
         abasExtras={abasExtras}
         conteudoExtra={conteudoExtra}
         acoes={
-          <Button variant="outline" onClick={imprimirFicha} className="shrink-0">
-            <Printer className="mr-2 h-4 w-4" />
-            <span className="hidden sm:inline">Imprimir ficha (PDF)</span>
-            <span className="sm:hidden">Ficha</span>
-          </Button>
+          <>
+            <Button variant="outline" onClick={imprimirFicha} className="shrink-0">
+              <Printer className="mr-2 h-4 w-4" />
+              <span className="hidden sm:inline">Imprimir ficha (PDF)</span>
+              <span className="sm:hidden">Ficha</span>
+            </Button>
+            <Button
+              variant="outline"
+              className="shrink-0 border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
+              onClick={() => setConfirmar(true)}
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              <span className="hidden sm:inline">Excluir funcionário</span>
+              <span className="sm:hidden">Excluir</span>
+            </Button>
+          </>
         }
       />
+
+      <AlertDialog open={confirmar} onOpenChange={setConfirmar}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir funcionário</AlertDialogTitle>
+            <AlertDialogDescription>
+              {q.data.nome} será excluído definitivamente, junto com documentos, dependentes,
+              férias, benefícios, holerites e lançamentos vinculados apenas a ele.
+              Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={excluir.isPending}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={excluir.isPending}
+              onClick={(e) => {
+                e.preventDefault();
+                excluir.mutate();
+              }}
+            >
+              {excluir.isPending ? "Excluindo…" : "Excluir"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
+
