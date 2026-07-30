@@ -156,16 +156,6 @@ export function HoleriteBuilderDialog({
       // Campos não preenchidos são tratados como zero: o PDF sempre é gerado.
 
 
-      const user = (await supabase.auth.getUser()).data.user;
-      if (!user) throw new Error("Sessão expirada.");
-      const prof = await supabase
-        .from("profiles")
-        .select("correspondente_id")
-        .eq("id", user.id)
-        .maybeSingle();
-      const cid = prof.data?.correspondente_id as string | undefined;
-      if (!cid) throw new Error("Correspondente não encontrado.");
-
       const { blob, filename } = gerarHoleritePdf({
         competencia: { mes, ano },
         funcionario: {
@@ -188,32 +178,52 @@ export function HoleriteBuilderDialog({
         liquido: calc.liquido,
       });
 
-      const path = `${cid}/holerites/${funcionarioId}/${ano}-${String(mes).padStart(2, "0")}.pdf`;
-      const { error } = await supabase.storage
-        .from("rh-documentos")
-        .upload(path, blob, { contentType: "application/pdf", upsert: true });
-      if (error) throw new Error(error.message);
-
-      await fnAnexar({
-        data: {
-          funcionario_id: funcionarioId,
-          mes,
-          ano,
-          arquivo_path: path,
-          arquivo_nome: filename,
-          valor_liquido: calc.liquido,
-          entrada: e as unknown as Record<string, string | number | boolean>,
-        },
-      });
-
-      // Download imediato para conferência.
+      // O download acontece sempre, mesmo que o anexo à ficha falhe.
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
       a.download = filename;
       a.click();
       setTimeout(() => URL.revokeObjectURL(url), 5000);
+
+      let anexado = false;
+      try {
+        const user = (await supabase.auth.getUser()).data.user;
+        if (!user) throw new Error("Sessão expirada.");
+        const prof = await supabase
+          .from("profiles")
+          .select("correspondente_id")
+          .eq("id", user.id)
+          .maybeSingle();
+        const cid = prof.data?.correspondente_id as string | undefined;
+        if (!cid) throw new Error("Correspondente não encontrado.");
+
+        const path = `${cid}/holerites/${funcionarioId}/${ano}-${String(mes).padStart(2, "0")}.pdf`;
+        const { error } = await supabase.storage
+          .from("rh-documentos")
+          .upload(path, blob, { contentType: "application/pdf", upsert: true });
+        if (error) throw new Error(error.message);
+
+        await fnAnexar({
+          data: {
+            funcionario_id: funcionarioId,
+            mes,
+            ano,
+            arquivo_path: path,
+            arquivo_nome: filename,
+            valor_liquido: calc.liquido,
+            entrada: e as unknown as Record<string, string | number | boolean>,
+          },
+        });
+        anexado = true;
+      } catch (err: any) {
+        toast.warning(
+          `PDF baixado, mas não foi possível anexar à ficha: ${err?.message ?? "erro desconhecido"}`,
+        );
+      }
+      return { anexado };
     },
+
     onSuccess: () => {
       toast.success(
         editando
