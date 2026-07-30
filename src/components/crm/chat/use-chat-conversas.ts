@@ -48,10 +48,12 @@ export function useChatConversas() {
     return () => clearInterval(id);
   }, []);
 
+  // Idempotente: só dispara render quando algo realmente muda. Sem isso,
+  // efeitos de auto-seleção podem entrar em laço de atualização infinito.
   const abrirConversa = useMemo(
     () => (clienteId: string, atendenteId: string | null) => {
-      setSelecionado(clienteId);
-      setAtendenteSel(atendenteId);
+      setSelecionado((atual) => (atual === clienteId ? atual : clienteId));
+      setAtendenteSel((atual) => (atual === atendenteId ? atual : atendenteId));
     },
     [],
   );

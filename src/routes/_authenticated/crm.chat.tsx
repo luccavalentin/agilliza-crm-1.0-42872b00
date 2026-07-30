@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { assertModuloPermitido } from "@/lib/route-guards";
 import { PainelChatCliente } from "@/components/crm/chat-cliente/painel-cliente";
@@ -21,10 +21,16 @@ function Pagina() {
   const { conversas, alvoAtual, etiquetas, etiquetasCliente, verTodos, selecionado, abrirConversa } = hook;
 
   const search = Route.useSearch();
+  const autoAbertoRef = useRef<string | null>(null);
   useEffect(() => {
     if (search.c) {
-      const alvo = (conversas ?? []).find((c) => c.cliente_id === search.c);
-      abrirConversa(search.c, alvo?.atendente_id ?? null);
+      // Abre uma única vez por cliente vindo da URL — reabrir a cada render
+      // brigava com o fechamento automático de conversas ocultas (laço).
+      if (autoAbertoRef.current !== search.c) {
+        autoAbertoRef.current = search.c;
+        const alvo = (conversas ?? []).find((c) => c.cliente_id === search.c);
+        abrirConversa(search.c, alvo?.atendente_id ?? null);
+      }
       return;
     }
     // Auto-seleciona a primeira conversa apenas no desktop; no mobile o usuário
