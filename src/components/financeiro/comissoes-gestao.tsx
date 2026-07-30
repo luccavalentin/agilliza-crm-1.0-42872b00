@@ -273,7 +273,10 @@ export function SecaoRegrasComissao() {
                     <SelectItem value={TODOS_BANCOS}>Todos os bancos</SelectItem>
                     {(bancos ?? []).map((b) => (
                       <SelectItem key={b.codigo} value={b.codigo}>
-                        {b.nome}
+                        <span className="flex items-center gap-2">
+                          <BancoLogo nome={b.nome} size="xs" />
+                          {b.nome}
+                        </span>
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -472,7 +475,10 @@ export function SimuladorComissao() {
                 <SelectItem value={TODOS_BANCOS}>Todos os bancos</SelectItem>
                 {(bancos ?? []).map((b) => (
                   <SelectItem key={b.codigo} value={b.codigo}>
-                    {b.nome}
+                    <span className="flex items-center gap-2">
+                      <BancoLogo nome={b.nome} size="xs" />
+                      {b.nome}
+                    </span>
                   </SelectItem>
                 ))}
               </SelectContent>
