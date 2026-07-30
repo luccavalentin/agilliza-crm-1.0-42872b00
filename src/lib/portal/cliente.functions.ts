@@ -535,6 +535,44 @@ export const clienteReagirMensagem = createServerFn({ method: "POST" })
     return { ok: Boolean((r as any)?.ok) };
   });
 
+/** Edita uma mensagem enviada pelo próprio cliente. */
+export const clienteEditarMensagem = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        mensagem_id: z.string().uuid(),
+        mensagem: z.string().trim().min(1).max(2000),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data }): Promise<{ ok: boolean }> => {
+    const sess = requireClienteSession();
+    const { portalDb } = await import("./portal-db.server");
+    const { data: r, error } = await portalDb().rpc("portal_editar_mensagem", {
+      _cid: sess.cid,
+      _mensagem_id: data.mensagem_id,
+      _texto: data.mensagem,
+    } as any);
+    if (error) throw new Error("Não foi possível editar a mensagem.");
+    if (!(r as any)?.ok) throw new Error((r as any)?.error ?? "Não foi possível editar a mensagem.");
+    return { ok: true };
+  });
+
+/** Exclui (apaga o conteúdo de) uma mensagem enviada pelo próprio cliente. */
+export const clienteExcluirMensagem = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => z.object({ mensagem_id: z.string().uuid() }).parse(d))
+  .handler(async ({ data }): Promise<{ ok: boolean }> => {
+    const sess = requireClienteSession();
+    const { portalDb } = await import("./portal-db.server");
+    const { data: r, error } = await portalDb().rpc("portal_excluir_mensagem", {
+      _cid: sess.cid,
+      _mensagem_id: data.mensagem_id,
+    } as any);
+    if (error) throw new Error("Não foi possível excluir a mensagem.");
+    if (!(r as any)?.ok) throw new Error((r as any)?.error ?? "Não foi possível excluir a mensagem.");
+    return { ok: true };
+  });
+
 
 // Enviar mensagem com anexo (foto/documento) — upload em base64
 const enviarAnexoSchema = z.object({
