@@ -55,7 +55,7 @@ export function PainelDrilldownDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl gap-0 overflow-hidden border-border/60 p-0 shadow-2xl">
+      <DialogContent className="flex max-h-[85vh] max-w-2xl flex-col gap-0 overflow-hidden border-border/60 p-0 shadow-2xl">
         <img
           src={agillizaSymbol}
           alt=""
@@ -63,7 +63,7 @@ export function PainelDrilldownDialog({
           draggable={false}
           className="pointer-events-none absolute left-1/2 top-1/2 h-[320px] w-auto -translate-x-1/2 -translate-y-1/2 select-none opacity-[0.035] dark:opacity-[0.06]"
         />
-        <DialogHeader className="relative space-y-1 border-b border-border/60 bg-gradient-to-br from-primary/[0.06] via-background to-background px-7 pt-6 pb-5">
+        <DialogHeader className="relative shrink-0 space-y-1 border-b border-border/60 bg-gradient-to-br from-primary/[0.06] via-background to-background px-7 pt-6 pb-5">
           <span className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
           <DialogTitle className="text-[15px] font-semibold tracking-tight text-foreground">
             {data?.titulo ?? contexto?.metrica ?? "Detalhamento"}
@@ -114,7 +114,7 @@ export function PainelDrilldownDialog({
           )}
         </DialogHeader>
 
-        <ScrollArea className="max-h-[62vh]">
+        <ScrollArea className="min-h-0 flex-1">
           <div className="px-3 py-2">
             {isLoading ? (
               <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">
