@@ -52,6 +52,7 @@ import {
   soDigitos,
 } from "@/lib/crm/documento";
 import { InputAutocomplete } from "@/components/ui/input-autocomplete";
+import { FuncionarioFoto } from "@/components/rh/funcionario-foto";
 
 const OPCOES_ORGAO_EMISSOR = [
   "SSP", "SSP/SP", "SSP/RJ", "SSP/MG", "SSP/RS", "SSP/PR", "SSP/SC", "SSP/BA",
@@ -267,6 +268,14 @@ export function FuncionarioForm({ inicial }: { inicial?: Funcionario | null }) {
   return (
     <div className="mx-auto w-full max-w-[1400px] space-y-4 p-3 sm:p-4 md:p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-4">
+          {inicial?.id && (
+            <FuncionarioFoto
+              funcionarioId={inicial.id}
+              nome={inicial.nome}
+              fotoPath={(inicial as any).foto_url ?? null}
+            />
+          )}
         <div>
           <button
             onClick={() => navigate({ to: "/rh/funcionarios" })}
@@ -280,6 +289,7 @@ export function FuncionarioForm({ inicial }: { inicial?: Funcionario | null }) {
           {inicial?.numero && (
             <p className="text-xs text-muted-foreground">Nº {inicial.numero}</p>
           )}
+        </div>
         </div>
         <Button onClick={salvar} disabled={mut.isPending}>
           {mut.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}

@@ -242,10 +242,29 @@ export const CATALOGO_MODULOS: ModuloCatalogo[] = [
   {
     grupo: "Administração",
     modulo: "admin.compras",
-    label: "Compras",
+    label: "Compras (geral)",
     acoes: [
       { acao: "view", label: "Ver" },
       { acao: "create", label: "Criar" },
+    ],
+  },
+  {
+    grupo: "Administração",
+    modulo: "admin.compras.pedidos",
+    label: "Pedidos de compra",
+    acoes: [
+      { acao: "view", label: "Ver" },
+      { acao: "create", label: "Criar" },
+      { acao: "edit", label: "Editar" },
+    ],
+  },
+  {
+    grupo: "Administração",
+    modulo: "admin.compras.aprovacoes",
+    label: "Aprovação de compras",
+    acoes: [
+      { acao: "view", label: "Ver" },
+      { acao: "edit", label: "Aprovar / reprovar" },
     ],
   },
   {

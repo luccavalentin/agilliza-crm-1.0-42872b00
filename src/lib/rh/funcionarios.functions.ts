@@ -81,6 +81,7 @@ export interface Funcionario extends FuncionarioLista {
   dia_pagamento_salario: number | null;
   dia_pagamento_adiantamento: number | null;
   gerar_contas_pagar_automatico: boolean;
+  foto_url: string | null;
 }
 
 const funcionarioSchema = z.object({
@@ -141,6 +142,7 @@ const funcionarioSchema = z.object({
   dia_pagamento_salario: z.number().int().min(1).max(31).optional().nullable(),
   dia_pagamento_adiantamento: z.number().int().min(1).max(31).optional().nullable(),
   gerar_contas_pagar_automatico: z.boolean().optional().default(false),
+  foto_url: z.string().optional().nullable(),
 });
 
 export type FuncionarioInput = z.infer<typeof funcionarioSchema>;
@@ -586,3 +588,20 @@ export const listarUsuariosVinculaveis = createServerFn({ method: "GET" })
     }));
   });
 
+
+/** Atualiza apenas a foto do funcionário (upload imediato na ficha). */
+export const salvarFotoFuncionario = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z
+      .object({ id: z.string().uuid(), foto_url: z.string().nullable() })
+      .parse(data),
+  )
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase
+      .from("rh_funcionarios")
+      .update({ foto_url: data.foto_url })
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });

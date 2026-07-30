@@ -818,6 +818,64 @@ export const listarAdiantamentos = createServerFn({ method: "GET" })
     listarLancamentos(context.supabase, "rh_adiantamentos", data),
   );
 
+/**
+ * Espelha um adiantamento em contas a pagar (origem_tipo = "rh_adiantamento").
+ * Mantém uma única conta por adiantamento; cancelamentos removem a conta
+ * ainda em aberto.
+ */
+async function sincronizarAdiantamentoFinanceiro(
+  supabase: any,
+  cid: string,
+  userId: string,
+  adiantamentoId: string,
+  input: {
+    funcionario_id: string;
+    data: string;
+    valor: number;
+    descricao: string | null;
+    status: string;
+  },
+) {
+  const { data: func } = await supabase
+    .from("rh_funcionarios")
+    .select("nome")
+    .eq("id", input.funcionario_id)
+    .maybeSingle();
+  const nome = func?.nome ?? "Funcionário";
+  const { data: existente } = await supabase
+    .from("financial_payables")
+    .select("id, status")
+    .eq("origem_tipo", "rh_adiantamento")
+    .eq("origem_ref", adiantamentoId)
+    .maybeSingle();
+
+  if (input.status === "cancelado") {
+    if (existente && existente.status !== "pago") {
+      await supabase.from("financial_payables").delete().eq("id", existente.id);
+    }
+    return;
+  }
+
+  const payload = {
+    correspondente_id: cid,
+    descricao: `Adiantamento salarial — ${nome}${input.descricao ? ` (${input.descricao})` : ""}`,
+    fornecedor: nome,
+    valor: input.valor,
+    vencimento: input.data,
+    origem_tipo: "rh_adiantamento",
+    origem_ref: adiantamentoId,
+  };
+
+  if (existente) {
+    if (existente.status === "pago") return;
+    await supabase.from("financial_payables").update(payload).eq("id", existente.id);
+    return;
+  }
+  await supabase
+    .from("financial_payables")
+    .insert({ ...payload, criador_id: userId });
+}
+
 export const registrarAdiantamento = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => lancamentoInput.parse(data))
@@ -833,21 +891,36 @@ export const registrarAdiantamento = createServerFn({ method: "POST" })
       descricao: data.descricao || null,
       status: data.status,
     };
-    if (data.id) {
+    let id = data.id;
+    if (id) {
       const { error } = await context.supabase
         .from("rh_adiantamentos")
         .update(payload)
-        .eq("id", data.id);
+        .eq("id", id);
       if (error) throw new Error(error.message);
-      return { id: data.id };
+    } else {
+      const { data: row, error } = await context.supabase
+        .from("rh_adiantamentos")
+        .insert(payload)
+        .select("id")
+        .single();
+      if (error) throw new Error(error.message);
+      id = row!.id as string;
     }
-    const { data: row, error } = await context.supabase
-      .from("rh_adiantamentos")
-      .insert(payload)
-      .select("id")
-      .single();
-    if (error) throw new Error(error.message);
-    return { id: row!.id as string };
+    // Reflete no Financeiro (contas a pagar). Falhas aqui não invalidam o RH.
+    try {
+      await sincronizarAdiantamentoFinanceiro(context.supabase, cid, context.userId, id!, {
+        funcionario_id: data.funcionario_id,
+        data: data.data,
+        valor: data.valor,
+        descricao: data.descricao || null,
+        status: data.status,
+      });
+    } catch {
+      /* silencioso: o adiantamento já foi salvo */
+    }
+    return { id: id! };
+
   });
 
 // ============================================================
@@ -996,6 +1069,18 @@ export const anexarHolerite = createServerFn({ method: "POST" })
       .single();
     if (error) throw new Error(error.message);
     return { id: row!.id as string };
+  });
+
+export const excluirHolerite = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase
+      .from("rh_holerites")
+      .delete()
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
   });
 
 // Exporta helper para uso em componentes

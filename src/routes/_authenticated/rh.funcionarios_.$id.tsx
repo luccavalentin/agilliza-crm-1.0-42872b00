@@ -18,6 +18,11 @@ import {
   FichaHolerites,
 } from "@/components/rh/ficha-tabs";
 import { FichaDependentes } from "@/components/rh/ficha-dependentes";
+import {
+  FichaAdiantamentos,
+  FichaDescontos,
+  FichaAlteracoesSalariais,
+} from "@/components/rh/ficha-financeiro";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -99,6 +104,9 @@ function Pagina() {
             <TabsTrigger value="beneficios">Benefícios</TabsTrigger>
             <TabsTrigger value="ferias">Férias</TabsTrigger>
             <TabsTrigger value="ocorrencias">Ocorrências</TabsTrigger>
+            <TabsTrigger value="adiantamentos">Adiantamentos</TabsTrigger>
+            <TabsTrigger value="descontos">Descontos</TabsTrigger>
+            <TabsTrigger value="salarios">Alterações salariais</TabsTrigger>
             <TabsTrigger value="holerites">Holerites</TabsTrigger>
           </TabsList>
 
@@ -153,6 +161,15 @@ function Pagina() {
           </TabsContent>
           <TabsContent value="ocorrencias" className="mt-4">
             <FichaOcorrencias funcionarioId={id} />
+          </TabsContent>
+          <TabsContent value="adiantamentos" className="mt-4">
+            <FichaAdiantamentos funcionarioId={id} />
+          </TabsContent>
+          <TabsContent value="descontos" className="mt-4">
+            <FichaDescontos funcionarioId={id} />
+          </TabsContent>
+          <TabsContent value="salarios" className="mt-4">
+            <FichaAlteracoesSalariais funcionarioId={id} />
           </TabsContent>
           <TabsContent value="holerites" className="mt-4">
             <FichaHolerites funcionarioId={id} />

@@ -9,7 +9,8 @@ export function permsToSet(perms: MinhasPermissoes | undefined): Set<string> {
 function itemVisivel(item: NavItem, perms: Set<string>, todas: boolean): boolean {
   if (!item.perm) return true;
   if (todas) return true;
-  return perms.has(`${item.perm.modulo}:view`);
+  const aceitos = [item.perm.modulo, ...(item.perm.equivalentes ?? [])];
+  return aceitos.some((m) => perms.has(`${m}:view`));
 }
 
 /**

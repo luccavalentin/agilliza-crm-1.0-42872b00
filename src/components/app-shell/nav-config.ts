@@ -42,6 +42,8 @@ import {
 /** Permissão exigida por um item (chave = `${modulo}:view`). */
 export interface NavPerm {
   modulo: string;
+  /** Módulos legados equivalentes (mantêm acesso após desmembramentos). */
+  equivalentes?: string[];
 }
 
 export interface NavItem {
@@ -390,6 +392,84 @@ export const navInterno: NavGroup[] = [
             to: "/relatorios/comparativos",
             perm: { modulo: "relatorios.geral" },
           },
+          {
+            label: "Relatório consolidado",
+            icon: LineChart,
+            to: "/relatorios/consolidado",
+            perm: { modulo: "relatorios.geral" },
+          },
+          {
+            label: "Relatórios comerciais",
+            icon: Percent,
+            to: "/relatorios/comerciais",
+            perm: { modulo: "relatorios.geral" },
+          },
+          {
+            label: "Relatórios de CRM",
+            icon: KanbanSquare,
+            to: "/relatorios/crm",
+            perm: { modulo: "relatorios.geral" },
+          },
+          {
+            label: "Clientes",
+            icon: Users,
+            to: "/relatorios/clientes",
+            perm: { modulo: "relatorios.geral" },
+          },
+          {
+            label: "Simulações",
+            icon: Calculator,
+            to: "/relatorios/simulacoes",
+            perm: { modulo: "relatorios.geral" },
+          },
+          {
+            label: "Propostas",
+            icon: FileSignature,
+            to: "/relatorios/propostas",
+            perm: { modulo: "relatorios.geral" },
+          },
+          {
+            label: "Comissões",
+            icon: Wallet,
+            to: "/relatorios/comissoes",
+            perm: { modulo: "relatorios.geral" },
+          },
+          {
+            label: "Tarefas",
+            icon: ListChecks,
+            to: "/relatorios/tarefas",
+            perm: { modulo: "relatorios.geral" },
+          },
+          {
+            label: "Demandas",
+            icon: Inbox,
+            to: "/relatorios/demandas",
+            perm: { modulo: "relatorios.geral" },
+          },
+          {
+            label: "Gestão de pessoas",
+            icon: UserRound,
+            to: "/rh/relatorios",
+            perm: { modulo: "rh.relatorios" },
+          },
+          {
+            label: "App do cliente",
+            icon: Gauge,
+            to: "/relatorios/app-cliente",
+            perm: { modulo: "relatorios.geral" },
+          },
+          {
+            label: "Relatórios personalizados",
+            icon: SlidersHorizontal,
+            to: "/relatorios/personalizados",
+            perm: { modulo: "relatorios.geral" },
+          },
+          {
+            label: "Exportações",
+            icon: FolderOpen,
+            to: "/relatorios/exportacoes",
+            perm: { modulo: "relatorios.geral" },
+          },
         ],
       },
     ],
@@ -462,13 +542,13 @@ export const navInterno: NavGroup[] = [
         label: "Pedidos de Compras",
         icon: ShoppingCart,
         to: "/admin/compras/pedidos",
-        perm: { modulo: "admin.compras" },
+        perm: { modulo: "admin.compras.pedidos", equivalentes: ["admin.compras"] },
       },
       {
         label: "Aprovação de Compras",
         icon: ShoppingCart,
         to: "/admin/compras/aprovacoes",
-        perm: { modulo: "admin.compras" },
+        perm: { modulo: "admin.compras.aprovacoes", equivalentes: ["admin.compras"] },
       },
     ],
   },
