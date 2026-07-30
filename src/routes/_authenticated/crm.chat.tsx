@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { assertModuloPermitido } from "@/lib/route-guards";
 import { PainelChatCliente } from "@/components/crm/chat-cliente/painel-cliente";
@@ -18,13 +18,19 @@ export const Route = createFileRoute("/_authenticated/crm/chat")({
 
 function Pagina() {
   const hook = useChatConversas();
-  const { conversas, alvoAtual, etiquetas, etiquetasCliente, verTodos, selecionado, abrirConversa } = hook;
+  const { conversas, filtradas, alvoAtual, etiquetas, etiquetasCliente, selecionado, abrirConversa } = hook;
 
   const search = Route.useSearch();
+  const autoAbertoRef = useRef<string | null>(null);
   useEffect(() => {
     if (search.c) {
-      const alvo = (conversas ?? []).find((c) => c.cliente_id === search.c);
-      abrirConversa(search.c, alvo?.atendente_id ?? null);
+      // Abre uma única vez por cliente vindo da URL — reabrir a cada render
+      // brigava com o fechamento automático de conversas ocultas (laço).
+      if (autoAbertoRef.current !== search.c) {
+        autoAbertoRef.current = search.c;
+        const alvo = (conversas ?? []).find((c) => c.cliente_id === search.c);
+        abrirConversa(search.c, alvo?.atendente_id ?? null);
+      }
       return;
     }
     // Auto-seleciona a primeira conversa apenas no desktop; no mobile o usuário
@@ -32,13 +38,15 @@ function Pagina() {
     const ehDesktop =
       typeof window !== "undefined" &&
       window.matchMedia("(min-width: 1024px)").matches;
-    if (ehDesktop && !selecionado && (conversas?.length ?? 0) > 0) {
-      abrirConversa(conversas![0].cliente_id, conversas![0].atendente_id);
+    // Usa a lista JÁ filtrada (sem conversas ocultas/arquivadas). Selecionar
+    // uma conversa oculta fazia o painel fechar e reabrir em laço.
+    if (ehDesktop && !selecionado && filtradas.length > 0) {
+      abrirConversa(filtradas[0].cliente_id, filtradas[0].atendente_id);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [conversas, selecionado, search.c]);
+  }, [conversas, filtradas, selecionado, search.c]);
 
-  const somenteLeituraAtual = !!alvoAtual && !alvoAtual.minha && verTodos;
+  const somenteLeituraAtual = !!alvoAtual && !alvoAtual.minha && !alvoAtual.participo;
   const acoesGestao =
     alvoAtual && !somenteLeituraAtual ? (
       <MaisAcoesGestao
