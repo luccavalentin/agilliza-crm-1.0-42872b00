@@ -107,7 +107,9 @@ function Pagina() {
             <TabsTrigger value="adiantamentos">Adiantamentos</TabsTrigger>
             <TabsTrigger value="descontos">Descontos</TabsTrigger>
             <TabsTrigger value="salarios">Alterações salariais</TabsTrigger>
+            <TabsTrigger value="previa">Prévia da folha</TabsTrigger>
             <TabsTrigger value="holerites">Holerites</TabsTrigger>
+
           </TabsList>
 
           <TabsContent value="historico" className="mt-4">
