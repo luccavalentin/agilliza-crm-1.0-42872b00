@@ -206,14 +206,15 @@ function montarTabela(ws: ExcelJS.Worksheet, aba: AbaXlsx, titulo: string) {
         cell.value = "TOTAIS";
       } else if (modo === "count") {
         cell.value = aba.linhas.length;
-        cell.numFmt = FORMATO.int;
+        cell.numFmt = FORMATO.int ?? "#,##0";
       } else if (modo === "sum") {
         const soma = aba.linhas.reduce((s, l) => {
           const n = Number(l[c.key]);
           return Number.isFinite(n) ? s + n : s;
         }, 0);
         cell.value = soma;
-        cell.numFmt = FORMATO[c.tipo ?? "int"];
+        cell.numFmt = FORMATO[c.tipo ?? "int"] ?? "#,##0";
+
       } else {
         cell.value = null;
       }
