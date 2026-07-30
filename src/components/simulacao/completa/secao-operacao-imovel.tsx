@@ -75,9 +75,26 @@ export function SecaoOperacaoImovel({ ctx }: { ctx: SimulacaoCompletaCtx }) {
           {restricaoEspecial.apenasBradesco ? ", operado apenas pelo Bradesco." : "."}
         </div>
       )}
+      {f.produto === "home_equity" && (
+        <div className="rounded-lg border-l-4 border-destructive border-y border-r border-y-destructive/40 border-r-destructive/40 bg-destructive/10 px-3 py-2 text-sm leading-relaxed text-destructive-foreground dark:text-destructive-foreground">
+          <strong className="font-semibold">Home Equity temporariamente indisponível:</strong> a
+          API HomeFin ainda não processa simulações e propostas deste produto. Você pode registrar
+          a simulação, mas o envio aos bancos não estará disponível.
+        </div>
+      )}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <Campo label={<>Produto <Ast /></>}>
-          <Select value={f.produto} onValueChange={(v) => set("produto", v)}>
+          <Select
+            value={f.produto}
+            onValueChange={(v) => {
+              set("produto", v);
+              if (v === "home_equity") {
+                toast.warning("Home Equity está temporariamente indisponível na API HomeFin.", {
+                  description: "O envio aos bancos para este produto ainda não é suportado.",
+                });
+              }
+            }}
+          >
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
@@ -90,6 +107,7 @@ export function SecaoOperacaoImovel({ ctx }: { ctx: SimulacaoCompletaCtx }) {
             </SelectContent>
           </Select>
         </Campo>
+
         <Campo label={<>Tipo de imóvel <Ast /></>}>
           <Select value={f.tipo_imovel} onValueChange={(v) => set("tipo_imovel", v)}>
             <SelectTrigger aria-invalid={!!erros.tipo_imovel}>
