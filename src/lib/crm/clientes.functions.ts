@@ -384,7 +384,7 @@ export const criarCliente = createServerFn({ method: "POST" })
     // "vincula" o cliente já cadastrado, atualizando os campos informados).
     const { data: existente } = await supabaseAdmin
       .from("clientes")
-      .select("id, responsavel_id, criador_id")
+      .select("id, responsavel_id, criador_id, deleted_at")
       .eq("correspondente_id", me.correspondente_id)
       .eq("documento", data.documento)
       .maybeSingle();
@@ -399,7 +399,13 @@ export const criarCliente = createServerFn({ method: "POST" })
       }
       const { error: upErr } = await supabaseAdmin
         .from("clientes")
-        .update(campos)
+        // Cadastro excluído (soft delete) com o mesmo documento é restaurado,
+        // senão o cliente "criado" não apareceria nas listas do CRM.
+        .update(
+          existente.deleted_at
+            ? { ...campos, deleted_at: null, deleted_by: null, deleted_motivo: null, ativo: true }
+            : campos,
+        )
         .eq("id", existente.id);
       if (upErr) throw upErr;
       const { registrarAuditoria } = await import("@/lib/admin/audit.server");
