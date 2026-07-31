@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Percent, RefreshCw, SlidersHorizontal } from "lucide-react";
+import { Percent, RefreshCw, SlidersHorizontal, ListChecks, Settings2 } from "lucide-react";
 import { PanelHeader } from "@/components/common/dashboard";
 
 import { assertModuloPermitido } from "@/lib/route-guards";
@@ -17,7 +17,12 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { ExportarFinanceiro } from "@/components/financeiro/exportar-financeiro";
+import {
+  SecaoRegrasComissao,
+  SimuladorComissao,
+} from "@/components/financeiro/comissoes-gestao";
 import { ComissaoStatusBadge } from "@/components/financeiro/status-badge";
 import { formatBRL } from "@/lib/financeiro/format";
 
@@ -51,6 +56,29 @@ function Pagina() {
       }),
   });
 
+  const [aba, setAba] = useState<"lancamentos" | "regras">("lancamentos");
+
+  const colunasExport = [
+    { key: "proposta", label: "Proposta" },
+    { key: "banco", label: "Banco" },
+    { key: "bruto", label: "Valor bruto", align: "right" as const, format: "brl" as const, footer: "sum" as const },
+    { key: "parceiro", label: "Split parceiro", align: "right" as const, format: "brl" as const, footer: "sum" as const },
+    { key: "interno", label: "Split interno", align: "right" as const, format: "brl" as const, footer: "sum" as const },
+    { key: "status", label: "Status" },
+  ];
+  const linhasExport = (data ?? []).map((c) => ({
+    proposta: c.numero_proposta ?? "—",
+    banco: c.banco_nome ?? "—",
+    bruto: Number(c.valor_bruto) || 0,
+    parceiro: Number(c.split_parceiro) || 0,
+    interno: Number(c.split_interno) || 0,
+    status: STATUS_LABEL[c.status] ?? c.status,
+  }));
+  const metaExport = [
+    `Status: ${STATUS_LABEL[status] ?? "Todos"}`,
+    de || ate ? `Período: ${de || "início"} até ${ate || "hoje"}` : "Período: todos",
+  ];
+
   const recalc = useMutation({
     mutationFn: (comissao_id: string) => recalcularComissao({ data: { comissao_id } }),
     onSuccess: () => {
@@ -67,17 +95,51 @@ function Pagina() {
         titulo="Repasses"
         descricao="Repasses calculados automaticamente a partir dos contratos emitidos, conforme as regras por banco."
         actions={
-          <Tabs value={status} onValueChange={setStatus}>
-            <TabsList>
-              {STATUS.map((s) => (
-                <TabsTrigger key={s || "all"} value={s}>
-                  {STATUS_LABEL[s]}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </Tabs>
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            {aba === "lancamentos" && (
+              <Tabs value={status} onValueChange={setStatus}>
+                <TabsList>
+                  {STATUS.map((s) => (
+                    <TabsTrigger key={s || "all"} value={s}>
+                      {STATUS_LABEL[s]}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </Tabs>
+            )}
+            <ExportarFinanceiro
+              titulo="Repasses"
+              descricao="Repasses calculados a partir dos contratos emitidos, conforme as regras por banco."
+              meta={metaExport}
+              columns={colunasExport}
+              rows={linhasExport}
+            />
+          </div>
         }
       />
+
+      <Tabs value={aba} onValueChange={(v) => setAba(v as typeof aba)} className="space-y-6">
+        <TabsList className="h-auto gap-1 rounded-xl bg-muted/50 p-1.5 shadow-sm">
+          <TabsTrigger
+            value="lancamentos"
+            className="gap-2 rounded-lg px-4 py-2 text-sm font-medium data-[state=active]:shadow-md"
+          >
+            <ListChecks className="size-4" /> Repasses lançados
+          </TabsTrigger>
+          <TabsTrigger
+            value="regras"
+            className="gap-2 rounded-lg px-4 py-2 text-sm font-medium data-[state=active]:shadow-md"
+          >
+            <Settings2 className="size-4" /> Regras de repasse
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="regras" className="space-y-6">
+          <SecaoRegrasComissao />
+          <SimuladorComissao />
+        </TabsContent>
+
+        <TabsContent value="lancamentos" className="space-y-6">
 
       <div className="flex flex-wrap items-end gap-3 rounded-2xl border border-border/70 bg-gradient-to-br from-card via-card to-primary/[0.03] p-4 shadow-sm sm:p-5">
         <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
@@ -184,6 +246,8 @@ function Pagina() {
           </TableBody>
         </Table>
       </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
