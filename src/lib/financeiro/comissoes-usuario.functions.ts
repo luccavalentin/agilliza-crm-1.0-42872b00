@@ -258,13 +258,15 @@ export const excluirRegraComissaoUsuario = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }) => {
     const { supabase } = context;
-    const { error } = await supabase
-      .from("comissao_regras_usuario")
-      .delete()
-      .eq("id", data.id);
+    // Remove em cascata: lançamentos da regra + contas a pagar geradas por ela.
+    const { data: removidos, error } = await supabase.rpc(
+      "excluir_regra_comissao_usuario" as never,
+      { _regra: data.id } as never,
+    );
     if (error) throw new Error(error.message);
-    return { ok: true };
+    return { ok: true, removidos: Number(removidos ?? 0) };
   });
+
 
 // ---------- LANÇAMENTOS ----------
 
