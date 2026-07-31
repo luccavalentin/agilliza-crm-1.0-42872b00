@@ -28,7 +28,9 @@ import { NovaTarefaDialog } from "@/components/operacional/nova-tarefa-dialog";
 import { TarefaDrawer } from "@/components/operacional/tarefa-drawer";
 import { ConfirmDelete } from "@/components/shared/confirm-delete";
 import { type Prioridade } from "@/components/operacional/status";
-import { OpHero, OpStat, PriorityChip, OpAvatar } from "@/components/operacional/ui";
+import { OpHero, OpStat } from "@/components/operacional/ui";
+import { TarefasBoard } from "@/components/operacional/tarefas-board";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
