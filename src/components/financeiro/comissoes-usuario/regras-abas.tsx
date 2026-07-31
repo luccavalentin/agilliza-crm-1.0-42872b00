@@ -31,12 +31,12 @@ import {
   TIPOS_VINCULO_COMISSAO,
   excluirRegraComissaoUsuario,
   listarRegrasComissaoUsuario,
-  recalcularComissoesUsuario,
   resumoRegrasComissaoUsuario,
   type RegraComissaoUsuario,
   type TipoVinculoComissao,
 } from "@/lib/financeiro/comissoes-usuario.functions";
 import { RegraComissaoUsuarioForm } from "./regra-form";
+import { RecalcularComissoesButton } from "./recalcular-button";
 
 const rotulo = (arr: readonly { valor: string; rotulo: string }[], v: string) =>
   arr.find((i) => i.valor === v)?.rotulo ?? v;
@@ -86,19 +86,6 @@ export function RegrasAbas({
     onError: (e: any) => toast.error(e?.message ?? "Falha ao excluir."),
   });
 
-  const recalcular = useMutation({
-    mutationFn: () => recalcularComissoesUsuario({ data: {} } as never),
-    onSuccess: (r: any) => {
-      toast.success(
-        r?.criados
-          ? `${r.criados} comissão(ões) gerada(s) a partir das etapas atuais.`
-          : "Nenhuma comissão pendente: tudo já está computado.",
-      );
-      qc.invalidateQueries({ queryKey: ["fin-com-usr"] });
-    },
-    onError: (e: any) => toast.error(e?.message ?? "Falha ao recalcular."),
-  });
-
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between gap-3">
@@ -109,19 +96,7 @@ export function RegrasAbas({
           </p>
         </div>
         <div className="flex items-center gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => recalcular.mutate()}
-          disabled={recalcular.isPending}
-        >
-          {recalcular.isPending ? (
-            <Loader2 className="mr-2 size-4 animate-spin" />
-          ) : (
-            <RefreshCw className="mr-2 size-4" />
-          )}
-          Recalcular comissões
-        </Button>
+        <RecalcularComissoesButton />
         <Button onClick={() => setDialog({ aberto: true, regra: null })} size="sm">
           <Plus className="mr-2 size-4" />
           Nova regra

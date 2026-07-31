@@ -22,6 +22,8 @@ import {
   CalendarClock,
   ArrowDownRight,
   ArrowUpRight,
+  CalendarRange,
+  X,
 } from "lucide-react";
 import { assertModuloPermitido } from "@/lib/route-guards";
 import {
@@ -30,6 +32,9 @@ import {
 } from "@/lib/financeiro/financeiro.functions";
 import { PanelHeader, SectionTitle, HeroMetric, MiniMetric, PanelCard } from "@/components/common/dashboard";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { formatBRL } from "@/lib/financeiro/format";
 import { cn } from "@/lib/utils";
 
@@ -44,13 +49,6 @@ export const Route = createFileRoute("/_authenticated/financeiro/fluxo-de-caixa"
   ),
 });
 
-const tooltipStyle = {
-  background: "hsl(var(--card))",
-  border: "1px solid hsl(var(--border))",
-  borderRadius: 10,
-  fontSize: 12,
-};
-
 function formatCurto(v: number) {
   const abs = Math.abs(v);
   if (abs >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`;
@@ -58,11 +56,136 @@ function formatCurto(v: number) {
   return String(v);
 }
 
+const SERIES: Record<string, { rotulo: string; cor: string }> = {
+  entrada: { rotulo: "Entradas", cor: "var(--chart-3)" },
+  saida: { rotulo: "Saídas", cor: "var(--chart-5)" },
+  saldoAcum: { rotulo: "Saldo acumulado", cor: "var(--chart-1)" },
+  resultado: { rotulo: "Resultado líquido", cor: "var(--chart-2)" },
+};
+
+/** Tooltip do gráfico com tipografia tabular e cores por série. */
+function FluxoTooltip({ active, payload, label }: any) {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="min-w-[210px] rounded-xl border border-border/70 bg-card/95 p-3 shadow-xl backdrop-blur">
+      <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        {label}
+      </p>
+      <ul className="space-y-1.5">
+        {payload.map((p: any) => (
+          <li key={p.dataKey} className="flex items-center justify-between gap-4 text-xs">
+            <span className="flex items-center gap-2 text-muted-foreground">
+              <span
+                className="size-2.5 rounded-full"
+                style={{ background: SERIES[p.dataKey]?.cor ?? p.color }}
+              />
+              {SERIES[p.dataKey]?.rotulo ?? p.name}
+            </span>
+            <span className="font-mono font-semibold tabular-nums text-foreground">
+              {formatBRL(Number(p.value))}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+/** Legenda customizada em chips, no lugar da legenda padrão do Recharts. */
+function FluxoLegenda() {
+  return (
+    <div className="mb-3 flex flex-wrap items-center gap-2">
+      {Object.entries(SERIES).map(([k, s]) => (
+        <span
+          key={k}
+          className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-muted/40 px-2.5 py-1 text-[11px] font-medium text-muted-foreground"
+        >
+          <span className="size-2 rounded-full" style={{ background: s.cor }} />
+          {s.rotulo}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+/** Filtro por calendário: de X a X, com aplicar e limpar. */
+function FiltroPeriodo({
+  de,
+  ate,
+  onAplicar,
+  onLimpar,
+}: {
+  de: string;
+  ate: string;
+  onAplicar: (de: string, ate: string) => void;
+  onLimpar: () => void;
+}) {
+  const [rascDe, setRascDe] = useState(de);
+  const [rascAte, setRascAte] = useState(ate);
+  const ativo = !!(de || ate);
+
+  return (
+    <div className="flex flex-wrap items-end gap-2 rounded-xl border border-border/70 bg-card/70 p-2 shadow-sm">
+      <div className="flex items-center gap-2">
+        <CalendarRange className="size-4 shrink-0 text-muted-foreground" />
+        <div className="space-y-1">
+          <Label htmlFor="fluxo-de" className="text-[10px] uppercase tracking-wide text-muted-foreground">
+            De
+          </Label>
+          <Input
+            id="fluxo-de"
+            type="date"
+            className="h-9 w-[9.5rem]"
+            value={rascDe}
+            onChange={(e) => setRascDe(e.target.value)}
+          />
+        </div>
+        <div className="space-y-1">
+          <Label htmlFor="fluxo-ate" className="text-[10px] uppercase tracking-wide text-muted-foreground">
+            Até
+          </Label>
+          <Input
+            id="fluxo-ate"
+            type="date"
+            className="h-9 w-[9.5rem]"
+            value={rascAte}
+            onChange={(e) => setRascAte(e.target.value)}
+          />
+        </div>
+      </div>
+      <div className="flex items-center gap-1.5">
+        <Button size="sm" className="h-9" onClick={() => onAplicar(rascDe, rascAte)}>
+          Aplicar
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          className="h-9"
+          disabled={!ativo && !rascDe && !rascAte}
+          onClick={() => {
+            setRascDe("");
+            setRascAte("");
+            onLimpar();
+          }}
+        >
+          <X className="mr-1 size-3.5" /> Limpar
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+
 function Pagina() {
   const [gran, setGran] = useState<"dia" | "semana" | "mes">("mes");
+  const [de, setDe] = useState("");
+  const [ate, setAte] = useState("");
   const { data, isLoading, dataUpdatedAt } = useQuery({
-    queryKey: ["fin-fluxo-analitico", gran],
-    queryFn: () => obterFluxoCaixaAnalitico({ data: { granularidade: gran } }),
+    queryKey: ["fin-fluxo-analitico", gran, de, ate],
+    queryFn: () =>
+      obterFluxoCaixaAnalitico({
+        data: { granularidade: gran, de: de || null, ate: ate || null },
+      }),
   });
 
   const atualizado = dataUpdatedAt
@@ -81,15 +204,44 @@ function Pagina() {
         descricao="Caixa realizado e projeção de entradas e saídas em aberto."
         atualizadoEm={atualizado}
         actions={
-          <Tabs value={gran} onValueChange={(v) => setGran(v as typeof gran)}>
-            <TabsList>
-              <TabsTrigger value="dia">Diário</TabsTrigger>
-              <TabsTrigger value="semana">Semanal</TabsTrigger>
-              <TabsTrigger value="mes">Mensal</TabsTrigger>
-            </TabsList>
-          </Tabs>
+          <div className="flex flex-wrap items-end justify-end gap-2">
+            <Tabs value={gran} onValueChange={(v) => setGran(v as typeof gran)}>
+              <TabsList className="h-auto gap-1 rounded-xl bg-muted/50 p-1.5 shadow-sm">
+                <TabsTrigger value="dia" className="rounded-lg px-3 py-1.5">
+                  Diário
+                </TabsTrigger>
+                <TabsTrigger value="semana" className="rounded-lg px-3 py-1.5">
+                  Semanal
+                </TabsTrigger>
+                <TabsTrigger value="mes" className="rounded-lg px-3 py-1.5">
+                  Mensal
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+            <FiltroPeriodo
+              de={de}
+              ate={ate}
+              onAplicar={(d, a) => {
+                setDe(d);
+                setAte(a);
+              }}
+              onLimpar={() => {
+                setDe("");
+                setAte("");
+              }}
+            />
+          </div>
         }
       />
+
+      {(de || ate) && (
+        <p className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 font-medium text-primary">
+            <CalendarRange className="size-3.5" />
+            Período: {de ? formatarData(de) : "início"} até {ate ? formatarData(ate) : "hoje"}
+          </span>
+        </p>
+      )}
 
       {vazio ? (
         <PanelCard titulo="Sem movimentações">
@@ -157,31 +309,60 @@ function Pagina() {
           <SectionTitle>Evolução do caixa</SectionTitle>
           <PanelCard
             titulo="Entradas, saídas e saldo acumulado"
-            subtitulo="Barras = entradas/saídas por período · linha = saldo projetado acumulado"
+            subtitulo="Barras = entradas/saídas por período · área = saldo projetado acumulado"
           >
-            <div className="h-[360px] w-full">
+            <FluxoLegenda />
+            <div className="h-[380px] w-full">
               {isLoading ? (
-                <p className="text-sm text-muted-foreground">Carregando…</p>
+                <div className="h-full w-full animate-pulse rounded-xl bg-muted/50" />
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
-                  <ComposedChart data={pontos} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                  <ComposedChart
+                    data={pontos}
+                    margin={{ top: 12, right: 12, left: 0, bottom: 0 }}
+                    barGap={6}
+                  >
                     <defs>
                       <linearGradient id="gSaldo" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="var(--chart-1)" stopOpacity={0.28} />
-                        <stop offset="100%" stopColor="var(--chart-1)" stopOpacity={0} />
+                        <stop offset="0%" stopColor="var(--chart-1)" stopOpacity={0.32} />
+                        <stop offset="100%" stopColor="var(--chart-1)" stopOpacity={0.02} />
+                      </linearGradient>
+                      <linearGradient id="gEntrada" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="var(--chart-3)" stopOpacity={0.95} />
+                        <stop offset="100%" stopColor="var(--chart-3)" stopOpacity={0.45} />
+                      </linearGradient>
+                      <linearGradient id="gSaida" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="var(--chart-5)" stopOpacity={0.95} />
+                        <stop offset="100%" stopColor="var(--chart-5)" stopOpacity={0.45} />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-                    <XAxis dataKey="label" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
+                    <CartesianGrid
+                      strokeDasharray="4 6"
+                      stroke="hsl(var(--border))"
+                      strokeOpacity={0.6}
+                      vertical={false}
+                    />
+                    <XAxis
+                      dataKey="label"
+                      tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                      tickLine={false}
+                      axisLine={false}
+                      tickMargin={10}
+                      minTickGap={12}
+                    />
                     <YAxis
-                      tick={{ fontSize: 11 }}
-                      stroke="hsl(var(--muted-foreground))"
-                      width={54}
+                      tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                      tickLine={false}
+                      axisLine={false}
+                      width={58}
+                      tickMargin={8}
                       tickFormatter={(v) => formatCurto(Number(v))}
                     />
-                    <Tooltip formatter={(v) => formatBRL(Number(v))} contentStyle={tooltipStyle} />
-                    <Legend wrapperStyle={{ fontSize: 12 }} />
-                    <ReferenceLine y={0} stroke="hsl(var(--border))" />
+                    <Tooltip
+                      content={<FluxoTooltip />}
+                      cursor={{ fill: "hsl(var(--muted))", fillOpacity: 0.35, radius: 8 }}
+                    />
+                    <ReferenceLine y={0} stroke="hsl(var(--border))" strokeWidth={1.5} />
                     <Area
                       type="monotone"
                       dataKey="saldoAcum"
@@ -189,22 +370,39 @@ function Pagina() {
                       stroke="var(--chart-1)"
                       strokeWidth={2.5}
                       fill="url(#gSaldo)"
+                      activeDot={{ r: 5, strokeWidth: 2, stroke: "hsl(var(--card))" }}
+                      dot={false}
                     />
-                    <Bar dataKey="entrada" name="Entradas" fill="var(--chart-3)" radius={[4, 4, 0, 0]} maxBarSize={34} />
-                    <Bar dataKey="saida" name="Saídas" fill="var(--chart-5)" radius={[4, 4, 0, 0]} maxBarSize={34} />
+                    <Bar
+                      dataKey="entrada"
+                      name="Entradas"
+                      fill="url(#gEntrada)"
+                      radius={[6, 6, 0, 0]}
+                      maxBarSize={28}
+                    />
+                    <Bar
+                      dataKey="saida"
+                      name="Saídas"
+                      fill="url(#gSaida)"
+                      radius={[6, 6, 0, 0]}
+                      maxBarSize={28}
+                    />
                     <Line
                       type="monotone"
                       dataKey="resultado"
                       name="Resultado líquido"
                       stroke="var(--chart-2)"
                       strokeWidth={2}
-                      dot={{ r: 2 }}
+                      strokeDasharray="5 4"
+                      dot={false}
+                      activeDot={{ r: 4 }}
                     />
                   </ComposedChart>
                 </ResponsiveContainer>
               )}
             </div>
           </PanelCard>
+
 
           <SectionTitle>Composição em aberto</SectionTitle>
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">

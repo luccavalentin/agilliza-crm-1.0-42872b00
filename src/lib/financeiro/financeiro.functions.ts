@@ -1256,7 +1256,11 @@ export const obterFluxoCaixaAnalitico = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data) =>
     z
-      .object({ granularidade: z.enum(["dia", "semana", "mes"]).default("mes") })
+      .object({
+        granularidade: z.enum(["dia", "semana", "mes"]).default("mes"),
+        de: z.string().optional().nullable(),
+        ate: z.string().optional().nullable(),
+      })
       .parse(data ?? {}),
   )
   .handler(async ({ context, data }): Promise<FluxoAnalitico> => {
@@ -1279,9 +1283,24 @@ export const obterFluxoCaixaAnalitico = createServerFn({ method: "GET" })
         .eq("realizado", true),
     ]);
 
-    const recRows = rec.data ?? [];
-    const payRows = pay.data ?? [];
-    const realizRows = realiz.data ?? [];
+    // Filtro por período (calendário): aplica sobre vencimentos e datas realizadas.
+    const dentroDoPeriodo = (iso?: string | null) => {
+      if (!iso) return false;
+      if (data.de && iso < data.de) return false;
+      if (data.ate && iso > data.ate) return false;
+      return true;
+    };
+    const temPeriodo = !!(data.de || data.ate);
+
+    const recRows = (rec.data ?? []).filter((r: any) =>
+      temPeriodo ? dentroDoPeriodo(r.vencimento) : true,
+    );
+    const payRows = (pay.data ?? []).filter((r: any) =>
+      temPeriodo ? dentroDoPeriodo(r.vencimento) : true,
+    );
+    const realizRows = (realiz.data ?? []).filter((r: any) =>
+      temPeriodo ? dentroDoPeriodo(r.data) : true,
+    );
     const saldoAberto = (r: any) => Number(r.valor) - Number(r.valor_pago);
 
     const chave = (iso: string): string => {
