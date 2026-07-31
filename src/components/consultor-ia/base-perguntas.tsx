@@ -1,6 +1,17 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { BookOpen, ChevronDown, Search, TriangleAlert } from "lucide-react";
+import {
+  BookOpen,
+  ChevronDown,
+  FileDown,
+  Printer,
+  Search,
+  Sparkles,
+  Tags,
+  TriangleAlert,
+  X,
+} from "lucide-react";
+import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,10 +23,22 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { listarPerguntasRespondidas } from "@/lib/consultor-ia/consultor-ia.functions";
+import { exportarBaseConhecimentoPdf } from "@/lib/consultor-ia/base-pdf";
+import { cn } from "@/lib/utils";
+
+/** Resumo curto da resposta para a prévia fechada do card. */
+function resumo(md: string, limite = 190): string {
+  const texto = md
+    .replace(/```[\s\S]*?```/g, " ")
+    .replace(/[#*`>]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  return texto.length > limite ? `${texto.slice(0, limite).trimEnd()}…` : texto;
+}
 
 /**
  * Base de conhecimento formada pelas perguntas já respondidas pelo consultor,
- * organizada e pesquisável por palavra-chave.
+ * organizada, pesquisável por palavra-chave e exportável em PDF.
  */
 export function BasePerguntasRespondidas({
   onReperguntar,
@@ -39,8 +62,8 @@ export function BasePerguntasRespondidas({
       for (const p of it.palavras_chave) contagem.set(p, (contagem.get(p) ?? 0) + 1);
     }
     return Array.from(contagem.entries())
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 14)
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+      .slice(0, 16)
       .map(([p, n]) => ({ palavra: p, total: n }));
   }, [itens]);
 
@@ -54,112 +77,259 @@ export function BasePerguntasRespondidas({
     });
   }, [itens, busca, chave]);
 
+  const comFonte = useMemo(() => filtrados.filter((i) => i.fontes.length > 0).length, [filtrados]);
+
+  const contexto = [
+    chave ? `Palavra-chave: ${chave}` : null,
+    busca.trim() ? `Busca: "${busca.trim()}"` : null,
+  ]
+    .filter(Boolean)
+    .join(" · ") || "Base completa";
+
+  function baixar(modo: "download" | "print") {
+    if (filtrados.length === 0) {
+      toast.error("Nenhum registro para exportar.");
+      return;
+    }
+    try {
+      exportarBaseConhecimentoPdf({ itens: filtrados, contexto, modo });
+      toast.success(modo === "print" ? "Abrindo impressão…" : "PDF gerado com sucesso.");
+    } catch {
+      toast.error("Não foi possível gerar o PDF.");
+    }
+  }
+
   return (
-    <section className="rounded-xl border border-border/60 bg-card">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 p-3">
-        <div className="flex items-center gap-2">
-          <BookOpen className="size-4 text-primary" />
-          <h2 className="text-sm font-semibold">Base de conhecimento</h2>
-          <Badge variant="secondary" className="text-[11px]">
-            {itens.length} perguntas respondidas
-          </Badge>
+    <section className="overflow-hidden rounded-2xl border border-border/70 bg-card shadow-card">
+      {/* Cabeçalho editorial */}
+      <header className="relative border-b border-border/70 bg-[linear-gradient(180deg,color-mix(in_oklab,var(--primary)_6%,var(--card)),var(--card))] p-4 sm:p-5">
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4 sm:flex sm:flex-wrap sm:justify-between">
+          <div className="flex min-w-0 items-start gap-3">
+            <span className="grid size-11 shrink-0 place-items-center rounded-2xl border border-border/70 bg-card text-primary shadow-sm">
+              <BookOpen className="size-5" />
+            </span>
+            <div className="min-w-0">
+              <span className="text-[10.5px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                Consultor IA
+              </span>
+              <h2 className="truncate text-lg font-semibold tracking-tight text-foreground">
+                Base de conhecimento
+              </h2>
+              <p className="text-[13px] text-muted-foreground">
+                Todo o histórico curado de perguntas e respostas, pesquisável por palavra-chave.
+              </p>
+            </div>
+          </div>
+          <div className="col-span-2 flex flex-wrap items-center gap-2 sm:col-auto">
+            <Button
+              variant="outline"
+              size="sm"
+              className="bg-card/70 backdrop-blur"
+              onClick={() => baixar("print")}
+              disabled={filtrados.length === 0}
+            >
+              <Printer className="mr-1.5 size-4" /> Imprimir
+            </Button>
+            <Button size="sm" onClick={() => baixar("download")} disabled={filtrados.length === 0}>
+              <FileDown className="mr-1.5 size-4" /> Baixar PDF
+            </Button>
+          </div>
         </div>
-        <div className="relative w-full sm:w-72">
-          <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+
+        {/* Métricas discretas */}
+        <div className="mt-4 grid grid-cols-3 gap-2 sm:max-w-md">
+          {[
+            { label: "Registros", valor: itens.length },
+            { label: "No filtro", valor: filtrados.length },
+            { label: "Com fonte", valor: comFonte },
+          ].map((m) => (
+            <div
+              key={m.label}
+              className="rounded-xl border border-border/70 bg-card px-3 py-2"
+            >
+              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                {m.label}
+              </p>
+              <p className="mt-0.5 text-lg font-semibold tabular-nums leading-none text-foreground">
+                {m.valor}
+              </p>
+            </div>
+          ))}
+        </div>
+      </header>
+
+      {/* Busca + palavras-chave */}
+      <div className="space-y-3 border-b border-border/70 bg-muted/25 p-4">
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
-            placeholder="Pesquisar por palavra-chave…"
-            className="pl-8"
+            placeholder="Pesquisar por assunto, termo ou palavra-chave…"
+            className="h-11 rounded-xl pl-9 pr-9"
           />
-        </div>
-      </div>
-
-      {palavrasChave.length > 0 ? (
-        <div className="flex flex-wrap gap-1.5 border-b border-border/60 p-3">
-          {palavrasChave.map((p) => (
-            <button key={p.palavra} type="button" onClick={() => setChave(chave === p.palavra ? null : p.palavra)}>
-              <Badge
-                variant={chave === p.palavra ? "default" : "outline"}
-                className="cursor-pointer text-[11px] capitalize"
-              >
-                {p.palavra} · {p.total}
-              </Badge>
+          {busca ? (
+            <button
+              type="button"
+              onClick={() => setBusca("")}
+              aria-label="Limpar busca"
+              className="absolute right-2.5 top-1/2 grid size-6 -translate-y-1/2 place-items-center rounded-md text-muted-foreground hover:bg-accent"
+            >
+              <X className="size-3.5" />
             </button>
-          ))}
-          {chave ? (
-            <Button variant="ghost" size="sm" className="h-6 text-[11px]" onClick={() => setChave(null)}>
-              Limpar filtro
-            </Button>
           ) : null}
         </div>
-      ) : null}
 
-      <div className="max-h-[420px] space-y-1.5 overflow-y-auto p-3">
+        {palavrasChave.length > 0 ? (
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="mr-1 inline-flex items-center gap-1 text-[10.5px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+              <Tags className="size-3.5" /> Palavras-chave
+            </span>
+            {palavrasChave.map((p) => {
+              const ativo = chave === p.palavra;
+              return (
+                <button
+                  key={p.palavra}
+                  type="button"
+                  onClick={() => setChave(ativo ? null : p.palavra)}
+                  className={cn(
+                    "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium capitalize transition-colors",
+                    ativo
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground",
+                  )}
+                >
+                  {p.palavra}
+                  <span className="tabular-nums opacity-70">{p.total}</span>
+                </button>
+              );
+            })}
+            {chave ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 text-[11px]"
+                onClick={() => setChave(null)}
+              >
+                Limpar filtro
+              </Button>
+            ) : null}
+          </div>
+        ) : null}
+      </div>
+
+      {/* Lista */}
+      <div className="brand-scroll max-h-[560px] space-y-2 overflow-y-auto p-4">
         {isLoading ? (
-          <Skeleton className="h-20 w-full" />
+          <>
+            <Skeleton className="h-16 w-full rounded-xl" />
+            <Skeleton className="h-16 w-full rounded-xl" />
+            <Skeleton className="h-16 w-full rounded-xl" />
+          </>
         ) : filtrados.length === 0 ? (
-          <p className="py-6 text-center text-xs text-muted-foreground">
-            Nenhuma pergunta respondida encontrada para esta pesquisa.
-          </p>
+          <div className="flex flex-col items-center gap-2 py-12 text-center">
+            <span className="grid size-12 place-items-center rounded-full bg-primary/10 text-primary">
+              <Sparkles className="size-5" />
+            </span>
+            <p className="text-sm font-medium text-foreground">Nada encontrado</p>
+            <p className="max-w-xs text-xs text-muted-foreground">
+              Ajuste a pesquisa ou faça uma nova pergunta ao Consultor IA para alimentar a base.
+            </p>
+          </div>
         ) : (
-          filtrados.map((it) => (
-            <Collapsible
-              key={it.id}
-              open={aberto === it.id}
-              onOpenChange={(o) => setAberto(o ? it.id : null)}
-              className="rounded-lg border border-border/60"
-            >
-              <CollapsibleTrigger className="flex w-full items-start gap-2 px-3 py-2 text-left text-sm hover:bg-muted/50">
-                <ChevronDown
-                  className={`mt-0.5 size-4 shrink-0 text-muted-foreground transition-transform ${
-                    aberto === it.id ? "rotate-180" : ""
-                  }`}
-                />
-                <span className="min-w-0 flex-1">
-                  <span className="block font-medium">{it.pergunta}</span>
-                  <span className="mt-1 flex flex-wrap gap-1">
-                    {it.palavras_chave.map((p) => (
-                      <Badge key={p} variant="secondary" className="text-[10px] capitalize">
-                        {p}
-                      </Badge>
-                    ))}
-                    {it.sem_resposta ? (
-                      <Badge variant="outline" className="gap-1 text-[10px] text-amber-600">
-                        <TriangleAlert className="size-3" />
-                        fora da base
-                      </Badge>
-                    ) : null}
+          filtrados.map((it, i) => {
+            const open = aberto === it.id;
+            return (
+              <Collapsible
+                key={it.id}
+                open={open}
+                onOpenChange={(o) => setAberto(o ? it.id : null)}
+                className={cn(
+                  "group overflow-hidden rounded-xl border bg-card transition-all",
+                  open
+                    ? "border-primary/40 shadow-[0_10px_30px_-18px_color-mix(in_oklab,var(--primary)_60%,transparent)]"
+                    : "border-border/70 hover:border-primary/30",
+                )}
+              >
+                <CollapsibleTrigger className="flex w-full items-start gap-3 p-3 text-left">
+                  <span className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-lg bg-primary/8 text-[11px] font-semibold tabular-nums text-primary">
+                    {String(i + 1).padStart(2, "0")}
                   </span>
-                </span>
-                <span className="shrink-0 text-[11px] text-muted-foreground">
-                  {new Date(it.created_at).toLocaleDateString("pt-BR")}
-                </span>
-              </CollapsibleTrigger>
-              <CollapsibleContent className="border-t border-border/60 px-3 py-2.5">
-                <Markdown conteudo={it.resposta} className="text-sm" />
-                {it.fontes.length > 0 ? (
-                  <div className="mt-2 flex flex-wrap gap-1.5">
-                    {it.fontes.map((f) => (
-                      <Badge key={f.id} variant="secondary" className="text-[10px]">
-                        Fonte: {f.categoria} — {f.titulo}
-                      </Badge>
-                    ))}
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-[13.5px] font-semibold leading-snug text-foreground">
+                      {it.pergunta}
+                    </span>
+                    {!open ? (
+                      <span className="mt-1 block line-clamp-2 text-[12px] leading-relaxed text-muted-foreground">
+                        {resumo(it.resposta)}
+                      </span>
+                    ) : null}
+                    <span className="mt-1.5 flex flex-wrap items-center gap-1">
+                      {it.palavras_chave.slice(0, 5).map((p) => (
+                        <Badge key={p} variant="secondary" className="text-[10px] capitalize">
+                          {p}
+                        </Badge>
+                      ))}
+                      {it.sem_resposta ? (
+                        <Badge variant="outline" className="gap-1 text-[10px] text-amber-600">
+                          <TriangleAlert className="size-3" /> fora da base
+                        </Badge>
+                      ) : null}
+                    </span>
+                  </span>
+                  <span className="flex shrink-0 flex-col items-end gap-1.5">
+                    <span className="text-[11px] tabular-nums text-muted-foreground">
+                      {new Date(it.created_at).toLocaleDateString("pt-BR")}
+                    </span>
+                    <ChevronDown
+                      className={cn(
+                        "size-4 text-muted-foreground transition-transform",
+                        open && "rotate-180 text-primary",
+                      )}
+                    />
+                  </span>
+                </CollapsibleTrigger>
+
+                <CollapsibleContent className="border-t border-border/60 bg-muted/20 px-4 py-3">
+                  <Markdown conteudo={it.resposta} className="text-sm" />
+                  {it.fontes.length > 0 ? (
+                    <div className="mt-3 flex flex-wrap gap-1.5">
+                      {it.fontes.map((f) => (
+                        <Badge key={f.id} variant="secondary" className="text-[10px]">
+                          Fonte: {f.categoria} — {f.titulo}
+                        </Badge>
+                      ))}
+                    </div>
+                  ) : null}
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {onReperguntar ? (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-8 text-[11.5px]"
+                        onClick={() => onReperguntar(it.pergunta)}
+                      >
+                        <Sparkles className="mr-1.5 size-3.5" /> Perguntar novamente
+                      </Button>
+                    ) : null}
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-8 text-[11.5px]"
+                      onClick={() =>
+                        exportarBaseConhecimentoPdf({
+                          itens: [it],
+                          contexto: "Registro individual",
+                        })
+                      }
+                    >
+                      <FileDown className="mr-1.5 size-3.5" /> PDF deste item
+                    </Button>
                   </div>
-                ) : null}
-                {onReperguntar ? (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="mt-2.5 h-7 text-[11px]"
-                    onClick={() => onReperguntar(it.pergunta)}
-                  >
-                    Perguntar novamente ao consultor
-                  </Button>
-                ) : null}
-              </CollapsibleContent>
-            </Collapsible>
-          ))
+                </CollapsibleContent>
+              </Collapsible>
+            );
+          })
         )}
       </div>
     </section>
