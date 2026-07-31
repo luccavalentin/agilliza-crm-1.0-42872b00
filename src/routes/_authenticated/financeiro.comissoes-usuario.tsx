@@ -19,6 +19,7 @@ export const Route = createFileRoute("/_authenticated/financeiro/comissoes-usuar
 
 function Pagina() {
   const [aba, setAba] = useState<"lancamentos" | "regras">("lancamentos");
+  const [usuarioId, setUsuarioId] = useState<string | null>(null);
   return (
     <div className="space-y-6 p-4 sm:p-6">
       <div>
@@ -39,12 +40,21 @@ function Pagina() {
           </TabsTrigger>
         </TabsList>
         <TabsContent value="lancamentos" className="mt-4">
-          <LancamentosComissoesUsuario />
+          <LancamentosComissoesUsuario
+            usuarioId={usuarioId}
+            onLimparUsuario={() => setUsuarioId(null)}
+          />
         </TabsContent>
         <TabsContent value="regras" className="mt-4">
-          <RegrasAbas />
+          <RegrasAbas
+            onVerLancamentos={(id) => {
+              setUsuarioId(id);
+              setAba("lancamentos");
+            }}
+          />
         </TabsContent>
       </Tabs>
     </div>
   );
 }
+
