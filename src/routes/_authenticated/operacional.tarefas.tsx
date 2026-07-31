@@ -11,8 +11,6 @@ import {
   Loader2,
   CheckCircle2,
   Clock,
-  Check,
-  User2,
   Download,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -26,15 +24,12 @@ import {
 } from "@/lib/operacional/tarefas.functions";
 import { NovaTarefaDialog } from "@/components/operacional/nova-tarefa-dialog";
 import { TarefaDrawer } from "@/components/operacional/tarefa-drawer";
-import { ConfirmDelete } from "@/components/shared/confirm-delete";
-import { type Prioridade } from "@/components/operacional/status";
 import { OpHero, OpStat } from "@/components/operacional/ui";
 import { TarefasBoard } from "@/components/operacional/tarefas-board";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/operacional/tarefas")({
   head: () => ({ meta: [{ title: "Tarefas — Agilliza" }] }),
