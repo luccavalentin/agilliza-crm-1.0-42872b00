@@ -1512,12 +1512,12 @@ export const excluirContasEmLote = createServerFn({ method: "POST" })
       .in("id", data.ids);
     if (e0) throw new Error(e0.message);
 
-    const permitidas = (rows ?? [])
-      .filter((r: any) => Number(r.valor_pago ?? 0) <= 0)
-      .map((r: any) => r.id as string);
-    const bloqueadas = (rows ?? []).length - permitidas.length;
+    // Exclusão sempre permitida, inclusive de contas já pagas.
+    const permitidas = (rows ?? []).map((r: any) => r.id as string);
+    const bloqueadas = 0;
 
     if (permitidas.length) {
+      await desvincularContaDeComissoes(supabase, data.tipo, permitidas);
       const { error } = await supabase
         .from(TABELA[data.tipo])
         .delete()
@@ -1525,5 +1525,6 @@ export const excluirContasEmLote = createServerFn({ method: "POST" })
         .in("id", permitidas);
       if (error) throw new Error(error.message);
     }
+
     return { excluidas: permitidas.length, bloqueadas };
   });
