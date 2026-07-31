@@ -120,6 +120,7 @@ import { Route as AuthenticatedCrmClientesNovoRouteImport } from './routes/_auth
 import { Route as AuthenticatedCrmClientesIdRouteImport } from './routes/_authenticated/crm.clientes_.$id'
 import { Route as AuthenticatedAdminComprasPedidosRouteImport } from './routes/_authenticated/admin.compras.pedidos'
 import { Route as AuthenticatedAdminComprasAprovacoesRouteImport } from './routes/_authenticated/admin.compras.aprovacoes'
+import { Route as AuthenticatedRhFuncionariosRouteImport } from './routes/_authenticated/rh.funcionarios_.'
 
 const PortalRoute = PortalRouteImport.update({
   id: '/portal',
@@ -756,6 +757,12 @@ const AuthenticatedAdminComprasAprovacoesRoute =
     path: '/admin/compras/aprovacoes',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedRhFuncionariosRoute =
+  AuthenticatedRhFuncionariosRouteImport.update({
+    id: '/rh/funcionarios_/',
+    path: '/rh/funcionarios/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -850,6 +857,7 @@ export interface FileRoutesByFullPath {
   '/formularios/': typeof AuthenticatedFormulariosIndexRoute
   '/relatorios/': typeof AuthenticatedRelatoriosIndexRoute
   '/rh/': typeof AuthenticatedRhIndexRoute
+  '/rh/funcionarios/': typeof AuthenticatedRhFuncionariosRoute
   '/admin/compras/aprovacoes': typeof AuthenticatedAdminComprasAprovacoesRoute
   '/admin/compras/pedidos': typeof AuthenticatedAdminComprasPedidosRoute
   '/crm/clientes/$id': typeof AuthenticatedCrmClientesIdRoute
@@ -1074,6 +1082,7 @@ export interface FileRoutesById {
   '/_authenticated/formularios/': typeof AuthenticatedFormulariosIndexRoute
   '/_authenticated/relatorios/': typeof AuthenticatedRelatoriosIndexRoute
   '/_authenticated/rh/': typeof AuthenticatedRhIndexRoute
+  '/_authenticated/rh/funcionarios_/': typeof AuthenticatedRhFuncionariosRoute
   '/_authenticated/admin/compras/aprovacoes': typeof AuthenticatedAdminComprasAprovacoesRoute
   '/_authenticated/admin/compras/pedidos': typeof AuthenticatedAdminComprasPedidosRoute
   '/_authenticated/crm/clientes_/$id': typeof AuthenticatedCrmClientesIdRoute
@@ -1188,6 +1197,7 @@ export interface FileRouteTypes {
     | '/formularios/'
     | '/relatorios/'
     | '/rh/'
+    | '/rh/funcionarios/'
     | '/admin/compras/aprovacoes'
     | '/admin/compras/pedidos'
     | '/crm/clientes/$id'
@@ -1411,6 +1421,7 @@ export interface FileRouteTypes {
     | '/_authenticated/formularios/'
     | '/_authenticated/relatorios/'
     | '/_authenticated/rh/'
+    | '/_authenticated/rh/funcionarios_/'
     | '/_authenticated/admin/compras/aprovacoes'
     | '/_authenticated/admin/compras/pedidos'
     | '/_authenticated/crm/clientes_/$id'
@@ -2223,6 +2234,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminComprasAprovacoesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/rh/funcionarios_/': {
+      id: '/_authenticated/rh/funcionarios_/'
+      path: '/rh/funcionarios'
+      fullPath: '/rh/funcionarios/'
+      preLoaderRoute: typeof AuthenticatedRhFuncionariosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -2379,6 +2397,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedRhRelatoriosRoute: typeof AuthenticatedRhRelatoriosRoute
   AuthenticatedVisaoGeralPainelRoute: typeof AuthenticatedVisaoGeralPainelRoute
   AuthenticatedRhIndexRoute: typeof AuthenticatedRhIndexRoute
+  AuthenticatedRhFuncionariosRoute: typeof AuthenticatedRhFuncionariosRoute
   AuthenticatedAdminComprasAprovacoesRoute: typeof AuthenticatedAdminComprasAprovacoesRoute
   AuthenticatedAdminComprasPedidosRoute: typeof AuthenticatedAdminComprasPedidosRoute
   AuthenticatedOperacionalDemandasIdRoute: typeof AuthenticatedOperacionalDemandasIdRoute
@@ -2451,6 +2470,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedRhRelatoriosRoute: AuthenticatedRhRelatoriosRoute,
   AuthenticatedVisaoGeralPainelRoute: AuthenticatedVisaoGeralPainelRoute,
   AuthenticatedRhIndexRoute: AuthenticatedRhIndexRoute,
+  AuthenticatedRhFuncionariosRoute: AuthenticatedRhFuncionariosRoute,
   AuthenticatedAdminComprasAprovacoesRoute:
     AuthenticatedAdminComprasAprovacoesRoute,
   AuthenticatedAdminComprasPedidosRoute: AuthenticatedAdminComprasPedidosRoute,
