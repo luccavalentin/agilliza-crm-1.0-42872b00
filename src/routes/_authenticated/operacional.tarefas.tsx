@@ -98,6 +98,11 @@ const GRUPOS: Array<{
 function Pagina() {
   const [escopo, setEscopo] = useState<"todas" | "minhas">("minhas");
   const [q, setQ] = useState("");
+  const [prioridade, setPrioridade] = useState<string>("todas");
+  const [ordem, setOrdem] = useState<"recentes" | "prazo" | "prioridade" | "alfabetica">(
+    "recentes",
+  );
+
   const [sel, setSel] = useState<string | null>(null);
   const [alternando, setAlternando] = useState<string | null>(null);
   const excluir = useServerFn(excluirTarefa);
