@@ -189,6 +189,18 @@ export function RegrasAbas({
                             )}
                           </TableCell>
                           <TableCell>{r.produto ?? "Todos"}</TableCell>
+                          <TableCell>{r.produto ?? "Todos"}</TableCell>
+                          <TableCell className="text-right">
+                            <div className="font-medium text-amber-600">
+                              {brl(resumoDe(r.id).a_pagar)}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {resumoDe(r.id).qtd} lanç.
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right font-medium text-emerald-600">
+                            {brl(resumoDe(r.id).paga)}
+                          </TableCell>
                           <TableCell className="text-center">
                             {r.ativo ? (
                               <Badge variant="secondary">Ativa</Badge>
@@ -197,6 +209,16 @@ export function RegrasAbas({
                             )}
                           </TableCell>
                           <TableCell className="text-right">
+                            {onVerLancamentos ? (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                title="Ver lançamentos deste usuário"
+                                onClick={() => onVerLancamentos(r.usuario_id)}
+                              >
+                                <Receipt className="size-4" />
+                              </Button>
+                            ) : null}
                             <Button
                               variant="ghost"
                               size="icon"
@@ -214,6 +236,7 @@ export function RegrasAbas({
                           </TableCell>
                         </TableRow>
                       ))}
+
                     </TableBody>
                   </Table>
                 </div>
