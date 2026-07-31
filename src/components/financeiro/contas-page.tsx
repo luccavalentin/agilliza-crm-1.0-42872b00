@@ -67,12 +67,13 @@ export function ContasPage({ tipo }: { tipo: ContaTipo }) {
       await excluir({ data: { tipo, id: excluirAlvo.id } });
       toast.success("Conta excluída.");
       recarregar();
-    } catch {
-      toast.error("Não foi possível excluir a conta.");
+    } catch (e: any) {
+      toast.error(e?.message ?? "Não foi possível excluir a conta.");
     } finally {
       setExcluirAlvo(null);
     }
   }
+
 
   async function handleExcluirSelecionadas() {
     if (!selecionados.length) return;
