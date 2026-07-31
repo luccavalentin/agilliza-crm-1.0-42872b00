@@ -250,23 +250,48 @@ function Pagina() {
       </div>
 
 
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="flex flex-wrap items-center gap-2.5">
         <Tabs value={escopo} onValueChange={(v) => setEscopo(v as "todas" | "minhas")}>
-          <TabsList>
-            <TabsTrigger value="minhas">Minhas</TabsTrigger>
-            <TabsTrigger value="todas">Todas</TabsTrigger>
+          <TabsList className="h-10 rounded-xl">
+            <TabsTrigger value="minhas" className="rounded-lg">Minhas</TabsTrigger>
+            <TabsTrigger value="todas" className="rounded-lg">Todas</TabsTrigger>
           </TabsList>
         </Tabs>
-        <div className="relative max-w-xs flex-1">
+        <div className="relative min-w-[200px] flex-1 sm:max-w-sm">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Buscar por título…"
-            className="pl-9"
+            placeholder="Buscar por título, código ou responsável…"
+            className="h-10 rounded-xl pl-9"
           />
         </div>
+        <Select value={prioridade} onValueChange={setPrioridade}>
+          <SelectTrigger className="h-10 w-[168px] rounded-xl">
+            <Flag className="mr-1 h-4 w-4 text-muted-foreground" />
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="todas">Prioridade: Todas</SelectItem>
+            <SelectItem value="p1">P1 · Urgente</SelectItem>
+            <SelectItem value="p2">P2 · Alta</SelectItem>
+            <SelectItem value="p3">P3 · Normal</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={ordem} onValueChange={(v) => setOrdem(v as typeof ordem)}>
+          <SelectTrigger className="h-10 w-[176px] rounded-xl">
+            <ArrowDownUp className="mr-1 h-4 w-4 text-muted-foreground" />
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="recentes">Mais recentes</SelectItem>
+            <SelectItem value="prazo">Prazo mais próximo</SelectItem>
+            <SelectItem value="prioridade">Maior prioridade</SelectItem>
+            <SelectItem value="alfabetica">Título (A–Z)</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
+
 
       {isLoading ? (
         <div className="space-y-2">
