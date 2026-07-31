@@ -139,14 +139,25 @@ function Pagina() {
   }, [itens]);
 
 
-  const grupos = useMemo(
-    () =>
-      GRUPOS.map((g) => ({
-        ...g,
-        tarefas: itens.filter((t) => g.match(t.status)),
-      })),
-    [itens],
-  );
+  const grupos = useMemo(() => {
+    const peso: Record<string, number> = { p1: 0, p2: 1, p3: 2 };
+    const base = itens.filter((t) => prioridade === "todas" || t.prioridade === prioridade);
+    const ordenados = [...base].sort((a, b) => {
+      if (ordem === "prioridade") return (peso[a.prioridade] ?? 9) - (peso[b.prioridade] ?? 9);
+      if (ordem === "alfabetica") return a.titulo.localeCompare(b.titulo);
+      if (ordem === "prazo") {
+        const va = a.prazo ? new Date(a.prazo).getTime() : Infinity;
+        const vb = b.prazo ? new Date(b.prazo).getTime() : Infinity;
+        return va - vb;
+      }
+      return 0;
+    });
+    return GRUPOS.map((g) => ({
+      ...g,
+      tarefas: ordenados.filter((t) => g.match(t.status)),
+    }));
+  }, [itens, prioridade, ordem]);
+
 
   async function handleExcluir(id: string) {
     try {
