@@ -25,7 +25,16 @@ interface Resumo {
  * financeiro para manter tipografia, barra tonal, ícone envidraçado e
  * paleta semântica alinhados ao restante do módulo.
  */
-export function ContasKpis({ tipo, resumo }: { tipo: ContaTipo; resumo?: Resumo }) {
+export function ContasKpis({
+  tipo,
+  resumo,
+  onSelecionar,
+}: {
+  tipo: ContaTipo;
+  resumo?: Resumo;
+  /** Abre o detalhamento do card. `status` é o filtro equivalente no servidor. */
+  onSelecionar?: (kpi: { titulo: string; status: string }) => void;
+}) {
   const recebe = tipo === "receber";
   const qtdSub = (n: number) => `${n} ${n === 1 ? "conta" : "contas"}`;
 
@@ -35,6 +44,7 @@ export function ContasKpis({ tipo, resumo }: { tipo: ContaTipo; resumo?: Resumo 
     qtd: number;
     icon: typeof Wallet;
     tone: KpiTone;
+    status: string;
   }> = [
     {
       titulo: "Total no período",
@@ -42,6 +52,7 @@ export function ContasKpis({ tipo, resumo }: { tipo: ContaTipo; resumo?: Resumo 
       qtd: resumo?.totalQtd ?? 0,
       icon: Wallet,
       tone: "brand",
+      status: "",
     },
     {
       titulo: recebe ? "A receber" : "A pagar",
@@ -49,6 +60,7 @@ export function ContasKpis({ tipo, resumo }: { tipo: ContaTipo; resumo?: Resumo 
       qtd: resumo?.abertoQtd ?? 0,
       icon: recebe ? ArrowDownCircle : ArrowUpCircle,
       tone: "warning",
+      status: "aberta",
     },
     {
       titulo: recebe ? "Recebido" : "Pago",
@@ -56,6 +68,7 @@ export function ContasKpis({ tipo, resumo }: { tipo: ContaTipo; resumo?: Resumo 
       qtd: resumo?.pagoQtd ?? 0,
       icon: CheckCircle2,
       tone: "success",
+      status: "paga",
     },
     {
       titulo: "Em atraso",
@@ -63,6 +76,7 @@ export function ContasKpis({ tipo, resumo }: { tipo: ContaTipo; resumo?: Resumo 
       qtd: resumo?.atrasadoQtd ?? 0,
       icon: AlertTriangle,
       tone: "danger",
+      status: "atrasada",
     },
   ];
 
@@ -76,8 +90,12 @@ export function ContasKpis({ tipo, resumo }: { tipo: ContaTipo; resumo?: Resumo 
           icon={k.icon}
           tone={k.tone}
           sub={qtdSub(k.qtd)}
+          onClick={
+            onSelecionar ? () => onSelecionar({ titulo: k.titulo, status: k.status }) : undefined
+          }
         />
       ))}
     </div>
   );
 }
+
