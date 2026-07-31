@@ -183,22 +183,75 @@ export const salvarRegraComissaoUsuario = createServerFn({ method: "POST" })
       observacao: data.observacao || null,
       criador_id: userId,
     };
+    let regraId: string;
     if (data.id) {
       const { error } = await supabase
         .from("comissao_regras_usuario")
         .update(payload)
         .eq("id", data.id);
       if (error) throw new Error(error.message);
-      return { id: data.id };
+      regraId = data.id;
+    } else {
+      const { data: novo, error } = await supabase
+        .from("comissao_regras_usuario")
+        .insert(payload)
+        .select("id")
+        .single();
+      if (error) throw new Error(error.message);
+      regraId = novo.id as string;
     }
-    const { data: novo, error } = await supabase
-      .from("comissao_regras_usuario")
-      .insert(payload)
-      .select("id")
-      .single();
-    if (error) throw new Error(error.message);
-    return { id: novo.id as string };
+
+    // Gera imediatamente os lançamentos (e as contas a pagar vinculadas)
+    // para as propostas/simulações que já atendem à regra recém-configurada.
+    let gerados = 0;
+    if (data.ativo) {
+      const { data: qtd } = await supabase.rpc(
+        "recalcular_comissoes_usuario_correspondente" as never,
+        { _corr: corr } as never,
+      );
+      gerados = Number(qtd ?? 0);
+    }
+    return { id: regraId, gerados };
   });
+
+// Resumo de lançamentos por regra (a pagar / pago / cancelado)
+export interface ResumoRegraComissao {
+  regra_id: string;
+  qtd: number;
+  a_pagar: number;
+  paga: number;
+  cancelada: number;
+  total: number;
+}
+
+export const resumoRegrasComissaoUsuario = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<ResumoRegraComissao[]> => {
+    const { supabase, userId } = context;
+    const corr = await corrDoUsuario(supabase, userId);
+    const { data, error } = await supabase
+      .from("comissoes_usuario")
+      .select("regra_id, status, valor_comissao")
+      .eq("correspondente_id", corr);
+    if (error) throw new Error(error.message);
+
+    const mapa = new Map<string, ResumoRegraComissao>();
+    (data ?? []).forEach((r: any) => {
+      if (!r.regra_id) return;
+      const atual =
+        mapa.get(r.regra_id) ??
+        { regra_id: r.regra_id, qtd: 0, a_pagar: 0, paga: 0, cancelada: 0, total: 0 };
+      const v = Number(r.valor_comissao ?? 0);
+      atual.qtd += 1;
+      if (r.status === "paga") atual.paga += v;
+      else if (r.status === "cancelada") atual.cancelada += v;
+      else atual.a_pagar += v;
+      if (r.status !== "cancelada") atual.total += v;
+      mapa.set(r.regra_id, atual);
+    });
+    return Array.from(mapa.values());
+  });
+
 
 export const excluirRegraComissaoUsuario = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

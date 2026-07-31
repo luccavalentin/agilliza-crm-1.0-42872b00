@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Pencil, Trash2, Loader2, RefreshCw } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, RefreshCw, Receipt } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -32,6 +32,7 @@ import {
   excluirRegraComissaoUsuario,
   listarRegrasComissaoUsuario,
   recalcularComissoesUsuario,
+  resumoRegrasComissaoUsuario,
   type RegraComissaoUsuario,
   type TipoVinculoComissao,
 } from "@/lib/financeiro/comissoes-usuario.functions";
@@ -40,7 +41,13 @@ import { RegraComissaoUsuarioForm } from "./regra-form";
 const rotulo = (arr: readonly { valor: string; rotulo: string }[], v: string) =>
   arr.find((i) => i.valor === v)?.rotulo ?? v;
 
-export function RegrasAbas() {
+const brl = (n: number) => n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+export function RegrasAbas({
+  onVerLancamentos,
+}: {
+  onVerLancamentos?: (usuarioId: string) => void;
+} = {}) {
   const [tipo, setTipo] = useState<TipoVinculoComissao>("corretor");
   const [dialog, setDialog] = useState<{ aberto: boolean; regra: RegraComissaoUsuario | null }>({
     aberto: false,
@@ -53,6 +60,21 @@ export function RegrasAbas() {
     queryKey: ["fin-com-usr-regras", tipo],
     queryFn: () => listarRegrasComissaoUsuario({ data: { tipo_vinculo: tipo } }),
   });
+
+  const { data: resumos } = useQuery({
+    queryKey: ["fin-com-usr-resumo"],
+    queryFn: () => resumoRegrasComissaoUsuario({ data: {} } as never),
+  });
+  const resumoDe = (regraId: string) =>
+    (resumos ?? []).find((r) => r.regra_id === regraId) ?? {
+      regra_id: regraId,
+      qtd: 0,
+      a_pagar: 0,
+      paga: 0,
+      cancelada: 0,
+      total: 0,
+    };
+
 
   const del = useMutation({
     mutationFn: (id: string) => excluirRegraComissaoUsuario({ data: { id } }),
@@ -137,8 +159,11 @@ export function RegrasAbas() {
                         <TableHead className="text-right">%</TableHead>
                         <TableHead>Banco</TableHead>
                         <TableHead>Produto</TableHead>
+                        <TableHead className="text-right">A pagar</TableHead>
+                        <TableHead className="text-right">Pago</TableHead>
                         <TableHead className="text-center">Ativo</TableHead>
                         <TableHead className="text-right">Ações</TableHead>
+
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -164,6 +189,18 @@ export function RegrasAbas() {
                             )}
                           </TableCell>
                           <TableCell>{r.produto ?? "Todos"}</TableCell>
+
+                          <TableCell className="text-right">
+                            <div className="font-medium text-amber-600">
+                              {brl(resumoDe(r.id).a_pagar)}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {resumoDe(r.id).qtd} lanç.
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right font-medium text-emerald-600">
+                            {brl(resumoDe(r.id).paga)}
+                          </TableCell>
                           <TableCell className="text-center">
                             {r.ativo ? (
                               <Badge variant="secondary">Ativa</Badge>
@@ -172,6 +209,16 @@ export function RegrasAbas() {
                             )}
                           </TableCell>
                           <TableCell className="text-right">
+                            {onVerLancamentos ? (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                title="Ver lançamentos deste usuário"
+                                onClick={() => onVerLancamentos(r.usuario_id)}
+                              >
+                                <Receipt className="size-4" />
+                              </Button>
+                            ) : null}
                             <Button
                               variant="ghost"
                               size="icon"
@@ -189,6 +236,7 @@ export function RegrasAbas() {
                           </TableCell>
                         </TableRow>
                       ))}
+
                     </TableBody>
                   </Table>
                 </div>

@@ -161,11 +161,21 @@ export function RegraComissaoUsuarioForm({ aberto, onFechar, tipoInicial, regra 
           observacao: observacao || null,
         },
       }),
-    onSuccess: () => {
-      toast.success(regra ? "Regra atualizada." : "Regra criada.");
+    onSuccess: (r: any) => {
+      toast.success(
+        r?.gerados
+          ? `${regra ? "Regra atualizada" : "Regra criada"} — ${r.gerados} lançamento(s) gerado(s) em contas a pagar.`
+          : regra
+            ? "Regra atualizada."
+            : "Regra criada.",
+      );
       qc.invalidateQueries({ queryKey: ["fin-com-usr-regras"] });
+      qc.invalidateQueries({ queryKey: ["fin-com-usr-resumo"] });
+      qc.invalidateQueries({ queryKey: ["fin-com-usr-lanc"] });
+      qc.invalidateQueries({ queryKey: ["financeiro"] });
       onFechar();
     },
+
     onError: (e: any) => toast.error(e?.message ?? "Falha ao salvar regra."),
   });
 

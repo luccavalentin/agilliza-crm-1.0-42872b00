@@ -38,7 +38,13 @@ const statusBadge = (s: string) => {
   return <Badge className="bg-amber-500/15 text-amber-700">A pagar</Badge>;
 };
 
-export function LancamentosComissoesUsuario() {
+export function LancamentosComissoesUsuario({
+  usuarioId,
+  onLimparUsuario,
+}: {
+  usuarioId?: string | null;
+  onLimparUsuario?: () => void;
+} = {}) {
   const qc = useQueryClient();
   const [status, setStatus] = useState<string>("todos");
   const [tipoVinculo, setTipoVinculo] = useState<string>("todos");
@@ -49,16 +55,18 @@ export function LancamentosComissoesUsuario() {
     () => ({
       status: status === "todos" ? undefined : (status as any),
       tipo_vinculo: tipoVinculo === "todos" ? undefined : tipoVinculo,
+      usuario_id: usuarioId || undefined,
       de: de || undefined,
       ate: ate || undefined,
     }),
-    [status, tipoVinculo, de, ate],
+    [status, tipoVinculo, usuarioId, de, ate],
   );
 
   const { data: rows, isLoading } = useQuery({
     queryKey: ["fin-com-usr-lanc", filtros],
     queryFn: () => listarComissoesUsuario({ data: filtros }),
   });
+
 
   const pagar = useMutation({
     mutationFn: (id: string) => marcarComissaoUsuarioPaga({ data: { id } }),
@@ -93,9 +101,19 @@ export function LancamentosComissoesUsuario() {
           <div>
             <CardTitle>Lançamentos de comissão</CardTitle>
             <p className="mt-1 text-sm text-muted-foreground">
-              Comissões geradas automaticamente ao emitir cada contrato.
+              Comissões geradas automaticamente pelas regras, já vinculadas a contas a pagar.
             </p>
+            {usuarioId ? (
+              <button
+                type="button"
+                onClick={onLimparUsuario}
+                className="mt-2 inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary"
+              >
+                Filtrando por usuário selecionado — limpar ✕
+              </button>
+            ) : null}
           </div>
+
           <div className="flex flex-wrap items-end gap-2">
             <div className="w-40">
               <Select value={status} onValueChange={setStatus}>
