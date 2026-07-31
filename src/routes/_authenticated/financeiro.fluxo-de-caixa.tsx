@@ -22,6 +22,8 @@ import {
   CalendarClock,
   ArrowDownRight,
   ArrowUpRight,
+  CalendarRange,
+  X,
 } from "lucide-react";
 import { assertModuloPermitido } from "@/lib/route-guards";
 import {
@@ -30,6 +32,9 @@ import {
 } from "@/lib/financeiro/financeiro.functions";
 import { PanelHeader, SectionTitle, HeroMetric, MiniMetric, PanelCard } from "@/components/common/dashboard";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { formatBRL } from "@/lib/financeiro/format";
 import { cn } from "@/lib/utils";
 
