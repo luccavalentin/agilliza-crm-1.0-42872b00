@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 /** Item mínimo consumido pelo board (evita acoplar ao tipo completo do server fn). */
 export interface TarefaBoardItem {
   id: string;
-  numero: string;
+  numero: string | null;
   titulo: string;
   status: string;
   prioridade: string;
@@ -223,7 +223,7 @@ export function TarefasBoard({
                             {t.titulo}
                           </span>
                           <span className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-muted-foreground">
-                            <span className="tabular-nums">{t.numero}</span>
+                            <span className="tabular-nums">{t.numero ?? "—"}</span>
                             {t.nome_cliente && (
                               <span className="inline-flex items-center gap-1 truncate">
                                 <User2 className="h-3 w-3" />
@@ -282,7 +282,7 @@ export function TarefasBoard({
                         <div className="hidden justify-end opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100 md:flex">
                           <ConfirmDelete
                             titulo="Excluir tarefa"
-                            descricao={`A tarefa ${t.numero} será removida permanentemente.`}
+                            descricao={`A tarefa ${t.numero ?? "—"} será removida permanentemente.`}
                             onConfirm={async () => {
                               await onExcluir(t.id);
                             }}
