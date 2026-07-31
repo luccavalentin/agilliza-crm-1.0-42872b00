@@ -7259,6 +7259,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      excluir_regra_comissao_usuario: {
+        Args: { _regra: string }
+        Returns: number
+      }
       garantir_feriados_nacionais: {
         Args: { ano_fim: number; ano_inicio: number }
         Returns: undefined
@@ -7421,6 +7425,10 @@ export type Database = {
       rh_semear_checklist_clt: {
         Args: { _func_id: string }
         Returns: undefined
+      }
+      sincronizar_comissoes_usuario_regra: {
+        Args: { _regra: string }
+        Returns: number
       }
       usuario_escopo_dados: {
         Args: { _modulo: string; _user_id: string }

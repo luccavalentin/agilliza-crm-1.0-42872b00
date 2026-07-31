@@ -201,18 +201,16 @@ export const salvarRegraComissaoUsuario = createServerFn({ method: "POST" })
       regraId = novo.id as string;
     }
 
-    // Gera imediatamente os lançamentos (e as contas a pagar vinculadas)
-    // para as propostas/simulações que já atendem à regra recém-configurada.
-    let gerados = 0;
-    if (data.ativo) {
-      const { data: qtd } = await supabase.rpc(
-        "recalcular_comissoes_usuario_correspondente" as never,
-        { _corr: corr } as never,
-      );
-      gerados = Number(qtd ?? 0);
-    }
+    // Sincroniza os lançamentos já existentes com o novo percentual/base e gera
+    // os que faltam (com as contas a pagar vinculadas).
+    const { data: qtd } = await supabase.rpc(
+      "recalcular_comissoes_usuario_correspondente" as never,
+      { _corr: corr } as never,
+    );
+    const gerados = Number(qtd ?? 0);
     return { id: regraId, gerados };
   });
+
 
 // Resumo de lançamentos por regra (a pagar / pago / cancelado)
 export interface ResumoRegraComissao {
@@ -258,13 +256,15 @@ export const excluirRegraComissaoUsuario = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }) => {
     const { supabase } = context;
-    const { error } = await supabase
-      .from("comissao_regras_usuario")
-      .delete()
-      .eq("id", data.id);
+    // Remove em cascata: lançamentos da regra + contas a pagar geradas por ela.
+    const { data: removidos, error } = await supabase.rpc(
+      "excluir_regra_comissao_usuario" as never,
+      { _regra: data.id } as never,
+    );
     if (error) throw new Error(error.message);
-    return { ok: true };
+    return { ok: true, removidos: Number(removidos ?? 0) };
   });
+
 
 // ---------- LANÇAMENTOS ----------
 
@@ -512,4 +512,112 @@ export const listarBancosComissao = createServerFn({ method: "GET" })
       .eq("ativo", true)
       .order("ordem", { ascending: true });
     return Array.from(new Set((data ?? []).map((b: any) => b.nome_banco).filter(Boolean)));
+  });
+
+// ---------- EDIÇÃO / EXCLUSÃO DE LANÇAMENTOS ----------
+
+export const atualizarComissaoUsuario = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        id: z.string().uuid(),
+        percentual: z.number().min(0).max(100).optional(),
+        valor_comissao: z.number().min(0).optional(),
+        status: z.enum(["a_pagar", "paga", "cancelada"]).optional(),
+        vencimento: z.string().optional().nullable(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ context, data }) => {
+    const { supabase } = context;
+    const { data: atual, error: e0 } = await supabase
+      .from("comissoes_usuario")
+      .select("id, payable_id, valor_base, percentual, valor_comissao")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (e0) throw new Error(e0.message);
+    if (!atual) throw new Error("Lançamento não encontrado.");
+
+    const base = Number(atual.valor_base ?? 0);
+    const percentual = data.percentual ?? Number(atual.percentual ?? 0);
+    const valor =
+      data.valor_comissao != null
+        ? data.valor_comissao
+        : data.percentual != null
+          ? Math.round(base * percentual) / 100
+          : Number(atual.valor_comissao ?? 0);
+
+    const patch: any = { percentual, valor_comissao: valor };
+    if (data.status) patch.status = data.status;
+
+    const { error } = await supabase.from("comissoes_usuario").update(patch).eq("id", data.id);
+    if (error) throw new Error(error.message);
+
+    if (atual.payable_id) {
+      const payPatch: any = { valor };
+      if (data.vencimento) payPatch.vencimento = data.vencimento;
+      if (data.status === "cancelada") payPatch.status = "cancelada";
+      if (data.status === "paga") {
+        payPatch.status = "paga";
+        payPatch.valor_pago = valor;
+        payPatch.data_pagamento = new Date().toISOString().slice(0, 10);
+      }
+      await supabase.from("financial_payables").update(payPatch).eq("id", atual.payable_id);
+    }
+    return { ok: true, valor_comissao: valor };
+  });
+
+export const excluirComissoesUsuario = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({ ids: z.array(z.string().uuid()).min(1) }).parse(d),
+  )
+  .handler(async ({ context, data }) => {
+    const { supabase } = context;
+    const { data: rows, error: e0 } = await supabase
+      .from("comissoes_usuario")
+      .select("id, payable_id")
+      .in("id", data.ids);
+    if (e0) throw new Error(e0.message);
+
+    const payIds = (rows ?? []).map((r: any) => r.payable_id).filter(Boolean);
+    const { error } = await supabase.from("comissoes_usuario").delete().in("id", data.ids);
+    if (error) throw new Error(error.message);
+    if (payIds.length) {
+      await supabase.from("financial_payables").delete().in("id", payIds);
+    }
+    return { ok: true, excluidos: (rows ?? []).length };
+  });
+
+export const marcarComissoesUsuarioPagas = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({ ids: z.array(z.string().uuid()).min(1) }).parse(d),
+  )
+  .handler(async ({ context, data }) => {
+    const { supabase } = context;
+    const hoje = new Date().toISOString().slice(0, 10);
+    const { data: rows } = await supabase
+      .from("comissoes_usuario")
+      .select("id, payable_id, valor_comissao")
+      .in("id", data.ids);
+    for (const r of rows ?? []) {
+      if ((r as any).payable_id) {
+        await supabase
+          .from("financial_payables")
+          .update({
+            status: "paga",
+            valor_pago: (r as any).valor_comissao,
+            data_pagamento: hoje,
+          })
+          .eq("id", (r as any).payable_id);
+      }
+    }
+    const { error } = await supabase
+      .from("comissoes_usuario")
+      .update({ status: "paga" })
+      .in("id", data.ids);
+    if (error) throw new Error(error.message);
+    return { ok: true, total: (rows ?? []).length };
   });

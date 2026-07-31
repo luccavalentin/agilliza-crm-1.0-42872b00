@@ -1,10 +1,20 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { CheckCircle2, XCircle, Loader2 } from "lucide-react";
+import {
+  CheckCircle2,
+  XCircle,
+  Loader2,
+  Pencil,
+  Trash2,
+  Wallet,
+  X,
+  ArrowUpCircle,
+} from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Table,
   TableBody,
@@ -25,9 +35,15 @@ import { BancoLogo } from "@/components/bancos/banco-logo";
 import {
   TIPOS_VINCULO_COMISSAO,
   cancelarComissaoUsuario,
+  excluirComissoesUsuario,
   listarComissoesUsuario,
   marcarComissaoUsuarioPaga,
+  marcarComissoesUsuarioPagas,
 } from "@/lib/financeiro/comissoes-usuario.functions";
+import {
+  ComissaoEditarDialog,
+  type ComissaoEditavel,
+} from "./comissao-editar-dialog";
 
 const brl = (n: number) =>
   n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -37,6 +53,7 @@ const statusBadge = (s: string) => {
   if (s === "cancelada") return <Badge variant="outline">Cancelada</Badge>;
   return <Badge className="bg-amber-500/15 text-amber-700">A pagar</Badge>;
 };
+
 
 export function LancamentosComissoesUsuario({
   usuarioId,
@@ -85,14 +102,52 @@ export function LancamentosComissoesUsuario({
     onError: (e: any) => toast.error(e?.message ?? "Falha ao cancelar."),
   });
 
+  const [selecionados, setSelecionados] = useState<string[]>([]);
+  const [editando, setEditando] = useState<ComissaoEditavel | null>(null);
+  const marcados = new Set(selecionados);
+
+  const excluirLote = useMutation({
+    mutationFn: (ids: string[]) => excluirComissoesUsuario({ data: { ids } }),
+    onSuccess: (r: any) => {
+      toast.success(`${r?.excluidos ?? 0} lançamento(s) excluído(s).`);
+      setSelecionados([]);
+      qc.invalidateQueries({ queryKey: ["fin-com-usr-lanc"] });
+      qc.invalidateQueries({ queryKey: ["fin-com-usr-regras"] });
+      qc.invalidateQueries({ queryKey: ["fin-contas"] });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Falha ao excluir."),
+  });
+
+  const pagarLote = useMutation({
+    mutationFn: (ids: string[]) => marcarComissoesUsuarioPagas({ data: { ids } }),
+    onSuccess: () => {
+      toast.success("Lançamentos marcados como pagos.");
+      setSelecionados([]);
+      qc.invalidateQueries({ queryKey: ["fin-com-usr-lanc"] });
+      qc.invalidateQueries({ queryKey: ["fin-com-usr-regras"] });
+      qc.invalidateQueries({ queryKey: ["fin-contas"] });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Falha ao pagar."),
+  });
+
   const totais = useMemo(() => {
     const list = rows ?? [];
     const somar = (st?: string) =>
       list
         .filter((r) => (st ? r.status === st : true))
         .reduce((a, r) => a + r.valor_comissao, 0);
-    return { aPagar: somar("a_pagar"), paga: somar("paga"), total: somar() };
+    const contar = (st?: string) =>
+      list.filter((r) => (st ? r.status === st : true)).length;
+    return {
+      aPagar: somar("a_pagar"),
+      paga: somar("paga"),
+      total: somar(),
+      qtdAPagar: contar("a_pagar"),
+      qtdPaga: contar("paga"),
+      qtdTotal: contar(),
+    };
   }, [rows]);
+
 
   return (
     <Card>
@@ -160,19 +215,95 @@ export function LancamentosComissoesUsuario({
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid gap-3 sm:grid-cols-3">
-          <div className="rounded-lg border border-border p-3">
-            <div className="text-xs text-muted-foreground">A pagar</div>
-            <div className="text-lg font-semibold">{brl(totais.aPagar)}</div>
-          </div>
-          <div className="rounded-lg border border-border p-3">
-            <div className="text-xs text-muted-foreground">Pagas</div>
-            <div className="text-lg font-semibold text-emerald-600">{brl(totais.paga)}</div>
-          </div>
-          <div className="rounded-lg border border-border p-3">
-            <div className="text-xs text-muted-foreground">Total no período</div>
-            <div className="text-lg font-semibold">{brl(totais.total)}</div>
-          </div>
+          {[
+            {
+              rotulo: "A pagar",
+              valor: totais.aPagar,
+              qtd: totais.qtdAPagar,
+              filtro: "a_pagar",
+              icon: ArrowUpCircle,
+              cor: "text-amber-600",
+            },
+            {
+              rotulo: "Pagas",
+              valor: totais.paga,
+              qtd: totais.qtdPaga,
+              filtro: "paga",
+              icon: CheckCircle2,
+              cor: "text-emerald-600",
+            },
+            {
+              rotulo: "Total no período",
+              valor: totais.total,
+              qtd: totais.qtdTotal,
+              filtro: "todos",
+              icon: Wallet,
+              cor: "text-foreground",
+            },
+          ].map((k) => (
+            <button
+              key={k.rotulo}
+              type="button"
+              onClick={() => setStatus(k.filtro)}
+              className={`group flex items-start justify-between rounded-xl border p-4 text-left transition-all hover:-translate-y-0.5 hover:shadow-md ${
+                status === k.filtro ? "border-primary/50 bg-primary/[0.04]" : "border-border"
+              }`}
+            >
+              <div>
+                <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  {k.rotulo}
+                </div>
+                <div className={`mt-1 text-xl font-semibold tabular-nums ${k.cor}`}>
+                  {brl(k.valor)}
+                </div>
+                <div className="mt-0.5 text-xs text-muted-foreground">
+                  {k.qtd} {k.qtd === 1 ? "lançamento" : "lançamentos"}
+                </div>
+              </div>
+              <k.icon className={`size-5 shrink-0 opacity-70 ${k.cor}`} />
+            </button>
+          ))}
         </div>
+
+        {selecionados.length > 0 && (
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-primary/30 bg-primary/[0.04] px-4 py-3">
+            <span className="text-sm font-medium">
+              {selecionados.length} lançamento(s) selecionado(s)
+            </span>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button variant="ghost" size="sm" onClick={() => setSelecionados([])}>
+                <X className="mr-1.5 size-4" /> Limpar
+              </Button>
+              <Button
+                size="sm"
+                variant="secondary"
+                disabled={pagarLote.isPending}
+                onClick={() => pagarLote.mutate(selecionados)}
+              >
+                {pagarLote.isPending ? (
+                  <Loader2 className="mr-1.5 size-4 animate-spin" />
+                ) : (
+                  <CheckCircle2 className="mr-1.5 size-4" />
+                )}
+                Marcar como pagas
+              </Button>
+              <Button
+                size="sm"
+                variant="destructive"
+                disabled={excluirLote.isPending}
+                onClick={() => excluirLote.mutate(selecionados)}
+              >
+                {excluirLote.isPending ? (
+                  <Loader2 className="mr-1.5 size-4 animate-spin" />
+                ) : (
+                  <Trash2 className="mr-1.5 size-4" />
+                )}
+                Excluir
+              </Button>
+            </div>
+          </div>
+        )}
+
 
         {isLoading ? (
           <div className="flex items-center justify-center py-10 text-muted-foreground">
@@ -187,6 +318,15 @@ export function LancamentosComissoesUsuario({
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-10">
+                    <Checkbox
+                      checked={!!rows.length && rows.every((r) => marcados.has(r.id))}
+                      aria-label="Selecionar todos os lançamentos"
+                      onCheckedChange={(v) =>
+                        setSelecionados(v ? rows.map((r) => r.id) : [])
+                      }
+                    />
+                  </TableHead>
                   <TableHead>Proposta</TableHead>
                   <TableHead>Cliente</TableHead>
                   <TableHead>Usuário</TableHead>
@@ -201,7 +341,22 @@ export function LancamentosComissoesUsuario({
               </TableHeader>
               <TableBody>
                 {rows.map((r) => (
-                  <TableRow key={r.id}>
+                  <TableRow
+                    key={r.id}
+                    className="transition-colors hover:bg-primary/[0.04]"
+                    data-state={marcados.has(r.id) ? "selected" : undefined}
+                  >
+                    <TableCell>
+                      <Checkbox
+                        checked={marcados.has(r.id)}
+                        aria-label="Selecionar lançamento"
+                        onCheckedChange={() =>
+                          setSelecionados((p) =>
+                            p.includes(r.id) ? p.filter((x) => x !== r.id) : [...p, r.id],
+                          )
+                        }
+                      />
+                    </TableCell>
                     <TableCell className="font-medium">{r.numero_proposta ?? "—"}</TableCell>
                     <TableCell>{r.nome_cliente ?? "—"}</TableCell>
                     <TableCell>{r.usuario_nome ?? "—"}</TableCell>
@@ -227,6 +382,22 @@ export function LancamentosComissoesUsuario({
                     </TableCell>
                     <TableCell>{statusBadge(r.status)}</TableCell>
                     <TableCell className="text-right">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        title="Editar lançamento"
+                        onClick={() => setEditando(r as any)}
+                      >
+                        <Pencil className="size-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        title="Excluir lançamento"
+                        onClick={() => excluirLote.mutate([r.id])}
+                      >
+                        <Trash2 className="size-4 text-destructive" />
+                      </Button>
                       {r.status === "a_pagar" && (
                         <>
                           <Button
@@ -255,6 +426,11 @@ export function LancamentosComissoesUsuario({
           </div>
         )}
       </CardContent>
+
+      <ComissaoEditarDialog
+        lancamento={editando}
+        onOpenChange={(o) => !o && setEditando(null)}
+      />
     </Card>
   );
 }

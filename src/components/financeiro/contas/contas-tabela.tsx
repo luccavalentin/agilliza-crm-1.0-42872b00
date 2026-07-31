@@ -7,12 +7,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Checkbox } from "@/components/ui/checkbox";
 import { ContaStatusBadge } from "@/components/financeiro/status-badge";
 import { formatBRL, formatData } from "@/lib/financeiro/format";
 import type { ContaTipo } from "@/lib/financeiro/financeiro.functions";
 import { AcoesMenu } from "./acoes-menu";
 
-interface Item {
+export interface ContaItem {
   id: string;
   numero: string | null;
   descricao: string;
@@ -28,10 +29,10 @@ interface Item {
 export interface ContasAcoes {
   onDetalhe: (id: string) => void;
   onEditar: (id: string) => void;
-  onBaixar: (conta: Item) => void;
+  onBaixar: (conta: ContaItem) => void;
   onEstornar: (id: string) => void;
   onCancelar: (id: string) => void;
-  onExcluir: (conta: Item) => void;
+  onExcluir: (conta: ContaItem) => void;
 }
 
 /**
@@ -44,21 +45,41 @@ export function ContasTabela({
   itens,
   isLoading,
   acoes,
+  selecionados,
+  onToggle,
+  onToggleTodos,
 }: {
   tipo: ContaTipo;
-  itens: Item[];
+  itens: ContaItem[];
   isLoading: boolean;
   acoes: ContasAcoes;
+  selecionados?: string[];
+  onToggle?: (id: string) => void;
+  onToggleTodos?: (marcar: boolean) => void;
 }) {
+  const selecionavel = !!onToggle;
+  const marcados = new Set(selecionados ?? []);
+  const todosMarcados = itens.length > 0 && itens.every((i) => marcados.has(i.id));
+
   return (
     <div className="hidden overflow-hidden rounded-xl border border-border bg-card shadow-sm md:block">
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow className="border-b border-border bg-muted/60 hover:bg-muted/60">
+              {selecionavel && (
+                <TableHead className="w-10">
+                  <Checkbox
+                    checked={todosMarcados}
+                    aria-label="Selecionar todas as contas"
+                    onCheckedChange={(v) => onToggleTodos?.(!!v)}
+                  />
+                </TableHead>
+              )}
               <TableHead className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 Número
               </TableHead>
+
               <TableHead className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 Descrição
               </TableHead>
@@ -84,14 +105,14 @@ export function ContasTabela({
             {isLoading &&
               Array.from({ length: 4 }).map((_, i) => (
                 <TableRow key={`sk-${i}`}>
-                  <TableCell colSpan={8} className="py-3">
+                  <TableCell colSpan={selecionavel ? 9 : 8} className="py-3">
                     <div className="h-6 w-full animate-pulse rounded bg-muted" />
                   </TableCell>
                 </TableRow>
               ))}
             {!isLoading && itens.length === 0 && (
               <TableRow>
-                <TableCell colSpan={8}>
+                <TableCell colSpan={selecionavel ? 9 : 8}>
                   <div className="flex flex-col items-center gap-3 py-14 text-center">
                     <div className="grid h-12 w-12 place-items-center rounded-full bg-muted">
                       <Wallet className="h-6 w-6 text-muted-foreground" />
@@ -110,6 +131,15 @@ export function ContasTabela({
                 className="cursor-pointer border-b border-border/60 transition-colors hover:bg-primary/[0.04]"
                 onClick={() => acoes.onDetalhe(c.id)}
               >
+                {selecionavel && (
+                  <TableCell onClick={(e) => e.stopPropagation()}>
+                    <Checkbox
+                      checked={marcados.has(c.id)}
+                      aria-label={`Selecionar conta ${c.numero ?? ""}`}
+                      onCheckedChange={() => onToggle?.(c.id)}
+                    />
+                  </TableCell>
+                )}
                 <TableCell className="font-medium tabular-nums text-primary">{c.numero}</TableCell>
                 <TableCell className="max-w-[220px] truncate">{c.descricao}</TableCell>
                 <TableCell>{c.contraparte ?? "—"}</TableCell>
@@ -142,4 +172,3 @@ export function ContasTabela({
   );
 }
 
-export type ContaItem = Item;
