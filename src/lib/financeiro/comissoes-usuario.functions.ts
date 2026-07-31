@@ -201,18 +201,16 @@ export const salvarRegraComissaoUsuario = createServerFn({ method: "POST" })
       regraId = novo.id as string;
     }
 
-    // Gera imediatamente os lançamentos (e as contas a pagar vinculadas)
-    // para as propostas/simulações que já atendem à regra recém-configurada.
-    let gerados = 0;
-    if (data.ativo) {
-      const { data: qtd } = await supabase.rpc(
-        "recalcular_comissoes_usuario_correspondente" as never,
-        { _corr: corr } as never,
-      );
-      gerados = Number(qtd ?? 0);
-    }
+    // Sincroniza os lançamentos já existentes com o novo percentual/base e gera
+    // os que faltam (com as contas a pagar vinculadas).
+    const { data: qtd } = await supabase.rpc(
+      "recalcular_comissoes_usuario_correspondente" as never,
+      { _corr: corr } as never,
+    );
+    const gerados = Number(qtd ?? 0);
     return { id: regraId, gerados };
   });
+
 
 // Resumo de lançamentos por regra (a pagar / pago / cancelado)
 export interface ResumoRegraComissao {
