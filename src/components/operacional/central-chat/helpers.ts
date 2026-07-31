@@ -3,7 +3,7 @@ import type { ChatTipo } from "@/lib/chats/gestao.functions";
 import type { ThreadCentral, ThreadKind } from "@/lib/chats/central.functions";
 
 export type SelecionadoState =
-  | { kind: "dm"; conversaId: string; nome: string | null }
+  | { kind: "dm"; conversaId: string; nome: string | null; foto: string | null }
   | { kind: "cliente"; clienteId: string; nome: string | null; foto: string | null }
   | {
       kind: "demanda";
@@ -58,7 +58,8 @@ export function ehSelecionado(sel: SelecionadoState, t: ThreadCentral): boolean 
 }
 
 export function threadParaSelecionado(t: ThreadCentral): SelecionadoState {
-  if (t.kind === "dm") return { kind: "dm", conversaId: t.id, nome: t.titulo };
+  if (t.kind === "dm")
+    return { kind: "dm", conversaId: t.id, nome: t.titulo, foto: t.avatar_url ?? null };
   if (t.kind === "cliente")
     return { kind: "cliente", clienteId: t.id, nome: t.titulo, foto: t.avatar_url ?? null };
   return {
