@@ -178,9 +178,14 @@ function FiltroPeriodo({
 
 function Pagina() {
   const [gran, setGran] = useState<"dia" | "semana" | "mes">("mes");
+  const [de, setDe] = useState("");
+  const [ate, setAte] = useState("");
   const { data, isLoading, dataUpdatedAt } = useQuery({
-    queryKey: ["fin-fluxo-analitico", gran],
-    queryFn: () => obterFluxoCaixaAnalitico({ data: { granularidade: gran } }),
+    queryKey: ["fin-fluxo-analitico", gran, de, ate],
+    queryFn: () =>
+      obterFluxoCaixaAnalitico({
+        data: { granularidade: gran, de: de || null, ate: ate || null },
+      }),
   });
 
   const atualizado = dataUpdatedAt
@@ -199,15 +204,44 @@ function Pagina() {
         descricao="Caixa realizado e projeção de entradas e saídas em aberto."
         atualizadoEm={atualizado}
         actions={
-          <Tabs value={gran} onValueChange={(v) => setGran(v as typeof gran)}>
-            <TabsList>
-              <TabsTrigger value="dia">Diário</TabsTrigger>
-              <TabsTrigger value="semana">Semanal</TabsTrigger>
-              <TabsTrigger value="mes">Mensal</TabsTrigger>
-            </TabsList>
-          </Tabs>
+          <div className="flex flex-wrap items-end justify-end gap-2">
+            <Tabs value={gran} onValueChange={(v) => setGran(v as typeof gran)}>
+              <TabsList className="h-auto gap-1 rounded-xl bg-muted/50 p-1.5 shadow-sm">
+                <TabsTrigger value="dia" className="rounded-lg px-3 py-1.5">
+                  Diário
+                </TabsTrigger>
+                <TabsTrigger value="semana" className="rounded-lg px-3 py-1.5">
+                  Semanal
+                </TabsTrigger>
+                <TabsTrigger value="mes" className="rounded-lg px-3 py-1.5">
+                  Mensal
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+            <FiltroPeriodo
+              de={de}
+              ate={ate}
+              onAplicar={(d, a) => {
+                setDe(d);
+                setAte(a);
+              }}
+              onLimpar={() => {
+                setDe("");
+                setAte("");
+              }}
+            />
+          </div>
         }
       />
+
+      {(de || ate) && (
+        <p className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 font-medium text-primary">
+            <CalendarRange className="size-3.5" />
+            Período: {de ? formatarData(de) : "início"} até {ate ? formatarData(ate) : "hoje"}
+          </span>
+        </p>
+      )}
 
       {vazio ? (
         <PanelCard titulo="Sem movimentações">
