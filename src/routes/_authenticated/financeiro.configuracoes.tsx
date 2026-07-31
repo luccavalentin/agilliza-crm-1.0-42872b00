@@ -12,6 +12,7 @@ import {
   Building2,
   
   Percent,
+  Users,
   TrendingUp,
   TrendingDown,
 } from "lucide-react";
@@ -59,6 +60,7 @@ import {
   SecaoRegrasComissao,
   SimuladorComissao,
 } from "@/components/financeiro/comissoes-gestao";
+import { RegrasAbas } from "@/components/financeiro/comissoes-usuario/regras-abas";
 
 export const Route = createFileRoute("/_authenticated/financeiro/configuracoes")({
   head: () => ({ meta: [{ title: "Configurações financeiras — Agilliza" }] }),
@@ -100,6 +102,9 @@ function Pagina() {
           <TabsTrigger value="comissoes" className="gap-1.5">
             <Percent className="h-4 w-4" /> Repasses
           </TabsTrigger>
+          <TabsTrigger value="comissoes-usuario" className="gap-1.5">
+            <Users className="h-4 w-4" /> Comissões por usuário
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="categorias" className="mt-4">
@@ -117,6 +122,9 @@ function Pagina() {
         <TabsContent value="comissoes" className="mt-4 space-y-6">
           <SecaoRegrasComissao />
           <SimuladorComissao />
+        </TabsContent>
+        <TabsContent value="comissoes-usuario" className="mt-4 space-y-6">
+          <RegrasAbas />
         </TabsContent>
       </Tabs>
     </div>
