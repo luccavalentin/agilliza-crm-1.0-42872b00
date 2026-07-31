@@ -1184,27 +1184,48 @@ export const excluirConta = createServerFn({ method: "POST" })
       .select("valor_pago, status, descricao, valor")
       .eq("id", data.id)
       .eq("correspondente_id", correspondente_id)
-      .single();
+      .maybeSingle();
     if (e0) throw new Error(e0.message);
     if (!atual) throw new Error("Conta não encontrada.");
-    if (Number(atual.valor_pago) > 0)
-      throw new Error("Conta com pagamentos não pode ser excluída. Estorne antes.");
+    // Exclusão sempre permitida: primeiro soltamos os vínculos de comissão
+    // para não deixar registros apontando para uma conta inexistente.
+    await desvincularContaDeComissoes(supabase, data.tipo, [data.id]);
     const { error } = await supabase
       .from(TABELA[data.tipo])
       .delete()
       .eq("id", data.id)
       .eq("correspondente_id", correspondente_id);
-    if (error) throw error;
+    if (error) throw new Error(error.message);
     await registrarAuditoria(
       supabase,
       correspondente_id,
       `conta_${data.tipo}`,
       data.id,
       "excluida",
-      { descricao: atual.descricao, valor: Number(atual.valor), status: atual.status },
+      {
+        descricao: atual.descricao,
+        valor: Number(atual.valor),
+        status: atual.status,
+        valor_pago: Number(atual.valor_pago ?? 0),
+      },
     );
     return { ok: true };
   });
+
+/** Remove os vínculos de comissões com as contas que serão excluídas. */
+async function desvincularContaDeComissoes(
+  supabase: any,
+  tipo: ContaTipo,
+  ids: string[],
+) {
+  if (!ids.length) return;
+  const coluna = tipo === "pagar" ? "payable_id" : "receivable_id";
+  await supabase.from("comissoes").update({ [coluna]: null }).in(coluna, ids);
+  if (tipo === "pagar") {
+    await supabase.from("comissoes_usuario").update({ payable_id: null }).in("payable_id", ids);
+  }
+}
+
 
 /** ===== Fluxo de caixa analítico (ERP) ===== */
 export interface FluxoPontoAnalitico {
@@ -1491,12 +1512,12 @@ export const excluirContasEmLote = createServerFn({ method: "POST" })
       .in("id", data.ids);
     if (e0) throw new Error(e0.message);
 
-    const permitidas = (rows ?? [])
-      .filter((r: any) => Number(r.valor_pago ?? 0) <= 0)
-      .map((r: any) => r.id as string);
-    const bloqueadas = (rows ?? []).length - permitidas.length;
+    // Exclusão sempre permitida, inclusive de contas já pagas.
+    const permitidas = (rows ?? []).map((r: any) => r.id as string);
+    const bloqueadas = 0;
 
     if (permitidas.length) {
+      await desvincularContaDeComissoes(supabase, data.tipo, permitidas);
       const { error } = await supabase
         .from(TABELA[data.tipo])
         .delete()
@@ -1504,5 +1525,6 @@ export const excluirContasEmLote = createServerFn({ method: "POST" })
         .in("id", permitidas);
       if (error) throw new Error(error.message);
     }
+
     return { excluidas: permitidas.length, bloqueadas };
   });
