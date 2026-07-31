@@ -50,7 +50,7 @@ export function exportDOCX(
         .map(
           (c) =>
             `<td class="${c.align === "right" ? "right" : ""}">${
-              c.footer ? esc(footerValue(c, rows)) : c === columns[0] ? "Totais" : ""
+              c.footer ? esc(footerValue(rows, c)) : c === columns[0] ? "Totais" : ""
             }</td>`,
         )
         .join("")}</tr>`
