@@ -1,6 +1,8 @@
 import { statusTarefa, PRIORIDADE, TONE_BAR } from "@/components/operacional/status";
 import { cn } from "@/lib/utils";
 import brandSymbol from "@/assets/brand/agilliza-symbol-oficial.png";
+import type { FeriadoBR } from "@/lib/feriados-br";
+
 
 
 // Estrutura mínima consumida pela célula (evita acoplar ao tipo completo da tarefa).
