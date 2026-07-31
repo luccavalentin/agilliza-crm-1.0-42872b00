@@ -56,7 +56,7 @@ import {
   salvarItemBase,
   type ItemBase,
 } from "@/lib/consultor-ia/consultor-ia.functions";
-import { gerarCompendioPDF, gerarVerbetePDF } from "@/lib/consultor-ia/biblioteca-pdf";
+import { gerarCompendioPDF, gerarVerbetePDF } from "@/lib/consultor-ia/pdf-lazy";
 
 export const Route = createFileRoute("/_authenticated/admin/consultor-ia-base")({
   head: () => ({
@@ -296,7 +296,7 @@ function BibliotecaPage() {
       toast.error("Nenhum verbete no resultado atual.");
       return;
     }
-    gerarCompendioPDF(resultados, {
+    void gerarCompendioPDF(resultados, {
       titulo:
         categoria !== "todas"
           ? `Biblioteca — ${categoria.replace(/_/g, " ")}`
@@ -639,7 +639,7 @@ function BibliotecaPage() {
                           variant="ghost"
                           className="size-7"
                           aria-label="Baixar em PDF"
-                          onClick={() => gerarVerbetePDF(it)}
+                          onClick={() => void gerarVerbetePDF(it)}
                         >
                           <Download className="size-3.5" />
                         </Button>
@@ -697,7 +697,7 @@ function BibliotecaPage() {
                 <Button
                   variant="outline"
                   className="gap-2"
-                  onClick={() => gerarVerbetePDF(lendo)}
+                  onClick={() => void gerarVerbetePDF(lendo)}
                 >
                   <Download className="size-4" />
                   Baixar PDF

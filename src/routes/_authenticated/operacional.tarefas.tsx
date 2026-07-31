@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 
 import { toast } from "sonner";
-import { baixarTarefasPDF } from "@/lib/operacional/export-pdf";
+import { baixarTarefasPDF } from "@/lib/operacional/pdf-lazy";
 import { assertModuloPermitido } from "@/lib/route-guards";
 import {
   listarTarefas,
@@ -213,9 +213,9 @@ function Pagina() {
               size="sm"
               className="bg-card/60 backdrop-blur"
               disabled={itens.length === 0}
-              onClick={() => {
+              onClick={async () => {
                 try {
-                  baixarTarefasPDF({
+                  await baixarTarefasPDF({
                     tarefas: itens,
                     escopo: escopo === "minhas" ? "Minhas tarefas" : "Todas as tarefas",
                   });

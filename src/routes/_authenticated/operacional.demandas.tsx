@@ -23,7 +23,7 @@ import {
   Calculator,
 } from "lucide-react";
 import { toast } from "sonner";
-import { baixarDemandasPDF } from "@/lib/operacional/export-pdf";
+import { baixarDemandasPDF } from "@/lib/operacional/pdf-lazy";
 import { assertModuloPermitido } from "@/lib/route-guards";
 import {
   listarDemandas,
@@ -226,9 +226,9 @@ function Pagina() {
             size="sm"
             className="bg-card/60 backdrop-blur"
             disabled={(filtrados?.length ?? 0) === 0}
-            onClick={() => {
+            onClick={async () => {
               try {
-                baixarDemandasPDF({
+                await baixarDemandasPDF({
                   demandas: filtrados,
                   escopo: escopo === "minhas" ? "Minhas demandas" : "Demandas gerais",
                 });

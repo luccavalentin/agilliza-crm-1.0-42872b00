@@ -36,7 +36,7 @@ import { FuncionarioPicker } from "@/components/rh/funcionario-picker";
 import { YearPicker } from "@/components/rh/year-picker";
 import { obterFuncionario } from "@/lib/rh/funcionarios.functions";
 import { anexarHolerite } from "@/lib/rh/submodulos.functions";
-import { gerarHoleritePdf } from "@/lib/rh/holerite-pdf";
+import { gerarHoleritePdf } from "@/lib/rh/pdf-lazy";
 import {
   calcularHolerite,
   ENTRADA_PADRAO,
@@ -156,7 +156,7 @@ export function HoleriteBuilderDialog({
       // Campos não preenchidos são tratados como zero: o PDF sempre é gerado.
 
 
-      const { blob, filename } = gerarHoleritePdf({
+      const { blob, filename } = await gerarHoleritePdf({
         competencia: { mes, ano },
         funcionario: {
           nome: func.nome,

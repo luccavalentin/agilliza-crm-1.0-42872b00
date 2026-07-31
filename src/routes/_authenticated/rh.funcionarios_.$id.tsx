@@ -42,7 +42,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-import { gerarFichaFuncionarioPdf } from "@/lib/rh/ficha-pdf";
+import { gerarFichaFuncionarioPdf } from "@/lib/rh/pdf-lazy";
 
 export const Route = createFileRoute("/_authenticated/rh/funcionarios_/$id")({
   head: () => ({ meta: [{ title: "Funcionário — Agilliza" }] }),
@@ -89,7 +89,7 @@ function Pagina() {
     if (!q.data) return;
     try {
       const deps = await fnDeps({ data: { funcionario_id: id } });
-      const { blob, filename } = gerarFichaFuncionarioPdf({
+      const { blob, filename } = await gerarFichaFuncionarioPdf({
         funcionario: q.data,
         dependentes: deps.map((d) => ({
           nome: d.nome,
