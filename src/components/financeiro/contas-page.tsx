@@ -198,8 +198,55 @@ export function ContasPage({ tipo }: { tipo: ContaTipo }) {
         }}
       />
 
-      <ContasTabela tipo={tipo} itens={itens} isLoading={isLoading} acoes={acoes} />
+      {selecionados.length > 0 && (
+        <div className="sticky bottom-3 z-20 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-primary/30 bg-card/95 px-4 py-3 shadow-lg backdrop-blur">
+          <span className="text-sm font-medium">
+            {selecionados.length} conta(s) selecionada(s)
+          </span>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="sm" onClick={() => setSelecionados([])}>
+              <X className="mr-1.5 size-4" /> Limpar
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              disabled={excluindoLote}
+              onClick={() => void handleExcluirSelecionadas()}
+            >
+              {excluindoLote ? (
+                <Loader2 className="mr-1.5 size-4 animate-spin" />
+              ) : (
+                <Trash2 className="mr-1.5 size-4" />
+              )}
+              Excluir selecionadas
+            </Button>
+          </div>
+        </div>
+      )}
+
+      <ContasTabela
+        tipo={tipo}
+        itens={itens}
+        isLoading={isLoading}
+        acoes={acoes}
+        selecionados={selecionados}
+        onToggle={(id) =>
+          setSelecionados((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]))
+        }
+        onToggleTodos={(marcar) => setSelecionados(marcar ? itens.map((i) => i.id) : [])}
+      />
       <ContasCardsMobile tipo={tipo} itens={itens} isLoading={isLoading} acoes={acoes} />
+
+      <ContasKpiDialog
+        tipo={tipo}
+        filtro={kpiDetalhe}
+        onOpenChange={(o) => !o && setKpiDetalhe(null)}
+        onAbrirConta={(id) => {
+          setKpiDetalhe(null);
+          setDetalheId(id);
+        }}
+      />
+
 
       <BaixarDialog
         tipo={tipo}
