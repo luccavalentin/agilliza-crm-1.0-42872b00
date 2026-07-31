@@ -12,7 +12,10 @@ import {
   CheckCircle2,
   Clock,
   Download,
+  Flag,
+  ArrowDownUp,
 } from "lucide-react";
+
 import { toast } from "sonner";
 import { baixarTarefasPDF } from "@/lib/operacional/export-pdf";
 import { assertModuloPermitido } from "@/lib/route-guards";
@@ -30,6 +33,14 @@ import { TarefasBoard } from "@/components/operacional/tarefas-board";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
 
 export const Route = createFileRoute("/_authenticated/operacional/tarefas")({
   head: () => ({ meta: [{ title: "Tarefas — Agilliza" }] }),
@@ -87,6 +98,11 @@ const GRUPOS: Array<{
 function Pagina() {
   const [escopo, setEscopo] = useState<"todas" | "minhas">("minhas");
   const [q, setQ] = useState("");
+  const [prioridade, setPrioridade] = useState<string>("todas");
+  const [ordem, setOrdem] = useState<"recentes" | "prazo" | "prioridade" | "alfabetica">(
+    "recentes",
+  );
+
   const [sel, setSel] = useState<string | null>(null);
   const [alternando, setAlternando] = useState<string | null>(null);
   const excluir = useServerFn(excluirTarefa);
@@ -123,14 +139,25 @@ function Pagina() {
   }, [itens]);
 
 
-  const grupos = useMemo(
-    () =>
-      GRUPOS.map((g) => ({
-        ...g,
-        tarefas: itens.filter((t) => g.match(t.status)),
-      })),
-    [itens],
-  );
+  const grupos = useMemo(() => {
+    const peso: Record<string, number> = { p1: 0, p2: 1, p3: 2 };
+    const base = itens.filter((t) => prioridade === "todas" || t.prioridade === prioridade);
+    const ordenados = [...base].sort((a, b) => {
+      if (ordem === "prioridade") return (peso[a.prioridade] ?? 9) - (peso[b.prioridade] ?? 9);
+      if (ordem === "alfabetica") return a.titulo.localeCompare(b.titulo);
+      if (ordem === "prazo") {
+        const va = a.prazo ? new Date(a.prazo).getTime() : Infinity;
+        const vb = b.prazo ? new Date(b.prazo).getTime() : Infinity;
+        return va - vb;
+      }
+      return 0;
+    });
+    return GRUPOS.map((g) => ({
+      ...g,
+      tarefas: ordenados.filter((t) => g.match(t.status)),
+    }));
+  }, [itens, prioridade, ordem]);
+
 
   async function handleExcluir(id: string) {
     try {
@@ -250,23 +277,48 @@ function Pagina() {
       </div>
 
 
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="flex flex-wrap items-center gap-2.5">
         <Tabs value={escopo} onValueChange={(v) => setEscopo(v as "todas" | "minhas")}>
-          <TabsList>
-            <TabsTrigger value="minhas">Minhas</TabsTrigger>
-            <TabsTrigger value="todas">Todas</TabsTrigger>
+          <TabsList className="h-10 rounded-xl">
+            <TabsTrigger value="minhas" className="rounded-lg">Minhas</TabsTrigger>
+            <TabsTrigger value="todas" className="rounded-lg">Todas</TabsTrigger>
           </TabsList>
         </Tabs>
-        <div className="relative max-w-xs flex-1">
+        <div className="relative min-w-[200px] flex-1 sm:max-w-sm">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Buscar por título…"
-            className="pl-9"
+            placeholder="Buscar por título, código ou responsável…"
+            className="h-10 rounded-xl pl-9"
           />
         </div>
+        <Select value={prioridade} onValueChange={setPrioridade}>
+          <SelectTrigger className="h-10 w-[168px] rounded-xl">
+            <Flag className="mr-1 h-4 w-4 text-muted-foreground" />
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="todas">Prioridade: Todas</SelectItem>
+            <SelectItem value="p1">P1 · Urgente</SelectItem>
+            <SelectItem value="p2">P2 · Alta</SelectItem>
+            <SelectItem value="p3">P3 · Normal</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={ordem} onValueChange={(v) => setOrdem(v as typeof ordem)}>
+          <SelectTrigger className="h-10 w-[176px] rounded-xl">
+            <ArrowDownUp className="mr-1 h-4 w-4 text-muted-foreground" />
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="recentes">Mais recentes</SelectItem>
+            <SelectItem value="prazo">Prazo mais próximo</SelectItem>
+            <SelectItem value="prioridade">Maior prioridade</SelectItem>
+            <SelectItem value="alfabetica">Título (A–Z)</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
+
 
       {isLoading ? (
         <div className="space-y-2">

@@ -1,6 +1,9 @@
 import { statusTarefa, PRIORIDADE, TONE_BAR } from "@/components/operacional/status";
 import { cn } from "@/lib/utils";
+import brandSymbol from "@/assets/brand/agilliza-symbol-oficial.png";
 import type { FeriadoBR } from "@/lib/feriados-br";
+
+
 
 // Estrutura mínima consumida pela célula (evita acoplar ao tipo completo da tarefa).
 export interface TarefaCelula {
@@ -62,16 +65,23 @@ export function CelulaDia({
       {feriado && (
         <div
           className={cn(
-            "mb-1 truncate rounded px-1 py-0.5 text-[10px] font-medium",
+            "mb-1 flex items-center gap-1 rounded px-1 py-0.5 text-[10px] font-medium",
             feriado.facultativo
               ? "bg-muted text-muted-foreground"
               : "bg-destructive/10 text-destructive",
           )}
           title={feriado.descricao + (feriado.facultativo ? " (facultativo)" : "")}
         >
-          {feriado.descricao}
+          <img
+            src={brandSymbol}
+            alt="Agilliza"
+            draggable={false}
+            className="size-3 shrink-0 select-none object-contain"
+          />
+          <span className="truncate">{feriado.descricao}</span>
         </div>
       )}
+
 
       <div className="space-y-1">
         {tarefas.slice(0, MAX_VISIVEIS).map((t) => (
