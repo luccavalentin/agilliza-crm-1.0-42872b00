@@ -24,7 +24,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { gerarFaqEbook, publicarFaqNaBase } from "@/lib/consultor-ia/ebook.functions";
 import type { EbookFaq } from "@/lib/consultor-ia/ebook.server";
-import { gerarEbookFaqPDF } from "@/lib/consultor-ia/ebook-pdf";
+import { gerarEbookFaqPDF } from "@/lib/consultor-ia/pdf-lazy";
 
 interface Props {
   pergunta: string;
@@ -143,7 +143,7 @@ export function EbookFaqButton({ pergunta, resposta }: Props) {
               {publicar.isPending ? <Loader2 className="mr-2 size-4 animate-spin" /> : null}
               Publicar na base
             </Button>
-            <Button disabled={!ebook} onClick={() => ebook && gerarEbookFaqPDF(ebook)}>
+            <Button disabled={!ebook} onClick={() => void (ebook && gerarEbookFaqPDF(ebook))}>
               <Download className="mr-2 size-4" />
               Baixar e-book (PDF)
             </Button>

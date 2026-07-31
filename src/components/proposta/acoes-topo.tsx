@@ -41,7 +41,7 @@ import { statusProposta } from "@/components/propostas/status";
 import {
   baixarPropostaDetalhadaPDF,
   baixarPropostaConsolidadoPDF,
-} from "@/lib/propostas/proposta-pdf";
+} from "@/lib/propostas/pdf-lazy";
 import { cn } from "@/lib/utils";
 
 export function AcoesTopo({

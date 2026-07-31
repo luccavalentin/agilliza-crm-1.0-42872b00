@@ -3,7 +3,6 @@
  * cruzamento entre os dois lados. Tudo executa no navegador; o CPF completo
  * nunca sai da memória (só o mascarado é exibido/exportado).
  */
-import * as XLSX from "xlsx";
 import {
   chaveCabecalho,
   mascararCpf,
@@ -125,7 +124,9 @@ function acharColuna(cabecalhos: string[], alvos: string[]): string | null {
   return null;
 }
 
-function registrosDoArquivo(buf: ArrayBuffer): Record<string, unknown>[] {
+async function registrosDoArquivo(buf: ArrayBuffer): Promise<Record<string, unknown>[]> {
+  // `xlsx` (~400 kB) só é baixado quando o usuário importa uma planilha.
+  const XLSX = await import("xlsx");
   const head = new Uint8Array(buf.slice(0, 8));
   const binario =
     (head[0] === 0xd0 && head[1] === 0xcf) || (head[0] === 0x50 && head[1] === 0x4b);
@@ -146,7 +147,7 @@ export async function lerPlanilhaGenerica(
   file: File,
   lado: LadoPlanilha,
 ): Promise<LinhaPlanilha[]> {
-  const registros = registrosDoArquivo(await file.arrayBuffer());
+  const registros = await registrosDoArquivo(await file.arrayBuffer());
   if (!registros.length) return [];
   const cabecalhos = Object.keys(registros[0]!);
   const mapa = {

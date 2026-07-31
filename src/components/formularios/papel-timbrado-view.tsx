@@ -7,10 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { OpHero } from "@/components/operacional/ui";
-import {
-  gerarPapelTimbradoPDF,
-  type PapelTimbradoDados,
-} from "@/lib/formularios/papel-timbrado-pdf";
+import { gerarPapelTimbradoPDF } from "@/lib/formularios/pdf-lazy";
+import type { PapelTimbradoDados } from "@/lib/formularios/papel-timbrado-pdf";
 import {
   PAPEL_TIMBRADO_MODELOS,
   getPapelTimbradoModelo,

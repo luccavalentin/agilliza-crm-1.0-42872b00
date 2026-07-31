@@ -15,8 +15,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { abaResumo, baixarXlsx } from "@/lib/conciliacao/exportar-xlsx";
-import { gerarPdfComparativo, type ModoSaida } from "@/lib/conciliacao/exportar-pdf";
+import { abaResumo } from "@/lib/conciliacao/xlsx-tipos";
+import {
+  baixarXlsx,
+  gerarPdfComparativo,
+  type ModoSaida,
+} from "@/lib/conciliacao/exportar-lazy";
 import { listarItensConciliacao } from "@/lib/conciliacao/conciliacao.functions";
 import { SITUACAO_LABEL } from "@/lib/conciliacao/bancos";
 import {
@@ -172,7 +176,7 @@ export function LoteDetalhe({
 
   function exportarPdf(modo: ModoSaida) {
     const alvo = filtrados.length ? filtrados : itens;
-    gerarPdfComparativo({
+    void gerarPdfComparativo({
       titulo: `Comparativo de dados — ${lote.banco_nome}`,
       descricao: `Relatório do banco cruzado com as propostas do sistema · ${lote.periodo_referencia.slice(0, 7)}`,
       meta: [

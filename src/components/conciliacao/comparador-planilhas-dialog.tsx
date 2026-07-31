@@ -51,8 +51,12 @@ import {
   type LinhaPlanilha,
   type ResultadoComparativo,
 } from "@/lib/conciliacao/planilhas";
-import { abaResumo, baixarXlsx } from "@/lib/conciliacao/exportar-xlsx";
-import { gerarPdfComparativo, type ModoSaida } from "@/lib/conciliacao/exportar-pdf";
+import { abaResumo } from "@/lib/conciliacao/xlsx-tipos";
+import {
+  baixarXlsx,
+  gerarPdfComparativo,
+  type ModoSaida,
+} from "@/lib/conciliacao/exportar-lazy";
 
 const brl = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 const fmtValor = (v: number | null | undefined) => (v == null ? "—" : brl.format(Number(v)));
@@ -341,7 +345,7 @@ export function ComparadorPlanilhasDialog({
   function exportarPdf(modo: ModoSaida) {
     if (!itens?.length) return;
     const alvo = filtrados.length ? filtrados : itens;
-    gerarPdfComparativo({
+    void gerarPdfComparativo({
       titulo: "Comparativo de planilhas e dados",
       descricao: "Cruzamento entre as planilhas do meu controle, os relatórios dos bancos e o sistema",
       meta: [

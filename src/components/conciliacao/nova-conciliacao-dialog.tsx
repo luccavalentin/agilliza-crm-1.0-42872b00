@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { BANCOS_CONCILIACAO, bancoPorId } from "@/lib/conciliacao/bancos";
-import { lerArquivoBanco } from "@/lib/conciliacao/leitor-arquivo";
+import { lerArquivoBanco } from "@/lib/conciliacao/exportar-lazy";
 import { processarConciliacao } from "@/lib/conciliacao/conciliacao.functions";
 
 /** Upload do relatório oficial do banco + disparo do cruzamento. */

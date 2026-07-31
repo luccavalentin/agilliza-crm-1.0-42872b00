@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { obterFichaConsolidada } from "@/lib/crm/documentos-gerais.functions";
-import { imprimirFichaPDF } from "@/lib/crm/ficha-pdf";
+import { imprimirFichaPDF } from "@/lib/crm/pdf-lazy";
 import { Campo } from "./card-cliente";
 import { brl, fmtData, titulo } from "./helpers";
 
@@ -56,7 +56,7 @@ export function FichaDialog({
               size="sm"
               variant="outline"
               disabled={!data}
-              onClick={() => data && imprimirFichaPDF(clienteNome, data)}
+              onClick={() => void (data && imprimirFichaPDF(clienteNome, data))}
               className="mr-8 shrink-0 gap-2 border-primary/30 bg-background/70 text-primary hover:bg-primary/10"
             >
               <Printer className="h-4 w-4" /> Imprimir PDF
