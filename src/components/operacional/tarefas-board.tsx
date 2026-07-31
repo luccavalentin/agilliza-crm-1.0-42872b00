@@ -110,7 +110,7 @@ export function TarefasBoard({
   onSelecionar: (id: string) => void;
   onToggle: (t: TarefaBoardItem) => void;
   onStatus: (t: TarefaBoardItem, status: string) => void;
-  onExcluir: (id: string) => void;
+  onExcluir: (id: string) => void | Promise<void>;
 }) {
   const [fechados, setFechados] = useState<Record<string, boolean>>({});
 
@@ -283,7 +283,9 @@ export function TarefasBoard({
                           <ConfirmDelete
                             titulo="Excluir tarefa"
                             descricao={`A tarefa ${t.numero} será removida permanentemente.`}
-                            onConfirm={() => onExcluir(t.id)}
+                            onConfirm={async () => {
+                              await onExcluir(t.id);
+                            }}
                           />
                         </div>
                       </li>
