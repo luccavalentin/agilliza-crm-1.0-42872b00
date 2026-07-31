@@ -7,6 +7,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Checkbox } from "@/components/ui/checkbox";
 import { ContaStatusBadge } from "@/components/financeiro/status-badge";
 import { formatBRL, formatData } from "@/lib/financeiro/format";
 import type { ContaTipo } from "@/lib/financeiro/financeiro.functions";
@@ -44,12 +45,22 @@ export function ContasTabela({
   itens,
   isLoading,
   acoes,
+  selecionados,
+  onToggle,
+  onToggleTodos,
 }: {
   tipo: ContaTipo;
   itens: Item[];
   isLoading: boolean;
   acoes: ContasAcoes;
+  selecionados?: string[];
+  onToggle?: (id: string) => void;
+  onToggleTodos?: (marcar: boolean) => void;
 }) {
+  const selecionavel = !!onToggle;
+  const marcados = new Set(selecionados ?? []);
+  const todosMarcados = itens.length > 0 && itens.every((i) => marcados.has(i.id));
+
   return (
     <div className="hidden overflow-hidden rounded-xl border border-border bg-card shadow-sm md:block">
       <div className="overflow-x-auto">
