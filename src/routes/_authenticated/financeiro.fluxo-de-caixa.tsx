@@ -275,31 +275,60 @@ function Pagina() {
           <SectionTitle>Evolução do caixa</SectionTitle>
           <PanelCard
             titulo="Entradas, saídas e saldo acumulado"
-            subtitulo="Barras = entradas/saídas por período · linha = saldo projetado acumulado"
+            subtitulo="Barras = entradas/saídas por período · área = saldo projetado acumulado"
           >
-            <div className="h-[360px] w-full">
+            <FluxoLegenda />
+            <div className="h-[380px] w-full">
               {isLoading ? (
-                <p className="text-sm text-muted-foreground">Carregando…</p>
+                <div className="h-full w-full animate-pulse rounded-xl bg-muted/50" />
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
-                  <ComposedChart data={pontos} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                  <ComposedChart
+                    data={pontos}
+                    margin={{ top: 12, right: 12, left: 0, bottom: 0 }}
+                    barGap={6}
+                  >
                     <defs>
                       <linearGradient id="gSaldo" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="var(--chart-1)" stopOpacity={0.28} />
-                        <stop offset="100%" stopColor="var(--chart-1)" stopOpacity={0} />
+                        <stop offset="0%" stopColor="var(--chart-1)" stopOpacity={0.32} />
+                        <stop offset="100%" stopColor="var(--chart-1)" stopOpacity={0.02} />
+                      </linearGradient>
+                      <linearGradient id="gEntrada" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="var(--chart-3)" stopOpacity={0.95} />
+                        <stop offset="100%" stopColor="var(--chart-3)" stopOpacity={0.45} />
+                      </linearGradient>
+                      <linearGradient id="gSaida" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="var(--chart-5)" stopOpacity={0.95} />
+                        <stop offset="100%" stopColor="var(--chart-5)" stopOpacity={0.45} />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-                    <XAxis dataKey="label" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
+                    <CartesianGrid
+                      strokeDasharray="4 6"
+                      stroke="hsl(var(--border))"
+                      strokeOpacity={0.6}
+                      vertical={false}
+                    />
+                    <XAxis
+                      dataKey="label"
+                      tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                      tickLine={false}
+                      axisLine={false}
+                      tickMargin={10}
+                      minTickGap={12}
+                    />
                     <YAxis
-                      tick={{ fontSize: 11 }}
-                      stroke="hsl(var(--muted-foreground))"
-                      width={54}
+                      tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                      tickLine={false}
+                      axisLine={false}
+                      width={58}
+                      tickMargin={8}
                       tickFormatter={(v) => formatCurto(Number(v))}
                     />
-                    <Tooltip formatter={(v) => formatBRL(Number(v))} contentStyle={tooltipStyle} />
-                    <Legend wrapperStyle={{ fontSize: 12 }} />
-                    <ReferenceLine y={0} stroke="hsl(var(--border))" />
+                    <Tooltip
+                      content={<FluxoTooltip />}
+                      cursor={{ fill: "hsl(var(--muted))", fillOpacity: 0.35, radius: 8 }}
+                    />
+                    <ReferenceLine y={0} stroke="hsl(var(--border))" strokeWidth={1.5} />
                     <Area
                       type="monotone"
                       dataKey="saldoAcum"
@@ -307,22 +336,39 @@ function Pagina() {
                       stroke="var(--chart-1)"
                       strokeWidth={2.5}
                       fill="url(#gSaldo)"
+                      activeDot={{ r: 5, strokeWidth: 2, stroke: "hsl(var(--card))" }}
+                      dot={false}
                     />
-                    <Bar dataKey="entrada" name="Entradas" fill="var(--chart-3)" radius={[4, 4, 0, 0]} maxBarSize={34} />
-                    <Bar dataKey="saida" name="Saídas" fill="var(--chart-5)" radius={[4, 4, 0, 0]} maxBarSize={34} />
+                    <Bar
+                      dataKey="entrada"
+                      name="Entradas"
+                      fill="url(#gEntrada)"
+                      radius={[6, 6, 0, 0]}
+                      maxBarSize={28}
+                    />
+                    <Bar
+                      dataKey="saida"
+                      name="Saídas"
+                      fill="url(#gSaida)"
+                      radius={[6, 6, 0, 0]}
+                      maxBarSize={28}
+                    />
                     <Line
                       type="monotone"
                       dataKey="resultado"
                       name="Resultado líquido"
                       stroke="var(--chart-2)"
                       strokeWidth={2}
-                      dot={{ r: 2 }}
+                      strokeDasharray="5 4"
+                      dot={false}
+                      activeDot={{ r: 4 }}
                     />
                   </ComposedChart>
                 </ResponsiveContainer>
               )}
             </div>
           </PanelCard>
+
 
           <SectionTitle>Composição em aberto</SectionTitle>
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
