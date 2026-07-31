@@ -11,8 +11,6 @@ import {
   Loader2,
   CheckCircle2,
   Clock,
-  Check,
-  User2,
   Download,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -26,13 +24,12 @@ import {
 } from "@/lib/operacional/tarefas.functions";
 import { NovaTarefaDialog } from "@/components/operacional/nova-tarefa-dialog";
 import { TarefaDrawer } from "@/components/operacional/tarefa-drawer";
-import { ConfirmDelete } from "@/components/shared/confirm-delete";
-import { type Prioridade } from "@/components/operacional/status";
-import { OpHero, OpStat, PriorityChip, OpAvatar } from "@/components/operacional/ui";
+import { OpHero, OpStat } from "@/components/operacional/ui";
+import { TarefasBoard } from "@/components/operacional/tarefas-board";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/operacional/tarefas")({
   head: () => ({ meta: [{ title: "Tarefas — Agilliza" }] }),
@@ -288,114 +285,27 @@ function Pagina() {
           </p>
         </div>
       ) : (
-        <div className="space-y-6">
-          {grupos.map((g) =>
-            g.tarefas.length === 0 ? null : (
-              <section key={g.id} className="space-y-2.5">
-                <div className="flex items-center gap-2 px-1">
-                  <span
-                    className="h-3.5 w-1 rounded-full"
-                    style={{ background: g.accent }}
-                  />
-                  <h2 className="text-[13px] font-semibold uppercase tracking-wide text-muted-foreground">
-                    {g.titulo}
-                  </h2>
-                  <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-semibold tabular-nums text-muted-foreground">
-                    {g.tarefas.length}
-                  </span>
-                </div>
-
-                <ul className="space-y-2">
-                  {g.tarefas.map((t) => {
-                    const late = vencida(t.prazo, t.status);
-                    const done = t.status === "concluida" || t.status === "cancelada";
-                    return (
-                      <li key={t.id}>
-                        <div
-                          className={cn(
-                            "op-row group flex items-center gap-3 rounded-xl border border-border bg-card p-3 pr-3 shadow-card transition-colors hover:border-primary/30 hover:bg-accent/30 md:gap-4 md:p-3.5",
-                            late && "ring-1 ring-destructive/30",
-                          )}
-                          style={{ ["--op-accent" as string]: g.accent }}
-                        >
-                          <button
-                            type="button"
-                            aria-label={done ? "Reabrir tarefa" : "Concluir tarefa"}
-                            onClick={() => toggle(t)}
-                            disabled={alternando === t.id}
-                            className={cn(
-                              "grid size-6 shrink-0 place-items-center rounded-full border-2 transition-colors",
-                              done
-                                ? "border-success bg-success text-success-foreground"
-                                : "border-muted-foreground/40 text-transparent hover:border-primary hover:text-primary/40",
-                            )}
-                          >
-                            {alternando === t.id ? (
-                              <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
-                            ) : (
-                              <Check className="h-3.5 w-3.5" strokeWidth={3} />
-                            )}
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => setSel(t.id)}
-                            className="flex min-w-0 flex-1 flex-col gap-1.5 text-left"
-                          >
-                            <span
-                              className={cn(
-                                "flex items-center gap-2 font-medium",
-                                done ? "text-muted-foreground line-through" : "text-foreground",
-                              )}
-                            >
-                              <span className="line-clamp-1">{t.titulo}</span>
-                            </span>
-                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                              <span className="tabular-nums text-muted-foreground/70">
-                                {t.numero}
-                              </span>
-                              <PriorityChip prioridade={t.prioridade as Prioridade} />
-                              <span
-                                className={cn(
-                                  "inline-flex items-center gap-1 tabular-nums",
-                                  late && "font-medium text-destructive",
-                                )}
-                              >
-                                <Clock className="h-3 w-3" />
-                                {fmtData(t.prazo)}
-                              </span>
-                              {t.nome_cliente && (
-                                <span className="inline-flex items-center gap-1 truncate">
-                                  <User2 className="h-3 w-3" />
-                                  {t.nome_cliente}
-                                </span>
-                              )}
-                            </div>
-                          </button>
-
-                          {t.nome_responsavel && (
-                            <div className="hidden shrink-0 items-center gap-2 sm:flex">
-                              <OpAvatar nome={t.nome_responsavel} />
-                            </div>
-                          )}
-
-                          <div className="shrink-0 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
-                            <ConfirmDelete
-                              titulo="Excluir tarefa"
-                              descricao={`A tarefa ${t.numero} será removida permanentemente.`}
-                              onConfirm={() => handleExcluir(t.id)}
-                            />
-                          </div>
-                        </div>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </section>
-            ),
-          )}
-        </div>
+        <TarefasBoard
+          grupos={grupos}
+          alternando={alternando}
+          onSelecionar={setSel}
+          onToggle={(t) => toggle(t as Tarefa)}
+          onStatus={async (t, status) => {
+            if (alternando) return;
+            setAlternando(t.id);
+            try {
+              await mover({ data: { id: t.id, status: status as any } });
+              await refetch();
+            } catch {
+              toast.error("Não foi possível atualizar o status.");
+            } finally {
+              setAlternando(null);
+            }
+          }}
+          onExcluir={handleExcluir}
+        />
       )}
+
 
       <TarefaDrawer id={sel} onClose={() => setSel(null)} />
     </div>
