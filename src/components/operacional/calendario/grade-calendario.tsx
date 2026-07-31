@@ -140,16 +140,23 @@ function VisaoDia({ ref, hojeChave, tarefasPorDia, feriados, onSelecionar }: Gra
           {feriado && (
             <p
               className={cn(
-                "mt-1 inline-block rounded px-2 py-0.5 text-xs font-medium",
+                "mt-1 inline-flex items-center gap-1.5 rounded px-2 py-0.5 text-xs font-medium",
                 feriado.facultativo
                   ? "bg-muted text-muted-foreground"
                   : "bg-destructive/10 text-destructive",
               )}
             >
+              <img
+                src={brandSymbol}
+                alt="Agilliza"
+                draggable={false}
+                className="size-3.5 shrink-0 select-none object-contain"
+              />
               {feriado.descricao}
               {feriado.facultativo ? " (facultativo)" : ""}
             </p>
           )}
+
         </div>
       </div>
 
