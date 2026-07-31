@@ -32,6 +32,7 @@ import {
   excluirRegraComissaoUsuario,
   listarRegrasComissaoUsuario,
   recalcularComissoesUsuario,
+  resumoRegrasComissaoUsuario,
   type RegraComissaoUsuario,
   type TipoVinculoComissao,
 } from "@/lib/financeiro/comissoes-usuario.functions";
@@ -40,7 +41,13 @@ import { RegraComissaoUsuarioForm } from "./regra-form";
 const rotulo = (arr: readonly { valor: string; rotulo: string }[], v: string) =>
   arr.find((i) => i.valor === v)?.rotulo ?? v;
 
-export function RegrasAbas() {
+const brl = (n: number) => n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+export function RegrasAbas({
+  onVerLancamentos,
+}: {
+  onVerLancamentos?: (usuarioId: string) => void;
+} = {}) {
   const [tipo, setTipo] = useState<TipoVinculoComissao>("corretor");
   const [dialog, setDialog] = useState<{ aberto: boolean; regra: RegraComissaoUsuario | null }>({
     aberto: false,
@@ -53,6 +60,21 @@ export function RegrasAbas() {
     queryKey: ["fin-com-usr-regras", tipo],
     queryFn: () => listarRegrasComissaoUsuario({ data: { tipo_vinculo: tipo } }),
   });
+
+  const { data: resumos } = useQuery({
+    queryKey: ["fin-com-usr-resumo"],
+    queryFn: () => resumoRegrasComissaoUsuario({ data: {} } as never),
+  });
+  const resumoDe = (regraId: string) =>
+    (resumos ?? []).find((r) => r.regra_id === regraId) ?? {
+      regra_id: regraId,
+      qtd: 0,
+      a_pagar: 0,
+      paga: 0,
+      cancelada: 0,
+      total: 0,
+    };
+
 
   const del = useMutation({
     mutationFn: (id: string) => excluirRegraComissaoUsuario({ data: { id } }),
