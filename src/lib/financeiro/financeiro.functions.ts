@@ -1450,3 +1450,40 @@ export const obterFluxoCaixaAnalitico = createServerFn({ method: "GET" })
       proximosVencimentos: proximos.slice(0, 10),
     };
   });
+
+/** Exclusão em lote de contas (a pagar / a receber). */
+export const excluirContasEmLote = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        tipo: z.enum(["pagar", "receber"]),
+        ids: z.array(z.string().uuid()).min(1),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }): Promise<{ excluidas: number; bloqueadas: number }> => {
+    const { supabase, userId } = context;
+    const correspondente_id = await correspondenteId(supabase, userId);
+    const { data: rows, error: e0 } = await supabase
+      .from(TABELA[data.tipo])
+      .select("id, valor_pago")
+      .eq("correspondente_id", correspondente_id)
+      .in("id", data.ids);
+    if (e0) throw new Error(e0.message);
+
+    const permitidas = (rows ?? [])
+      .filter((r: any) => Number(r.valor_pago ?? 0) <= 0)
+      .map((r: any) => r.id as string);
+    const bloqueadas = (rows ?? []).length - permitidas.length;
+
+    if (permitidas.length) {
+      const { error } = await supabase
+        .from(TABELA[data.tipo])
+        .delete()
+        .eq("correspondente_id", correspondente_id)
+        .in("id", permitidas);
+      if (error) throw new Error(error.message);
+    }
+    return { excluidas: permitidas.length, bloqueadas };
+  });
