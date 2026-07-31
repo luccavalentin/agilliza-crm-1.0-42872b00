@@ -38,7 +38,13 @@ const statusBadge = (s: string) => {
   return <Badge className="bg-amber-500/15 text-amber-700">A pagar</Badge>;
 };
 
-export function LancamentosComissoesUsuario() {
+export function LancamentosComissoesUsuario({
+  usuarioId,
+  onLimparUsuario,
+}: {
+  usuarioId?: string | null;
+  onLimparUsuario?: () => void;
+} = {}) {
   const qc = useQueryClient();
   const [status, setStatus] = useState<string>("todos");
   const [tipoVinculo, setTipoVinculo] = useState<string>("todos");
@@ -49,16 +55,18 @@ export function LancamentosComissoesUsuario() {
     () => ({
       status: status === "todos" ? undefined : (status as any),
       tipo_vinculo: tipoVinculo === "todos" ? undefined : tipoVinculo,
+      usuario_id: usuarioId || undefined,
       de: de || undefined,
       ate: ate || undefined,
     }),
-    [status, tipoVinculo, de, ate],
+    [status, tipoVinculo, usuarioId, de, ate],
   );
 
   const { data: rows, isLoading } = useQuery({
     queryKey: ["fin-com-usr-lanc", filtros],
     queryFn: () => listarComissoesUsuario({ data: filtros }),
   });
+
 
   const pagar = useMutation({
     mutationFn: (id: string) => marcarComissaoUsuarioPaga({ data: { id } }),
