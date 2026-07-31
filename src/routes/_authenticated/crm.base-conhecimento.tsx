@@ -41,9 +41,7 @@ function BaseConhecimentoPage() {
       </header>
 
       <BasePerguntasRespondidas
-        onReperguntar={(p) =>
-          navigate({ to: "/crm/consultor-ia", search: { pergunta: p } as never })
-        }
+        onReperguntar={() => navigate({ to: "/crm/consultor-ia" })}
       />
     </div>
   );
