@@ -105,14 +105,14 @@ export function ContasTabela({
             {isLoading &&
               Array.from({ length: 4 }).map((_, i) => (
                 <TableRow key={`sk-${i}`}>
-                  <TableCell colSpan={8} className="py-3">
+                  <TableCell colSpan={selecionavel ? 9 : 8} className="py-3">
                     <div className="h-6 w-full animate-pulse rounded bg-muted" />
                   </TableCell>
                 </TableRow>
               ))}
             {!isLoading && itens.length === 0 && (
               <TableRow>
-                <TableCell colSpan={8}>
+                <TableCell colSpan={selecionavel ? 9 : 8}>
                   <div className="flex flex-col items-center gap-3 py-14 text-center">
                     <div className="grid h-12 w-12 place-items-center rounded-full bg-muted">
                       <Wallet className="h-6 w-6 text-muted-foreground" />
@@ -131,6 +131,15 @@ export function ContasTabela({
                 className="cursor-pointer border-b border-border/60 transition-colors hover:bg-primary/[0.04]"
                 onClick={() => acoes.onDetalhe(c.id)}
               >
+                {selecionavel && (
+                  <TableCell onClick={(e) => e.stopPropagation()}>
+                    <Checkbox
+                      checked={marcados.has(c.id)}
+                      aria-label={`Selecionar conta ${c.numero ?? ""}`}
+                      onCheckedChange={() => onToggle?.(c.id)}
+                    />
+                  </TableCell>
+                )}
                 <TableCell className="font-medium tabular-nums text-primary">{c.numero}</TableCell>
                 <TableCell className="max-w-[220px] truncate">{c.descricao}</TableCell>
                 <TableCell>{c.contraparte ?? "—"}</TableCell>
