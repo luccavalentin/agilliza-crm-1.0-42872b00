@@ -318,6 +318,15 @@ export function LancamentosComissoesUsuario({
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-10">
+                    <Checkbox
+                      checked={!!rows.length && rows.every((r) => marcados.has(r.id))}
+                      aria-label="Selecionar todos os lançamentos"
+                      onCheckedChange={(v) =>
+                        setSelecionados(v ? rows.map((r) => r.id) : [])
+                      }
+                    />
+                  </TableHead>
                   <TableHead>Proposta</TableHead>
                   <TableHead>Cliente</TableHead>
                   <TableHead>Usuário</TableHead>
@@ -332,7 +341,22 @@ export function LancamentosComissoesUsuario({
               </TableHeader>
               <TableBody>
                 {rows.map((r) => (
-                  <TableRow key={r.id}>
+                  <TableRow
+                    key={r.id}
+                    className="transition-colors hover:bg-primary/[0.04]"
+                    data-state={marcados.has(r.id) ? "selected" : undefined}
+                  >
+                    <TableCell>
+                      <Checkbox
+                        checked={marcados.has(r.id)}
+                        aria-label="Selecionar lançamento"
+                        onCheckedChange={() =>
+                          setSelecionados((p) =>
+                            p.includes(r.id) ? p.filter((x) => x !== r.id) : [...p, r.id],
+                          )
+                        }
+                      />
+                    </TableCell>
                     <TableCell className="font-medium">{r.numero_proposta ?? "—"}</TableCell>
                     <TableCell>{r.nome_cliente ?? "—"}</TableCell>
                     <TableCell>{r.usuario_nome ?? "—"}</TableCell>
@@ -358,6 +382,22 @@ export function LancamentosComissoesUsuario({
                     </TableCell>
                     <TableCell>{statusBadge(r.status)}</TableCell>
                     <TableCell className="text-right">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        title="Editar lançamento"
+                        onClick={() => setEditando(r as any)}
+                      >
+                        <Pencil className="size-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        title="Excluir lançamento"
+                        onClick={() => excluirLote.mutate([r.id])}
+                      >
+                        <Trash2 className="size-4 text-destructive" />
+                      </Button>
                       {r.status === "a_pagar" && (
                         <>
                           <Button
@@ -386,6 +426,11 @@ export function LancamentosComissoesUsuario({
           </div>
         )}
       </CardContent>
+
+      <ComissaoEditarDialog
+        lancamento={editando}
+        onOpenChange={(o) => !o && setEditando(null)}
+      />
     </Card>
   );
 }
