@@ -189,7 +189,7 @@ export function RegrasAbas({
                             )}
                           </TableCell>
                           <TableCell>{r.produto ?? "Todos"}</TableCell>
-                          <TableCell>{r.produto ?? "Todos"}</TableCell>
+
                           <TableCell className="text-right">
                             <div className="font-medium text-amber-600">
                               {brl(resumoDe(r.id).a_pagar)}
