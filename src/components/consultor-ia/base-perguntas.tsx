@@ -48,6 +48,7 @@ export function BasePerguntasRespondidas({
   const [busca, setBusca] = useState("");
   const [chave, setChave] = useState<string | null>(null);
   const [aberto, setAberto] = useState<string | null>(null);
+  const [selecionados, setSelecionados] = useState<string[]>([]);
 
   const { data, isLoading } = useQuery({
     queryKey: ["consultor-ia-base-perguntas"],
@@ -79,25 +80,54 @@ export function BasePerguntasRespondidas({
 
   const comFonte = useMemo(() => filtrados.filter((i) => i.fontes.length > 0).length, [filtrados]);
 
+  /** Registros efetivamente exportados: seleção do usuário ou todo o filtro atual. */
+  const selecao = useMemo(
+    () => filtrados.filter((i) => selecionados.includes(i.id)),
+    [filtrados, selecionados],
+  );
+  const paraExportar = selecao.length > 0 ? selecao : filtrados;
+  const todosMarcados = filtrados.length > 0 && selecao.length === filtrados.length;
+
+  function alternar(id: string) {
+    setSelecionados((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+  }
+
+  function alternarTodos() {
+    setSelecionados(todosMarcados ? [] : filtrados.map((i) => i.id));
+  }
+
   const contexto = [
-    chave ? `Palavra-chave: ${chave}` : null,
-    busca.trim() ? `Busca: "${busca.trim()}"` : null,
+    selecao.length > 0
+      ? `Seleção: ${selecao.length} artigo(s)`
+      : chave
+        ? `Palavra-chave: ${chave}`
+        : null,
+    selecao.length === 0 && busca.trim() ? `Busca: "${busca.trim()}"` : null,
   ]
     .filter(Boolean)
     .join(" · ") || "Base completa";
 
   function baixar(modo: "download" | "print") {
-    if (filtrados.length === 0) {
+    if (paraExportar.length === 0) {
       toast.error("Nenhum registro para exportar.");
       return;
     }
     try {
-      exportarBaseConhecimentoPdf({ itens: filtrados, contexto, modo });
-      toast.success(modo === "print" ? "Abrindo impressão…" : "PDF gerado com sucesso.");
+      exportarBaseConhecimentoPdf({ itens: paraExportar, contexto, modo });
+      toast.success(
+        modo === "print"
+          ? "Abrindo impressão…"
+          : paraExportar.length === 1
+            ? "PDF do artigo gerado."
+            : `PDF único com ${paraExportar.length} artigos gerado.`,
+      );
     } catch {
       toast.error("Não foi possível gerar o PDF.");
     }
   }
+
 
   return (
     <section className="overflow-hidden rounded-2xl border border-border/70 bg-card shadow-card">
