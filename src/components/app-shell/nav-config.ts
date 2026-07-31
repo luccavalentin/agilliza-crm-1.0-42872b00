@@ -103,12 +103,6 @@ export const navInterno: NavGroup[] = [
             to: "/crm/consultor-ia",
             perm: { modulo: "crm.scan_ia" },
           },
-          {
-            label: "Base de Conhecimento",
-            icon: BookOpen,
-            to: "/crm/base-conhecimento",
-            perm: { modulo: "crm.scan_ia" },
-          },
         ],
       },
 

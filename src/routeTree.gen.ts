@@ -92,7 +92,6 @@ import { Route as AuthenticatedCrmDocumentosRouteImport } from './routes/_authen
 import { Route as AuthenticatedCrmConsultorIaRouteImport } from './routes/_authenticated/crm.consultor-ia'
 import { Route as AuthenticatedCrmClientesRouteImport } from './routes/_authenticated/crm.clientes'
 import { Route as AuthenticatedCrmChatRouteImport } from './routes/_authenticated/crm.chat'
-import { Route as AuthenticatedCrmBaseConhecimentoRouteImport } from './routes/_authenticated/crm.base-conhecimento'
 import { Route as AuthenticatedContaSegurancaRouteImport } from './routes/_authenticated/conta.seguranca'
 import { Route as AuthenticatedContaPerfilRouteImport } from './routes/_authenticated/conta.perfil'
 import { Route as AuthenticatedContaNotificacoesRouteImport } from './routes/_authenticated/conta.notificacoes'
@@ -593,12 +592,6 @@ const AuthenticatedCrmChatRoute = AuthenticatedCrmChatRouteImport.update({
   path: '/chat',
   getParentRoute: () => AuthenticatedCrmRoute,
 } as any)
-const AuthenticatedCrmBaseConhecimentoRoute =
-  AuthenticatedCrmBaseConhecimentoRouteImport.update({
-    id: '/base-conhecimento',
-    path: '/base-conhecimento',
-    getParentRoute: () => AuthenticatedCrmRoute,
-  } as any)
 const AuthenticatedContaSegurancaRoute =
   AuthenticatedContaSegurancaRouteImport.update({
     id: '/conta/seguranca',
@@ -831,7 +824,6 @@ export interface FileRoutesByFullPath {
   '/conta/notificacoes': typeof AuthenticatedContaNotificacoesRoute
   '/conta/perfil': typeof AuthenticatedContaPerfilRoute
   '/conta/seguranca': typeof AuthenticatedContaSegurancaRoute
-  '/crm/base-conhecimento': typeof AuthenticatedCrmBaseConhecimentoRoute
   '/crm/chat': typeof AuthenticatedCrmChatRoute
   '/crm/clientes': typeof AuthenticatedCrmClientesRoute
   '/crm/consultor-ia': typeof AuthenticatedCrmConsultorIaRoute
@@ -946,7 +938,6 @@ export interface FileRoutesByTo {
   '/conta/notificacoes': typeof AuthenticatedContaNotificacoesRoute
   '/conta/perfil': typeof AuthenticatedContaPerfilRoute
   '/conta/seguranca': typeof AuthenticatedContaSegurancaRoute
-  '/crm/base-conhecimento': typeof AuthenticatedCrmBaseConhecimentoRoute
   '/crm/chat': typeof AuthenticatedCrmChatRoute
   '/crm/clientes': typeof AuthenticatedCrmClientesRoute
   '/crm/consultor-ia': typeof AuthenticatedCrmConsultorIaRoute
@@ -1065,7 +1056,6 @@ export interface FileRoutesById {
   '/_authenticated/conta/notificacoes': typeof AuthenticatedContaNotificacoesRoute
   '/_authenticated/conta/perfil': typeof AuthenticatedContaPerfilRoute
   '/_authenticated/conta/seguranca': typeof AuthenticatedContaSegurancaRoute
-  '/_authenticated/crm/base-conhecimento': typeof AuthenticatedCrmBaseConhecimentoRoute
   '/_authenticated/crm/chat': typeof AuthenticatedCrmChatRoute
   '/_authenticated/crm/clientes': typeof AuthenticatedCrmClientesRoute
   '/_authenticated/crm/consultor-ia': typeof AuthenticatedCrmConsultorIaRoute
@@ -1184,7 +1174,6 @@ export interface FileRouteTypes {
     | '/conta/notificacoes'
     | '/conta/perfil'
     | '/conta/seguranca'
-    | '/crm/base-conhecimento'
     | '/crm/chat'
     | '/crm/clientes'
     | '/crm/consultor-ia'
@@ -1299,7 +1288,6 @@ export interface FileRouteTypes {
     | '/conta/notificacoes'
     | '/conta/perfil'
     | '/conta/seguranca'
-    | '/crm/base-conhecimento'
     | '/crm/chat'
     | '/crm/clientes'
     | '/crm/consultor-ia'
@@ -1417,7 +1405,6 @@ export interface FileRouteTypes {
     | '/_authenticated/conta/notificacoes'
     | '/_authenticated/conta/perfil'
     | '/_authenticated/conta/seguranca'
-    | '/_authenticated/crm/base-conhecimento'
     | '/_authenticated/crm/chat'
     | '/_authenticated/crm/clientes'
     | '/_authenticated/crm/consultor-ia'
@@ -2092,13 +2079,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCrmChatRouteImport
       parentRoute: typeof AuthenticatedCrmRoute
     }
-    '/_authenticated/crm/base-conhecimento': {
-      id: '/_authenticated/crm/base-conhecimento'
-      path: '/base-conhecimento'
-      fullPath: '/crm/base-conhecimento'
-      preLoaderRoute: typeof AuthenticatedCrmBaseConhecimentoRouteImport
-      parentRoute: typeof AuthenticatedCrmRoute
-    }
     '/_authenticated/conta/seguranca': {
       id: '/_authenticated/conta/seguranca'
       path: '/conta/seguranca'
@@ -2327,7 +2307,6 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedCrmRouteChildren {
-  AuthenticatedCrmBaseConhecimentoRoute: typeof AuthenticatedCrmBaseConhecimentoRoute
   AuthenticatedCrmChatRoute: typeof AuthenticatedCrmChatRoute
   AuthenticatedCrmClientesRoute: typeof AuthenticatedCrmClientesRoute
   AuthenticatedCrmConsultorIaRoute: typeof AuthenticatedCrmConsultorIaRoute
@@ -2341,7 +2320,6 @@ interface AuthenticatedCrmRouteChildren {
 }
 
 const AuthenticatedCrmRouteChildren: AuthenticatedCrmRouteChildren = {
-  AuthenticatedCrmBaseConhecimentoRoute: AuthenticatedCrmBaseConhecimentoRoute,
   AuthenticatedCrmChatRoute: AuthenticatedCrmChatRoute,
   AuthenticatedCrmClientesRoute: AuthenticatedCrmClientesRoute,
   AuthenticatedCrmConsultorIaRoute: AuthenticatedCrmConsultorIaRoute,

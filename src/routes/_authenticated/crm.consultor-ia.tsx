@@ -3,15 +3,19 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
-  Lightbulb,
-  Loader2,
+  ArrowUp,
+  BookMarked,
+  Bot,
+  Command,
+  Cpu,
   MessageSquarePlus,
-  Send,
+  Search,
   Sparkles,
   ThumbsDown,
   ThumbsUp,
   Trash2,
   TriangleAlert,
+  Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -28,7 +32,6 @@ import {
 } from "@/components/ui/dialog";
 import { Markdown } from "@/components/ui/markdown";
 import { assertModuloPermitido } from "@/lib/route-guards";
-import { BasePerguntasRespondidas } from "@/components/consultor-ia/base-perguntas";
 import { supabase } from "@/integrations/supabase/client";
 import {
   avaliarRespostaConsultor,
@@ -49,6 +52,13 @@ export const Route = createFileRoute("/_authenticated/crm/consultor-ia")({
         content:
           "Assistente de financiamento imobiliário com respostas fundamentadas na base de conhecimento da equipe.",
       },
+      { property: "og:title", content: "Consultor IA — Agilliza" },
+      {
+        property: "og:description",
+        content: "Inteligência aplicada ao crédito imobiliário, com fontes rastreáveis.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   beforeLoad: () => assertModuloPermitido("crm.scan_ia"),
@@ -56,20 +66,38 @@ export const Route = createFileRoute("/_authenticated/crm/consultor-ia")({
 });
 
 const SUGESTOES = [
-  "Qual a diferença entre SAC e PRICE?",
-  "Como funciona o uso de FGTS no financiamento habitacional?",
-  "Quais documentos são obrigatórios para o comprador na proposta?",
-  "O Santander opera Home Equity?",
+  {
+    icone: Cpu,
+    titulo: "SAC x PRICE",
+    prompt: "Qual a diferença entre SAC e PRICE?",
+  },
+  {
+    icone: Zap,
+    titulo: "FGTS no financiamento",
+    prompt: "Como funciona o uso de FGTS no financiamento habitacional?",
+  },
+  {
+    icone: BookMarked,
+    titulo: "Documentação obrigatória",
+    prompt: "Quais documentos são obrigatórios para o comprador na proposta?",
+  },
+  {
+    icone: Sparkles,
+    titulo: "Produtos por banco",
+    prompt: "O Santander opera Home Equity?",
+  },
 ];
 
 function ConsultorIaPage() {
   const qc = useQueryClient();
   const [conversaId, setConversaId] = useState<string | null>(null);
   const [pergunta, setPergunta] = useState("");
+  const [busca, setBusca] = useState("");
   const [fonteAberta, setFonteAberta] = useState<string | null>(null);
   const [sugerindo, setSugerindo] = useState<string | null>(null);
   const [observacao, setObservacao] = useState("");
   const fimRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   const { data: conversas } = useQuery({
     queryKey: ["consultor-ia-conversas"],
@@ -142,13 +170,13 @@ function ConsultorIaPage() {
       if (erro) throw new Error(erro);
       await qc.invalidateQueries({ queryKey: ["consultor-ia-mensagens", idConversa] });
       await qc.invalidateQueries({ queryKey: ["consultor-ia-conversas"] });
-      await qc.invalidateQueries({ queryKey: ["consultor-ia-base-perguntas"] });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Falha ao consultar a IA.");
     } finally {
       setStreaming(false);
       setParcial("");
       setPerguntaPendente(null);
+      inputRef.current?.focus();
     }
   }
 
@@ -185,7 +213,16 @@ function ConsultorIaPage() {
     fimRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [mensagens?.length, parcial, streaming]);
 
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, [conversaId]);
+
   const lista = useMemo(() => mensagens ?? [], [mensagens]);
+  const conversasFiltradas = useMemo(() => {
+    const termo = busca.trim().toLowerCase();
+    const todas = conversas ?? [];
+    return termo ? todas.filter((c) => c.titulo.toLowerCase().includes(termo)) : todas;
+  }, [conversas, busca]);
 
   function enviar(texto?: string) {
     const t = (texto ?? pergunta).trim();
@@ -194,134 +231,218 @@ function ConsultorIaPage() {
     void perguntarStream(t);
   }
 
+  function novaConversa() {
+    setConversaId(null);
+    setPergunta("");
+    inputRef.current?.focus();
+  }
+
   return (
-    <div className="flex min-h-full flex-col gap-4">
-      <header className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="flex items-center gap-2 text-xl font-semibold">
-            <Sparkles className="size-5 text-primary" />
-            Consultor IA
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Especialista em financiamento imobiliário — responde com base na base de conhecimento
-            mantida pela equipe.
-          </p>
+    <div className="relative flex min-h-full flex-col gap-5">
+      {/* Aura tecnológica de fundo */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 -top-10 h-64 opacity-70 blur-3xl"
+        style={{
+          background:
+            "radial-gradient(45% 60% at 15% 0%, color-mix(in oklab, var(--primary) 22%, transparent) 0%, transparent 70%), radial-gradient(35% 55% at 85% 10%, color-mix(in oklab, var(--primary) 14%, transparent) 0%, transparent 70%)",
+        }}
+      />
+
+      <header className="relative overflow-hidden rounded-2xl border border-border/60 bg-card/80 p-5 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-card/60">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 opacity-[0.35]"
+          style={{
+            backgroundImage:
+              "linear-gradient(to right, color-mix(in oklab, var(--primary) 12%, transparent) 1px, transparent 1px), linear-gradient(to bottom, color-mix(in oklab, var(--primary) 12%, transparent) 1px, transparent 1px)",
+            backgroundSize: "38px 38px",
+            maskImage: "radial-gradient(70% 100% at 20% 0%, black, transparent)",
+          }}
+        />
+        <div className="relative flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-start gap-3.5">
+            <span className="relative grid size-11 shrink-0 place-items-center rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/25">
+              <Bot className="size-5" />
+              <span className="absolute -bottom-0.5 -right-0.5 size-3 rounded-full border-2 border-card bg-emerald-500" />
+            </span>
+            <div className="min-w-0">
+              <h1 className="flex flex-wrap items-center gap-2 text-xl font-semibold tracking-tight">
+                Consultor IA
+                <Badge
+                  variant="secondary"
+                  className="gap-1 rounded-full border border-primary/20 bg-primary/10 text-[10px] font-medium uppercase tracking-wider text-primary"
+                >
+                  <Sparkles className="size-3" />
+                  RAG · fontes rastreáveis
+                </Badge>
+              </h1>
+              <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+                Inteligência especialista em crédito imobiliário brasileiro — respostas
+                fundamentadas na base mantida pela equipe, com citação de origem.
+              </p>
+            </div>
+          </div>
+          <Button onClick={novaConversa} className="gap-2 rounded-xl shadow-sm">
+            <MessageSquarePlus className="size-4" />
+            Nova conversa
+          </Button>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setConversaId(null)}
-          className="gap-2"
-        >
-          <MessageSquarePlus className="size-4" />
-          Nova conversa
-        </Button>
       </header>
 
-      <div className="grid min-h-[520px] flex-1 gap-4 lg:grid-cols-[260px_minmax(0,1fr)]">
-        <aside className="hidden min-h-0 flex-col rounded-xl border border-border/60 bg-card lg:flex">
-          <p className="border-b border-border/60 px-3 py-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-            Conversas
-          </p>
-          <div className="min-h-0 flex-1 overflow-y-auto p-2">
-            {(conversas ?? []).length === 0 ? (
-              <p className="px-2 py-4 text-xs text-muted-foreground">Nenhuma conversa ainda.</p>
+      <div className="relative grid min-h-[560px] flex-1 gap-4 lg:grid-cols-[280px_minmax(0,1fr)]">
+        <aside className="hidden min-h-0 flex-col overflow-hidden rounded-2xl border border-border/60 bg-card/80 shadow-sm backdrop-blur lg:flex">
+          <div className="space-y-2.5 border-b border-border/60 p-3">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+              Histórico
+            </p>
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={busca}
+                onChange={(e) => setBusca(e.target.value)}
+                placeholder="Buscar conversa"
+                className="h-8 rounded-lg pl-8 text-xs"
+              />
+            </div>
+          </div>
+          <div className="min-h-0 flex-1 space-y-1 overflow-y-auto p-2">
+            {conversasFiltradas.length === 0 ? (
+              <p className="px-2 py-6 text-center text-xs text-muted-foreground">
+                {busca ? "Nada encontrado." : "Nenhuma conversa ainda."}
+              </p>
             ) : (
-              (conversas ?? []).map((c) => (
-                <div
-                  key={c.id}
-                  className={`group flex items-center gap-1 rounded-lg px-2 py-1.5 text-sm transition-colors ${
-                    conversaId === c.id ? "bg-primary/10 text-primary" : "hover:bg-muted/60"
-                  }`}
-                >
-                  <button
-                    type="button"
-                    className="min-w-0 flex-1 truncate text-left"
-                    onClick={() => setConversaId(c.id)}
+              conversasFiltradas.map((c) => {
+                const ativa = conversaId === c.id;
+                return (
+                  <div
+                    key={c.id}
+                    className={`group relative flex items-center gap-1 rounded-xl px-2.5 py-2 text-sm transition-all ${
+                      ativa
+                        ? "bg-primary/10 text-primary shadow-[inset_0_0_0_1px_color-mix(in_oklab,var(--primary)_25%,transparent)]"
+                        : "hover:bg-muted/70"
+                    }`}
                   >
-                    {c.titulo}
-                  </button>
-                  <button
-                    type="button"
-                    aria-label="Excluir conversa"
-                    className="opacity-0 transition-opacity group-hover:opacity-100"
-                    onClick={() => excluir.mutate(c.id)}
-                  >
-                    <Trash2 className="size-3.5 text-muted-foreground hover:text-destructive" />
-                  </button>
-                </div>
-              ))
+                    <span
+                      className={`absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-primary transition-opacity ${
+                        ativa ? "opacity-100" : "opacity-0"
+                      }`}
+                    />
+                    <button
+                      type="button"
+                      className="min-w-0 flex-1 truncate text-left"
+                      onClick={() => setConversaId(c.id)}
+                    >
+                      {c.titulo}
+                    </button>
+                    <button
+                      type="button"
+                      aria-label="Excluir conversa"
+                      className="opacity-0 transition-opacity group-hover:opacity-100"
+                      onClick={() => excluir.mutate(c.id)}
+                    >
+                      <Trash2 className="size-3.5 text-muted-foreground hover:text-destructive" />
+                    </button>
+                  </div>
+                );
+              })
             )}
           </div>
         </aside>
 
-        <section className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-border/60 bg-card">
-          <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4">
+        <section className="relative flex min-h-0 flex-col overflow-hidden rounded-2xl border border-border/60 bg-card/80 shadow-sm backdrop-blur">
+          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-5 sm:px-6">
             {!conversaId && !streaming ? (
-              <div className="mx-auto max-w-xl py-8 text-center">
-                <Lightbulb className="mx-auto mb-3 size-8 text-primary" />
-                <p className="text-sm font-medium">Como posso ajudar?</p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Pergunte sobre regras de bancos, FGTS, SFH/SFI, documentação e etapas da esteira.
+              <div className="mx-auto max-w-2xl py-10 text-center">
+                <span className="mx-auto mb-4 grid size-14 place-items-center rounded-2xl border border-primary/20 bg-primary/10 text-primary">
+                  <Sparkles className="size-6" />
+                </span>
+                <h2 className="text-lg font-semibold tracking-tight">Como posso ajudar hoje?</h2>
+                <p className="mx-auto mt-1.5 max-w-md text-sm text-muted-foreground">
+                  Regras de bancos, FGTS, SFH/SFI, documentação, engenharia, jurídico e etapas da
+                  esteira — com fonte citada em cada resposta.
                 </p>
-                <div className="mt-4 grid gap-2 sm:grid-cols-2">
-                  {SUGESTOES.map((s) => (
-                    <button
-                      key={s}
-                      type="button"
-                      onClick={() => enviar(s)}
-                      className="rounded-lg border border-border/60 px-3 py-2 text-left text-xs transition-colors hover:border-primary/40 hover:bg-primary/[0.04]"
-                    >
-                      {s}
-                    </button>
-                  ))}
+                <div className="mt-6 grid gap-2.5 text-left sm:grid-cols-2">
+                  {SUGESTOES.map((s) => {
+                    const Icone = s.icone;
+                    return (
+                      <button
+                        key={s.prompt}
+                        type="button"
+                        onClick={() => enviar(s.prompt)}
+                        className="group flex items-start gap-3 rounded-xl border border-border/60 bg-background/60 p-3 text-left transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:bg-primary/[0.05] hover:shadow-md"
+                      >
+                        <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+                          <Icone className="size-4" />
+                        </span>
+                        <span className="min-w-0">
+                          <span className="block text-xs font-semibold">{s.titulo}</span>
+                          <span className="mt-0.5 block text-xs text-muted-foreground">
+                            {s.prompt}
+                          </span>
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             ) : null}
 
-            {carregandoMsgs && conversaId ? <Skeleton className="h-20 w-full" /> : null}
+            {carregandoMsgs && conversaId ? (
+              <div className="space-y-3">
+                <Skeleton className="ml-auto h-10 w-1/2 rounded-2xl" />
+                <Skeleton className="h-24 w-3/4 rounded-2xl" />
+              </div>
+            ) : null}
 
             {lista.map((m) =>
               m.papel === "usuario" ? (
                 <div key={m.id} className="flex justify-end">
-                  <div className="max-w-[85%] rounded-2xl rounded-br-sm bg-primary px-3.5 py-2 text-sm text-primary-foreground">
+                  <div className="max-w-[80%] rounded-2xl rounded-br-md bg-primary px-4 py-2.5 text-sm leading-relaxed text-primary-foreground shadow-sm shadow-primary/20">
                     {m.conteudo}
                   </div>
                 </div>
               ) : (
-                <div key={m.id} className="flex justify-start">
-                  <div
-                    className={`max-w-[90%] rounded-2xl rounded-bl-sm border px-3.5 py-2.5 text-sm ${
-                      m.sem_resposta
-                        ? "border-amber-500/40 bg-amber-500/10"
-                        : "border-border/60 bg-muted/40"
-                    }`}
-                  >
+                <div key={m.id} className="flex items-start gap-3">
+                  <span className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-lg border border-primary/20 bg-primary/10 text-primary">
+                    <Bot className="size-4" />
+                  </span>
+                  <div className="min-w-0 max-w-[92%] flex-1">
                     {m.sem_resposta ? (
-                      <p className="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-amber-700 dark:text-amber-400">
+                      <p className="mb-2 inline-flex items-center gap-1.5 rounded-full border border-amber-500/40 bg-amber-500/10 px-2.5 py-1 text-[11px] font-medium text-amber-700 dark:text-amber-400">
                         <TriangleAlert className="size-3.5" />
-                        Resposta com conhecimento geral da IA — não consta na base da empresa
+                        Conhecimento geral da IA — não consta na base da empresa
                       </p>
                     ) : null}
-                    <Markdown conteudo={m.conteudo} />
+                    <Markdown
+                      conteudo={m.conteudo}
+                      className="text-sm leading-relaxed text-foreground"
+                    />
 
                     {m.fontes_usadas.length > 0 ? (
-                      <div className="mt-2.5 flex flex-wrap gap-1.5">
+                      <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                        <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                          Fontes
+                        </span>
                         {m.fontes_usadas.map((f: FonteCitada) => (
                           <button key={f.id} type="button" onClick={() => setFonteAberta(f.id)}>
-                            <Badge variant="secondary" className="cursor-pointer text-[11px]">
-                              Fonte: {f.categoria} — {f.titulo}
+                            <Badge
+                              variant="outline"
+                              className="cursor-pointer gap-1 rounded-full border-primary/25 bg-primary/[0.06] text-[11px] font-normal text-primary transition-colors hover:bg-primary/15"
+                            >
+                              <BookMarked className="size-3" />
+                              {f.categoria} — {f.titulo}
                             </Badge>
                           </button>
                         ))}
                       </div>
                     ) : null}
 
-                    <div className="mt-2 flex items-center gap-1">
+                    <div className="mt-2 flex items-center gap-1 opacity-70 transition-opacity hover:opacity-100">
                       <Button
                         size="icon"
                         variant="ghost"
-                        className="size-6"
+                        className="size-7 rounded-lg"
                         aria-label="Resposta útil"
                         onClick={() => avaliar.mutate({ mensagem_id: m.id, avaliacao: "util" })}
                       >
@@ -332,7 +453,7 @@ function ConsultorIaPage() {
                       <Button
                         size="icon"
                         variant="ghost"
-                        className="size-6"
+                        className="size-7 rounded-lg"
                         aria-label="Resposta não útil"
                         onClick={() => avaliar.mutate({ mensagem_id: m.id, avaliacao: "nao_util" })}
                       >
@@ -344,7 +465,7 @@ function ConsultorIaPage() {
                         <Button
                           size="sm"
                           variant="outline"
-                          className="ml-1 h-6 text-[11px]"
+                          className="ml-1 h-7 rounded-lg text-[11px]"
                           onClick={() => {
                             const idx = lista.findIndex((x) => x.id === m.id);
                             const anterior = [...lista.slice(0, idx)]
@@ -364,24 +485,34 @@ function ConsultorIaPage() {
 
             {perguntaPendente ? (
               <div className="flex justify-end">
-                <div className="max-w-[85%] rounded-2xl rounded-br-sm bg-primary px-3.5 py-2 text-sm text-primary-foreground">
+                <div className="max-w-[80%] rounded-2xl rounded-br-md bg-primary px-4 py-2.5 text-sm leading-relaxed text-primary-foreground shadow-sm shadow-primary/20">
                   {perguntaPendente}
                 </div>
               </div>
             ) : null}
 
             {streaming ? (
-              <div className="flex justify-start">
-                <div className="max-w-[90%] rounded-2xl rounded-bl-sm border border-border/60 bg-muted/40 px-3.5 py-2.5 text-sm">
+              <div className="flex items-start gap-3">
+                <span className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-lg border border-primary/20 bg-primary/10 text-primary">
+                  <Bot className="size-4 animate-pulse" />
+                </span>
+                <div className="min-w-0 max-w-[92%] flex-1">
                   {parcial ? (
                     <>
-                      <Markdown conteudo={parcial} />
+                      <Markdown
+                        conteudo={parcial}
+                        className="text-sm leading-relaxed text-foreground"
+                      />
                       <span className="ml-0.5 inline-block h-4 w-[2px] animate-pulse bg-primary align-text-bottom" />
                     </>
                   ) : (
-                    <span className="flex items-center gap-2 text-muted-foreground">
-                      <Loader2 className="size-4 animate-spin" />
-                      Consultando a base…
+                    <span className="inline-flex items-center gap-2 text-sm text-muted-foreground">
+                      <span className="flex gap-1">
+                        <span className="size-1.5 animate-bounce rounded-full bg-primary [animation-delay:-0.2s]" />
+                        <span className="size-1.5 animate-bounce rounded-full bg-primary [animation-delay:-0.1s]" />
+                        <span className="size-1.5 animate-bounce rounded-full bg-primary" />
+                      </span>
+                      Analisando a base de conhecimento…
                     </span>
                   )}
                 </div>
@@ -390,33 +521,40 @@ function ConsultorIaPage() {
             <div ref={fimRef} />
           </div>
 
-          <div className="flex items-center gap-2 border-t border-border/60 p-3">
-            <Input
-              value={pergunta}
-              onChange={(e) => setPergunta(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  enviar();
-                }
-              }}
-              placeholder="Pergunte ao consultor…"
-              disabled={streaming}
-            />
-            <Button onClick={() => enviar()} disabled={streaming || !pergunta.trim()}>
-              <Send className="size-4" />
-            </Button>
+          <div className="border-t border-border/60 bg-background/40 p-3 sm:p-4">
+            <div className="group relative rounded-2xl border border-border/70 bg-card shadow-sm transition-all focus-within:border-primary/50 focus-within:shadow-lg focus-within:shadow-primary/10">
+              <Textarea
+                ref={inputRef}
+                value={pergunta}
+                onChange={(e) => setPergunta(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    enviar();
+                  }
+                }}
+                rows={2}
+                placeholder="Pergunte ao consultor sobre bancos, FGTS, documentação, esteira…"
+                disabled={streaming}
+                className="max-h-40 min-h-[56px] resize-none border-0 bg-transparent pr-14 text-sm shadow-none focus-visible:ring-0"
+              />
+              <Button
+                size="icon"
+                onClick={() => enviar()}
+                disabled={streaming || !pergunta.trim()}
+                aria-label="Enviar pergunta"
+                className="absolute bottom-2.5 right-2.5 size-9 rounded-xl shadow-md shadow-primary/25"
+              >
+                <ArrowUp className="size-4" />
+              </Button>
+            </div>
+            <p className="mt-2 flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground">
+              <Command className="size-3" />
+              Enter envia · Shift + Enter quebra linha · respostas podem citar fontes internas
+            </p>
           </div>
         </section>
       </div>
-
-      <BasePerguntasRespondidas
-        onReperguntar={(p) => {
-          setConversaId(null);
-          enviar(p);
-          window.scrollTo({ top: 0, behavior: "smooth" });
-        }}
-      />
 
       <Dialog open={!!fonteAberta} onOpenChange={(o) => !o && setFonteAberta(null)}>
         <DialogContent className="max-h-[80vh] overflow-y-auto sm:max-w-2xl">
