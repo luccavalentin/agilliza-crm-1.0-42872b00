@@ -31,7 +31,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Markdown } from "@/components/ui/markdown";
+import { EbookFaqButton } from "@/components/consultor-ia/ebook-faq-dialog";
 import { assertModuloPermitido } from "@/lib/route-guards";
+
 import { supabase } from "@/integrations/supabase/client";
 import {
   avaliarRespostaConsultor,
