@@ -12,7 +12,10 @@ import {
   CheckCircle2,
   Clock,
   Download,
+  Flag,
+  ArrowDownUp,
 } from "lucide-react";
+
 import { toast } from "sonner";
 import { baixarTarefasPDF } from "@/lib/operacional/export-pdf";
 import { assertModuloPermitido } from "@/lib/route-guards";
