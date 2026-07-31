@@ -83,7 +83,7 @@ function Pagina() {
       tipo: c.tipo === "receita" ? "Receita" : "Despesa",
       situacao: c.ativo ? "Ativa" : "Inativa",
     })),
-    ...(configs?.centros ?? []).map((c: ConfigItem) => ({
+    ...(configs?.centrosCusto ?? []).map((c: ConfigItem) => ({
       grupo: "Centro de custo",
       nome: c.nome,
       tipo: "—",
