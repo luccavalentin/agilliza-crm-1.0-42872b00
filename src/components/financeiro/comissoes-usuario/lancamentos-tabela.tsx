@@ -102,14 +102,52 @@ export function LancamentosComissoesUsuario({
     onError: (e: any) => toast.error(e?.message ?? "Falha ao cancelar."),
   });
 
+  const [selecionados, setSelecionados] = useState<string[]>([]);
+  const [editando, setEditando] = useState<ComissaoEditavel | null>(null);
+  const marcados = new Set(selecionados);
+
+  const excluirLote = useMutation({
+    mutationFn: (ids: string[]) => excluirComissoesUsuario({ data: { ids } }),
+    onSuccess: (r: any) => {
+      toast.success(`${r?.excluidos ?? 0} lançamento(s) excluído(s).`);
+      setSelecionados([]);
+      qc.invalidateQueries({ queryKey: ["fin-com-usr-lanc"] });
+      qc.invalidateQueries({ queryKey: ["fin-com-usr-regras"] });
+      qc.invalidateQueries({ queryKey: ["fin-contas"] });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Falha ao excluir."),
+  });
+
+  const pagarLote = useMutation({
+    mutationFn: (ids: string[]) => marcarComissoesUsuarioPagas({ data: { ids } }),
+    onSuccess: () => {
+      toast.success("Lançamentos marcados como pagos.");
+      setSelecionados([]);
+      qc.invalidateQueries({ queryKey: ["fin-com-usr-lanc"] });
+      qc.invalidateQueries({ queryKey: ["fin-com-usr-regras"] });
+      qc.invalidateQueries({ queryKey: ["fin-contas"] });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Falha ao pagar."),
+  });
+
   const totais = useMemo(() => {
     const list = rows ?? [];
     const somar = (st?: string) =>
       list
         .filter((r) => (st ? r.status === st : true))
         .reduce((a, r) => a + r.valor_comissao, 0);
-    return { aPagar: somar("a_pagar"), paga: somar("paga"), total: somar() };
+    const contar = (st?: string) =>
+      list.filter((r) => (st ? r.status === st : true)).length;
+    return {
+      aPagar: somar("a_pagar"),
+      paga: somar("paga"),
+      total: somar(),
+      qtdAPagar: contar("a_pagar"),
+      qtdPaga: contar("paga"),
+      qtdTotal: contar(),
+    };
   }, [rows]);
+
 
   return (
     <Card>
