@@ -147,7 +147,7 @@ export async function lerPlanilhaGenerica(
   file: File,
   lado: LadoPlanilha,
 ): Promise<LinhaPlanilha[]> {
-  const registros = registrosDoArquivo(await file.arrayBuffer());
+  const registros = await registrosDoArquivo(await file.arrayBuffer());
   if (!registros.length) return [];
   const cabecalhos = Object.keys(registros[0]!);
   const mapa = {
