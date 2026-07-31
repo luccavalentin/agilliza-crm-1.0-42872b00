@@ -35,6 +35,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ExportarFinanceiro } from "@/components/financeiro/exportar-financeiro";
 import { formatBRL } from "@/lib/financeiro/format";
 import { cn } from "@/lib/utils";
 
@@ -218,6 +219,28 @@ function Pagina() {
                 </TabsTrigger>
               </TabsList>
             </Tabs>
+            <ExportarFinanceiro
+              titulo="Fluxo de caixa"
+              descricao="Entradas, saídas, resultado líquido e saldo acumulado projetado."
+              meta={[
+                `Granularidade: ${gran === "dia" ? "Diária" : gran === "semana" ? "Semanal" : "Mensal"}`,
+                de || ate ? `Período: ${de || "início"} até ${ate || "hoje"}` : "Período: completo",
+              ]}
+              columns={[
+                { key: "label", label: "Período" },
+                { key: "entrada", label: "Entradas", align: "right" as const, format: "brl" as const, footer: "sum" as const },
+                { key: "saida", label: "Saídas", align: "right" as const, format: "brl" as const, footer: "sum" as const },
+                { key: "resultado", label: "Resultado", align: "right" as const, format: "brl" as const, footer: "sum" as const },
+                { key: "saldoAcum", label: "Saldo acumulado", align: "right" as const, format: "brl" as const },
+              ]}
+              rows={(pontos ?? []).map((p: any) => ({
+                label: p.label,
+                entrada: Number(p.entrada) || 0,
+                saida: Number(p.saida) || 0,
+                resultado: Number(p.resultado) || 0,
+                saldoAcum: Number(p.saldoAcum) || 0,
+              }))}
+            />
             <FiltroPeriodo
               de={de}
               ate={ate}

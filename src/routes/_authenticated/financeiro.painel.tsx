@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { formatBRL } from "@/lib/financeiro/format";
 import { KpiDrilldownDialog, type KpiDrillItem } from "@/components/reports/kpi-drilldown-dialog";
+import { ExportarFinanceiro } from "@/components/financeiro/exportar-financeiro";
 
 export const Route = createFileRoute("/_authenticated/financeiro/painel")({
   head: () => ({ meta: [{ title: "Painel financeiro — Agilliza" }] }),
@@ -124,6 +125,25 @@ function Pagina() {
   };
 
   const mensal = (data?.receitaDespesaMensal ?? []).map((r) => ({ ...r, label: mesLabel(r.mes) }));
+
+  const exportColunas = [
+    { key: "mes", label: "Competência" },
+    { key: "receita", label: "Receitas", align: "right" as const, format: "brl" as const, footer: "sum" as const },
+    { key: "despesa", label: "Despesas", align: "right" as const, format: "brl" as const, footer: "sum" as const },
+    { key: "resultado", label: "Resultado", align: "right" as const, format: "brl" as const, footer: "sum" as const },
+  ];
+  const exportLinhas = mensal.map((m: any) => ({
+    mes: m.label,
+    receita: Number(m.receita) || 0,
+    despesa: Number(m.despesa) || 0,
+    resultado: (Number(m.receita) || 0) - (Number(m.despesa) || 0),
+  }));
+  const exportKpis = [
+    { label: "A receber", valor: formatBRL(data?.aReceber30d ?? 0), tone: "success" as const },
+    { label: "A pagar", valor: formatBRL(data?.aPagar30d ?? 0), tone: "warning" as const },
+    { label: "Saldo projetado", valor: formatBRL(data?.saldoProjetado ?? 0), tone: "brand" as const },
+    { label: "Inadimplência", valor: formatBRL(data?.inadimplencia ?? 0), tone: "danger" as const },
+  ];
   const alterado = de !== padrao.de || ate !== padrao.ate;
   const periodoLabel = alterado ? "no período" : "este mês";
   const atualizado = dataUpdatedAt
@@ -170,6 +190,15 @@ function Pagina() {
                 Restaurar mês atual
               </Button>
             )}
+            <ExportarFinanceiro
+              titulo="Painel financeiro"
+              descricao="Visão geral de recebimentos, pagamentos e caixa projetado."
+              meta={[`Período: ${de} até ${ate}`]}
+              kpis={exportKpis}
+              columns={exportColunas}
+              rows={exportLinhas}
+              className="col-span-2 h-9 sm:col-span-1"
+            />
           </div>
         }
       />
