@@ -215,19 +215,95 @@ export function LancamentosComissoesUsuario({
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid gap-3 sm:grid-cols-3">
-          <div className="rounded-lg border border-border p-3">
-            <div className="text-xs text-muted-foreground">A pagar</div>
-            <div className="text-lg font-semibold">{brl(totais.aPagar)}</div>
-          </div>
-          <div className="rounded-lg border border-border p-3">
-            <div className="text-xs text-muted-foreground">Pagas</div>
-            <div className="text-lg font-semibold text-emerald-600">{brl(totais.paga)}</div>
-          </div>
-          <div className="rounded-lg border border-border p-3">
-            <div className="text-xs text-muted-foreground">Total no período</div>
-            <div className="text-lg font-semibold">{brl(totais.total)}</div>
-          </div>
+          {[
+            {
+              rotulo: "A pagar",
+              valor: totais.aPagar,
+              qtd: totais.qtdAPagar,
+              filtro: "a_pagar",
+              icon: ArrowUpCircle,
+              cor: "text-amber-600",
+            },
+            {
+              rotulo: "Pagas",
+              valor: totais.paga,
+              qtd: totais.qtdPaga,
+              filtro: "paga",
+              icon: CheckCircle2,
+              cor: "text-emerald-600",
+            },
+            {
+              rotulo: "Total no período",
+              valor: totais.total,
+              qtd: totais.qtdTotal,
+              filtro: "todos",
+              icon: Wallet,
+              cor: "text-foreground",
+            },
+          ].map((k) => (
+            <button
+              key={k.rotulo}
+              type="button"
+              onClick={() => setStatus(k.filtro)}
+              className={`group flex items-start justify-between rounded-xl border p-4 text-left transition-all hover:-translate-y-0.5 hover:shadow-md ${
+                status === k.filtro ? "border-primary/50 bg-primary/[0.04]" : "border-border"
+              }`}
+            >
+              <div>
+                <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  {k.rotulo}
+                </div>
+                <div className={`mt-1 text-xl font-semibold tabular-nums ${k.cor}`}>
+                  {brl(k.valor)}
+                </div>
+                <div className="mt-0.5 text-xs text-muted-foreground">
+                  {k.qtd} {k.qtd === 1 ? "lançamento" : "lançamentos"}
+                </div>
+              </div>
+              <k.icon className={`size-5 shrink-0 opacity-70 ${k.cor}`} />
+            </button>
+          ))}
         </div>
+
+        {selecionados.length > 0 && (
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-primary/30 bg-primary/[0.04] px-4 py-3">
+            <span className="text-sm font-medium">
+              {selecionados.length} lançamento(s) selecionado(s)
+            </span>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button variant="ghost" size="sm" onClick={() => setSelecionados([])}>
+                <X className="mr-1.5 size-4" /> Limpar
+              </Button>
+              <Button
+                size="sm"
+                variant="secondary"
+                disabled={pagarLote.isPending}
+                onClick={() => pagarLote.mutate(selecionados)}
+              >
+                {pagarLote.isPending ? (
+                  <Loader2 className="mr-1.5 size-4 animate-spin" />
+                ) : (
+                  <CheckCircle2 className="mr-1.5 size-4" />
+                )}
+                Marcar como pagas
+              </Button>
+              <Button
+                size="sm"
+                variant="destructive"
+                disabled={excluirLote.isPending}
+                onClick={() => excluirLote.mutate(selecionados)}
+              >
+                {excluirLote.isPending ? (
+                  <Loader2 className="mr-1.5 size-4 animate-spin" />
+                ) : (
+                  <Trash2 className="mr-1.5 size-4" />
+                )}
+                Excluir
+              </Button>
+            </div>
+          </div>
+        )}
+
 
         {isLoading ? (
           <div className="flex items-center justify-center py-10 text-muted-foreground">
