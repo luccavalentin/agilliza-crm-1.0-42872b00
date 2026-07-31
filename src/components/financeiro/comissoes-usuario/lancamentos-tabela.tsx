@@ -101,9 +101,19 @@ export function LancamentosComissoesUsuario({
           <div>
             <CardTitle>Lançamentos de comissão</CardTitle>
             <p className="mt-1 text-sm text-muted-foreground">
-              Comissões geradas automaticamente ao emitir cada contrato.
+              Comissões geradas automaticamente pelas regras, já vinculadas a contas a pagar.
             </p>
+            {usuarioId ? (
+              <button
+                type="button"
+                onClick={onLimparUsuario}
+                className="mt-2 inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary"
+              >
+                Filtrando por usuário selecionado — limpar ✕
+              </button>
+            ) : null}
           </div>
+
           <div className="flex flex-wrap items-end gap-2">
             <div className="w-40">
               <Select value={status} onValueChange={setStatus}>
