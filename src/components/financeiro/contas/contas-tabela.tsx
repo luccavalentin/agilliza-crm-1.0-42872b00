@@ -13,7 +13,7 @@ import { formatBRL, formatData } from "@/lib/financeiro/format";
 import type { ContaTipo } from "@/lib/financeiro/financeiro.functions";
 import { AcoesMenu } from "./acoes-menu";
 
-interface Item {
+export interface ContaItem {
   id: string;
   numero: string | null;
   descricao: string;
@@ -29,10 +29,10 @@ interface Item {
 export interface ContasAcoes {
   onDetalhe: (id: string) => void;
   onEditar: (id: string) => void;
-  onBaixar: (conta: Item) => void;
+  onBaixar: (conta: ContaItem) => void;
   onEstornar: (id: string) => void;
   onCancelar: (id: string) => void;
-  onExcluir: (conta: Item) => void;
+  onExcluir: (conta: ContaItem) => void;
 }
 
 /**
@@ -50,7 +50,7 @@ export function ContasTabela({
   onToggleTodos,
 }: {
   tipo: ContaTipo;
-  itens: Item[];
+  itens: ContaItem[];
   isLoading: boolean;
   acoes: ContasAcoes;
   selecionados?: string[];
