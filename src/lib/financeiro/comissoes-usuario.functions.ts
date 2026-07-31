@@ -548,14 +548,14 @@ export const atualizarComissaoUsuario = createServerFn({ method: "POST" })
           ? Math.round(base * percentual) / 100
           : Number(atual.valor_comissao ?? 0);
 
-    const patch: Record<string, unknown> = { percentual, valor_comissao: valor };
+    const patch: any = { percentual, valor_comissao: valor };
     if (data.status) patch.status = data.status;
 
     const { error } = await supabase.from("comissoes_usuario").update(patch).eq("id", data.id);
     if (error) throw new Error(error.message);
 
     if (atual.payable_id) {
-      const payPatch: Record<string, unknown> = { valor };
+      const payPatch: any = { valor };
       if (data.vencimento) payPatch.vencimento = data.vencimento;
       if (data.status === "cancelada") payPatch.status = "cancelada";
       if (data.status === "paga") {
