@@ -172,4 +172,3 @@ export function ContasTabela({
   );
 }
 
-export type ContaItem = Item;
