@@ -133,51 +133,58 @@ export function BasePerguntasRespondidas({
     <section className="overflow-hidden rounded-2xl border border-border/70 bg-card shadow-card">
       {/* Cabeçalho editorial */}
       <header className="relative border-b border-border/70 bg-[linear-gradient(180deg,color-mix(in_oklab,var(--primary)_6%,var(--card)),var(--card))] p-4 sm:p-5">
-        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4 sm:flex sm:flex-wrap sm:justify-between">
+        <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
           <div className="flex min-w-0 items-start gap-3">
-            <span className="grid size-11 shrink-0 place-items-center rounded-2xl border border-border/70 bg-card text-primary shadow-sm">
+            <span className="grid size-10 shrink-0 place-items-center rounded-2xl border border-border/70 bg-card text-primary shadow-sm sm:size-11">
               <BookOpen className="size-5" />
             </span>
             <div className="min-w-0">
               <span className="text-[10.5px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                 Consultor IA
               </span>
-              <h2 className="truncate text-lg font-semibold tracking-tight text-foreground">
+              <h2 className="text-base font-semibold tracking-tight text-foreground sm:text-lg">
                 Base de conhecimento
               </h2>
-              <p className="text-[13px] text-muted-foreground">
+              <p className="text-[12.5px] text-muted-foreground sm:text-[13px]">
                 Todo o histórico curado de perguntas e respostas, pesquisável por palavra-chave.
               </p>
             </div>
           </div>
-          <div className="col-span-2 flex flex-wrap items-center gap-2 sm:col-auto">
+          <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:items-center">
             <Button
               variant="outline"
               size="sm"
-              className="bg-card/70 backdrop-blur"
+              className="w-full bg-card/70 backdrop-blur sm:w-auto"
               onClick={() => baixar("print")}
-              disabled={filtrados.length === 0}
+              disabled={paraExportar.length === 0}
             >
               <Printer className="mr-1.5 size-4" /> Imprimir
             </Button>
-            <Button size="sm" onClick={() => baixar("download")} disabled={filtrados.length === 0}>
-              <FileDown className="mr-1.5 size-4" /> Baixar PDF
+            <Button
+              size="sm"
+              className="w-full sm:w-auto"
+              onClick={() => baixar("download")}
+              disabled={paraExportar.length === 0}
+            >
+              <FileDown className="mr-1.5 size-4" />
+              {selecao.length > 0 ? `Baixar (${selecao.length})` : "Baixar PDF"}
             </Button>
           </div>
         </div>
 
         {/* Métricas discretas */}
-        <div className="mt-4 grid grid-cols-3 gap-2 sm:max-w-md">
+        <div className="mt-4 grid grid-cols-2 gap-2 sm:max-w-xl sm:grid-cols-4">
           {[
             { label: "Registros", valor: itens.length },
             { label: "No filtro", valor: filtrados.length },
             { label: "Com fonte", valor: comFonte },
+            { label: "Selecionados", valor: selecao.length },
           ].map((m) => (
             <div
               key={m.label}
-              className="rounded-xl border border-border/70 bg-card px-3 py-2"
+              className="min-w-0 rounded-xl border border-border/70 bg-card px-3 py-2"
             >
-              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+              <p className="truncate text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                 {m.label}
               </p>
               <p className="mt-0.5 text-lg font-semibold tabular-nums leading-none text-foreground">
@@ -186,6 +193,7 @@ export function BasePerguntasRespondidas({
             </div>
           ))}
         </div>
+
       </header>
 
       {/* Busca + palavras-chave */}
