@@ -306,6 +306,7 @@ export function BasePerguntasRespondidas({
         ) : (
           filtrados.map((it, i) => {
             const open = aberto === it.id;
+            const marcado = selecionados.includes(it.id);
             return (
               <Collapsible
                 key={it.id}
@@ -313,49 +314,64 @@ export function BasePerguntasRespondidas({
                 onOpenChange={(o) => setAberto(o ? it.id : null)}
                 className={cn(
                   "group overflow-hidden rounded-xl border bg-card transition-all",
-                  open
-                    ? "border-primary/40 shadow-[0_10px_30px_-18px_color-mix(in_oklab,var(--primary)_60%,transparent)]"
-                    : "border-border/70 hover:border-primary/30",
+                  marcado
+                    ? "border-primary/60 ring-1 ring-primary/25"
+                    : open
+                      ? "border-primary/40 shadow-[0_10px_30px_-18px_color-mix(in_oklab,var(--primary)_60%,transparent)]"
+                      : "border-border/70 hover:border-primary/30",
                 )}
               >
-                <CollapsibleTrigger className="flex w-full items-start gap-3 p-3 text-left">
-                  <span className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-lg bg-primary/8 text-[11px] font-semibold tabular-nums text-primary">
-                    {String(i + 1).padStart(2, "0")}
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-[13.5px] font-semibold leading-snug text-foreground">
-                      {it.pergunta}
-                    </span>
-                    {!open ? (
-                      <span className="mt-1 block line-clamp-2 text-[12px] leading-relaxed text-muted-foreground">
-                        {resumo(it.resposta)}
-                      </span>
-                    ) : null}
-                    <span className="mt-1.5 flex flex-wrap items-center gap-1">
-                      {it.palavras_chave.slice(0, 5).map((p) => (
-                        <Badge key={p} variant="secondary" className="text-[10px] capitalize">
-                          {p}
-                        </Badge>
-                      ))}
-                      {it.sem_resposta ? (
-                        <Badge variant="outline" className="gap-1 text-[10px] text-amber-600">
-                          <TriangleAlert className="size-3" /> fora da base
-                        </Badge>
-                      ) : null}
-                    </span>
-                  </span>
-                  <span className="flex shrink-0 flex-col items-end gap-1.5">
-                    <span className="text-[11px] tabular-nums text-muted-foreground">
-                      {new Date(it.created_at).toLocaleDateString("pt-BR")}
-                    </span>
-                    <ChevronDown
-                      className={cn(
-                        "size-4 text-muted-foreground transition-transform",
-                        open && "rotate-180 text-primary",
-                      )}
+                <div className="flex items-start gap-2 p-3">
+                  <span className="mt-1 flex shrink-0 flex-col items-center gap-1.5">
+                    <Checkbox
+                      checked={marcado}
+                      onCheckedChange={() => alternar(it.id)}
+                      aria-label={`Selecionar artigo ${it.pergunta}`}
                     />
+                    <span className="hidden text-[10px] font-semibold tabular-nums text-muted-foreground sm:block">
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
                   </span>
-                </CollapsibleTrigger>
+                  <CollapsibleTrigger className="flex min-w-0 flex-1 items-start gap-3 text-left">
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-[13px] font-semibold leading-snug text-foreground sm:text-[13.5px]">
+                        {it.pergunta}
+                      </span>
+                      {!open ? (
+                        <span className="mt-1 block line-clamp-2 text-[12px] leading-relaxed text-muted-foreground">
+                          {resumo(it.resposta)}
+                        </span>
+                      ) : null}
+                      <span className="mt-1.5 flex flex-wrap items-center gap-1">
+                        {it.palavras_chave.slice(0, 5).map((p) => (
+                          <Badge key={p} variant="secondary" className="max-w-[9rem] truncate text-[10px] capitalize">
+                            {p}
+                          </Badge>
+                        ))}
+                        {it.sem_resposta ? (
+                          <Badge variant="outline" className="gap-1 text-[10px] text-amber-600">
+                            <TriangleAlert className="size-3" /> fora da base
+                          </Badge>
+                        ) : null}
+                      </span>
+                      <span className="mt-1 block text-[11px] tabular-nums text-muted-foreground sm:hidden">
+                        {new Date(it.created_at).toLocaleDateString("pt-BR")}
+                      </span>
+                    </span>
+                    <span className="flex shrink-0 flex-col items-end gap-1.5">
+                      <span className="hidden text-[11px] tabular-nums text-muted-foreground sm:block">
+                        {new Date(it.created_at).toLocaleDateString("pt-BR")}
+                      </span>
+                      <ChevronDown
+                        className={cn(
+                          "size-4 text-muted-foreground transition-transform",
+                          open && "rotate-180 text-primary",
+                        )}
+                      />
+                    </span>
+                  </CollapsibleTrigger>
+                </div>
+
 
                 <CollapsibleContent className="border-t border-border/60 bg-muted/20 px-4 py-3">
                   <Markdown conteudo={it.resposta} className="text-sm" />
