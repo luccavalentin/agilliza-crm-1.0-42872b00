@@ -254,7 +254,35 @@ export function BasePerguntasRespondidas({
             ) : null}
           </div>
         ) : null}
+
+        {/* Seleção de artigos */}
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-border/70 bg-card px-3 py-2">
+          <label className="flex cursor-pointer items-center gap-2 text-[12px] font-medium text-foreground">
+            <Checkbox
+              checked={todosMarcados}
+              onCheckedChange={alternarTodos}
+              aria-label="Selecionar todos os artigos"
+            />
+            Selecionar todos
+          </label>
+          <span className="min-w-0 flex-1 truncate text-[11.5px] text-muted-foreground">
+            {selecao.length > 0
+              ? `${selecao.length} artigo(s) — o PDF virá com as páginas unidas.`
+              : "Nenhum selecionado — exporta o filtro atual."}
+          </span>
+          {selecao.length > 0 ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 text-[11px]"
+              onClick={() => setSelecionados([])}
+            >
+              Limpar seleção
+            </Button>
+          ) : null}
+        </div>
       </div>
+
 
       {/* Lista */}
       <div className="brand-scroll max-h-[560px] space-y-2 overflow-y-auto p-4">
