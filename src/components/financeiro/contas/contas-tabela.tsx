@@ -67,9 +67,19 @@ export function ContasTabela({
         <Table>
           <TableHeader>
             <TableRow className="border-b border-border bg-muted/60 hover:bg-muted/60">
+              {selecionavel && (
+                <TableHead className="w-10">
+                  <Checkbox
+                    checked={todosMarcados}
+                    aria-label="Selecionar todas as contas"
+                    onCheckedChange={(v) => onToggleTodos?.(!!v)}
+                  />
+                </TableHead>
+              )}
               <TableHead className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 Número
               </TableHead>
+
               <TableHead className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 Descrição
               </TableHead>
