@@ -1,8 +1,25 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { BookOpen, Pencil, Plus, Search, Trash2 } from "lucide-react";
+import {
+  ArrowUpDown,
+  BookMarked,
+  BookOpen,
+  CalendarClock,
+  Download,
+  FileDown,
+  Globe2,
+  Layers,
+  Library,
+  Pencil,
+  Plus,
+  Search,
+  Sparkles,
+  Tag,
+  Trash2,
+  X,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -10,6 +27,8 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
 import {
   Select,
   SelectContent,
@@ -26,6 +45,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Markdown } from "@/components/ui/markdown";
+import { cn } from "@/lib/utils";
 import { assertModuloPermitido } from "@/lib/route-guards";
 import {
   CATEGORIAS_BASE,
@@ -36,20 +56,29 @@ import {
   salvarItemBase,
   type ItemBase,
 } from "@/lib/consultor-ia/consultor-ia.functions";
+import { gerarCompendioPDF, gerarVerbetePDF } from "@/lib/consultor-ia/biblioteca-pdf";
 
 export const Route = createFileRoute("/_authenticated/admin/consultor-ia-base")({
   head: () => ({
     meta: [
-      { title: "Base de conhecimento do Consultor IA — Agilliza" },
+      { title: "Biblioteca de conhecimento — Agilliza" },
       {
         name: "description",
         content:
-          "Curadoria dos conteúdos que fundamentam as respostas do Consultor IA da Agilliza.",
+          "Biblioteca de crédito imobiliário da Agilliza: pesquise por palavra-chave e consulte verbetes curados que fundamentam o Consultor IA.",
       },
+      { property: "og:title", content: "Biblioteca de conhecimento — Agilliza" },
+      {
+        property: "og:description",
+        content:
+          "Pesquise por palavra-chave e consulte verbetes curados de crédito imobiliário.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   beforeLoad: () => assertModuloPermitido("admin.parametros"),
-  component: BaseConhecimentoPage,
+  component: BibliotecaPage,
 });
 
 type Rascunho = {
@@ -71,17 +100,94 @@ const VAZIO: Rascunho = {
   global: true,
 };
 
-function BaseConhecimentoPage() {
+type Ordem = "relevancia" | "recentes" | "antigos" | "az";
+
+const STOP = new Set([
+  "a","o","as","os","de","da","do","das","dos","e","em","um","uma","para","por","com","que",
+  "qual","quais","como","quando","onde","no","na","nos","nas","ao","aos","se","sobre",
+]);
+
+function normalizar(t: string) {
+  return t
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
+function termosDe(q: string) {
+  return normalizar(q)
+    .split(/[^a-z0-9]+/)
+    .filter((t) => t.length > 1 && !STOP.has(t));
+}
+
+function textoPlano(md: string) {
+  return md
+    .replace(/```[\s\S]*?```/g, " ")
+    .replace(/[#>*_`|-]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function tempoLeitura(md: string) {
+  const palavras = textoPlano(md).split(" ").length;
+  return Math.max(1, Math.round(palavras / 200));
+}
+
+function relevancia(it: ItemBase, termos: string[]) {
+  if (!termos.length) return 0;
+  const titulo = normalizar(it.titulo);
+  const tags = normalizar(it.tags.join(" "));
+  const corpo = normalizar(textoPlano(it.conteudo));
+  let score = 0;
+  for (const t of termos) {
+    if (titulo.includes(t)) score += 8;
+    if (tags.includes(t)) score += 5;
+    const ocorr = corpo.split(t).length - 1;
+    score += Math.min(ocorr, 6);
+  }
+  return score;
+}
+
+function trechoDestaque(it: ItemBase, termos: string[]) {
+  const plano = textoPlano(it.conteudo);
+  if (!termos.length) return plano.slice(0, 230);
+  const alvo = normalizar(plano);
+  const pos = termos.map((t) => alvo.indexOf(t)).filter((p) => p >= 0).sort((a, b) => a - b)[0];
+  if (pos === undefined) return plano.slice(0, 230);
+  const ini = Math.max(0, pos - 90);
+  return `${ini > 0 ? "… " : ""}${plano.slice(ini, ini + 240)}…`;
+}
+
+function dataCurta(iso: string) {
+  return new Date(iso).toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+function periodoDe(iso: string) {
+  const d = new Date(iso);
+  const dias = (Date.now() - d.getTime()) / 86400000;
+  if (dias <= 30) return "Últimos 30 dias";
+  if (dias <= 90) return "Último trimestre";
+  if (d.getFullYear() === new Date().getFullYear()) return `${d.getFullYear()}`;
+  return `${d.getFullYear()}`;
+}
+
+function BibliotecaPage() {
   const qc = useQueryClient();
   const [q, setQ] = useState("");
   const [categoria, setCategoria] = useState("todas");
+  const [tagsSel, setTagsSel] = useState<string[]>([]);
+  const [ordem, setOrdem] = useState<Ordem>("relevancia");
   const [editando, setEditando] = useState<Rascunho | null>(null);
   const [preview, setPreview] = useState(false);
+  const [lendo, setLendo] = useState<ItemBase | null>(null);
 
   const { data: itens, isLoading } = useQuery({
-    queryKey: ["consultor-ia-base", q, categoria],
-    queryFn: () =>
-      listarBaseConhecimento({ data: { q, categoria, incluirInativos: true } }),
+    queryKey: ["consultor-ia-base"],
+    queryFn: () => listarBaseConhecimento({ data: { incluirInativos: true } }),
   });
 
   const { data: sugestoes } = useQuery({
@@ -97,10 +203,7 @@ function BaseConhecimentoPage() {
           categoria: r.categoria,
           titulo: r.titulo.trim(),
           conteudo: r.conteudo.trim(),
-          tags: r.tags
-            .split(",")
-            .map((t) => t.trim())
-            .filter(Boolean),
+          tags: r.tags.split(",").map((t) => t.trim()).filter(Boolean),
           ativo: r.ativo,
           global: r.global,
         },
@@ -108,7 +211,7 @@ function BaseConhecimentoPage() {
     onSuccess: async () => {
       setEditando(null);
       await qc.invalidateQueries({ queryKey: ["consultor-ia-base"] });
-      toast.success("Conteúdo salvo. O Consultor IA já passa a usá-lo.");
+      toast.success("Verbete publicado na biblioteca.");
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Falha ao salvar."),
   });
@@ -116,8 +219,9 @@ function BaseConhecimentoPage() {
   const excluir = useMutation({
     mutationFn: (id: string) => excluirItemBase({ data: { id } }),
     onSuccess: async () => {
+      setLendo(null);
       await qc.invalidateQueries({ queryKey: ["consultor-ia-base"] });
-      toast.success("Conteúdo removido.");
+      toast.success("Verbete removido da biblioteca.");
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Falha ao remover."),
   });
@@ -129,6 +233,50 @@ function BaseConhecimentoPage() {
       await qc.invalidateQueries({ queryKey: ["consultor-ia-sugestoes"] });
     },
   });
+
+  const base = itens ?? [];
+  const termos = useMemo(() => termosDe(q), [q]);
+
+  const catalogoTags = useMemo(() => {
+    const mapa = new Map<string, number>();
+    for (const it of base) for (const t of it.tags) mapa.set(t, (mapa.get(t) ?? 0) + 1);
+    return [...mapa.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+  }, [base]);
+
+  const contagemCategoria = useMemo(() => {
+    const mapa = new Map<string, number>();
+    for (const it of base) mapa.set(it.categoria, (mapa.get(it.categoria) ?? 0) + 1);
+    return mapa;
+  }, [base]);
+
+  const resultados = useMemo(() => {
+    let lista = base.filter((it) => {
+      if (categoria !== "todas" && it.categoria !== categoria) return false;
+      if (tagsSel.length && !tagsSel.every((t) => it.tags.includes(t))) return false;
+      if (!termos.length) return true;
+      return relevancia(it, termos) > 0;
+    });
+    lista = [...lista].sort((a, b) => {
+      if (ordem === "az") return a.titulo.localeCompare(b.titulo);
+      if (ordem === "recentes") return +new Date(b.updated_at) - +new Date(a.updated_at);
+      if (ordem === "antigos") return +new Date(a.updated_at) - +new Date(b.updated_at);
+      const r = relevancia(b, termos) - relevancia(a, termos);
+      return r !== 0 ? r : +new Date(b.updated_at) - +new Date(a.updated_at);
+    });
+    return lista;
+  }, [base, categoria, tagsSel, termos, ordem]);
+
+  const grupos = useMemo(() => {
+    if (ordem === "az" || (ordem === "relevancia" && termos.length)) {
+      return [{ rotulo: null as string | null, itens: resultados }];
+    }
+    const mapa = new Map<string, ItemBase[]>();
+    for (const it of resultados) {
+      const k = periodoDe(it.updated_at);
+      mapa.set(k, [...(mapa.get(k) ?? []), it]);
+    }
+    return [...mapa.entries()].map(([rotulo, itens]) => ({ rotulo, itens }));
+  }, [resultados, ordem, termos]);
 
   function abrirEdicao(it: ItemBase) {
     setEditando({
@@ -143,35 +291,123 @@ function BaseConhecimentoPage() {
     setPreview(false);
   }
 
+  function baixarColetanea() {
+    if (!resultados.length) {
+      toast.error("Nenhum verbete no resultado atual.");
+      return;
+    }
+    gerarCompendioPDF(resultados, {
+      titulo:
+        categoria !== "todas"
+          ? `Biblioteca — ${categoria.replace(/_/g, " ")}`
+          : "Biblioteca de Conhecimento",
+      filtro: q.trim() || tagsSel.join(", ") || undefined,
+    });
+  }
+
+  const filtrosAtivos = categoria !== "todas" || tagsSel.length > 0 || q.trim().length > 0;
+
   return (
-    <div className="space-y-5">
-      <header className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="flex items-center gap-2 text-xl font-semibold">
-            <BookOpen className="size-5 text-primary" />
-            Base de conhecimento — Consultor IA
-          </h1>
-          <p className="max-w-2xl text-sm text-muted-foreground">
-            Atualize aqui sempre que uma regra de banco ou regulação mudar — o Consultor IA
-            responde com base nesse conteúdo.
-          </p>
-        </div>
-        <Button
-          onClick={() => {
-            setEditando({ ...VAZIO });
-            setPreview(false);
+    <div className="space-y-6">
+      {/* Hero de pesquisa */}
+      <section className="relative overflow-hidden rounded-2xl border border-border/60 bg-gradient-to-br from-primary/10 via-card to-card p-6 shadow-sm">
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.14]"
+          style={{
+            backgroundImage:
+              "linear-gradient(to right, hsl(var(--primary)/0.35) 1px, transparent 1px), linear-gradient(to bottom, hsl(var(--primary)/0.35) 1px, transparent 1px)",
+            backgroundSize: "34px 34px",
           }}
-          className="gap-2"
-        >
-          <Plus className="size-4" />
-          Novo conteúdo
-        </Button>
-      </header>
+        />
+        <div className="relative space-y-4">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.2em] text-primary">
+                <Library className="size-3.5" />
+                Biblioteca Agilliza
+              </p>
+              <h1 className="mt-1 text-2xl font-semibold tracking-tight">
+                Conhecimento em crédito imobiliário
+              </h1>
+              <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+                Pesquise por palavra-chave e encontre verbetes curados — ordenados por
+                relevância ou data. É esse acervo que fundamenta o Consultor IA.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" className="gap-2" onClick={baixarColetanea}>
+                <FileDown className="size-4" />
+                Baixar coletânea
+              </Button>
+              <Button
+                onClick={() => {
+                  setEditando({ ...VAZIO });
+                  setPreview(false);
+                }}
+                className="gap-2"
+              >
+                <Plus className="size-4" />
+                Novo verbete
+              </Button>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="relative min-w-[260px] flex-1">
+              <Search className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                placeholder="Pesquisar por palavra-chave: FGTS, portabilidade, avaliação, ITBI…"
+                className="h-12 rounded-xl border-border/70 bg-background/80 pl-10 pr-9 text-base shadow-sm backdrop-blur"
+              />
+              {q ? (
+                <button
+                  type="button"
+                  aria-label="Limpar busca"
+                  onClick={() => setQ("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  <X className="size-4" />
+                </button>
+              ) : null}
+            </div>
+            <Select value={ordem} onValueChange={(v) => setOrdem(v as Ordem)}>
+              <SelectTrigger className="h-12 w-[200px] rounded-xl bg-background/80">
+                <ArrowUpDown className="mr-1 size-3.5 text-muted-foreground" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="relevancia">Mais relevantes</SelectItem>
+                <SelectItem value="recentes">Mais recentes</SelectItem>
+                <SelectItem value="antigos">Mais antigos</SelectItem>
+                <SelectItem value="az">Ordem alfabética</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+            <span className="inline-flex items-center gap-1.5">
+              <BookMarked className="size-3.5" />
+              {base.length} verbetes
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <Layers className="size-3.5" />
+              {contagemCategoria.size} categorias
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <Tag className="size-3.5" />
+              {catalogoTags.length} palavras-chave
+            </span>
+          </div>
+        </div>
+      </section>
 
       {(sugestoes ?? []).length > 0 ? (
         <div className="rounded-xl border border-amber-500/40 bg-amber-500/5 p-3">
-          <p className="mb-2 text-xs font-medium uppercase tracking-wide text-amber-700 dark:text-amber-400">
-            Sugestões da equipe ({sugestoes!.length})
+          <p className="mb-2 flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-amber-700 dark:text-amber-400">
+            <Sparkles className="size-3.5" />
+            Lacunas apontadas pela equipe ({sugestoes!.length})
           </p>
           <ul className="space-y-1.5">
             {sugestoes!.map((s) => (
@@ -186,7 +422,7 @@ function BaseConhecimentoPage() {
                     setPreview(false);
                   }}
                 >
-                  Criar conteúdo
+                  Escrever verbete
                 </Button>
                 <Button
                   size="sm"
@@ -202,98 +438,293 @@ function BaseConhecimentoPage() {
         </div>
       ) : null}
 
-      <div className="flex flex-wrap items-center gap-2">
-        <div className="relative min-w-[220px] flex-1">
-          <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Buscar por título ou conteúdo"
-            className="pl-8"
-          />
-        </div>
-        <Select value={categoria} onValueChange={setCategoria}>
-          <SelectTrigger className="w-[200px]">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todas">Todas as categorias</SelectItem>
-            {CATEGORIAS_BASE.map((c) => (
-              <SelectItem key={c} value={c}>
-                {c.replace(/_/g, " ")}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      <div className="grid gap-5 lg:grid-cols-[248px_minmax(0,1fr)]">
+        {/* Estantes / facetas */}
+        <aside className="space-y-5 lg:sticky lg:top-4 lg:self-start">
+          <div className="rounded-xl border border-border/60 bg-card p-3">
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Estantes
+            </p>
+            <div className="space-y-0.5">
+              <button
+                type="button"
+                onClick={() => setCategoria("todas")}
+                className={cn(
+                  "flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-sm transition-colors",
+                  categoria === "todas"
+                    ? "bg-primary/10 font-medium text-primary"
+                    : "hover:bg-muted",
+                )}
+              >
+                Todas <span className="text-xs text-muted-foreground">{base.length}</span>
+              </button>
+              {CATEGORIAS_BASE.map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => setCategoria(c)}
+                  className={cn(
+                    "flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-left text-sm transition-colors",
+                    categoria === c
+                      ? "bg-primary/10 font-medium text-primary"
+                      : "hover:bg-muted",
+                  )}
+                >
+                  <span className="truncate">{c.replace(/_/g, " ")}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {contagemCategoria.get(c) ?? 0}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {catalogoTags.length > 0 ? (
+            <div className="rounded-xl border border-border/60 bg-card p-3">
+              <div className="mb-2 flex items-center justify-between">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Palavras-chave
+                </p>
+                {tagsSel.length ? (
+                  <button
+                    type="button"
+                    onClick={() => setTagsSel([])}
+                    className="text-[11px] text-primary hover:underline"
+                  >
+                    limpar
+                  </button>
+                ) : null}
+              </div>
+              <ScrollArea className="max-h-[260px] pr-2">
+                <div className="flex flex-wrap gap-1.5">
+                  {catalogoTags.map(([t, n]) => {
+                    const on = tagsSel.includes(t);
+                    return (
+                      <button
+                        key={t}
+                        type="button"
+                        onClick={() =>
+                          setTagsSel((prev) =>
+                            on ? prev.filter((x) => x !== t) : [...prev, t],
+                          )
+                        }
+                        className={cn(
+                          "rounded-full border px-2.5 py-1 text-[11px] transition-colors",
+                          on
+                            ? "border-primary bg-primary text-primary-foreground"
+                            : "border-border/70 bg-background hover:border-primary/50 hover:text-primary",
+                        )}
+                      >
+                        {t} <span className="opacity-60">{n}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </ScrollArea>
+            </div>
+          ) : null}
+        </aside>
+
+        {/* Prateleira de resultados */}
+        <section className="space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-muted-foreground">
+            <span>
+              {resultados.length} resultado{resultados.length === 1 ? "" : "s"}
+              {q.trim() ? (
+                <>
+                  {" "}
+                  para <span className="font-medium text-foreground">“{q.trim()}”</span>
+                </>
+              ) : null}
+            </span>
+            {filtrosAtivos ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 gap-1 text-xs"
+                onClick={() => {
+                  setQ("");
+                  setCategoria("todas");
+                  setTagsSel([]);
+                }}
+              >
+                <X className="size-3.5" />
+                Limpar filtros
+              </Button>
+            ) : null}
+          </div>
+
+          {isLoading ? (
+            <div className="space-y-3">
+              <Skeleton className="h-28 w-full rounded-xl" />
+              <Skeleton className="h-28 w-full rounded-xl" />
+              <Skeleton className="h-28 w-full rounded-xl" />
+            </div>
+          ) : resultados.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-border/70 bg-card p-10 text-center">
+              <BookOpen className="mx-auto size-8 text-muted-foreground/60" />
+              <p className="mt-3 text-sm font-medium">Nada encontrado nesta estante</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Ajuste a palavra-chave ou escreva um novo verbete sobre o tema.
+              </p>
+            </div>
+          ) : (
+            grupos.map((g) => (
+              <div key={g.rotulo ?? "todos"} className="space-y-3">
+                {g.rotulo ? (
+                  <div className="flex items-center gap-3 pt-2">
+                    <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                      <CalendarClock className="size-3.5" />
+                      {g.rotulo}
+                    </span>
+                    <Separator className="flex-1" />
+                  </div>
+                ) : null}
+
+                {g.itens.map((it) => (
+                  <article
+                    key={it.id}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => setLendo(it)}
+                    onKeyDown={(e) => e.key === "Enter" && setLendo(it)}
+                    className="group cursor-pointer rounded-xl border border-border/60 bg-card p-4 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-lg"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
+                          <Badge variant="secondary">
+                            {it.categoria.replace(/_/g, " ")}
+                          </Badge>
+                          {it.correspondente_id === null ? (
+                            <Badge variant="outline" className="gap-1">
+                              <Globe2 className="size-3" /> Global
+                            </Badge>
+                          ) : null}
+                          {!it.ativo ? (
+                            <Badge variant="outline" className="text-muted-foreground">
+                              Inativo
+                            </Badge>
+                          ) : null}
+                          <span className="text-muted-foreground">
+                            · {dataCurta(it.updated_at)} · {tempoLeitura(it.conteudo)} min de
+                            leitura
+                          </span>
+                        </div>
+                        <h2 className="mt-2 text-base font-semibold leading-snug transition-colors group-hover:text-primary">
+                          {it.titulo}
+                        </h2>
+                        <p className="mt-1.5 line-clamp-2 text-sm text-muted-foreground">
+                          {trechoDestaque(it, termos)}
+                        </p>
+                        {it.tags.length ? (
+                          <div className="mt-2.5 flex flex-wrap gap-1">
+                            {it.tags.slice(0, 6).map((t) => (
+                              <span
+                                key={t}
+                                className="rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground"
+                              >
+                                {t}
+                              </span>
+                            ))}
+                          </div>
+                        ) : null}
+                      </div>
+                      <div
+                        className="flex shrink-0 flex-col gap-1 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="size-7"
+                          aria-label="Baixar em PDF"
+                          onClick={() => gerarVerbetePDF(it)}
+                        >
+                          <Download className="size-3.5" />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="size-7"
+                          aria-label="Editar"
+                          onClick={() => abrirEdicao(it)}
+                        >
+                          <Pencil className="size-3.5" />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="size-7"
+                          aria-label="Excluir"
+                          onClick={() => excluir.mutate(it.id)}
+                        >
+                          <Trash2 className="size-3.5 text-destructive" />
+                        </Button>
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            ))
+          )}
+        </section>
       </div>
 
-      {isLoading ? (
-        <Skeleton className="h-40 w-full" />
-      ) : (itens ?? []).length === 0 ? (
-        <p className="rounded-xl border border-border/60 bg-card p-6 text-center text-sm text-muted-foreground">
-          Nenhum conteúdo cadastrado.
-        </p>
-      ) : (
-        <div className="grid gap-3 md:grid-cols-2">
-          {(itens ?? []).map((it) => (
-            <article
-              key={it.id}
-              className="rounded-xl border border-border/60 bg-card p-3.5 transition-shadow hover:shadow-md"
-            >
-              <div className="flex items-start justify-between gap-2">
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    <Badge variant="secondary" className="text-[11px]">
-                      {it.categoria.replace(/_/g, " ")}
-                    </Badge>
-                    {!it.ativo ? (
-                      <Badge variant="outline" className="text-[11px]">
-                        Inativo
-                      </Badge>
-                    ) : null}
-                    {it.correspondente_id === null ? (
-                      <Badge variant="outline" className="text-[11px]">
-                        Global
-                      </Badge>
-                    ) : null}
-                  </div>
-                  <h2 className="mt-1.5 truncate text-sm font-medium">{it.titulo}</h2>
+      {/* Leitor */}
+      <Dialog open={!!lendo} onOpenChange={(o) => !o && setLendo(null)}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl">
+          {lendo ? (
+            <>
+              <DialogHeader>
+                <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
+                  <Badge variant="secondary">{lendo.categoria.replace(/_/g, " ")}</Badge>
+                  <span className="text-muted-foreground">
+                    Atualizado em {dataCurta(lendo.updated_at)} ·{" "}
+                    {tempoLeitura(lendo.conteudo)} min
+                  </span>
                 </div>
-                <div className="flex shrink-0 gap-1">
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="size-7"
-                    aria-label="Editar"
-                    onClick={() => abrirEdicao(it)}
-                  >
-                    <Pencil className="size-3.5" />
-                  </Button>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="size-7"
-                    aria-label="Excluir"
-                    onClick={() => excluir.mutate(it.id)}
-                  >
-                    <Trash2 className="size-3.5 text-destructive" />
-                  </Button>
-                </div>
+                <DialogTitle className="text-xl leading-snug">{lendo.titulo}</DialogTitle>
+                {lendo.tags.length ? (
+                  <DialogDescription>{lendo.tags.join(" · ")}</DialogDescription>
+                ) : null}
+              </DialogHeader>
+              <Separator />
+              <div className="prose-sm max-w-none text-sm leading-relaxed">
+                <Markdown conteudo={lendo.conteudo} />
               </div>
-              <p className="mt-1.5 line-clamp-3 text-xs text-muted-foreground">
-                {it.conteudo.replace(/[#*_`]/g, "").slice(0, 220)}
-              </p>
-            </article>
-          ))}
-        </div>
-      )}
+              <DialogFooter className="gap-2 sm:justify-between">
+                <Button
+                  variant="outline"
+                  className="gap-2"
+                  onClick={() => gerarVerbetePDF(lendo)}
+                >
+                  <Download className="size-4" />
+                  Baixar PDF
+                </Button>
+                <Button
+                  className="gap-2"
+                  onClick={() => {
+                    abrirEdicao(lendo);
+                    setLendo(null);
+                  }}
+                >
+                  <Pencil className="size-4" />
+                  Editar verbete
+                </Button>
+              </DialogFooter>
+            </>
+          ) : null}
+        </DialogContent>
+      </Dialog>
 
+      {/* Editor */}
       <Dialog open={!!editando} onOpenChange={(o) => !o && setEditando(null)}>
         <DialogContent className="max-h-[88vh] overflow-y-auto sm:max-w-3xl">
           <DialogHeader>
-            <DialogTitle>{editando?.id ? "Editar conteúdo" : "Novo conteúdo"}</DialogTitle>
+            <DialogTitle>{editando?.id ? "Editar verbete" : "Novo verbete"}</DialogTitle>
             <DialogDescription>
-              O texto abaixo é enviado como referência para a IA responder.
+              O texto abaixo entra na biblioteca e é usado como referência pelo Consultor IA.
             </DialogDescription>
           </DialogHeader>
 
@@ -319,7 +750,7 @@ function BaseConhecimentoPage() {
                   </Select>
                 </div>
                 <div className="space-y-1.5">
-                  <Label>Tags (separadas por vírgula)</Label>
+                  <Label>Palavras-chave (separadas por vírgula)</Label>
                   <Input
                     value={editando.tags}
                     onChange={(e) => setEditando({ ...editando, tags: e.target.value })}
