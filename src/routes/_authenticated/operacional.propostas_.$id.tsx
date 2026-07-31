@@ -91,7 +91,7 @@ import {
   baixarPropostaSimplificadaPDF,
   baixarPropostaDetalhadaPDF,
   baixarPropostaConsolidadoPDF,
-} from "@/lib/propostas/proposta-pdf";
+} from "@/lib/propostas/pdf-lazy";
 import { TRANSICOES, STATUS_EDITAVEIS, type PropostaStatus } from "@/lib/propostas/state-machine";
 import { statusProposta } from "@/components/propostas/status";
 import { formatBRL } from "@/lib/simulacao/format";
