@@ -2,9 +2,12 @@ import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
+import { Loader2, Trash2, X } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
 import {
   excluirConta,
+  excluirContasEmLote,
   listarConfigs,
   listarContas,
   resumoContas,
@@ -22,6 +25,7 @@ import { ContasFiltros } from "./contas/contas-filtros";
 import { ContasExport } from "./contas/contas-export";
 import { ContasHeader } from "./contas/contas-header";
 import { ContasKpis } from "./contas/contas-kpis";
+import { ContasKpiDialog, type KpiDetalheFiltro } from "./contas/contas-kpi-dialog";
 import { ContasTabela, type ContaItem } from "./contas/contas-tabela";
 
 /**
@@ -43,22 +47,51 @@ export function ContasPage({ tipo }: { tipo: ContaTipo }) {
   const [detalheId, setDetalheId] = useState<string | null>(null);
   const [editarId, setEditarId] = useState<string | null>(null);
   const [excluirAlvo, setExcluirAlvo] = useState<{ id: string; numero: string } | null>(null);
+  const [selecionados, setSelecionados] = useState<string[]>([]);
+  const [kpiDetalhe, setKpiDetalhe] = useState<KpiDetalheFiltro | null>(null);
+  const [excluindoLote, setExcluindoLote] = useState(false);
 
   const queryClient = useQueryClient();
   const excluir = useServerFn(excluirConta);
+  const excluirLote = useServerFn(excluirContasEmLote);
+
+  function recarregar() {
+    queryClient.invalidateQueries({ queryKey: ["fin-contas"] });
+    queryClient.invalidateQueries({ queryKey: ["fin-contas-resumo"] });
+    queryClient.invalidateQueries({ queryKey: ["fin-contas-kpi-detalhe"] });
+  }
 
   async function handleExcluir() {
     if (!excluirAlvo) return;
     try {
       await excluir({ data: { tipo, id: excluirAlvo.id } });
       toast.success("Conta excluída.");
-      queryClient.invalidateQueries({ queryKey: ["fin-contas"] });
+      recarregar();
     } catch {
       toast.error("Não foi possível excluir a conta.");
     } finally {
       setExcluirAlvo(null);
     }
   }
+
+  async function handleExcluirSelecionadas() {
+    if (!selecionados.length) return;
+    setExcluindoLote(true);
+    try {
+      const r = await excluirLote({ data: { tipo, ids: selecionados } });
+      toast.success(
+        `${r.excluidas} conta(s) excluída(s).` +
+          (r.bloqueadas ? ` ${r.bloqueadas} com pagamento não puderam ser excluídas.` : ""),
+      );
+      setSelecionados([]);
+      recarregar();
+    } catch (e: any) {
+      toast.error(e?.message ?? "Não foi possível excluir as contas selecionadas.");
+    } finally {
+      setExcluindoLote(false);
+    }
+  }
+
 
   const { data: cfg } = useQuery({ queryKey: ["fin-configs"], queryFn: () => listarConfigs() });
   const { data, isLoading } = useQuery({
