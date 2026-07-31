@@ -157,7 +157,21 @@ export function ContasPage({ tipo }: { tipo: ContaTipo }) {
         }
       />
 
-      <ContasKpis tipo={tipo} resumo={resumo} />
+      <ContasKpis
+        tipo={tipo}
+        resumo={resumo}
+        onSelecionar={(k) =>
+          setKpiDetalhe({
+            titulo: k.titulo,
+            status: k.status,
+            categoria_id: categoriaId || undefined,
+            contraparte: busca || undefined,
+            de: de || undefined,
+            ate: ate || undefined,
+          })
+        }
+      />
+
 
       <ContasFiltros
         tipo={tipo}
