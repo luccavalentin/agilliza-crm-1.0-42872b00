@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Markdown } from "@/components/ui/markdown";
 import {
@@ -48,6 +49,7 @@ export function BasePerguntasRespondidas({
   const [busca, setBusca] = useState("");
   const [chave, setChave] = useState<string | null>(null);
   const [aberto, setAberto] = useState<string | null>(null);
+  const [selecionados, setSelecionados] = useState<string[]>([]);
 
   const { data, isLoading } = useQuery({
     queryKey: ["consultor-ia-base-perguntas"],
@@ -79,75 +81,111 @@ export function BasePerguntasRespondidas({
 
   const comFonte = useMemo(() => filtrados.filter((i) => i.fontes.length > 0).length, [filtrados]);
 
+  /** Registros efetivamente exportados: seleção do usuário ou todo o filtro atual. */
+  const selecao = useMemo(
+    () => filtrados.filter((i) => selecionados.includes(i.id)),
+    [filtrados, selecionados],
+  );
+  const paraExportar = selecao.length > 0 ? selecao : filtrados;
+  const todosMarcados = filtrados.length > 0 && selecao.length === filtrados.length;
+
+  function alternar(id: string) {
+    setSelecionados((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+  }
+
+  function alternarTodos() {
+    setSelecionados(todosMarcados ? [] : filtrados.map((i) => i.id));
+  }
+
   const contexto = [
-    chave ? `Palavra-chave: ${chave}` : null,
-    busca.trim() ? `Busca: "${busca.trim()}"` : null,
+    selecao.length > 0
+      ? `Seleção: ${selecao.length} artigo(s)`
+      : chave
+        ? `Palavra-chave: ${chave}`
+        : null,
+    selecao.length === 0 && busca.trim() ? `Busca: "${busca.trim()}"` : null,
   ]
     .filter(Boolean)
     .join(" · ") || "Base completa";
 
   function baixar(modo: "download" | "print") {
-    if (filtrados.length === 0) {
+    if (paraExportar.length === 0) {
       toast.error("Nenhum registro para exportar.");
       return;
     }
     try {
-      exportarBaseConhecimentoPdf({ itens: filtrados, contexto, modo });
-      toast.success(modo === "print" ? "Abrindo impressão…" : "PDF gerado com sucesso.");
+      exportarBaseConhecimentoPdf({ itens: paraExportar, contexto, modo });
+      toast.success(
+        modo === "print"
+          ? "Abrindo impressão…"
+          : paraExportar.length === 1
+            ? "PDF do artigo gerado."
+            : `PDF único com ${paraExportar.length} artigos gerado.`,
+      );
     } catch {
       toast.error("Não foi possível gerar o PDF.");
     }
   }
 
+
   return (
     <section className="overflow-hidden rounded-2xl border border-border/70 bg-card shadow-card">
       {/* Cabeçalho editorial */}
       <header className="relative border-b border-border/70 bg-[linear-gradient(180deg,color-mix(in_oklab,var(--primary)_6%,var(--card)),var(--card))] p-4 sm:p-5">
-        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4 sm:flex sm:flex-wrap sm:justify-between">
+        <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
           <div className="flex min-w-0 items-start gap-3">
-            <span className="grid size-11 shrink-0 place-items-center rounded-2xl border border-border/70 bg-card text-primary shadow-sm">
+            <span className="grid size-10 shrink-0 place-items-center rounded-2xl border border-border/70 bg-card text-primary shadow-sm sm:size-11">
               <BookOpen className="size-5" />
             </span>
             <div className="min-w-0">
               <span className="text-[10.5px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                 Consultor IA
               </span>
-              <h2 className="truncate text-lg font-semibold tracking-tight text-foreground">
+              <h2 className="text-base font-semibold tracking-tight text-foreground sm:text-lg">
                 Base de conhecimento
               </h2>
-              <p className="text-[13px] text-muted-foreground">
+              <p className="text-[12.5px] text-muted-foreground sm:text-[13px]">
                 Todo o histórico curado de perguntas e respostas, pesquisável por palavra-chave.
               </p>
             </div>
           </div>
-          <div className="col-span-2 flex flex-wrap items-center gap-2 sm:col-auto">
+          <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:items-center">
             <Button
               variant="outline"
               size="sm"
-              className="bg-card/70 backdrop-blur"
+              className="w-full bg-card/70 backdrop-blur sm:w-auto"
               onClick={() => baixar("print")}
-              disabled={filtrados.length === 0}
+              disabled={paraExportar.length === 0}
             >
               <Printer className="mr-1.5 size-4" /> Imprimir
             </Button>
-            <Button size="sm" onClick={() => baixar("download")} disabled={filtrados.length === 0}>
-              <FileDown className="mr-1.5 size-4" /> Baixar PDF
+            <Button
+              size="sm"
+              className="w-full sm:w-auto"
+              onClick={() => baixar("download")}
+              disabled={paraExportar.length === 0}
+            >
+              <FileDown className="mr-1.5 size-4" />
+              {selecao.length > 0 ? `Baixar (${selecao.length})` : "Baixar PDF"}
             </Button>
           </div>
         </div>
 
         {/* Métricas discretas */}
-        <div className="mt-4 grid grid-cols-3 gap-2 sm:max-w-md">
+        <div className="mt-4 grid grid-cols-2 gap-2 sm:max-w-xl sm:grid-cols-4">
           {[
             { label: "Registros", valor: itens.length },
             { label: "No filtro", valor: filtrados.length },
             { label: "Com fonte", valor: comFonte },
+            { label: "Selecionados", valor: selecao.length },
           ].map((m) => (
             <div
               key={m.label}
-              className="rounded-xl border border-border/70 bg-card px-3 py-2"
+              className="min-w-0 rounded-xl border border-border/70 bg-card px-3 py-2"
             >
-              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+              <p className="truncate text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                 {m.label}
               </p>
               <p className="mt-0.5 text-lg font-semibold tabular-nums leading-none text-foreground">
@@ -156,6 +194,7 @@ export function BasePerguntasRespondidas({
             </div>
           ))}
         </div>
+
       </header>
 
       {/* Busca + palavras-chave */}
@@ -216,7 +255,35 @@ export function BasePerguntasRespondidas({
             ) : null}
           </div>
         ) : null}
+
+        {/* Seleção de artigos */}
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-border/70 bg-card px-3 py-2">
+          <label className="flex cursor-pointer items-center gap-2 text-[12px] font-medium text-foreground">
+            <Checkbox
+              checked={todosMarcados}
+              onCheckedChange={alternarTodos}
+              aria-label="Selecionar todos os artigos"
+            />
+            Selecionar todos
+          </label>
+          <span className="min-w-0 flex-1 truncate text-[11.5px] text-muted-foreground">
+            {selecao.length > 0
+              ? `${selecao.length} artigo(s) — o PDF virá com as páginas unidas.`
+              : "Nenhum selecionado — exporta o filtro atual."}
+          </span>
+          {selecao.length > 0 ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 text-[11px]"
+              onClick={() => setSelecionados([])}
+            >
+              Limpar seleção
+            </Button>
+          ) : null}
+        </div>
       </div>
+
 
       {/* Lista */}
       <div className="brand-scroll max-h-[560px] space-y-2 overflow-y-auto p-4">
@@ -239,6 +306,7 @@ export function BasePerguntasRespondidas({
         ) : (
           filtrados.map((it, i) => {
             const open = aberto === it.id;
+            const marcado = selecionados.includes(it.id);
             return (
               <Collapsible
                 key={it.id}
@@ -246,56 +314,73 @@ export function BasePerguntasRespondidas({
                 onOpenChange={(o) => setAberto(o ? it.id : null)}
                 className={cn(
                   "group overflow-hidden rounded-xl border bg-card transition-all",
-                  open
-                    ? "border-primary/40 shadow-[0_10px_30px_-18px_color-mix(in_oklab,var(--primary)_60%,transparent)]"
-                    : "border-border/70 hover:border-primary/30",
+                  marcado
+                    ? "border-primary/60 ring-1 ring-primary/25"
+                    : open
+                      ? "border-primary/40 shadow-[0_10px_30px_-18px_color-mix(in_oklab,var(--primary)_60%,transparent)]"
+                      : "border-border/70 hover:border-primary/30",
                 )}
               >
-                <CollapsibleTrigger className="flex w-full items-start gap-3 p-3 text-left">
-                  <span className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-lg bg-primary/8 text-[11px] font-semibold tabular-nums text-primary">
-                    {String(i + 1).padStart(2, "0")}
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-[13.5px] font-semibold leading-snug text-foreground">
-                      {it.pergunta}
-                    </span>
-                    {!open ? (
-                      <span className="mt-1 block line-clamp-2 text-[12px] leading-relaxed text-muted-foreground">
-                        {resumo(it.resposta)}
-                      </span>
-                    ) : null}
-                    <span className="mt-1.5 flex flex-wrap items-center gap-1">
-                      {it.palavras_chave.slice(0, 5).map((p) => (
-                        <Badge key={p} variant="secondary" className="text-[10px] capitalize">
-                          {p}
-                        </Badge>
-                      ))}
-                      {it.sem_resposta ? (
-                        <Badge variant="outline" className="gap-1 text-[10px] text-amber-600">
-                          <TriangleAlert className="size-3" /> fora da base
-                        </Badge>
-                      ) : null}
-                    </span>
-                  </span>
-                  <span className="flex shrink-0 flex-col items-end gap-1.5">
-                    <span className="text-[11px] tabular-nums text-muted-foreground">
-                      {new Date(it.created_at).toLocaleDateString("pt-BR")}
-                    </span>
-                    <ChevronDown
-                      className={cn(
-                        "size-4 text-muted-foreground transition-transform",
-                        open && "rotate-180 text-primary",
-                      )}
+                <div className="flex items-start gap-2 p-3">
+                  <span className="mt-1 flex shrink-0 flex-col items-center gap-1.5">
+                    <Checkbox
+                      checked={marcado}
+                      onCheckedChange={() => alternar(it.id)}
+                      aria-label={`Selecionar artigo ${it.pergunta}`}
                     />
+                    <span className="hidden text-[10px] font-semibold tabular-nums text-muted-foreground sm:block">
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
                   </span>
-                </CollapsibleTrigger>
+                  <CollapsibleTrigger className="flex min-w-0 flex-1 items-start gap-3 text-left">
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-[13px] font-semibold leading-snug text-foreground sm:text-[13.5px]">
+                        {it.pergunta}
+                      </span>
+                      {!open ? (
+                        <span className="mt-1 block line-clamp-2 text-[12px] leading-relaxed text-muted-foreground">
+                          {resumo(it.resposta)}
+                        </span>
+                      ) : null}
+                      <span className="mt-1.5 flex flex-wrap items-center gap-1">
+                        {it.palavras_chave.slice(0, 5).map((p) => (
+                          <Badge key={p} variant="secondary" className="max-w-[9rem] truncate text-[10px] capitalize">
+                            {p}
+                          </Badge>
+                        ))}
+                        {it.sem_resposta ? (
+                          <Badge variant="outline" className="gap-1 text-[10px] text-amber-600">
+                            <TriangleAlert className="size-3" /> fora da base
+                          </Badge>
+                        ) : null}
+                      </span>
+                      <span className="mt-1 block text-[11px] tabular-nums text-muted-foreground sm:hidden">
+                        {new Date(it.created_at).toLocaleDateString("pt-BR")}
+                      </span>
+                    </span>
+                    <span className="flex shrink-0 flex-col items-end gap-1.5">
+                      <span className="hidden text-[11px] tabular-nums text-muted-foreground sm:block">
+                        {new Date(it.created_at).toLocaleDateString("pt-BR")}
+                      </span>
+                      <ChevronDown
+                        className={cn(
+                          "size-4 text-muted-foreground transition-transform",
+                          open && "rotate-180 text-primary",
+                        )}
+                      />
+                    </span>
+                  </CollapsibleTrigger>
+                </div>
 
-                <CollapsibleContent className="border-t border-border/60 bg-muted/20 px-4 py-3">
-                  <Markdown conteudo={it.resposta} className="text-sm" />
+
+                <CollapsibleContent className="border-t border-border/60 bg-muted/20 px-3 py-3 sm:px-4">
+                  <div className="overflow-x-auto">
+                    <Markdown conteudo={it.resposta} className="text-sm" />
+                  </div>
                   {it.fontes.length > 0 ? (
                     <div className="mt-3 flex flex-wrap gap-1.5">
                       {it.fontes.map((f) => (
-                        <Badge key={f.id} variant="secondary" className="text-[10px]">
+                        <Badge key={f.id} variant="secondary" className="max-w-full truncate text-[10px]">
                           Fonte: {f.categoria} — {f.titulo}
                         </Badge>
                       ))}
@@ -306,7 +391,7 @@ export function BasePerguntasRespondidas({
                       <Button
                         size="sm"
                         variant="outline"
-                        className="h-8 text-[11.5px]"
+                        className="h-8 flex-1 text-[11.5px] sm:flex-none"
                         onClick={() => onReperguntar(it.pergunta)}
                       >
                         <Sparkles className="mr-1.5 size-3.5" /> Perguntar novamente
@@ -315,17 +400,23 @@ export function BasePerguntasRespondidas({
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="h-8 text-[11.5px]"
-                      onClick={() =>
-                        exportarBaseConhecimentoPdf({
-                          itens: [it],
-                          contexto: "Registro individual",
-                        })
-                      }
+                      className="h-8 flex-1 text-[11.5px] sm:flex-none"
+                      onClick={() => {
+                        try {
+                          exportarBaseConhecimentoPdf({
+                            itens: [it],
+                            contexto: "Artigo individual",
+                          });
+                          toast.success("PDF do artigo gerado.");
+                        } catch {
+                          toast.error("Não foi possível gerar o PDF.");
+                        }
+                      }}
                     >
-                      <FileDown className="mr-1.5 size-3.5" /> PDF deste item
+                      <FileDown className="mr-1.5 size-3.5" /> Baixar este artigo
                     </Button>
                   </div>
+
                 </CollapsibleContent>
               </Collapsible>
             );
