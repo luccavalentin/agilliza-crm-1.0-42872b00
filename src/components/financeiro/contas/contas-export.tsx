@@ -1,8 +1,4 @@
-import { useState } from "react";
-import { FileSpreadsheet, FileText, Printer } from "lucide-react";
-import { toast } from "sonner";
-
-import { Button } from "@/components/ui/button";
+import { ExportarFinanceiro } from "@/components/financeiro/exportar-financeiro";
 import { formatBRL } from "@/lib/financeiro/format";
 import type { ContaTipo } from "@/lib/financeiro/financeiro.functions";
 import type { ContaItem } from "./contas-tabela";
@@ -37,7 +33,6 @@ export function ContasExport({
   } | null;
   meta: string[];
 }) {
-  const [busy, setBusy] = useState(false);
   const recebe = tipo === "receber";
   const titulo = recebe ? "Contas a receber" : "Contas a pagar";
   const descricao = recebe
@@ -79,67 +74,15 @@ export function ContasExport({
     .toISOString()
     .slice(0, 10)}`;
 
-  function semDados() {
-    if (rows.length === 0) {
-      toast.error("Nenhuma conta na relação atual.");
-      return true;
-    }
-    return false;
-  }
-
-  async function gerarPDF(modo: "download" | "print") {
-    if (semDados()) return;
-    setBusy(true);
-    try {
-      const { exportPDF } = await import("@/lib/relatorios/report-pdf");
-      exportPDF(
-        titulo,
-        descricao,
-        meta,
-        kpis,
-        columns,
-        rows,
-        arquivo,
-        undefined,
-        undefined,
-        undefined,
-        "landscape",
-        undefined,
-        modo,
-      );
-    } catch (e) {
-      console.error("[contas:pdf]", e);
-      toast.error("Falha ao gerar o PDF.");
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function gerarXLSX() {
-    if (semDados()) return;
-    setBusy(true);
-    try {
-      const { exportXLSX } = await import("@/lib/relatorios/report-xlsx");
-      await exportXLSX(arquivo, titulo, meta, columns, rows);
-    } catch (e) {
-      console.error("[contas:xlsx]", e);
-      toast.error("Falha ao gerar a planilha.");
-    } finally {
-      setBusy(false);
-    }
-  }
-
   return (
-    <div className="flex items-center gap-2">
-      <Button variant="outline" size="sm" disabled={busy} onClick={() => void gerarPDF("download")}>
-        <FileText className="mr-1.5 h-3.5 w-3.5 opacity-70" /> PDF
-      </Button>
-      <Button variant="outline" size="sm" disabled={busy} onClick={() => void gerarXLSX()}>
-        <FileSpreadsheet className="mr-1.5 h-3.5 w-3.5 opacity-70" /> Excel
-      </Button>
-      <Button variant="outline" size="sm" disabled={busy} onClick={() => void gerarPDF("print")}>
-        <Printer className="mr-1.5 h-3.5 w-3.5 opacity-70" /> Imprimir
-      </Button>
-    </div>
+    <ExportarFinanceiro
+      titulo={titulo}
+      descricao={descricao}
+      meta={meta}
+      kpis={kpis}
+      columns={columns}
+      rows={rows}
+      arquivo={arquivo}
+    />
   );
 }

@@ -12,6 +12,7 @@ import {
   Building2,
   
   Percent,
+  Users,
   TrendingUp,
   TrendingDown,
 } from "lucide-react";
@@ -59,6 +60,8 @@ import {
   SecaoRegrasComissao,
   SimuladorComissao,
 } from "@/components/financeiro/comissoes-gestao";
+import { RegrasAbas } from "@/components/financeiro/comissoes-usuario/regras-abas";
+import { ExportarFinanceiro } from "@/components/financeiro/exportar-financeiro";
 
 export const Route = createFileRoute("/_authenticated/financeiro/configuracoes")({
   head: () => ({ meta: [{ title: "Configurações financeiras — Agilliza" }] }),
@@ -72,13 +75,29 @@ export const Route = createFileRoute("/_authenticated/financeiro/configuracoes")
 });
 
 function Pagina() {
+  const { data: configs } = useConfigs();
+  const linhasConfig = [
+    ...(configs?.categorias ?? []).map((c: ConfigItem) => ({
+      grupo: "Categoria",
+      nome: c.nome,
+      tipo: c.tipo === "receita" ? "Receita" : "Despesa",
+      situacao: c.ativo ? "Ativa" : "Inativa",
+    })),
+    ...(configs?.centrosCusto ?? []).map((c: ConfigItem) => ({
+      grupo: "Centro de custo",
+      nome: c.nome,
+      tipo: "—",
+      situacao: c.ativo ? "Ativo" : "Inativo",
+    })),
+  ];
+
   return (
     <div className="mx-auto w-full max-w-none space-y-6 p-3 sm:p-4 md:p-6">
       <header className="flex items-start gap-3">
         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
           <SlidersHorizontal className="h-5 w-5" />
         </div>
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <h1 className="text-xl font-semibold tracking-tight text-foreground">
             Configurações financeiras
           </h1>
@@ -87,6 +106,18 @@ function Pagina() {
             custo e regras de repasse por banco.
           </p>
         </div>
+        <ExportarFinanceiro
+          titulo="Configurações financeiras"
+          descricao="Plano de contas e centros de custo cadastrados."
+          columns={[
+            { key: "grupo", label: "Grupo" },
+            { key: "nome", label: "Nome" },
+            { key: "tipo", label: "Tipo" },
+            { key: "situacao", label: "Situação" },
+          ]}
+          rows={linhasConfig}
+          orientation="portrait"
+        />
       </header>
 
       <Tabs defaultValue="categorias" className="w-full">
@@ -99,6 +130,9 @@ function Pagina() {
           </TabsTrigger>
           <TabsTrigger value="comissoes" className="gap-1.5">
             <Percent className="h-4 w-4" /> Repasses
+          </TabsTrigger>
+          <TabsTrigger value="comissoes-usuario" className="gap-1.5">
+            <Users className="h-4 w-4" /> Comissões por usuário
           </TabsTrigger>
         </TabsList>
 
@@ -117,6 +151,9 @@ function Pagina() {
         <TabsContent value="comissoes" className="mt-4 space-y-6">
           <SecaoRegrasComissao />
           <SimuladorComissao />
+        </TabsContent>
+        <TabsContent value="comissoes-usuario" className="mt-4 space-y-6">
+          <RegrasAbas />
         </TabsContent>
       </Tabs>
     </div>
