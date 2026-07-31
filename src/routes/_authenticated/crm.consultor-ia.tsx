@@ -461,6 +461,14 @@ function ConsultorIaPage() {
                           className={`size-3.5 ${m.avaliacao === "nao_util" ? "text-destructive" : "text-muted-foreground"}`}
                         />
                       </Button>
+                      <EbookFaqButton
+                        pergunta={
+                          [...lista.slice(0, lista.findIndex((x) => x.id === m.id))]
+                            .reverse()
+                            .find((x) => x.papel === "usuario")?.conteudo ?? m.conteudo
+                        }
+                        resposta={m.conteudo}
+                      />
                       {m.sem_resposta ? (
                         <Button
                           size="sm"
@@ -477,6 +485,7 @@ function ConsultorIaPage() {
                           Sugerir conteúdo para a base
                         </Button>
                       ) : null}
+
                     </div>
                   </div>
                 </div>
