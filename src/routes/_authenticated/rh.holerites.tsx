@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { gerarHoleritePdf } from "@/lib/rh/pdf-lazy";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -43,7 +44,6 @@ import {
   type RhHolerite,
 } from "@/lib/rh/submodulos.functions";
 import { listarItensFolha, listarAjustes } from "@/lib/rh/folha.functions";
-import { gerarHoleritePdf } from "@/lib/rh/holerite-pdf";
 import { HoleriteBuilderDialog } from "@/components/rh/holerite-builder-dialog";
 import { formatBRL } from "@/lib/financeiro/format";
 
@@ -160,7 +160,7 @@ function Pagina() {
       const prof = await supabase.from("profiles").select("correspondente_id").eq("id", user.id).maybeSingle();
       const cid = prof.data?.correspondente_id as string | undefined;
       if (!cid) throw new Error("Correspondente não encontrado.");
-      const { blob, filename } = gerarHoleritePdf({
+      const { blob, filename } = await gerarHoleritePdf({
         competencia: { mes: row.mes, ano: row.ano },
         funcionario: {
           nome: it.funcionario_nome,

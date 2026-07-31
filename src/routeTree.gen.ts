@@ -71,11 +71,9 @@ import { Route as AuthenticatedRelatoriosComissoesRouteImport } from './routes/_
 import { Route as AuthenticatedRelatoriosComerciaisRouteImport } from './routes/_authenticated/relatorios.comerciais'
 import { Route as AuthenticatedRelatoriosClientesRouteImport } from './routes/_authenticated/relatorios.clientes'
 import { Route as AuthenticatedRelatoriosAppClienteRouteImport } from './routes/_authenticated/relatorios.app-cliente'
-import { Route as AuthenticatedOperacionalTarefasRouteImport } from './routes/_authenticated/operacional.tarefas'
 import { Route as AuthenticatedOperacionalSimulacoesRouteImport } from './routes/_authenticated/operacional.simulacoes'
 import { Route as AuthenticatedOperacionalPropostasRouteImport } from './routes/_authenticated/operacional.propostas'
 import { Route as AuthenticatedOperacionalPainelRouteImport } from './routes/_authenticated/operacional.painel'
-import { Route as AuthenticatedOperacionalDemandasRouteImport } from './routes/_authenticated/operacional.demandas'
 import { Route as AuthenticatedOperacionalChatsRouteImport } from './routes/_authenticated/operacional.chats'
 import { Route as AuthenticatedFormulariosBancoRouteImport } from './routes/_authenticated/formularios.$banco'
 import { Route as AuthenticatedFinanceiroPainelRouteImport } from './routes/_authenticated/financeiro.painel'
@@ -100,14 +98,12 @@ import { Route as AuthenticatedAdminPessoasRouteImport } from './routes/_authent
 import { Route as AuthenticatedAdminParametrosRouteImport } from './routes/_authenticated/admin.parametros'
 import { Route as AuthenticatedAdminNotificacoesRouteImport } from './routes/_authenticated/admin.notificacoes'
 import { Route as AuthenticatedAdminIntegracoesRouteImport } from './routes/_authenticated/admin.integracoes'
-import { Route as AuthenticatedAdminConsultorIaBaseRouteImport } from './routes/_authenticated/admin.consultor-ia-base'
 import { Route as AuthenticatedAdminBancosRouteImport } from './routes/_authenticated/admin.bancos'
 import { Route as AuthenticatedAdminBackupRouteImport } from './routes/_authenticated/admin.backup'
 import { Route as AuthenticatedAdminAuditoriaRouteImport } from './routes/_authenticated/admin.auditoria'
 import { Route as AuthenticatedAdminApisIaRouteImport } from './routes/_authenticated/admin.apis-ia'
 import { Route as AuthenticatedAdminComprasIndexRouteImport } from './routes/_authenticated/admin.compras.index'
 import { Route as AuthenticatedRhFuncionariosNovoRouteImport } from './routes/_authenticated/rh.funcionarios_.novo'
-import { Route as AuthenticatedRhFuncionariosIdRouteImport } from './routes/_authenticated/rh.funcionarios_.$id'
 import { Route as AuthenticatedOperacionalTarefasKanbanRouteImport } from './routes/_authenticated/operacional.tarefas_.kanban'
 import { Route as AuthenticatedOperacionalTarefasCalendarioRouteImport } from './routes/_authenticated/operacional.tarefas_.calendario'
 import { Route as AuthenticatedOperacionalSimulacoesNovaRouteImport } from './routes/_authenticated/operacional.simulacoes_.nova'
@@ -469,12 +465,6 @@ const AuthenticatedRelatoriosAppClienteRoute =
     path: '/app-cliente',
     getParentRoute: () => AuthenticatedRelatoriosRoute,
   } as any)
-const AuthenticatedOperacionalTarefasRoute =
-  AuthenticatedOperacionalTarefasRouteImport.update({
-    id: '/operacional/tarefas',
-    path: '/operacional/tarefas',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
 const AuthenticatedOperacionalSimulacoesRoute =
   AuthenticatedOperacionalSimulacoesRouteImport.update({
     id: '/operacional/simulacoes',
@@ -491,12 +481,6 @@ const AuthenticatedOperacionalPainelRoute =
   AuthenticatedOperacionalPainelRouteImport.update({
     id: '/operacional/painel',
     path: '/operacional/painel',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedOperacionalDemandasRoute =
-  AuthenticatedOperacionalDemandasRouteImport.update({
-    id: '/operacional/demandas',
-    path: '/operacional/demandas',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedOperacionalChatsRoute =
@@ -640,12 +624,6 @@ const AuthenticatedAdminIntegracoesRoute =
     path: '/admin/integracoes',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedAdminConsultorIaBaseRoute =
-  AuthenticatedAdminConsultorIaBaseRouteImport.update({
-    id: '/admin/consultor-ia-base',
-    path: '/admin/consultor-ia-base',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
 const AuthenticatedAdminBancosRoute =
   AuthenticatedAdminBancosRouteImport.update({
     id: '/admin/bancos',
@@ -680,12 +658,6 @@ const AuthenticatedRhFuncionariosNovoRoute =
   AuthenticatedRhFuncionariosNovoRouteImport.update({
     id: '/rh/funcionarios_/novo',
     path: '/rh/funcionarios/novo',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedRhFuncionariosIdRoute =
-  AuthenticatedRhFuncionariosIdRouteImport.update({
-    id: '/rh/funcionarios_/$id',
-    path: '/rh/funcionarios/$id',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedOperacionalTarefasKanbanRoute =
@@ -815,7 +787,6 @@ export interface FileRoutesByFullPath {
   '/admin/auditoria': typeof AuthenticatedAdminAuditoriaRoute
   '/admin/backup': typeof AuthenticatedAdminBackupRoute
   '/admin/bancos': typeof AuthenticatedAdminBancosRoute
-  '/admin/consultor-ia-base': typeof AuthenticatedAdminConsultorIaBaseRoute
   '/admin/integracoes': typeof AuthenticatedAdminIntegracoesRoute
   '/admin/notificacoes': typeof AuthenticatedAdminNotificacoesRoute
   '/admin/parametros': typeof AuthenticatedAdminParametrosRoute
@@ -840,11 +811,9 @@ export interface FileRoutesByFullPath {
   '/financeiro/painel': typeof AuthenticatedFinanceiroPainelRoute
   '/formularios/$banco': typeof AuthenticatedFormulariosBancoRoute
   '/operacional/chats': typeof AuthenticatedOperacionalChatsRoute
-  '/operacional/demandas': typeof AuthenticatedOperacionalDemandasRoute
   '/operacional/painel': typeof AuthenticatedOperacionalPainelRoute
   '/operacional/propostas': typeof AuthenticatedOperacionalPropostasRoute
   '/operacional/simulacoes': typeof AuthenticatedOperacionalSimulacoesRoute
-  '/operacional/tarefas': typeof AuthenticatedOperacionalTarefasRoute
   '/relatorios/app-cliente': typeof AuthenticatedRelatoriosAppClienteRoute
   '/relatorios/clientes': typeof AuthenticatedRelatoriosClientesRoute
   '/relatorios/comerciais': typeof AuthenticatedRelatoriosComerciaisRoute
@@ -897,7 +866,6 @@ export interface FileRoutesByFullPath {
   '/operacional/simulacoes/nova': typeof AuthenticatedOperacionalSimulacoesNovaRoute
   '/operacional/tarefas/calendario': typeof AuthenticatedOperacionalTarefasCalendarioRoute
   '/operacional/tarefas/kanban': typeof AuthenticatedOperacionalTarefasKanbanRoute
-  '/rh/funcionarios/$id': typeof AuthenticatedRhFuncionariosIdRoute
   '/rh/funcionarios/novo': typeof AuthenticatedRhFuncionariosNovoRoute
   '/admin/compras/': typeof AuthenticatedAdminComprasIndexRoute
 }
@@ -929,7 +897,6 @@ export interface FileRoutesByTo {
   '/admin/auditoria': typeof AuthenticatedAdminAuditoriaRoute
   '/admin/backup': typeof AuthenticatedAdminBackupRoute
   '/admin/bancos': typeof AuthenticatedAdminBancosRoute
-  '/admin/consultor-ia-base': typeof AuthenticatedAdminConsultorIaBaseRoute
   '/admin/integracoes': typeof AuthenticatedAdminIntegracoesRoute
   '/admin/notificacoes': typeof AuthenticatedAdminNotificacoesRoute
   '/admin/parametros': typeof AuthenticatedAdminParametrosRoute
@@ -954,11 +921,9 @@ export interface FileRoutesByTo {
   '/financeiro/painel': typeof AuthenticatedFinanceiroPainelRoute
   '/formularios/$banco': typeof AuthenticatedFormulariosBancoRoute
   '/operacional/chats': typeof AuthenticatedOperacionalChatsRoute
-  '/operacional/demandas': typeof AuthenticatedOperacionalDemandasRoute
   '/operacional/painel': typeof AuthenticatedOperacionalPainelRoute
   '/operacional/propostas': typeof AuthenticatedOperacionalPropostasRoute
   '/operacional/simulacoes': typeof AuthenticatedOperacionalSimulacoesRoute
-  '/operacional/tarefas': typeof AuthenticatedOperacionalTarefasRoute
   '/relatorios/app-cliente': typeof AuthenticatedRelatoriosAppClienteRoute
   '/relatorios/clientes': typeof AuthenticatedRelatoriosClientesRoute
   '/relatorios/comerciais': typeof AuthenticatedRelatoriosComerciaisRoute
@@ -1011,7 +976,6 @@ export interface FileRoutesByTo {
   '/operacional/simulacoes/nova': typeof AuthenticatedOperacionalSimulacoesNovaRoute
   '/operacional/tarefas/calendario': typeof AuthenticatedOperacionalTarefasCalendarioRoute
   '/operacional/tarefas/kanban': typeof AuthenticatedOperacionalTarefasKanbanRoute
-  '/rh/funcionarios/$id': typeof AuthenticatedRhFuncionariosIdRoute
   '/rh/funcionarios/novo': typeof AuthenticatedRhFuncionariosNovoRoute
   '/admin/compras': typeof AuthenticatedAdminComprasIndexRoute
 }
@@ -1047,7 +1011,6 @@ export interface FileRoutesById {
   '/_authenticated/admin/auditoria': typeof AuthenticatedAdminAuditoriaRoute
   '/_authenticated/admin/backup': typeof AuthenticatedAdminBackupRoute
   '/_authenticated/admin/bancos': typeof AuthenticatedAdminBancosRoute
-  '/_authenticated/admin/consultor-ia-base': typeof AuthenticatedAdminConsultorIaBaseRoute
   '/_authenticated/admin/integracoes': typeof AuthenticatedAdminIntegracoesRoute
   '/_authenticated/admin/notificacoes': typeof AuthenticatedAdminNotificacoesRoute
   '/_authenticated/admin/parametros': typeof AuthenticatedAdminParametrosRoute
@@ -1072,11 +1035,9 @@ export interface FileRoutesById {
   '/_authenticated/financeiro/painel': typeof AuthenticatedFinanceiroPainelRoute
   '/_authenticated/formularios/$banco': typeof AuthenticatedFormulariosBancoRoute
   '/_authenticated/operacional/chats': typeof AuthenticatedOperacionalChatsRoute
-  '/_authenticated/operacional/demandas': typeof AuthenticatedOperacionalDemandasRoute
   '/_authenticated/operacional/painel': typeof AuthenticatedOperacionalPainelRoute
   '/_authenticated/operacional/propostas': typeof AuthenticatedOperacionalPropostasRoute
   '/_authenticated/operacional/simulacoes': typeof AuthenticatedOperacionalSimulacoesRoute
-  '/_authenticated/operacional/tarefas': typeof AuthenticatedOperacionalTarefasRoute
   '/_authenticated/relatorios/app-cliente': typeof AuthenticatedRelatoriosAppClienteRoute
   '/_authenticated/relatorios/clientes': typeof AuthenticatedRelatoriosClientesRoute
   '/_authenticated/relatorios/comerciais': typeof AuthenticatedRelatoriosComerciaisRoute
@@ -1129,7 +1090,6 @@ export interface FileRoutesById {
   '/_authenticated/operacional/simulacoes_/nova': typeof AuthenticatedOperacionalSimulacoesNovaRoute
   '/_authenticated/operacional/tarefas_/calendario': typeof AuthenticatedOperacionalTarefasCalendarioRoute
   '/_authenticated/operacional/tarefas_/kanban': typeof AuthenticatedOperacionalTarefasKanbanRoute
-  '/_authenticated/rh/funcionarios_/$id': typeof AuthenticatedRhFuncionariosIdRoute
   '/_authenticated/rh/funcionarios_/novo': typeof AuthenticatedRhFuncionariosNovoRoute
   '/_authenticated/admin/compras/': typeof AuthenticatedAdminComprasIndexRoute
 }
@@ -1165,7 +1125,6 @@ export interface FileRouteTypes {
     | '/admin/auditoria'
     | '/admin/backup'
     | '/admin/bancos'
-    | '/admin/consultor-ia-base'
     | '/admin/integracoes'
     | '/admin/notificacoes'
     | '/admin/parametros'
@@ -1190,11 +1149,9 @@ export interface FileRouteTypes {
     | '/financeiro/painel'
     | '/formularios/$banco'
     | '/operacional/chats'
-    | '/operacional/demandas'
     | '/operacional/painel'
     | '/operacional/propostas'
     | '/operacional/simulacoes'
-    | '/operacional/tarefas'
     | '/relatorios/app-cliente'
     | '/relatorios/clientes'
     | '/relatorios/comerciais'
@@ -1247,7 +1204,6 @@ export interface FileRouteTypes {
     | '/operacional/simulacoes/nova'
     | '/operacional/tarefas/calendario'
     | '/operacional/tarefas/kanban'
-    | '/rh/funcionarios/$id'
     | '/rh/funcionarios/novo'
     | '/admin/compras/'
   fileRoutesByTo: FileRoutesByTo
@@ -1279,7 +1235,6 @@ export interface FileRouteTypes {
     | '/admin/auditoria'
     | '/admin/backup'
     | '/admin/bancos'
-    | '/admin/consultor-ia-base'
     | '/admin/integracoes'
     | '/admin/notificacoes'
     | '/admin/parametros'
@@ -1304,11 +1259,9 @@ export interface FileRouteTypes {
     | '/financeiro/painel'
     | '/formularios/$banco'
     | '/operacional/chats'
-    | '/operacional/demandas'
     | '/operacional/painel'
     | '/operacional/propostas'
     | '/operacional/simulacoes'
-    | '/operacional/tarefas'
     | '/relatorios/app-cliente'
     | '/relatorios/clientes'
     | '/relatorios/comerciais'
@@ -1361,7 +1314,6 @@ export interface FileRouteTypes {
     | '/operacional/simulacoes/nova'
     | '/operacional/tarefas/calendario'
     | '/operacional/tarefas/kanban'
-    | '/rh/funcionarios/$id'
     | '/rh/funcionarios/novo'
     | '/admin/compras'
   id:
@@ -1396,7 +1348,6 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/auditoria'
     | '/_authenticated/admin/backup'
     | '/_authenticated/admin/bancos'
-    | '/_authenticated/admin/consultor-ia-base'
     | '/_authenticated/admin/integracoes'
     | '/_authenticated/admin/notificacoes'
     | '/_authenticated/admin/parametros'
@@ -1421,11 +1372,9 @@ export interface FileRouteTypes {
     | '/_authenticated/financeiro/painel'
     | '/_authenticated/formularios/$banco'
     | '/_authenticated/operacional/chats'
-    | '/_authenticated/operacional/demandas'
     | '/_authenticated/operacional/painel'
     | '/_authenticated/operacional/propostas'
     | '/_authenticated/operacional/simulacoes'
-    | '/_authenticated/operacional/tarefas'
     | '/_authenticated/relatorios/app-cliente'
     | '/_authenticated/relatorios/clientes'
     | '/_authenticated/relatorios/comerciais'
@@ -1478,7 +1427,6 @@ export interface FileRouteTypes {
     | '/_authenticated/operacional/simulacoes_/nova'
     | '/_authenticated/operacional/tarefas_/calendario'
     | '/_authenticated/operacional/tarefas_/kanban'
-    | '/_authenticated/rh/funcionarios_/$id'
     | '/_authenticated/rh/funcionarios_/novo'
     | '/_authenticated/admin/compras/'
   fileRoutesById: FileRoutesById
@@ -1932,13 +1880,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRelatoriosAppClienteRouteImport
       parentRoute: typeof AuthenticatedRelatoriosRoute
     }
-    '/_authenticated/operacional/tarefas': {
-      id: '/_authenticated/operacional/tarefas'
-      path: '/operacional/tarefas'
-      fullPath: '/operacional/tarefas'
-      preLoaderRoute: typeof AuthenticatedOperacionalTarefasRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/operacional/simulacoes': {
       id: '/_authenticated/operacional/simulacoes'
       path: '/operacional/simulacoes'
@@ -1958,13 +1899,6 @@ declare module '@tanstack/react-router' {
       path: '/operacional/painel'
       fullPath: '/operacional/painel'
       preLoaderRoute: typeof AuthenticatedOperacionalPainelRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/operacional/demandas': {
-      id: '/_authenticated/operacional/demandas'
-      path: '/operacional/demandas'
-      fullPath: '/operacional/demandas'
-      preLoaderRoute: typeof AuthenticatedOperacionalDemandasRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/operacional/chats': {
@@ -2135,13 +2069,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminIntegracoesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/admin/consultor-ia-base': {
-      id: '/_authenticated/admin/consultor-ia-base'
-      path: '/admin/consultor-ia-base'
-      fullPath: '/admin/consultor-ia-base'
-      preLoaderRoute: typeof AuthenticatedAdminConsultorIaBaseRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/admin/bancos': {
       id: '/_authenticated/admin/bancos'
       path: '/admin/bancos'
@@ -2182,13 +2109,6 @@ declare module '@tanstack/react-router' {
       path: '/rh/funcionarios/novo'
       fullPath: '/rh/funcionarios/novo'
       preLoaderRoute: typeof AuthenticatedRhFuncionariosNovoRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/rh/funcionarios_/$id': {
-      id: '/_authenticated/rh/funcionarios_/$id'
-      path: '/rh/funcionarios/$id'
-      fullPath: '/rh/funcionarios/$id'
-      preLoaderRoute: typeof AuthenticatedRhFuncionariosIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/operacional/tarefas_/kanban': {
@@ -2425,7 +2345,6 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminAuditoriaRoute: typeof AuthenticatedAdminAuditoriaRoute
   AuthenticatedAdminBackupRoute: typeof AuthenticatedAdminBackupRoute
   AuthenticatedAdminBancosRoute: typeof AuthenticatedAdminBancosRoute
-  AuthenticatedAdminConsultorIaBaseRoute: typeof AuthenticatedAdminConsultorIaBaseRoute
   AuthenticatedAdminIntegracoesRoute: typeof AuthenticatedAdminIntegracoesRoute
   AuthenticatedAdminNotificacoesRoute: typeof AuthenticatedAdminNotificacoesRoute
   AuthenticatedAdminParametrosRoute: typeof AuthenticatedAdminParametrosRoute
@@ -2442,11 +2361,9 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedFinanceiroFluxoDeCaixaRoute: typeof AuthenticatedFinanceiroFluxoDeCaixaRoute
   AuthenticatedFinanceiroPainelRoute: typeof AuthenticatedFinanceiroPainelRoute
   AuthenticatedOperacionalChatsRoute: typeof AuthenticatedOperacionalChatsRoute
-  AuthenticatedOperacionalDemandasRoute: typeof AuthenticatedOperacionalDemandasRoute
   AuthenticatedOperacionalPainelRoute: typeof AuthenticatedOperacionalPainelRoute
   AuthenticatedOperacionalPropostasRoute: typeof AuthenticatedOperacionalPropostasRoute
   AuthenticatedOperacionalSimulacoesRoute: typeof AuthenticatedOperacionalSimulacoesRoute
-  AuthenticatedOperacionalTarefasRoute: typeof AuthenticatedOperacionalTarefasRoute
   AuthenticatedRhAdiantamentosRoute: typeof AuthenticatedRhAdiantamentosRoute
   AuthenticatedRhAlteracoesSalariaisRoute: typeof AuthenticatedRhAlteracoesSalariaisRoute
   AuthenticatedRhAtestadosRoute: typeof AuthenticatedRhAtestadosRoute
@@ -2475,7 +2392,6 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOperacionalSimulacoesNovaRoute: typeof AuthenticatedOperacionalSimulacoesNovaRoute
   AuthenticatedOperacionalTarefasCalendarioRoute: typeof AuthenticatedOperacionalTarefasCalendarioRoute
   AuthenticatedOperacionalTarefasKanbanRoute: typeof AuthenticatedOperacionalTarefasKanbanRoute
-  AuthenticatedRhFuncionariosIdRoute: typeof AuthenticatedRhFuncionariosIdRoute
   AuthenticatedRhFuncionariosNovoRoute: typeof AuthenticatedRhFuncionariosNovoRoute
   AuthenticatedAdminComprasIndexRoute: typeof AuthenticatedAdminComprasIndexRoute
 }
@@ -2493,8 +2409,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminAuditoriaRoute: AuthenticatedAdminAuditoriaRoute,
   AuthenticatedAdminBackupRoute: AuthenticatedAdminBackupRoute,
   AuthenticatedAdminBancosRoute: AuthenticatedAdminBancosRoute,
-  AuthenticatedAdminConsultorIaBaseRoute:
-    AuthenticatedAdminConsultorIaBaseRoute,
   AuthenticatedAdminIntegracoesRoute: AuthenticatedAdminIntegracoesRoute,
   AuthenticatedAdminNotificacoesRoute: AuthenticatedAdminNotificacoesRoute,
   AuthenticatedAdminParametrosRoute: AuthenticatedAdminParametrosRoute,
@@ -2516,13 +2430,11 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
     AuthenticatedFinanceiroFluxoDeCaixaRoute,
   AuthenticatedFinanceiroPainelRoute: AuthenticatedFinanceiroPainelRoute,
   AuthenticatedOperacionalChatsRoute: AuthenticatedOperacionalChatsRoute,
-  AuthenticatedOperacionalDemandasRoute: AuthenticatedOperacionalDemandasRoute,
   AuthenticatedOperacionalPainelRoute: AuthenticatedOperacionalPainelRoute,
   AuthenticatedOperacionalPropostasRoute:
     AuthenticatedOperacionalPropostasRoute,
   AuthenticatedOperacionalSimulacoesRoute:
     AuthenticatedOperacionalSimulacoesRoute,
-  AuthenticatedOperacionalTarefasRoute: AuthenticatedOperacionalTarefasRoute,
   AuthenticatedRhAdiantamentosRoute: AuthenticatedRhAdiantamentosRoute,
   AuthenticatedRhAlteracoesSalariaisRoute:
     AuthenticatedRhAlteracoesSalariaisRoute,
@@ -2564,7 +2476,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
     AuthenticatedOperacionalTarefasCalendarioRoute,
   AuthenticatedOperacionalTarefasKanbanRoute:
     AuthenticatedOperacionalTarefasKanbanRoute,
-  AuthenticatedRhFuncionariosIdRoute: AuthenticatedRhFuncionariosIdRoute,
   AuthenticatedRhFuncionariosNovoRoute: AuthenticatedRhFuncionariosNovoRoute,
   AuthenticatedAdminComprasIndexRoute: AuthenticatedAdminComprasIndexRoute,
 }

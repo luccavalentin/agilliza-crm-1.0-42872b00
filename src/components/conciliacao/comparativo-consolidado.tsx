@@ -16,8 +16,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { abaResumo, baixarXlsx } from "@/lib/conciliacao/exportar-xlsx";
-import { gerarPdfComparativo, type ModoSaida } from "@/lib/conciliacao/exportar-pdf";
+import { abaResumo } from "@/lib/conciliacao/xlsx-tipos";
+import {
+  baixarXlsx,
+  gerarPdfComparativo,
+  type ModoSaida,
+} from "@/lib/conciliacao/exportar-lazy";
 import { listarItensConciliacao } from "@/lib/conciliacao/conciliacao.functions";
 import { SITUACAO_LABEL } from "@/lib/conciliacao/bancos";
 import {
@@ -227,7 +231,7 @@ export function ComparativoConsolidado({
   }
 
   function exportarPdf(modo: ModoSaida) {
-    gerarPdfComparativo({
+    void gerarPdfComparativo({
       titulo: "Comparativo de dados — consolidado",
       descricao: `Relatórios dos bancos cruzados com as propostas do sistema · ${periodoLabel}`,
       meta: [

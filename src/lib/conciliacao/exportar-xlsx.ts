@@ -8,26 +8,10 @@
  */
 import ExcelJS from "exceljs";
 
-export type TipoColuna = "texto" | "brl" | "data" | "int" | "pct";
+import type { AbaXlsx, ColunaXlsx, TipoColuna } from "./xlsx-tipos";
 
-export interface ColunaXlsx {
-  header: string;
-  key: string;
-  tipo?: TipoColuna;
-  width?: number;
-  /** Soma/contagem exibida na linha de totais. */
-  total?: "sum" | "count";
-}
-
-export interface AbaXlsx {
-  nome: string;
-  colunas: ColunaXlsx[];
-  linhas: Record<string, unknown>[];
-  /** Subtítulo exibido acima da tabela. */
-  subtitulo?: string;
-  /** Aba de capa (pares rótulo → valor), sem cabeçalho de tabela colorido. */
-  capa?: boolean;
-}
+export { abaResumo } from "./xlsx-tipos";
+export type { AbaXlsx, ColunaXlsx, TipoColuna } from "./xlsx-tipos";
 
 // Paleta Agilliza (ARGB literal — XLSX não entende tokens CSS).
 const BRAND = "FF000F9F";
@@ -74,22 +58,6 @@ function largura(col: ColunaXlsx, linhas: Record<string, unknown>[]): number {
     return Math.max(max, v == null ? 0 : String(v).length);
   }, col.header.length);
   return Math.min(52, Math.max(col.tipo === "brl" ? 16 : 11, maior + 2));
-}
-
-/** Aba de capa/resumo com pares rótulo → valor. */
-export function abaResumo(
-  titulo: string,
-  itens: { rotulo: string; valor: string | number }[],
-): AbaXlsx {
-  return {
-    nome: "Resumo",
-    capa: true,
-    colunas: [
-      { header: titulo, key: "rotulo", width: 40 },
-      { header: "Valor", key: "valor", width: 28 },
-    ],
-    linhas: itens.map((i) => ({ rotulo: i.rotulo, valor: i.valor })),
-  };
 }
 
 function montarCapa(ws: ExcelJS.Worksheet, aba: AbaXlsx, titulo: string) {
