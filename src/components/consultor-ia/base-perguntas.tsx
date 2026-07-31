@@ -373,12 +373,14 @@ export function BasePerguntasRespondidas({
                 </div>
 
 
-                <CollapsibleContent className="border-t border-border/60 bg-muted/20 px-4 py-3">
-                  <Markdown conteudo={it.resposta} className="text-sm" />
+                <CollapsibleContent className="border-t border-border/60 bg-muted/20 px-3 py-3 sm:px-4">
+                  <div className="overflow-x-auto">
+                    <Markdown conteudo={it.resposta} className="text-sm" />
+                  </div>
                   {it.fontes.length > 0 ? (
                     <div className="mt-3 flex flex-wrap gap-1.5">
                       {it.fontes.map((f) => (
-                        <Badge key={f.id} variant="secondary" className="text-[10px]">
+                        <Badge key={f.id} variant="secondary" className="max-w-full truncate text-[10px]">
                           Fonte: {f.categoria} — {f.titulo}
                         </Badge>
                       ))}
@@ -389,7 +391,7 @@ export function BasePerguntasRespondidas({
                       <Button
                         size="sm"
                         variant="outline"
-                        className="h-8 text-[11.5px]"
+                        className="h-8 flex-1 text-[11.5px] sm:flex-none"
                         onClick={() => onReperguntar(it.pergunta)}
                       >
                         <Sparkles className="mr-1.5 size-3.5" /> Perguntar novamente
@@ -398,17 +400,23 @@ export function BasePerguntasRespondidas({
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="h-8 text-[11.5px]"
-                      onClick={() =>
-                        exportarBaseConhecimentoPdf({
-                          itens: [it],
-                          contexto: "Registro individual",
-                        })
-                      }
+                      className="h-8 flex-1 text-[11.5px] sm:flex-none"
+                      onClick={() => {
+                        try {
+                          exportarBaseConhecimentoPdf({
+                            itens: [it],
+                            contexto: "Artigo individual",
+                          });
+                          toast.success("PDF do artigo gerado.");
+                        } catch {
+                          toast.error("Não foi possível gerar o PDF.");
+                        }
+                      }}
                     >
-                      <FileDown className="mr-1.5 size-3.5" /> PDF deste item
+                      <FileDown className="mr-1.5 size-3.5" /> Baixar este artigo
                     </Button>
                   </div>
+
                 </CollapsibleContent>
               </Collapsible>
             );
