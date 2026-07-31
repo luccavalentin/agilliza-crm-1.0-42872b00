@@ -44,19 +44,132 @@ export const Route = createFileRoute("/_authenticated/financeiro/fluxo-de-caixa"
   ),
 });
 
-const tooltipStyle = {
-  background: "hsl(var(--card))",
-  border: "1px solid hsl(var(--border))",
-  borderRadius: 10,
-  fontSize: 12,
-};
-
 function formatCurto(v: number) {
   const abs = Math.abs(v);
   if (abs >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`;
   if (abs >= 1_000) return `${(v / 1_000).toFixed(0)}k`;
   return String(v);
 }
+
+const SERIES: Record<string, { rotulo: string; cor: string }> = {
+  entrada: { rotulo: "Entradas", cor: "var(--chart-3)" },
+  saida: { rotulo: "Saídas", cor: "var(--chart-5)" },
+  saldoAcum: { rotulo: "Saldo acumulado", cor: "var(--chart-1)" },
+  resultado: { rotulo: "Resultado líquido", cor: "var(--chart-2)" },
+};
+
+/** Tooltip do gráfico com tipografia tabular e cores por série. */
+function FluxoTooltip({ active, payload, label }: any) {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="min-w-[210px] rounded-xl border border-border/70 bg-card/95 p-3 shadow-xl backdrop-blur">
+      <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        {label}
+      </p>
+      <ul className="space-y-1.5">
+        {payload.map((p: any) => (
+          <li key={p.dataKey} className="flex items-center justify-between gap-4 text-xs">
+            <span className="flex items-center gap-2 text-muted-foreground">
+              <span
+                className="size-2.5 rounded-full"
+                style={{ background: SERIES[p.dataKey]?.cor ?? p.color }}
+              />
+              {SERIES[p.dataKey]?.rotulo ?? p.name}
+            </span>
+            <span className="font-mono font-semibold tabular-nums text-foreground">
+              {formatBRL(Number(p.value))}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+/** Legenda customizada em chips, no lugar da legenda padrão do Recharts. */
+function FluxoLegenda() {
+  return (
+    <div className="mb-3 flex flex-wrap items-center gap-2">
+      {Object.entries(SERIES).map(([k, s]) => (
+        <span
+          key={k}
+          className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-muted/40 px-2.5 py-1 text-[11px] font-medium text-muted-foreground"
+        >
+          <span className="size-2 rounded-full" style={{ background: s.cor }} />
+          {s.rotulo}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+/** Filtro por calendário: de X a X, com aplicar e limpar. */
+function FiltroPeriodo({
+  de,
+  ate,
+  onAplicar,
+  onLimpar,
+}: {
+  de: string;
+  ate: string;
+  onAplicar: (de: string, ate: string) => void;
+  onLimpar: () => void;
+}) {
+  const [rascDe, setRascDe] = useState(de);
+  const [rascAte, setRascAte] = useState(ate);
+  const ativo = !!(de || ate);
+
+  return (
+    <div className="flex flex-wrap items-end gap-2 rounded-xl border border-border/70 bg-card/70 p-2 shadow-sm">
+      <div className="flex items-center gap-2">
+        <CalendarRange className="size-4 shrink-0 text-muted-foreground" />
+        <div className="space-y-1">
+          <Label htmlFor="fluxo-de" className="text-[10px] uppercase tracking-wide text-muted-foreground">
+            De
+          </Label>
+          <Input
+            id="fluxo-de"
+            type="date"
+            className="h-9 w-[9.5rem]"
+            value={rascDe}
+            onChange={(e) => setRascDe(e.target.value)}
+          />
+        </div>
+        <div className="space-y-1">
+          <Label htmlFor="fluxo-ate" className="text-[10px] uppercase tracking-wide text-muted-foreground">
+            Até
+          </Label>
+          <Input
+            id="fluxo-ate"
+            type="date"
+            className="h-9 w-[9.5rem]"
+            value={rascAte}
+            onChange={(e) => setRascAte(e.target.value)}
+          />
+        </div>
+      </div>
+      <div className="flex items-center gap-1.5">
+        <Button size="sm" className="h-9" onClick={() => onAplicar(rascDe, rascAte)}>
+          Aplicar
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          className="h-9"
+          disabled={!ativo && !rascDe && !rascAte}
+          onClick={() => {
+            setRascDe("");
+            setRascAte("");
+            onLimpar();
+          }}
+        >
+          <X className="mr-1 size-3.5" /> Limpar
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 
 function Pagina() {
   const [gran, setGran] = useState<"dia" | "semana" | "mes">("mes");
