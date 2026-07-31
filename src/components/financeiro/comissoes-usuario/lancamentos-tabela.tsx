@@ -1,10 +1,20 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { CheckCircle2, XCircle, Loader2 } from "lucide-react";
+import {
+  CheckCircle2,
+  XCircle,
+  Loader2,
+  Pencil,
+  Trash2,
+  Wallet,
+  X,
+  ArrowUpCircle,
+} from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Table,
   TableBody,
@@ -25,9 +35,15 @@ import { BancoLogo } from "@/components/bancos/banco-logo";
 import {
   TIPOS_VINCULO_COMISSAO,
   cancelarComissaoUsuario,
+  excluirComissoesUsuario,
   listarComissoesUsuario,
   marcarComissaoUsuarioPaga,
+  marcarComissoesUsuarioPagas,
 } from "@/lib/financeiro/comissoes-usuario.functions";
+import {
+  ComissaoEditarDialog,
+  type ComissaoEditavel,
+} from "./comissao-editar-dialog";
 
 const brl = (n: number) =>
   n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -37,6 +53,7 @@ const statusBadge = (s: string) => {
   if (s === "cancelada") return <Badge variant="outline">Cancelada</Badge>;
   return <Badge className="bg-amber-500/15 text-amber-700">A pagar</Badge>;
 };
+
 
 export function LancamentosComissoesUsuario({
   usuarioId,
