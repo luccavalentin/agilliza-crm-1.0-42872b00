@@ -40,6 +40,7 @@ import {
   marcarComissaoUsuarioPaga,
   marcarComissoesUsuarioPagas,
 } from "@/lib/financeiro/comissoes-usuario.functions";
+import { RecalcularComissoesButton } from "./recalcular-button";
 import {
   ComissaoEditarDialog,
   type ComissaoEditavel,
@@ -170,6 +171,7 @@ export function LancamentosComissoesUsuario({
           </div>
 
           <div className="flex flex-wrap items-end gap-2">
+            <RecalcularComissoesButton className="h-9 py-0" />
             <div className="w-40">
               <Select value={status} onValueChange={setStatus}>
                 <SelectTrigger className="h-9">
