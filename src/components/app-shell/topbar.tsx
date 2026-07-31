@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { Menu, PanelLeftClose, PanelLeft, LogOut, UserRound, Lock, Bell } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,6 +21,8 @@ export interface ShellUser {
   id: string;
   nome: string | null;
   email: string | null;
+  /** Foto de perfil enviada pelo usuário (exibida em todo o sistema). */
+  foto_url?: string | null;
 }
 
 interface TopbarProps {
@@ -106,6 +108,9 @@ export function Topbar({
                 aria-label="Menu da conta"
               >
                 <Avatar className="h-8 w-8">
+                  {user.foto_url && (
+                    <AvatarImage src={user.foto_url} alt={user.nome ?? "Foto do usuário"} />
+                  )}
                   <AvatarFallback className="bg-primary text-xs text-primary-foreground">
                     {iniciais(user.nome, user.email)}
                   </AvatarFallback>

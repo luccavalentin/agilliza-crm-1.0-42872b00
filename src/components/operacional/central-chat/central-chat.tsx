@@ -151,7 +151,7 @@ export function CentralChatPage() {
         )}
         <NovaConversaDialog
           onCriado={(conv) =>
-            setSelecionado({ kind: "dm", conversaId: conv.id, nome: conv.nome })
+            setSelecionado({ kind: "dm", conversaId: conv.id, nome: conv.nome, foto: null })
           }
         />
       </div>
@@ -167,7 +167,7 @@ export function CentralChatPage() {
           <div className="space-y-2.5 border-b border-border/40 p-3">
             <IniciarDmInline
               onCriado={(conv) =>
-                setSelecionado({ kind: "dm", conversaId: conv.id, nome: conv.nome })
+                setSelecionado({ kind: "dm", conversaId: conv.id, nome: conv.nome, foto: null })
               }
             />
             <div className="relative">

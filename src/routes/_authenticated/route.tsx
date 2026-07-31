@@ -206,6 +206,7 @@ function InternalLayout() {
         id: profile?.id ?? "",
         nome: profile?.nome ?? null,
         email: profile?.email ?? null,
+        foto_url: profile?.foto_url ?? null,
       }}
       onSignOut={sair}
     >
