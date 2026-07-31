@@ -85,13 +85,33 @@ export const navInterno: NavGroup[] = [
         to: "/crm/chat",
         perm: { modulo: "crm.clientes" },
       },
-      { label: "Scan IA", icon: ScanLine, to: "/crm/scan-ia", perm: { modulo: "crm.scan_ia" } },
       {
-        label: "Consultor IA",
-        icon: Sparkles,
-        to: "/crm/consultor-ia",
+        label: "Scan IA",
+        icon: ScanLine,
+        to: "/crm/scan-ia",
         perm: { modulo: "crm.scan_ia" },
+        children: [
+          {
+            label: "Leitura de documentos",
+            icon: ScanLine,
+            to: "/crm/scan-ia",
+            perm: { modulo: "crm.scan_ia" },
+          },
+          {
+            label: "Consultor IA",
+            icon: Sparkles,
+            to: "/crm/consultor-ia",
+            perm: { modulo: "crm.scan_ia" },
+          },
+          {
+            label: "Base de Conhecimento",
+            icon: BookOpen,
+            to: "/crm/base-conhecimento",
+            perm: { modulo: "crm.scan_ia" },
+          },
+        ],
       },
+
       {
         label: "Documentos Gerais",
         icon: FolderTree,
