@@ -41,6 +41,7 @@ import {
   marcarComissoesUsuarioPagas,
 } from "@/lib/financeiro/comissoes-usuario.functions";
 import { RecalcularComissoesButton } from "./recalcular-button";
+import { ExportarFinanceiro } from "@/components/financeiro/exportar-financeiro";
 import {
   ComissaoEditarDialog,
   type ComissaoEditavel,
@@ -150,6 +151,29 @@ export function LancamentosComissoesUsuario({
   }, [rows]);
 
 
+  const exportColunas = [
+    { key: "proposta", label: "Proposta" },
+    { key: "cliente", label: "Cliente" },
+    { key: "usuario", label: "Usuário" },
+    { key: "vinculo", label: "Vínculo" },
+    { key: "banco", label: "Banco" },
+    { key: "base", label: "Base", align: "right" as const, format: "brl" as const, footer: "sum" as const },
+    { key: "percentual", label: "%", align: "right" as const, format: "pct" as const },
+    { key: "comissao", label: "Comissão", align: "right" as const, format: "brl" as const, footer: "sum" as const },
+    { key: "status", label: "Status" },
+  ];
+  const exportLinhas = (rows ?? []).map((r) => ({
+    proposta: r.numero_proposta ?? "—",
+    cliente: r.nome_cliente ?? "—",
+    usuario: r.usuario_nome ?? "—",
+    vinculo: r.tipo_vinculo.replace("_", " "),
+    banco: r.banco_nome ?? "—",
+    base: Number(r.valor_base) || 0,
+    percentual: Number(r.percentual) || 0,
+    comissao: Number(r.valor_comissao) || 0,
+    status: r.status === "a_pagar" ? "A pagar" : r.status === "paga" ? "Paga" : "Cancelada",
+  }));
+
   return (
     <Card>
       <CardHeader>
@@ -172,6 +196,22 @@ export function LancamentosComissoesUsuario({
 
           <div className="flex flex-wrap items-end gap-2">
             <RecalcularComissoesButton className="h-9 py-0" />
+            <ExportarFinanceiro
+              titulo="Lançamentos de comissão"
+              descricao="Comissões por usuário geradas pelas regras vigentes."
+              meta={[
+                `Status: ${status === "todos" ? "Todos" : status}`,
+                `Vínculo: ${tipoVinculo === "todos" ? "Todos" : tipoVinculo}`,
+                de || ate ? `Período: ${de || "início"} até ${ate || "hoje"}` : "Período: completo",
+              ]}
+              kpis={[
+                { label: "A pagar", valor: brl(totais.aPagar), hint: `${totais.qtdAPagar} lançamento(s)`, tone: "warning" as const },
+                { label: "Pago", valor: brl(totais.paga), hint: `${totais.qtdPaga} lançamento(s)`, tone: "success" as const },
+                { label: "Total", valor: brl(totais.total), hint: `${totais.qtdTotal} lançamento(s)`, tone: "brand" as const },
+              ]}
+              columns={exportColunas}
+              rows={exportLinhas}
+            />
             <div className="w-40">
               <Select value={status} onValueChange={setStatus}>
                 <SelectTrigger className="h-9">

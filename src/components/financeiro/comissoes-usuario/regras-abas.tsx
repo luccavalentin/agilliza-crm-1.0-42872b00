@@ -37,6 +37,7 @@ import {
 } from "@/lib/financeiro/comissoes-usuario.functions";
 import { RegraComissaoUsuarioForm } from "./regra-form";
 import { RecalcularComissoesButton } from "./recalcular-button";
+import { ExportarFinanceiro } from "@/components/financeiro/exportar-financeiro";
 
 const rotulo = (arr: readonly { valor: string; rotulo: string }[], v: string) =>
   arr.find((i) => i.valor === v)?.rotulo ?? v;
@@ -96,6 +97,36 @@ export function RegrasAbas({
           </p>
         </div>
         <div className="flex items-center gap-2">
+        <ExportarFinanceiro
+          titulo="Regras de comissão por usuário"
+          descricao="Percentuais e bases de cálculo configurados por vínculo."
+          meta={[`Vínculo: ${rotulo(TIPOS_VINCULO_COMISSAO, tipo)}`]}
+          columns={[
+            { key: "usuario", label: "Usuário" },
+            { key: "vinculo", label: "Vínculo" },
+            { key: "banco", label: "Banco" },
+            { key: "gatilho", label: "Gatilho" },
+            { key: "base", label: "Base de cálculo" },
+            { key: "percentual", label: "Percentual", align: "right" as const, format: "pct" as const },
+            { key: "a_pagar", label: "A pagar", align: "right" as const, format: "brl" as const, footer: "sum" as const },
+            { key: "pago", label: "Pago", align: "right" as const, format: "brl" as const, footer: "sum" as const },
+            { key: "ativo", label: "Situação" },
+          ]}
+          rows={(regras ?? []).map((r: any) => {
+            const res = resumoDe(r.id);
+            return {
+              usuario: r.usuario_nome ?? "—",
+              vinculo: rotulo(TIPOS_VINCULO_COMISSAO, r.tipo_vinculo),
+              banco: r.banco_nome ?? "Todos",
+              gatilho: rotuloGatilho(r.gatilho),
+              base: rotulo(BASES_CALCULO, r.base_calculo),
+              percentual: Number(r.percentual) || 0,
+              a_pagar: Number(res.a_pagar) || 0,
+              pago: Number(res.paga) || 0,
+              ativo: r.ativo ? "Ativa" : "Inativa",
+            };
+          })}
+        />
         <RecalcularComissoesButton />
         <Button onClick={() => setDialog({ aberto: true, regra: null })} size="sm">
           <Plus className="mr-2 size-4" />
