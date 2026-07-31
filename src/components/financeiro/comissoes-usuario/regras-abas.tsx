@@ -159,8 +159,11 @@ export function RegrasAbas({
                         <TableHead className="text-right">%</TableHead>
                         <TableHead>Banco</TableHead>
                         <TableHead>Produto</TableHead>
+                        <TableHead className="text-right">A pagar</TableHead>
+                        <TableHead className="text-right">Pago</TableHead>
                         <TableHead className="text-center">Ativo</TableHead>
                         <TableHead className="text-right">Ações</TableHead>
+
                       </TableRow>
                     </TableHeader>
                     <TableBody>
