@@ -3,7 +3,7 @@ import { useState, useMemo } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ShoppingCart, Plus, Search } from "lucide-react";
+import { ShoppingCart, Plus, Search, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,9 +26,17 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { ConfirmDelete } from "@/components/shared/confirm-delete";
 import { assertModuloPermitido } from "@/lib/route-guards";
 import { getMinhaSessao } from "@/lib/session.functions";
-import { listarCompras, criarCompra } from "@/lib/admin/compras.functions";
+import {
+  listarCompras,
+  criarCompra,
+  editarCompra,
+  excluirCompra,
+  type CompraLinha,
+} from "@/lib/admin/compras.functions";
+
 
 export const Route = createFileRoute("/_authenticated/admin/compras/pedidos")({
   head: () => ({ meta: [{ title: "Pedidos de Compras — Agilliza" }] }),
