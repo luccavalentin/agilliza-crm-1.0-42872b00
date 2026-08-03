@@ -33,13 +33,13 @@ export function UploadAvatar({ currentUrl, onUploadComplete, userId }: UploadAva
       const filePath = `avatars/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
-        .from("configuracoes")
+        .from("avatars")
         .upload(filePath, file);
 
       if (uploadError) throw uploadError;
 
       const { data: { publicUrl } } = supabase.storage
-        .from("configuracoes")
+        .from("avatars")
         .getPublicUrl(filePath);
 
       onUploadComplete(publicUrl);
