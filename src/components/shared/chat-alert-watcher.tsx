@@ -7,6 +7,7 @@ import {
 import {
   abrirChatFlutuante,
   abrirDemandaChatFlutuante,
+  abrirDmFlutuante,
 } from "@/components/shared/floating-chat-store";
 
 interface Props {
@@ -64,7 +65,7 @@ export function ChatAlertWatcher({ meuId }: Props) {
           abrirChatFlutuante(
             row.cliente_id,
             { nome },
-            { minimized: true },
+            { minimized: false },
           );
         },
       )
@@ -116,8 +117,55 @@ export function ChatAlertWatcher({ meuId }: Props) {
           abrirDemandaChatFlutuante(
             row.demanda_id,
             { numero, titulo, interlocutorNome, interlocutorFoto },
-            { minimized: true },
+            { minimized: false },
           );
+        },
+      )
+      .subscribe();
+
+    // Mensagens diretas entre usuários internos (DM): abrem a janela do chat
+    // na tela imediatamente, para o colega poder responder sem procurar o menu.
+    const canalDm = supabase
+      .channel("chat:alerta-global-dm")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "dm_mensagens" },
+        async (payload) => {
+          const row = payload.new as {
+            id?: string;
+            conversa_id?: string | null;
+            autor_id?: string | null;
+          };
+          if (!row?.id || !row.conversa_id) return;
+          if (meuId && row.autor_id === meuId) return;
+          if (vistos.current.has(row.id)) return;
+          vistos.current.add(row.id);
+
+          // Só alerta se eu participo da conversa (RLS já restringe, mas o
+          // canal pode entregar eventos de outras conversas visíveis).
+          if (meuId) {
+            const { data: sou } = await supabase
+              .from("dm_participantes")
+              .select("user_id")
+              .eq("conversa_id", row.conversa_id)
+              .eq("user_id", meuId)
+              .maybeSingle();
+            if (!sou) return;
+          }
+
+          const { data: autor } = row.autor_id
+            ? await supabase
+                .from("profiles")
+                .select("nome")
+                .eq("id", row.autor_id)
+                .maybeSingle()
+            : { data: null };
+          const nome = (autor?.nome as string | null) ?? "Colega";
+          signalIncomingChat(row.id, {
+            titulo: `Nova mensagem · ${nome}`,
+            corpo: "Você recebeu uma mensagem direta.",
+          });
+          abrirDmFlutuante(row.conversa_id, { nome }, { minimized: false });
         },
       )
       .subscribe();
@@ -125,6 +173,7 @@ export function ChatAlertWatcher({ meuId }: Props) {
     return () => {
       supabase.removeChannel(canalCliente);
       supabase.removeChannel(canalDemanda);
+      supabase.removeChannel(canalDm);
     };
   }, [meuId]);
 
