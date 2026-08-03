@@ -773,16 +773,16 @@ export const runReport = createServerFn({ method: "POST" })
         ),
       ];
       const nomes = await nomesUsuarios(respIds);
-      const userMap = new Map<string, { sims: number; props: number; contratos: number; valor: number }>();
+      const userMap = new Map<string, { sims: number; props: number; contratos: number; valor: number; comissao: number; repasse: number }>();
       sims.forEach((s) => {
         const k = s.usuario_responsavel_id ?? "—";
-        const cur = userMap.get(k) ?? { sims: 0, props: 0, contratos: 0, valor: 0 };
+        const cur = userMap.get(k) ?? { sims: 0, props: 0, contratos: 0, valor: 0, comissao: 0, repasse: 0 };
         cur.sims += 1;
         userMap.set(k, cur);
       });
       enviadas.forEach((p) => {
         const k = p.usuario_responsavel_id ?? "—";
-        const cur = userMap.get(k) ?? { sims: 0, props: 0, contratos: 0, valor: 0 };
+        const cur = userMap.get(k) ?? { sims: 0, props: 0, contratos: 0, valor: 0, comissao: 0, repasse: 0 };
         cur.props += 1;
         if (["contrato_emitido", "registrado"].includes(p.status)) {
           cur.contratos += 1;
@@ -790,6 +790,21 @@ export const runReport = createServerFn({ method: "POST" })
         }
         userMap.set(k, cur);
       });
+      coms.forEach((c: any) => {
+        const k = c.usuario_responsavel_id ?? "—";
+        const cur = userMap.get(k) ?? { sims: 0, props: 0, contratos: 0, valor: 0, comissao: 0, repasse: 0 };
+        cur.comissao += c.valor_bruto ?? 0;
+        userMap.set(k, cur);
+      });
+      repasses.forEach((r: any) => {
+        const k = r.usuario_id ?? "—";
+        const cur = userMap.get(k) ?? { sims: 0, props: 0, contratos: 0, valor: 0, comissao: 0, repasse: 0 };
+        cur.repasse += r.valor_previsto ?? 0;
+        userMap.set(k, cur);
+      });
+
+      const totalComissao = coms.reduce((acc, c: any) => acc + (c.valor_bruto ?? 0), 0);
+      const totalRepasse = repasses.reduce((acc, r: any) => acc + (r.valor_previsto ?? 0), 0);
       return {
         titulo: "Relatório comercial (Produção e Comissões)",
         descricao: "Desempenho de produção e resumo de ganhos por período e responsável.",
@@ -801,6 +816,8 @@ export const runReport = createServerFn({ method: "POST" })
           { label: "Ticket médio", valor: brl(ticket), tone: "brand" },
           { label: "Volume contratado", valor: brl(valor), tone: "success" },
           { label: "Contratos", valor: int(contratos.length), tone: "success" },
+          { label: "Total Comissões", valor: brl(totalComissao), tone: "brand" },
+          { label: "Prev. Repasses", valor: brl(totalRepasse), tone: "neutral" },
           { label: "Banco líder", valor: bancoLider, tone: "neutral" },
         ],
         charts: [
@@ -819,7 +836,9 @@ export const runReport = createServerFn({ method: "POST" })
           { key: "sims", label: "Simulações", align: "right", footer: "sum", format: "int" },
           { key: "props", label: "Propostas", align: "right", footer: "sum", format: "int" },
           { key: "contratos", label: "Contratos", align: "right", footer: "sum", format: "int" },
-          { key: "valor", label: "Valor contratado", align: "right", footer: "sum", format: "brl" },
+          { key: "valor", label: "Volume Contratado", align: "right", footer: "sum", format: "brl" },
+          { key: "comissao", label: "Comissões", align: "right", footer: "sum", format: "brl" },
+          { key: "repasse", label: "Repasses", align: "right", footer: "sum", format: "brl" },
         ],
         rows: [...userMap.entries()]
           .sort((a, b) => b[1].valor - a[1].valor)
@@ -830,6 +849,8 @@ export const runReport = createServerFn({ method: "POST" })
             props: v.props,
             contratos: v.contratos,
             valor: v.valor,
+            comissao: v.comissao,
+            repasse: v.repasse,
           })),
         filtrosDisponiveis: {
           bancos: opcoesOperacionais.bancos,
