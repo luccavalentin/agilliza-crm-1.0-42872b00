@@ -14,6 +14,7 @@ import { getMinhaSessao, atualizarMeuPerfil, atualizarMeuEmail } from "@/lib/ses
 import { supabase } from "@/integrations/supabase/client";
 import { AdminHero } from "@/components/admin/admin-hero";
 import { ChatSoundSetting } from "@/components/shared/chat-sound-setting";
+import { otimizarImagem } from "@/lib/imagem";
 
 // URL assinada de longa duração (~10 anos) para exibir a foto de um bucket privado.
 const URL_EXPIRACAO_SEGUNDOS = 60 * 60 * 24 * 365 * 10;
@@ -84,17 +85,18 @@ function Pagina() {
       toast.error("Selecione um arquivo de imagem.");
       return;
     }
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("A imagem deve ter no máximo 5 MB.");
-      return;
-    }
     setEnviandoFoto(true);
     try {
-      const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+      const imagem = await otimizarImagem(file);
+      const ext = imagem.name.split(".").pop()?.toLowerCase() || "webp";
       const path = `${userId}/avatar-${Date.now()}.${ext}`;
       const { error: upErr } = await supabase.storage
         .from("avatars")
-        .upload(path, file, { upsert: true, contentType: file.type });
+        .upload(path, imagem, {
+          upsert: true,
+          contentType: imagem.type,
+          cacheControl: "31536000",
+        });
       if (upErr) throw upErr;
       const { data: signed, error: signErr } = await supabase.storage
         .from("avatars")

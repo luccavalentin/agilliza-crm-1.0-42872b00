@@ -3,6 +3,7 @@ import { User, Upload, Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { otimizarImagem } from "@/lib/imagem";
 
 interface UploadAvatarProps {
   currentUrl: string | null;
@@ -26,26 +27,30 @@ export function UploadAvatar({ currentUrl, onUploadComplete, userId }: UploadAva
 
     try {
       setIsUploading(true);
-      
-      const fileExt = file.name.split(".").pop();
-      const fileName = `${userId || Math.random()}-${Math.random()}.${fileExt}`;
-      const filePath = fileName; // No bucket 'avatars', colocamos na raiz do bucket
+      const imagem = await otimizarImagem(file);
+      const fileExt = imagem.name.split(".").pop() || "webp";
+      const fileName = `${userId || crypto.randomUUID()}-${crypto.randomUUID()}.${fileExt}`;
+      const filePath = fileName;
 
       const { error: uploadError } = await supabase.storage
         .from("avatars")
-        .upload(filePath, file);
+        .upload(filePath, imagem, { contentType: imagem.type, cacheControl: "31536000" });
 
       if (uploadError) throw uploadError;
 
-      const { data: { publicUrl } } = supabase.storage
+      const { data: signed, error: signError } = await supabase.storage
         .from("avatars")
-        .getPublicUrl(filePath);
+        .createSignedUrl(filePath, 60 * 60 * 24 * 365 * 10);
+      if (signError || !signed?.signedUrl) throw signError ?? new Error("Falha ao carregar a foto.");
 
-      onUploadComplete(publicUrl);
+      onUploadComplete(signed.signedUrl);
       toast.success("Foto carregada com sucesso!");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Erro no upload:", error);
-      toast.error("Erro ao fazer upload da imagem: " + (error.message || "Tente novamente"));
+      toast.error(
+        "Erro ao fazer upload da imagem: " +
+          (error instanceof Error ? error.message : "Tente novamente"),
+      );
     } finally {
       setIsUploading(false);
       // Reset input
@@ -57,7 +62,7 @@ export function UploadAvatar({ currentUrl, onUploadComplete, userId }: UploadAva
     <div className="flex flex-col items-center gap-3">
       <div className="group relative h-32 w-32 overflow-hidden rounded-full border-4 border-background bg-muted shadow-xl ring-2 ring-primary/10 transition-all hover:ring-primary/30">
         {currentUrl ? (
-          <img src={currentUrl} alt="Avatar" className="h-full w-full object-cover transition-transform group-hover:scale-110" />
+          <img src={currentUrl} alt="Avatar" loading="lazy" decoding="async" className="h-full w-full object-cover transition-transform group-hover:scale-110" />
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-primary/5 text-primary/20">
             <User className="h-16 w-16" />

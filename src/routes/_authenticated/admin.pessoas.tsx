@@ -277,6 +277,8 @@ function PessoasPage() {
                                   <img
                                     src={p.avatar_url}
                                     alt={p.nome ?? ""}
+                                    loading="lazy"
+                                    decoding="async"
                                     className="h-full w-full object-cover"
                                   />
                                 ) : (
