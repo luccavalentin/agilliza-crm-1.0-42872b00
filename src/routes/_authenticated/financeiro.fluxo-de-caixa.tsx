@@ -256,6 +256,72 @@ function Pagina() {
   const pontos = data?.pontos ?? [];
   const vazio = !isLoading && pontos.length === 0;
 
+  // Detalhamento dos cards (clicáveis).
+  const [detalhe, setDetalhe] = useState<string | null>(null);
+  const DETALHES: Record<
+    string,
+    { titulo: string; descricao: string; linhas: { rotulo: string; sub?: string; valor: number }[] }
+  > = {
+    saldoRealizado: {
+      titulo: "Saldo realizado por período",
+      descricao: "Movimentações já efetivadas em caixa.",
+      linhas: pontos.map((p: any) => ({
+        rotulo: p.label,
+        sub: `Entradas ${formatBRL(p.entradaReal)} · Saídas ${formatBRL(p.saidaReal)}`,
+        valor: Number(p.entradaReal) - Number(p.saidaReal),
+      })),
+    },
+    resultadoProj: {
+      titulo: "Resultado projetado por período",
+      descricao: "Entradas menos saídas em aberto.",
+      linhas: pontos.map((p: any) => ({
+        rotulo: p.label,
+        sub: `A receber ${formatBRL(p.entradaProj)} · A pagar ${formatBRL(p.saidaProj)}`,
+        valor: Number(p.entradaProj) - Number(p.saidaProj),
+      })),
+    },
+    saldoFinalProj: {
+      titulo: "Saldo acumulado projetado",
+      descricao: "Realizado somado à projeção, período a período.",
+      linhas: pontos.map((p: any) => ({ rotulo: p.label, valor: Number(p.saldoAcum) })),
+    },
+    coberturaPct: {
+      titulo: "Cobertura de saídas",
+      descricao: "Entradas e saídas em aberto por período.",
+      linhas: pontos.map((p: any) => ({
+        rotulo: p.label,
+        sub: `A receber ${formatBRL(p.entradaProj)} · A pagar ${formatBRL(p.saidaProj)}`,
+        valor: Number(p.entradaProj) - Number(p.saidaProj),
+      })),
+    },
+    entradasProj: {
+      titulo: "Entradas em aberto",
+      descricao: "Contas a receber por origem.",
+      linhas: (data?.entradasPorCategoria ?? []).map((c) => ({ rotulo: c.nome, valor: c.valor })),
+    },
+    saidasProj: {
+      titulo: "Saídas em aberto",
+      descricao: "Contas a pagar por categoria.",
+      linhas: (data?.saidasPorCategoria ?? []).map((c) => ({ rotulo: c.nome, valor: c.valor })),
+    },
+    melhor: {
+      titulo: "Melhores períodos",
+      descricao: "Resultado líquido por período (maior primeiro).",
+      linhas: [...pontos]
+        .sort((a: any, b: any) => b.resultado - a.resultado)
+        .map((p: any) => ({ rotulo: p.label, valor: Number(p.resultado) })),
+    },
+    pior: {
+      titulo: "Piores períodos",
+      descricao: "Resultado líquido por período (menor primeiro).",
+      linhas: [...pontos]
+        .sort((a: any, b: any) => a.resultado - b.resultado)
+        .map((p: any) => ({ rotulo: p.label, valor: Number(p.resultado) })),
+    },
+  };
+  const det = detalhe ? DETALHES[detalhe] : null;
+
+
   return (
     <div className="mx-auto w-full max-w-[1600px] space-y-6 p-3 sm:p-4 md:space-y-8 md:p-6">
       <PanelHeader
