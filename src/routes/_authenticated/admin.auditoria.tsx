@@ -110,8 +110,8 @@ function Pagina() {
     <div className="space-y-6 p-4 md:p-6">
       <AdminHero
         icon={<ShieldCheck className="h-5 w-5" />}
-        titulo="Auditoria"
-        descricao="Acompanhe, de forma clara e cronológica, tudo o que acontece no seu ecossistema."
+        titulo="Auditoria e Logs"
+        descricao="Acompanhe o histórico de ações e exportações realizadas no ecossistema."
       />
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">

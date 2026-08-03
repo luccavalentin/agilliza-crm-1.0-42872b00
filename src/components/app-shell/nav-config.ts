@@ -103,6 +103,12 @@ export const navInterno: NavGroup[] = [
             to: "/crm/consultor-ia",
             perm: { modulo: "crm.scan_ia" },
           },
+          {
+            label: "Base de Conhecimento",
+            icon: BookOpen,
+            to: "/admin/consultor-ia-base",
+            perm: { modulo: "admin.integracoes" },
+          },
         ],
       },
 
@@ -390,7 +396,7 @@ export const navInterno: NavGroup[] = [
         perm: { modulo: "relatorios.geral" },
         children: [
           {
-            label: "Relatório gerencial de operações",
+            label: "Relatório gerencial",
             icon: LayoutDashboard,
             to: "/relatorios/gerencial",
           },
@@ -413,13 +419,7 @@ export const navInterno: NavGroup[] = [
             perm: { modulo: "relatorios.geral" },
           },
           {
-            label: "Relatório consolidado",
-            icon: LineChart,
-            to: "/relatorios/consolidado",
-            perm: { modulo: "relatorios.geral" },
-          },
-          {
-            label: "Relatórios comerciais",
+            label: "Produção e Comissões (Comercial)",
             icon: Percent,
             to: "/relatorios/comerciais",
             perm: { modulo: "relatorios.geral" },
@@ -484,12 +484,6 @@ export const navInterno: NavGroup[] = [
             to: "/relatorios/personalizados",
             perm: { modulo: "relatorios.geral" },
           },
-          {
-            label: "Exportações",
-            icon: FolderOpen,
-            to: "/relatorios/exportacoes",
-            perm: { modulo: "relatorios.geral" },
-          },
         ],
       },
     ],
@@ -506,16 +500,16 @@ export const navInterno: NavGroup[] = [
         perm: { modulo: "admin.pessoas" },
         children: [
           {
-            label: "Pessoas",
+            label: "Pessoas e Permissões de Acessos",
             icon: UserCog,
             to: "/admin/pessoas",
             perm: { modulo: "admin.pessoas" },
           },
           {
-            label: "Bancos",
-            icon: Landmark,
-            to: "/admin/bancos",
-            perm: { modulo: "admin.integracoes" },
+            label: "Auditoria e Logs",
+            icon: ShieldCheck,
+            to: "/admin/auditoria",
+            perm: { modulo: "admin.auditoria" },
           },
           {
             label: "APIs de IA",
@@ -524,22 +518,22 @@ export const navInterno: NavGroup[] = [
             perm: { modulo: "admin.integracoes" },
           },
           {
-            label: "Base do Consultor IA",
-            icon: BookOpen,
-            to: "/admin/consultor-ia-base",
-            perm: { modulo: "admin.parametros" },
+            label: "Exportações",
+            icon: FolderOpen,
+            to: "/relatorios/exportacoes",
+            perm: { modulo: "relatorios.geral" },
+          },
+          {
+            label: "Bancos",
+            icon: Landmark,
+            to: "/admin/bancos",
+            perm: { modulo: "admin.integracoes" },
           },
           {
             label: "Backup",
             icon: DatabaseBackup,
             to: "/admin/backup",
             perm: { modulo: "admin.backup" },
-          },
-          {
-            label: "Auditoria",
-            icon: ShieldCheck,
-            to: "/admin/auditoria",
-            perm: { modulo: "admin.auditoria" },
           },
           {
             label: "Notificações",

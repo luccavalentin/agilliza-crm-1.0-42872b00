@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Loader2, Save } from "lucide-react";
+import { Loader2, Save, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -40,6 +40,7 @@ export function EditarPessoaDialog({
   const [telefone, setTelefone] = useState("");
   const [nivelId, setNivelId] = useState("");
   const [tiposPessoa, setTiposPessoa] = useState<string[]>(["usuario"]);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   const listarTipos = useServerFn(listarTiposPessoa);
   const { data: tipos } = useQuery({
@@ -59,6 +60,7 @@ export function EditarPessoaDialog({
       setNivelId(pessoa.nivel_acesso_id ?? "");
       const tps = (pessoa.tipos_pessoa ?? []).filter(Boolean);
       setTiposPessoa(tps.length > 0 ? tps : [pessoa.tipo_pessoa ?? "usuario"]);
+      setAvatarUrl(pessoa.avatar_url ?? null);
     }
   }, [pessoa]);
 
@@ -72,6 +74,7 @@ export function EditarPessoaDialog({
           nivel_acesso_id: nivelId,
           tipos_pessoa: tiposPessoa,
           tipo_pessoa: tiposPessoa[0],
+          avatar_url: avatarUrl,
         },
       }),
     onSuccess: async () => {
@@ -99,6 +102,26 @@ export function EditarPessoaDialog({
           <DialogTitle>Editar pessoa</DialogTitle>
         </DialogHeader>
         <form onSubmit={submeter} className="space-y-4">
+          <div className="flex flex-col items-center justify-center gap-4 py-4">
+            <div className="group relative h-24 w-24 overflow-hidden rounded-full border-2 border-primary/20 bg-muted shadow-inner ring-4 ring-background transition-all hover:border-primary">
+              {avatarUrl ? (
+                <img src={avatarUrl} alt="Avatar" className="h-full w-full object-cover" />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center bg-primary/5 text-primary/40">
+                  <User className="h-12 w-12" />
+                </div>
+              )}
+            </div>
+            <div className="w-full space-y-2">
+              <Label htmlFor="ep-avatar">URL da Foto</Label>
+              <Input
+                id="ep-avatar"
+                placeholder="https://exemplo.com/foto.jpg"
+                value={avatarUrl ?? ""}
+                onChange={(e) => setAvatarUrl(e.target.value)}
+              />
+            </div>
+          </div>
           <div className="space-y-2">
             <Label htmlFor="ep-nome">Nome completo</Label>
             <Input id="ep-nome" value={nome} onChange={(e) => setNome(e.target.value.toUpperCase())} required />
