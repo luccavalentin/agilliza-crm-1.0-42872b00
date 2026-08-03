@@ -60,7 +60,8 @@ export function signalIncomingChat(
     vistas.add(id);
   }
   if (!tipoAtivo("chat")) return;
-  if (tipoComSom("chat") && !info?.skipSound) playChatSound();
+  // Requisito: TODA NOTIFICAÇÃO DEVE EMITIR SOM (chat e outras)
+  if (!info?.skipSound) playChatSound();
   notificarSO(info?.titulo ?? "Nova mensagem", info?.corpo);
   startFlash();
 }

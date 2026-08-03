@@ -60,7 +60,7 @@ export function ChatAlertWatcher({ meuId }: Props) {
           signalIncomingChat(row.id, {
             titulo: `Nova mensagem · ${nome}`,
             corpo: "Você recebeu uma mensagem no chat do cliente.",
-            skipSound: true, // Já vamos emitir som abaixo de qualquer forma
+            skipSound: false, // Requisito: deve emitir som
           });
           
           // Som explícito para garantir que toca em todo chat aberto
@@ -116,7 +116,7 @@ export function ChatAlertWatcher({ meuId }: Props) {
           signalIncomingChat(row.id, {
             titulo: `Nova mensagem · Demanda ${numero}`,
             corpo: interlocutorNome ?? titulo ?? undefined,
-            skipSound: true,
+            skipSound: false,
           });
           
           import("@/lib/chat-sound").then(m => m.playChatSound());
@@ -171,7 +171,7 @@ export function ChatAlertWatcher({ meuId }: Props) {
           signalIncomingChat(row.id, {
             titulo: `Nova mensagem · ${nome}`,
             corpo: "Você recebeu uma mensagem direta.",
-            skipSound: true,
+            skipSound: false,
           });
           
           import("@/lib/chat-sound").then(m => m.playChatSound());
