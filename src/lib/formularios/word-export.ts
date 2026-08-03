@@ -8,29 +8,22 @@ import {
   Header, 
   Footer, 
   ImageRun, 
-  ExternalHyperlink,
   BorderStyle,
-  Table,
-  TableRow,
-  TableCell,
-  WidthType
 } from "docx";
 import { saveAs } from "file-saver";
 import { 
   getPapelTimbradoModelo, 
-  type PapelTimbradoModeloId 
 } from "./papel-timbrado-modelos";
 import type { PapelTimbradoDados } from "./papel-timbrado-pdf";
 import { AGILLIZA_LOGO_DARK } from "@/lib/relatorios/brand-logo";
 
 /**
  * Gera um arquivo Word (.docx) do papel timbrado.
- * Tenta replicar a formatação visual do PDF usando os recursos do docx.
  */
 export async function gerarPapelTimbradoWord(dados: PapelTimbradoDados = {}) {
   const modelo = getPapelTimbradoModelo(dados.modelo);
   
-  // Converter logo base64 para Buffer (Browser-safe)
+  // Converter logo base64 para Buffer
   const logoBase64 = AGILLIZA_LOGO_DARK.split(",")[1];
   const logoBuffer = Uint8Array.from(atob(logoBase64), c => c.charCodeAt(0));
 
@@ -40,7 +33,7 @@ export async function gerarPapelTimbradoWord(dados: PapelTimbradoDados = {}) {
         properties: {
           page: {
             margin: {
-              top: 1440, // ~2.54cm
+              top: 1440,
               right: 1440,
               bottom: 1440,
               left: 1440,
@@ -86,7 +79,7 @@ export async function gerarPapelTimbradoWord(dados: PapelTimbradoDados = {}) {
                   top: {
                     color: "E5E7EB",
                     space: 1,
-                    value: BorderStyle.SINGLE,
+                    style: BorderStyle.SINGLE,
                     size: 6,
                   },
                 },
@@ -102,7 +95,6 @@ export async function gerarPapelTimbradoWord(dados: PapelTimbradoDados = {}) {
           }),
         },
         children: [
-          // Cidade e Data
           new Paragraph({
             alignment: AlignmentType.RIGHT,
             spacing: { before: 400, after: 400 },
@@ -114,7 +106,6 @@ export async function gerarPapelTimbradoWord(dados: PapelTimbradoDados = {}) {
             ],
           }),
           
-          // Destinatário
           ...(dados.destinatario ? dados.destinatario.split("\n").map(line => 
             new Paragraph({
               spacing: { after: 100 },
@@ -122,7 +113,6 @@ export async function gerarPapelTimbradoWord(dados: PapelTimbradoDados = {}) {
             })
           ) : []),
 
-          // Referência
           ...(dados.referencia ? [
             new Paragraph({
               spacing: { before: 200, after: 200 },
@@ -141,7 +131,6 @@ export async function gerarPapelTimbradoWord(dados: PapelTimbradoDados = {}) {
             })
           ] : []),
 
-          // Saudação
           new Paragraph({
             spacing: { before: 200, after: 200 },
             children: [
@@ -152,10 +141,9 @@ export async function gerarPapelTimbradoWord(dados: PapelTimbradoDados = {}) {
             ],
           }),
 
-          // Mensagem
           ...(dados.mensagem ? dados.mensagem.split(/\n{2,}/).map(par => 
             new Paragraph({
-              alignment: AlignmentType.JUSTIFY,
+              alignment: AlignmentType.BOTH,
               spacing: { before: 200, after: 200 },
               children: [
                 new TextRun({
@@ -166,7 +154,6 @@ export async function gerarPapelTimbradoWord(dados: PapelTimbradoDados = {}) {
             })
           ) : []),
 
-          // Despedida
           new Paragraph({
             spacing: { before: 400, after: 800 },
             children: [
@@ -177,13 +164,12 @@ export async function gerarPapelTimbradoWord(dados: PapelTimbradoDados = {}) {
             ],
           }),
 
-          // Assinatura
           new Paragraph({
             border: {
               top: {
                 color: "E5E7EB",
                 space: 1,
-                value: BorderStyle.SINGLE,
+                style: BorderStyle.SINGLE,
                 size: 6,
               },
             },

@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { FileText, Download, FileDown, Eraser, Check, FileWord } from "lucide-react";
+import { FileText, Download, FileDown, Eraser, Check, FileType } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -110,7 +110,7 @@ export function PapelTimbradoView() {
               Baixar em branco
             </Button>
             <Button variant="outline" onClick={baixarWord}>
-              <FileWord className="mr-2 h-4 w-4" />
+              <FileType className="mr-2 h-4 w-4" />
               Baixar Word
             </Button>
             <Button onClick={baixarPreenchido}>
