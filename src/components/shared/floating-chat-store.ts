@@ -27,7 +27,7 @@ export type FloatingChatState =
       minimized?: boolean;
     };
 
-let estado: FloatingChatState | null = null;
+let estado: FloatingChatState[] = [];
 const ouvintes = new Set<() => void>();
 
 function emitir() {
@@ -40,7 +40,14 @@ export function abrirChatFlutuante(
   info?: ChatClienteInfo,
   opts?: { minimized?: boolean },
 ) {
-  estado = { kind: "cliente", clienteId, info, minimized: opts?.minimized };
+  const existingIndex = estado.findIndex(c => c.kind === "cliente" && c.clienteId === clienteId);
+  const newItem: FloatingChatState = { kind: "cliente", clienteId, info, minimized: opts?.minimized };
+  
+  if (existingIndex !== -1) {
+    estado[existingIndex] = newItem;
+  } else {
+    estado = [...estado, newItem];
+  }
   emitir();
 }
 
@@ -50,7 +57,14 @@ export function abrirDemandaChatFlutuante(
   info?: Extract<FloatingChatState, { kind: "demanda" }>["info"],
   opts?: { minimized?: boolean },
 ) {
-  estado = { kind: "demanda", demandaId, info, minimized: opts?.minimized };
+  const existingIndex = estado.findIndex(c => c.kind === "demanda" && c.demandaId === demandaId);
+  const newItem: FloatingChatState = { kind: "demanda", demandaId, info, minimized: opts?.minimized };
+
+  if (existingIndex !== -1) {
+    estado[existingIndex] = newItem;
+  } else {
+    estado = [...estado, newItem];
+  }
   emitir();
 }
 
@@ -60,13 +74,25 @@ export function abrirDmFlutuante(
   info?: Extract<FloatingChatState, { kind: "dm" }>["info"],
   opts?: { minimized?: boolean },
 ) {
-  estado = { kind: "dm", conversaId, info, minimized: opts?.minimized };
+  const existingIndex = estado.findIndex(c => c.kind === "dm" && c.conversaId === conversaId);
+  const newItem: FloatingChatState = { kind: "dm", conversaId, info, minimized: opts?.minimized };
+
+  if (existingIndex !== -1) {
+    estado[existingIndex] = newItem;
+  } else {
+    estado = [...estado, newItem];
+  }
   emitir();
 }
 
 /** Fecha a janela flutuante global. */
-export function fecharChatFlutuante() {
-  estado = null;
+export function fecharChatFlutuante(kind: string, id: string) {
+  estado = estado.filter(c => {
+    if (c.kind === "cliente" && kind === "cliente") return c.clienteId !== id;
+    if (c.kind === "demanda" && kind === "demanda") return c.demandaId !== id;
+    if (c.kind === "dm" && kind === "dm") return c.conversaId !== id;
+    return true;
+  });
   emitir();
 }
 
@@ -81,7 +107,7 @@ function getSnapshot() {
   return estado;
 }
 
-/** Estado atual da janela flutuante global (ou null). */
-export function useFloatingChat(): FloatingChatState | null {
-  return useSyncExternalStore(subscribe, getSnapshot, () => null);
+/** Lista de janelas flutuantes ativas. */
+export function useFloatingChats(): FloatingChatState[] {
+  return useSyncExternalStore(subscribe, getSnapshot, () => []);
 }
