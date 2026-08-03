@@ -63,6 +63,26 @@ export const CATALOGO_MODULOS: ModuloCatalogo[] = [
     ],
   },
   {
+    grupo: "CRM",
+    modulo: "crm.chat",
+    label: "Chat e Follow-up do cliente",
+    acoes: [
+      { acao: "view", label: "Ver conversas" },
+      { acao: "create", label: "Enviar mensagens" },
+      { acao: "gerir", label: "Gerir atendimento (transferir/etiquetar)" },
+    ],
+  },
+  {
+    grupo: "Operacional",
+    modulo: "operacional.chats",
+    label: "Central de Conversas (chat interno)",
+    acoes: [
+      { acao: "view", label: "Ver conversas" },
+      { acao: "create", label: "Iniciar/Enviar mensagens" },
+      { acao: "anexar", label: "Enviar anexos" },
+    ],
+  },
+  {
     grupo: "Operacional",
     modulo: "operacional.simulacoes",
     label: "Simulações",
