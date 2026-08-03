@@ -735,7 +735,7 @@ export const runReport = createServerFn({ method: "POST" })
     }
 
     async function relComerciais(): Promise<ReportResult> {
-      const [props, sims, opcoesOperacionais] = await Promise.all([
+      const [props, sims, coms, repasses, opcoesOperacionais] = await Promise.all([
         fetchAll(
           "propostas",
           "id,status,produto,valor_financiamento,valor_financiamento_aprovado,nome_banco,usuario_responsavel_id,analista_id,comercial_id,parceiro_id,created_at",
@@ -744,6 +744,8 @@ export const runReport = createServerFn({ method: "POST" })
           { statusCol: statusEhFiltroSimulacao(filtros.status) ? false : undefined },
         ),
         fetchSimulacoesRelatorio({ rascunhoComoModulo: true }),
+        fetchAll("comissoes", "valor_bruto,usuario_responsavel_id", "created_at", "usuario_responsavel_id"),
+        fetchAll("contas", "valor_previsto,usuario_id", "data_vencimento", "usuario_id"),
         listarOpcoesOperacionais(),
       ]);
       const somenteSimulacoes = statusEhFiltroSimulacao(filtros.status);
@@ -789,15 +791,15 @@ export const runReport = createServerFn({ method: "POST" })
         userMap.set(k, cur);
       });
       return {
-        titulo: "Relatório comercial",
-        descricao: "Desempenho de produção por período e responsável.",
+        titulo: "Relatório comercial (Produção e Comissões)",
+        descricao: "Desempenho de produção e resumo de ganhos por período e responsável.",
         modulo: "Comercial",
         kpis: [
           { label: "Simulações", valor: int(sims.length), tone: "neutral" },
           { label: "Propostas", valor: int(enviadas.length), tone: "neutral" },
           { label: "Taxa de aprovação", valor: pct(taxa), tone: "success" },
           { label: "Ticket médio", valor: brl(ticket), tone: "brand" },
-          { label: "Valor contratado", valor: brl(valor), tone: "brand" },
+          { label: "Volume contratado", valor: brl(valor), tone: "success" },
           { label: "Contratos", valor: int(contratos.length), tone: "success" },
           { label: "Banco líder", valor: bancoLider, tone: "neutral" },
         ],
