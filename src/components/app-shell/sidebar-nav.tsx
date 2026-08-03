@@ -153,7 +153,7 @@ function SidebarLink({
       />
       <span className="truncate">{item.label}</span>
       {piscar && (
-        <span className="ml-auto h-2 w-2 shrink-0 animate-pulse rounded-full bg-sidebar-primary" />
+        <span className="ml-auto h-2.5 w-2.5 shrink-0 animate-ping rounded-full bg-white shadow-[0_0_8px_white]" />
       )}
       {item.badge && !piscar && (
         <span className="ml-auto rounded-full bg-sidebar-primary px-1.5 text-[10px] font-semibold text-sidebar-primary-foreground">
