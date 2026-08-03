@@ -685,12 +685,12 @@ export async function enviarSimulacaoImpl({
         // processamento" (tipoSituacao "P") e sem valores. A integração não
         // possui webhook, então consultamos a oportunidade algumas vezes para
         // capturar o retorno assim que ele chegar. Aumentamos o polling para o
-        // Itaú (12 tentativas a cada 8s) pois o tempo de resposta deles variou.
+        // Itaú (20 tentativas a cada 10s) para garantir o retorno.
         if (vazio(dadosApi)) {
           const isItau = String(b.nome_banco ?? "").toLowerCase().includes("itaú") ||
                          String(b.nome_banco ?? "").toLowerCase().includes("itau");
-          const maxTentativas = isItau ? 15 : 10;
-          const delay = isItau ? 8000 : 6000;
+          const maxTentativas = isItau ? 20 : 12;
+          const delay = isItau ? 10000 : 8000;
 
           for (let tentativa = 0; tentativa < maxTentativas && vazio(dadosApi); tentativa++) {
             await new Promise((r) => setTimeout(r, delay));
