@@ -403,40 +403,6 @@ function BibliotecaPage() {
         </div>
       </section>
 
-      {(sugestoes ?? []).length > 0 ? (
-        <div className="rounded-xl border border-amber-500/40 bg-amber-500/5 p-3">
-          <p className="mb-2 flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-amber-700 dark:text-amber-400">
-            <Sparkles className="size-3.5" />
-            Lacunas apontadas pela equipe ({sugestoes!.length})
-          </p>
-          <ul className="space-y-1.5">
-            {sugestoes!.map((s) => (
-              <li key={s.id} className="flex flex-wrap items-center gap-2 text-sm">
-                <span className="min-w-0 flex-1">{s.pergunta}</span>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="h-7 text-xs"
-                  onClick={() => {
-                    setEditando({ ...VAZIO, titulo: s.pergunta.slice(0, 120) });
-                    setPreview(false);
-                  }}
-                >
-                  Escrever verbete
-                </Button>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="h-7 text-xs"
-                  onClick={() => resolver.mutate({ id: s.id, status: "descartada" })}
-                >
-                  Descartar
-                </Button>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
 
       <div className="grid gap-5 lg:grid-cols-[248px_minmax(0,1fr)]">
         {/* Estantes / facetas */}
