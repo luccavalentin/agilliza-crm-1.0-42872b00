@@ -1272,7 +1272,7 @@ export async function sincronizarPropostaImpl({
     if (idsDesatualizados.length > 0) {
       await supabase
         .from("proposta_bancos")
-        .update({ status_banco: statusBancoDesfecho, situacao_banco: statusBancoDesfecho })
+        .update({ status_banco: statusBancoDesfecho, situacao_banco: desfechoBanco!.situacao })
         .in("id", idsDesatualizados);
     }
   }
