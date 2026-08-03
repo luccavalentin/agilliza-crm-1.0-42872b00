@@ -64,6 +64,27 @@ const toneClasses: Record<Tone, string> = {
 };
 
 /**
+ * Desfechos da proposta que prevalecem sobre o status da linha do banco.
+ * Evita que a lista mostre "Em análise" quando a proposta já foi recusada,
+ * aprovada ou cancelada (a linha de banco pode demorar um ciclo para
+ * reconciliar com o retorno da integração).
+ */
+const DESFECHO_PROPOSTA: Record<string, string> = {
+  credito_recusado: "recusada",
+  credito_aprovado: "aprovada",
+  cancelada: "cancelada",
+};
+
+const STATUS_BANCO_TERMINAL = new Set([
+  "aprovada",
+  "aprovado",
+  "recusada",
+  "recusado",
+  "cancelada",
+  "erro",
+]);
+
+/**
  * Mostra o status de cada banco para o qual a proposta foi enviada,
  * com o nome do banco na cor da sua marca.
  */
@@ -77,14 +98,18 @@ export function StatusBancosProposta({
   if (!bancos || bancos.length === 0) {
     return <span className="text-xs text-muted-foreground">{fallbackStatus ?? "—"}</span>;
   }
+  const desfecho = DESFECHO_PROPOSTA[String(fallbackStatus ?? "")];
   return (
     <div className="flex flex-col items-start gap-1">
       {bancos.map((b, i) => {
         const cor = corDoBanco(b.nome_banco);
-        const cfg = STATUS_BANCO[b.status_banco ?? ""] ?? {
-          label: b.status_banco ?? "—",
+        const bruto = String(b.status_banco ?? "");
+        const efetivo = desfecho && !STATUS_BANCO_TERMINAL.has(bruto) ? desfecho : bruto;
+        const cfg = STATUS_BANCO[efetivo] ?? {
+          label: efetivo || "—",
           tone: "muted" as Tone,
         };
+
         return (
           <div
             key={`${b.nome_banco}-${i}`}
