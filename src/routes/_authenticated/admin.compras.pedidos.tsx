@@ -304,3 +304,94 @@ function KpiCard({
     </div>
   );
 }
+
+function EditarPedidoDialog({
+  pedido,
+  onSalvo,
+}: {
+  pedido: CompraLinha;
+  onSalvo: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [descricao, setDescricao] = useState(pedido.descricao);
+  const [categoria, setCategoria] = useState(pedido.categoria ?? "");
+  const [valor, setValor] = useState(String(pedido.valor));
+  const [salvando, setSalvando] = useState(false);
+  const pendente = pedido.status === "pendente";
+
+  async function salvar() {
+    setSalvando(true);
+    try {
+      await editarCompra({
+        data: {
+          id: pedido.id,
+          descricao: descricao.trim(),
+          valor: Number(valor.replace(/\./g, "").replace(",", ".")) || 0,
+          categoria: categoria.trim() || null,
+        },
+      });
+      toast.success("Pedido atualizado.");
+      setOpen(false);
+      onSalvo();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Não foi possível salvar o pedido.");
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(o) => {
+        setOpen(o);
+        if (o) {
+          setDescricao(pedido.descricao);
+          setCategoria(pedido.categoria ?? "");
+          setValor(String(pedido.valor));
+        }
+      }}
+    >
+      <DialogTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8"
+          title={pendente ? "Editar pedido" : "Somente pedidos pendentes podem ser editados"}
+          disabled={!pendente}
+        >
+          <Pencil className="h-4 w-4" />
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="w-[calc(100%-2rem)] max-w-md">
+        <DialogHeader>
+          <DialogTitle>Editar pedido</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div className="space-y-1">
+            <Label>Descrição</Label>
+            <Textarea value={descricao} onChange={(e) => setDescricao(e.target.value)} rows={3} />
+          </div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="space-y-1">
+              <Label>Categoria</Label>
+              <Input value={categoria} onChange={(e) => setCategoria(e.target.value)} />
+            </div>
+            <div className="space-y-1">
+              <Label>Valor</Label>
+              <Input inputMode="decimal" value={valor} onChange={(e) => setValor(e.target.value)} />
+            </div>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="ghost" onClick={() => setOpen(false)}>
+            Cancelar
+          </Button>
+          <Button onClick={salvar} disabled={salvando || descricao.trim().length < 3}>
+            {salvando ? "Salvando…" : "Salvar"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
