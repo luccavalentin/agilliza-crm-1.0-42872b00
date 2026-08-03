@@ -101,10 +101,7 @@ export function FloatingWindow({
     const vw = typeof window !== "undefined" ? window.innerWidth : 1024;
     const vh = typeof window !== "undefined" ? window.innerHeight : 768;
     const w = vw < 640 ? Math.max(280, vw - 24) : 420;
-    // Quando inicia minimizado, ancora no canto superior direito para não
-    // atrapalhar a tela atual do usuário.
-    // Minimizada: aparece no MEIO da tela para o usuário perceber a mensagem
-    // independentemente da tela em que estiver.
+    // Quando inicia minimizado, ancora no MEIO da tela (Requisito: APARECER NO MEIO DA TELA IMEDIATAMENTE)
     if (startMinimized) {
       return {
         x: Math.max(12, Math.round((vw - w) / 2)),
