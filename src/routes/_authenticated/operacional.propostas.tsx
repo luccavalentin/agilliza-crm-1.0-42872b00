@@ -352,7 +352,19 @@ function Pagina() {
         verExcluidas={verExcluidas}
         handleExcluir={handleExcluir}
         handleRestaurar={handleRestaurar}
+        selecionados={selecionados}
+        onToggleSelecionado={toggleSelecionado}
+        onToggleTodos={toggleTodos}
       />
+
+      <BarraSelecao
+        quantidade={selecionados.length}
+        onLimpar={() => setSelecionados([])}
+        onExcluir={excluirSelecionados}
+        excluindo={excluindoLote}
+        rotulo="proposta(s) selecionada(s)"
+      />
+
     </div>
   );
 }
