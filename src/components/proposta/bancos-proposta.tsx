@@ -17,7 +17,11 @@ export function BancosProposta({
   className?: string;
 }) {
   if (!bancos || bancos.length === 0) {
-    return <span className="text-xs text-muted-foreground">Nenhum banco</span>;
+    return (
+      <span className="inline-flex items-center rounded-md bg-destructive/10 px-1.5 py-0.5 text-[10px] font-medium text-destructive ring-1 ring-inset ring-destructive/20">
+        Nenhum banco selecionado
+      </span>
+    );
   }
   return (
     <div className={`flex flex-wrap items-center gap-1 ${className ?? ""}`}>

@@ -404,7 +404,10 @@ function Pagina() {
                   </span>
                 </span>
               ) : (
-                "—"
+                <div className="flex flex-col items-start gap-1">
+                  <span className="text-destructive font-medium">Nenhum banco selecionado</span>
+                  <p className="text-[10px] text-muted-foreground leading-tight">Vá em "Enviar ao Banco" para escolher um.</p>
+                </div>
               )
             }
           />
