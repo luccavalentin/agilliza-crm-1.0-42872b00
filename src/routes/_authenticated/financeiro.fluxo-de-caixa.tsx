@@ -477,7 +477,7 @@ function Pagina() {
             subtitulo="Barras = entradas/saídas por período · área = saldo projetado acumulado"
           >
             <FluxoLegenda />
-            <div className="h-[380px] w-full">
+            <div className="h-[260px] w-full sm:h-[320px] lg:h-[380px]">
               {isLoading ? (
                 <div className="h-full w-full animate-pulse rounded-xl bg-muted/50" />
               ) : (
