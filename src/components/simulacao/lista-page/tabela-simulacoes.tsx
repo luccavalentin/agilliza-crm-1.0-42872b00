@@ -6,6 +6,8 @@
 import { Link } from "@tanstack/react-router";
 import { Calculator, Eye, Undo2, User as UserIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+
 import {
   Table,
   TableBody,
