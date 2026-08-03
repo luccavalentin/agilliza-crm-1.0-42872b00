@@ -25,7 +25,7 @@ import {
 import { DemandaChatConversa } from "@/components/operacional/demanda-chat";
 import {
   abrirDemandaChatFlutuante,
-  useFloatingChat,
+  useFloatingChats,
   fecharChatFlutuante,
 } from "@/components/shared/floating-chat-store";
 import { statusDemanda } from "@/components/operacional/status";
@@ -64,8 +64,8 @@ function Pagina() {
   const moverFn = useServerFn(moverStatusDemanda);
   const [aba, setAba] = useState<Aba>("conversas");
   const [copiado, setCopiado] = useState(false);
-  const flutuante = useFloatingChat();
-  const estaFlutuando = flutuante?.kind === "demanda" && flutuante.demandaId === id;
+  const janelas = useFloatingChats();
+  const estaFlutuando = janelas.some(c => c.kind === "demanda" && c.demandaId === id);
 
   const { data, refetch } = useQuery({
     queryKey: ["demanda", id],
@@ -237,7 +237,7 @@ function Pagina() {
                   variant="outline"
                   size="sm"
                   className="h-8 gap-1.5"
-                  onClick={() => fecharChatFlutuante()}
+                  onClick={() => fecharChatFlutuante("demanda", id)}
                 >
                   Reacoplar chat
                 </Button>
@@ -260,7 +260,7 @@ function Pagina() {
           <div className="flex min-h-0 flex-1 flex-col">
             {aba === "conversas" &&
               (estaFlutuando ? (
-                <ChatFlutuandoAviso />
+                <ChatFlutuandoAviso tipo="demanda" id={id} />
               ) : (
                 <DemandaChatConversa
                   demandaId={id}
