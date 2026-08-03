@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Loader2, RefreshCw, Sparkles } from "lucide-react";
+import { Loader2, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { recalcularComissoesUsuario } from "@/lib/financeiro/comissoes-usuario.functions";
 
@@ -55,7 +55,6 @@ export function RecalcularComissoesButton({ className }: { className?: string })
       <span className="relative">
         {recalcular.isPending ? "Recalculando…" : "Recalcular comissões"}
       </span>
-      <Sparkles className="relative size-3.5 opacity-70" />
     </button>
   );
 }
