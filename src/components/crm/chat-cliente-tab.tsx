@@ -1,6 +1,6 @@
 import { Maximize2 } from "lucide-react";
 import {
-  useFloatingChat,
+  useFloatingChats,
   abrirChatFlutuante,
   fecharChatFlutuante,
 } from "@/components/shared/floating-chat-store";
@@ -69,8 +69,8 @@ export function ChatClienteTab({
   atendenteNome?: string;
   acoes?: React.ReactNode;
 }) {
-  const flutuante = useFloatingChat();
-  const estaFlutuando = flutuante?.kind === "cliente" && flutuante.clienteId === clienteId;
+  const janelas = useFloatingChats();
+  const estaFlutuando = janelas.some(c => c.kind === "cliente" && c.clienteId === clienteId);
 
   // A janela flutuante só vale para a conversa do próprio usuário.
   if (somenteLeitura) {
@@ -101,7 +101,7 @@ export function ChatClienteTab({
         </div>
         <button
           type="button"
-          onClick={fecharChatFlutuante}
+          onClick={() => fecharChatFlutuante("cliente", clienteId)}
           className="rounded-md border border-border/60 bg-background px-3 py-1.5 text-xs font-medium text-foreground shadow-sm transition-colors hover:bg-accent"
         >
           Reacoplar janela
