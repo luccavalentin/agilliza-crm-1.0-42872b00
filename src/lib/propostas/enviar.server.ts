@@ -1251,12 +1251,14 @@ export async function sincronizarPropostaImpl({
   // (recusa/aprovação/cancelamento) vem da etapa/atividade da oportunidade e não
   // do snapshot da simulação, as linhas de banco ficavam presas em "em_analise"
   // e a lista mostrava um status diferente do detalhe. Aqui alinhamos os dois.
-  const DESFECHO_BANCO: Partial<Record<PropostaStatus, string>> = {
-    credito_recusado: "recusada",
-    credito_aprovado: "aprovada",
-    cancelada: "cancelada",
+  const DESFECHO_BANCO: Partial<Record<PropostaStatus, { status: string; situacao: string }>> = {
+    credito_recusado: { status: "recusada", situacao: "recusado" },
+    credito_aprovado: { status: "aprovada", situacao: "aprovado" },
+    cancelada: { status: "cancelada", situacao: "cancelado" },
   };
-  const statusBancoDesfecho = DESFECHO_BANCO[statusEfetivo];
+  const desfechoBanco = DESFECHO_BANCO[statusEfetivo];
+  const statusBancoDesfecho = desfechoBanco?.status;
+
   if (statusBancoDesfecho) {
     const patchesById = new Map(patchesBanco.map((p) => [String(p.id), p]));
     const idsDesatualizados = ((bancosProp ?? []) as any[])
