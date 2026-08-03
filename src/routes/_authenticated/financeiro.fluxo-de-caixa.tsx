@@ -35,6 +35,14 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+
 import { ExportarFinanceiro } from "@/components/financeiro/exportar-financeiro";
 import { formatBRL } from "@/lib/financeiro/format";
 import { cn } from "@/lib/utils";
