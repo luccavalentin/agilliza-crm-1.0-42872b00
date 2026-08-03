@@ -9,7 +9,7 @@ import { PainelChat } from "@/components/crm/chat/painel-chat";
 
 export const Route = createFileRoute("/_authenticated/crm/chat")({
   head: () => ({ meta: [{ title: "Chat e Follow-up Cliente — Agilliza" }] }),
-  beforeLoad: () => assertModuloPermitido("crm.clientes"),
+  beforeLoad: () => assertModuloPermitido("crm.chat", ["crm.clientes"]),
   validateSearch: (s: Record<string, unknown>) => ({
     c: typeof s.c === "string" ? s.c : undefined,
   }),
