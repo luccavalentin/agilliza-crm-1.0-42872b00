@@ -535,7 +535,19 @@ function Pagina() {
         escopo={escopo}
         verExcluidas={verExcluidas}
         handlers={handlersLinha}
+        selecionados={selecionados}
+        onToggleSelecionado={toggleSelecionado}
+        onToggleTodos={toggleTodos}
       />
+
+      <BarraSelecao
+        quantidade={selecionados.length}
+        onLimpar={() => setSelecionados([])}
+        onExcluir={excluirSelecionados}
+        excluindo={excluindoLote}
+        rotulo="simulação(ões) selecionada(s)"
+      />
+
 
       {/* Cartões (telas pequenas) */}
       <CartoesSimulacoes
