@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { FileText, Download, FileDown, Eraser, Check } from "lucide-react";
+import { FileText, Download, FileDown, Eraser, Check, FileType } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { OpHero } from "@/components/operacional/ui";
-import { gerarPapelTimbradoPDF } from "@/lib/formularios/pdf-lazy";
+import { gerarPapelTimbradoPDF, gerarPapelTimbradoWord } from "@/lib/formularios/pdf-lazy";
 import type { PapelTimbradoDados } from "@/lib/formularios/papel-timbrado-pdf";
 import {
   PAPEL_TIMBRADO_MODELOS,
@@ -62,6 +62,17 @@ export function PapelTimbradoView() {
     toast.success("Papel timbrado em branco gerado.");
   }
 
+  function baixarWord() {
+    const preenchido =
+      (dados.destinatario?.trim() || dados.mensagem?.trim() || dados.assinante?.trim()) ?? "";
+    if (!preenchido) {
+      toast.error("Preencha ao menos destinatário, mensagem ou assinante.");
+      return;
+    }
+    gerarPapelTimbradoWord(dados);
+    toast.success("Documento Word gerado.");
+  }
+
   function limpar() {
     setDados({ ...INICIAL, modelo: dados.modelo });
   }
@@ -85,8 +96,8 @@ export function PapelTimbradoView() {
       <OpHero
         icon={<FileText className="h-5 w-5" />}
         eyebrow="Documentos · Formulários"
-        titulo="Papel Timbrado"
-        descricao="Escolha entre 10 modelos — 5 institucionais e 5 da linha Real (carta régia) — e baixe em PDF com marca d'água, pronto para papel cartão."
+        titulo="PAPEL TIMBRADO PERMITA BAIXAR EM PDF E WORD, COM A MESMA FORMATAÇÃO E CONFIGURAÇÃO E ETC"
+        descricao="Escolha entre 10 modelos e baixe em PDF ou WORD com marca d'água e formatação profissional."
         accent={modelo.primaria}
         acoes={
           <div className="flex flex-wrap items-center gap-2">
@@ -98,9 +109,13 @@ export function PapelTimbradoView() {
               <FileDown className="mr-2 h-4 w-4" />
               Baixar em branco
             </Button>
+            <Button variant="outline" onClick={baixarWord}>
+              <FileType className="mr-2 h-4 w-4" />
+              Baixar Word
+            </Button>
             <Button onClick={baixarPreenchido}>
               <Download className="mr-2 h-4 w-4" />
-              Baixar preenchido
+              Baixar PDF
             </Button>
           </div>
         }
