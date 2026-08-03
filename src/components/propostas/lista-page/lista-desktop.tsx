@@ -133,7 +133,17 @@ export function ListaDesktop({
                     router.navigate({ to: "/operacional/propostas/$id", params: { id: p.id } })
                   }
                 >
+                  {selecionaveis && (
+                    <TableCell onClick={(e) => e.stopPropagation()}>
+                      <Checkbox
+                        checked={sel.has(p.id)}
+                        onCheckedChange={() => onToggleSelecionado?.(p.id)}
+                        aria-label={`Selecionar proposta ${p.numero_proposta}`}
+                      />
+                    </TableCell>
+                  )}
                   <TableCell className="relative">
+
                     <span className="absolute inset-y-0 left-0 w-[3px] origin-top scale-y-0 rounded-r-full bg-[var(--banco)] transition-transform duration-200 group-hover/row:scale-y-100" />
                     {(() => {
                       const nb = numeroBancoParaExibir(p.numero_proposta_banco);
