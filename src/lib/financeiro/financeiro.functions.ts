@@ -1249,6 +1249,7 @@ export interface FluxoPontoAnalitico {
   resultado: number;
   saldoAcum: number;
   futuro: boolean;
+  movimentacoesRealizadas?: { tipo: "entrada" | "saida"; valor: number; descricao: string | null; ref_id: string | null }[];
 }
 
 export interface FluxoResumo {
@@ -1309,7 +1310,7 @@ export const obterFluxoCaixaAnalitico = createServerFn({ method: "GET" })
         .in("status", abertos),
       supabase
         .from("fluxo_caixa")
-        .select("data, tipo, valor")
+        .select("data, tipo, valor, descricao, ref_id")
         .eq("realizado", true),
     ]);
 
@@ -1361,16 +1362,23 @@ export const obterFluxoCaixaAnalitico = createServerFn({ method: "GET" })
       saidaReal: number;
       entradaProj: number;
       saidaProj: number;
+      movimentacoesRealizadas: { tipo: "entrada" | "saida"; valor: number; descricao: string | null; ref_id: string | null }[];
     };
     const mapa: Record<string, Bucket> = {};
     const get = (k: string): Bucket =>
-      (mapa[k] ??= { entradaReal: 0, saidaReal: 0, entradaProj: 0, saidaProj: 0 });
+      (mapa[k] ??= { entradaReal: 0, saidaReal: 0, entradaProj: 0, saidaProj: 0, movimentacoesRealizadas: [] });
 
     realizRows.forEach((r: any) => {
       if (!r.data) return;
       const b = get(chave(r.data));
       if (r.tipo === "entrada") b.entradaReal += Number(r.valor);
       else b.saidaReal += Number(r.valor);
+      b.movimentacoesRealizadas.push({
+        tipo: r.tipo as "entrada" | "saida",
+        valor: Number(r.valor),
+        descricao: r.descricao,
+        ref_id: r.ref_id
+      });
     });
     recRows.forEach((r: any) => {
       if (!r.vencimento) return;
@@ -1403,6 +1411,7 @@ export const obterFluxoCaixaAnalitico = createServerFn({ method: "GET" })
           resultado,
           saldoAcum,
           futuro: periodo >= chaveHoje,
+          movimentacoesRealizadas: b.movimentacoesRealizadas,
         };
       });
 

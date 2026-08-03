@@ -196,7 +196,7 @@ function DetalheFluxoDialog({
   onClose: () => void;
   titulo: string;
   descricao?: string;
-  linhas: { rotulo: string; sub?: string; valor: number }[];
+  linhas: { rotulo: string; sub?: string; valor: number; details?: { tipo: "pagar" | "receber"; id: string }[] }[];
 }) {
   const total = linhas.reduce((s, l) => s + l.valor, 0);
   return (
@@ -211,14 +211,33 @@ function DetalheFluxoDialog({
         ) : (
           <ul className="divide-y divide-border">
             {linhas.map((l, i) => (
-              <li key={`${l.rotulo}-${i}`} className="flex items-center justify-between gap-4 py-2.5">
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-foreground">{l.rotulo}</p>
-                  {l.sub ? <p className="truncate text-xs text-muted-foreground">{l.sub}</p> : null}
+              <li key={`${l.rotulo}-${i}`} className="space-y-2 py-3 first:pt-0 last:pb-0">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-foreground">{l.rotulo}</p>
+                    {l.sub ? <p className="truncate text-xs text-muted-foreground">{l.sub}</p> : null}
+                  </div>
+                  <span className="shrink-0 font-mono text-sm font-bold tabular-nums text-foreground">
+                    {formatBRL(l.valor)}
+                  </span>
                 </div>
-                <span className="shrink-0 font-mono text-sm font-semibold tabular-nums text-foreground">
-                  {formatBRL(l.valor)}
-                </span>
+                {l.details && l.details.length > 0 && (
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    {l.details.map((d) => (
+                      <Button
+                        key={d.id}
+                        variant="outline"
+                        size="xs"
+                        className="h-7 text-[10px] font-medium"
+                        asChild
+                      >
+                        <a href={`/financeiro/contas-a-${d.tipo === "pagar" ? "pagar" : "receber"}?id=${d.id}`}>
+                          Ver/Editar {d.tipo === "pagar" ? "Saída" : "Entrada"}
+                        </a>
+                      </Button>
+                    ))}
+                  </div>
+                )}
               </li>
             ))}
           </ul>
@@ -269,6 +288,10 @@ function Pagina() {
         rotulo: p.label,
         sub: `Entradas ${formatBRL(p.entradaReal)} · Saídas ${formatBRL(p.saidaReal)}`,
         valor: Number(p.entradaReal) - Number(p.saidaReal),
+        details: p.movimentacoesRealizadas?.map((m: any) => ({
+          tipo: m.tipo === "saida" ? "pagar" : "receber",
+          id: m.ref_id
+        })).filter((m: any) => !!m.id)
       })),
     },
     resultadoProj: {
