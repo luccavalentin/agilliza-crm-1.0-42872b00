@@ -349,19 +349,13 @@ function PessoasPage() {
                                           <KeyRound className="mr-2 h-4 w-4" /> Redefinir senha
                                         </DropdownMenuItem>
                                         <DropdownMenuItem
+                                          className={ativo ? "text-destructive" : "text-emerald-600"}
                                           onClick={() =>
                                             statusMut.mutate({ id: p.id, ativar: !ativo })
                                           }
                                         >
-                                          {ativo ? (
-                                            <>
-                                              <Ban className="mr-2 h-4 w-4" /> Desativar
-                                            </>
-                                          ) : (
-                                            <>
-                                              <CheckCircle2 className="mr-2 h-4 w-4" /> Ativar
-                                            </>
-                                          )}
+                                          <ShieldAlert className="mr-2 h-4 w-4" />
+                                          {ativo ? "Bloquear acesso" : "Desbloquear acesso"}
                                         </DropdownMenuItem>
                                       </>
                                     ) : (
