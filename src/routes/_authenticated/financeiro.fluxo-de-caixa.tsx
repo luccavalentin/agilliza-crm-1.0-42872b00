@@ -227,7 +227,7 @@ function DetalheFluxoDialog({
                       <Button
                         key={d.id}
                         variant="outline"
-                        size="xs"
+                        size="sm"
                         className="h-7 text-[10px] font-medium"
                         asChild
                       >
