@@ -30,18 +30,36 @@ export function TabelaSimulacoes({
   escopo,
   verExcluidas,
   handlers,
+  selecionados,
+  onToggleSelecionado,
+  onToggleTodos,
 }: {
   itens: any[];
   isLoading: boolean;
   escopo: "todas" | "minhas";
   verExcluidas: boolean;
   handlers: HandlersLinha;
+  selecionados?: string[];
+  onToggleSelecionado?: (id: string) => void;
+  onToggleTodos?: () => void;
 }) {
+  const selecionaveis = !!onToggleSelecionado;
+  const sel = new Set(selecionados ?? []);
+  const todosMarcados = itens.length > 0 && itens.every((s) => sel.has(s.id));
   return (
     <div className="hidden overflow-x-auto rounded-lg border border-border/60 bg-card md:block">
       <Table>
         <TableHeader>
           <TableRow className="border-border/60 bg-muted/50 hover:bg-muted/50">
+            {selecionaveis && (
+              <TableHead className="h-10 w-10">
+                <Checkbox
+                  checked={todosMarcados}
+                  onCheckedChange={() => onToggleTodos?.()}
+                  aria-label="Selecionar todas"
+                />
+              </TableHead>
+            )}
             <TableHead className="h-10 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Número</TableHead>
             <TableHead className="h-10 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Cliente</TableHead>
             <TableHead className="h-10 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Produto</TableHead>
@@ -52,6 +70,7 @@ export function TabelaSimulacoes({
             <TableHead className="h-10 w-12 text-right text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Ações</TableHead>
           </TableRow>
         </TableHeader>
+
 
         <TableBody className="group/table">
           {isLoading &&
