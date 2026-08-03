@@ -3932,6 +3932,7 @@ export type Database = {
         Row: {
           acesso_tipo: Database["public"]["Enums"]["acesso_tipo"]
           ativo: boolean
+          avatar_url: string | null
           bloqueado_em: string | null
           consentimento_lgpd_em: string | null
           correspondente_id: string | null
@@ -3953,6 +3954,7 @@ export type Database = {
         Insert: {
           acesso_tipo?: Database["public"]["Enums"]["acesso_tipo"]
           ativo?: boolean
+          avatar_url?: string | null
           bloqueado_em?: string | null
           consentimento_lgpd_em?: string | null
           correspondente_id?: string | null
@@ -3974,6 +3976,7 @@ export type Database = {
         Update: {
           acesso_tipo?: Database["public"]["Enums"]["acesso_tipo"]
           ativo?: boolean
+          avatar_url?: string | null
           bloqueado_em?: string | null
           consentimento_lgpd_em?: string | null
           correspondente_id?: string | null

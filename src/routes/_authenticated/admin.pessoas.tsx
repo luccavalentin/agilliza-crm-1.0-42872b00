@@ -4,7 +4,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Plus, Copy, Search, MoreHorizontal, Pencil, KeyRound, Ban, CheckCircle2, Trash2, LogIn, Users } from "lucide-react";
+import { Plus, Copy, Search, MoreHorizontal, Pencil, KeyRound, Ban, CheckCircle2, Trash2, LogIn, Users, Loader2, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -242,68 +242,90 @@ function PessoasPage() {
               <Table className="min-w-[760px]">
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Nome</TableHead>
-                    <TableHead>E-mail</TableHead>
-                    <TableHead>Papel</TableHead>
-                    <TableHead>Acesso</TableHead>
+                    <TableHead>Pessoa</TableHead>
+                    <TableHead>Tipo / Nível</TableHead>
+                    <TableHead>Contato</TableHead>
                     <TableHead>Status</TableHead>
-                    {podeGerenciar && <TableHead className="w-12 text-right">Ações</TableHead>}
+                    {podeGerenciar && <TableHead className="text-right">Ações</TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {pessoasQuery.isLoading ? (
                     <TableRow>
-                      <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
-                        Carregando…
+                      <TableCell colSpan={podeGerenciar ? 5 : 4} className="py-10 text-center text-muted-foreground">
+                        <Loader2 className="mx-auto h-6 w-6 animate-spin" />
+                        <span className="mt-2 block text-xs">Carregando…</span>
                       </TableCell>
                     </TableRow>
                   ) : pessoas.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
-                        Nenhuma pessoa cadastrada ainda. Use “Nova pessoa” para começar.
+                      <TableCell colSpan={podeGerenciar ? 5 : 4} className="py-10 text-center text-muted-foreground">
+                        Nenhuma pessoa encontrada.
                       </TableCell>
                     </TableRow>
                   ) : (
-                    pessoas.map((p) => {
+                    pessoas.map((p: any) => {
                       const ativo = p.ativo && !p.bloqueado_em;
                       const gerenciavel =
                         !p.roles.includes("correspondente") && !p.roles.includes("admin");
                       return (
                         <TableRow key={p.id}>
                           <TableCell className="font-medium">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <span>{p.nome ?? "—"}</span>
-                              {(p.tipos_pessoa?.length ? p.tipos_pessoa : [p.tipo_pessoa]).map(
-                                (slug) => (
-                                  <Badge key={slug} variant="outline" className="font-normal">
-                                    {rotuloTipo(slug)}
-                                  </Badge>
-                                ),
-                              )}
+                            <div className="flex items-center gap-3">
+                              <div className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-full bg-muted shadow-inner ring-1 ring-border">
+                                {p.avatar_url ? (
+                                  <img
+                                    src={p.avatar_url}
+                                    alt={p.nome ?? ""}
+                                    className="h-full w-full object-cover"
+                                  />
+                                ) : (
+                                  <div className="flex h-full w-full items-center justify-center bg-primary/10 text-primary">
+                                    <Users className="h-5 w-5" />
+                                  </div>
+                                )}
+                              </div>
+                              <div className="flex flex-col">
+                                <span className="text-sm font-semibold">{p.nome ?? "—"}</span>
+                                <span className="text-xs text-muted-foreground">{p.email ?? "Sem e-mail"}</span>
+                              </div>
                             </div>
                           </TableCell>
-                          <TableCell className="text-muted-foreground">{p.email ?? "—"}</TableCell>
                           <TableCell>
-                            {p.nivel_acesso_nome ??
-                              (p.roles.map((r) => ROTULO_PAPEL[r] ?? r).join(", ") || "—")}
+                            <div className="flex flex-col gap-1">
+                              <div className="flex flex-wrap gap-1">
+                                  {(p.tipos_pessoa?.length ? p.tipos_pessoa : [p.tipo_pessoa]).map(
+                                    (slug: string) => (
+                                    <Badge key={slug} variant="secondary" className="px-1.5 py-0 text-[10px] font-medium uppercase tracking-wider">
+                                      {rotuloTipo(slug)}
+                                    </Badge>
+                                  ),
+                                )}
+                              </div>
+                              <span className="text-xs font-medium text-muted-foreground">
+                                {p.nivel_acesso_nome ?? (p.roles.map((r: string) => ROTULO_PAPEL[r] ?? r).join(", ") || "—")}
+                              </span>
+                            </div>
                           </TableCell>
                           <TableCell>
-                            <Badge
-                              variant={
-                                p.acesso_tipo === "portal_parceiro" ? "secondary" : "outline"
-                              }
-                            >
-                              {p.acesso_tipo === "portal_parceiro"
-                                ? "Portal do Parceiro"
-                                : "Portal do Correspondente"}
-                            </Badge>
+                            <span className="text-xs text-muted-foreground">{p.telefone ?? "—"}</span>
                           </TableCell>
                           <TableCell>
                             {!p.login_habilitado ? (
-                              <Badge variant="secondary">Sem login</Badge>
+                              <Badge variant="outline" className="h-5 border-dashed px-2 font-normal opacity-60">
+                                Sem login
+                              </Badge>
                             ) : (
-                              <Badge variant={ativo ? "default" : "destructive"}>
-                                {ativo ? "Ativo" : "Inativo"}
+                              <Badge
+                                variant={ativo ? "success" : "destructive"}
+                                className={
+                                  ativo
+                                    ? "h-5 gap-1 bg-emerald-500/10 px-2 font-normal text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400"
+                                    : "h-5 px-2 font-normal"
+                                }
+                              >
+                                {ativo && <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />}
+                                {ativo ? "Ativo" : "Bloqueado"}
                               </Badge>
                             )}
                           </TableCell>
@@ -327,19 +349,13 @@ function PessoasPage() {
                                           <KeyRound className="mr-2 h-4 w-4" /> Redefinir senha
                                         </DropdownMenuItem>
                                         <DropdownMenuItem
+                                          className={ativo ? "text-destructive" : "text-emerald-600"}
                                           onClick={() =>
                                             statusMut.mutate({ id: p.id, ativar: !ativo })
                                           }
                                         >
-                                          {ativo ? (
-                                            <>
-                                              <Ban className="mr-2 h-4 w-4" /> Desativar
-                                            </>
-                                          ) : (
-                                            <>
-                                              <CheckCircle2 className="mr-2 h-4 w-4" /> Ativar
-                                            </>
-                                          )}
+                                          <ShieldAlert className="mr-2 h-4 w-4" />
+                                          {ativo ? "Bloquear acesso" : "Desbloquear acesso"}
                                         </DropdownMenuItem>
                                       </>
                                     ) : (
