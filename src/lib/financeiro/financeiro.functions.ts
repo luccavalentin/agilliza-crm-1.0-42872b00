@@ -1224,7 +1224,16 @@ async function desvincularContaDeComissoes(
   if (tipo === "pagar") {
     await supabase.from("comissoes_usuario").update({ payable_id: null }).in("payable_id", ids);
   }
+  // Remove também os lançamentos realizados no fluxo de caixa gerados por
+  // baixas/estornos dessas contas — caso contrário o saldo acumulado continua
+  // considerando dinheiro de contas que não existem mais.
+  await supabase
+    .from("fluxo_caixa")
+    .delete()
+    .eq("origem", tipo === "pagar" ? "payable" : "receivable")
+    .in("ref_id", ids);
 }
+
 
 
 /** ===== Fluxo de caixa analítico (ERP) ===== */

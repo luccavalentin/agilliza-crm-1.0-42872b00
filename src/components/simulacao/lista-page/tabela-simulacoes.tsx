@@ -6,6 +6,8 @@
 import { Link } from "@tanstack/react-router";
 import { Calculator, Eye, Undo2, User as UserIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+
 import {
   Table,
   TableBody,
@@ -30,18 +32,36 @@ export function TabelaSimulacoes({
   escopo,
   verExcluidas,
   handlers,
+  selecionados,
+  onToggleSelecionado,
+  onToggleTodos,
 }: {
   itens: any[];
   isLoading: boolean;
   escopo: "todas" | "minhas";
   verExcluidas: boolean;
   handlers: HandlersLinha;
+  selecionados?: string[];
+  onToggleSelecionado?: (id: string) => void;
+  onToggleTodos?: () => void;
 }) {
+  const selecionaveis = !!onToggleSelecionado;
+  const sel = new Set(selecionados ?? []);
+  const todosMarcados = itens.length > 0 && itens.every((s) => sel.has(s.id));
   return (
     <div className="hidden overflow-x-auto rounded-lg border border-border/60 bg-card md:block">
       <Table>
         <TableHeader>
           <TableRow className="border-border/60 bg-muted/50 hover:bg-muted/50">
+            {selecionaveis && (
+              <TableHead className="h-10 w-10">
+                <Checkbox
+                  checked={todosMarcados}
+                  onCheckedChange={() => onToggleTodos?.()}
+                  aria-label="Selecionar todas"
+                />
+              </TableHead>
+            )}
             <TableHead className="h-10 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Número</TableHead>
             <TableHead className="h-10 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Cliente</TableHead>
             <TableHead className="h-10 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Produto</TableHead>
@@ -52,6 +72,7 @@ export function TabelaSimulacoes({
             <TableHead className="h-10 w-12 text-right text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Ações</TableHead>
           </TableRow>
         </TableHeader>
+
 
         <TableBody className="group/table">
           {isLoading &&
@@ -69,7 +90,7 @@ export function TabelaSimulacoes({
             ))}
           {!isLoading && itens.length === 0 && (
             <TableRow>
-              <TableCell colSpan={8}>
+              <TableCell colSpan={selecionaveis ? 9 : 8}>
                 <div className="flex flex-col items-center gap-3 py-12 text-center">
                   <Calculator className="h-8 w-8 text-muted-foreground" />
                   <p className="text-sm text-muted-foreground">Nenhuma simulação encontrada.</p>
@@ -95,7 +116,17 @@ export function TabelaSimulacoes({
                 className="group/row relative cursor-pointer border-border/50 transition-all duration-300 ease-out odd:bg-muted/[0.18] hover:z-10 hover:scale-[1.005] hover:bg-[var(--banco-tint)] hover:shadow-[inset_3px_0_0_0_var(--banco),0_12px_28px_-8px_rgba(0,0,0,0.12)]"
                 onClick={() => (verExcluidas ? undefined : handlers.onEditar(s.id))}
               >
+                {selecionaveis && (
+                  <TableCell className="py-3.5" onClick={(e) => e.stopPropagation()}>
+                    <Checkbox
+                      checked={sel.has(s.id)}
+                      onCheckedChange={() => onToggleSelecionado?.(s.id)}
+                      aria-label={`Selecionar simulação ${s.numero_simulacao}`}
+                    />
+                  </TableCell>
+                )}
                 <TableCell className="relative py-3.5">
+
                   <span className="absolute inset-y-0 left-0 w-[3px] origin-top scale-y-0 rounded-r-full bg-[var(--banco)] transition-transform duration-200 group-hover/row:scale-y-100" />
                   <span className="inline-flex items-center rounded-md bg-primary/5 px-2 py-0.5 font-mono text-[13px] font-semibold text-primary ring-1 ring-inset ring-primary/10 transition-colors group-hover:bg-primary/10">
                     {s.numero_simulacao}

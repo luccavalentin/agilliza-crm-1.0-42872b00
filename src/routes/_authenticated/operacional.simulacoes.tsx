@@ -34,6 +34,8 @@ import { FiltrosLista } from "@/components/simulacao/lista-page/filtros-lista";
 import { TabelaSimulacoes } from "@/components/simulacao/lista-page/tabela-simulacoes";
 import { CartoesSimulacoes } from "@/components/simulacao/lista-page/cartoes-simulacoes";
 import type { HandlersLinha } from "@/components/simulacao/lista-page/tipos";
+import { BarraSelecao } from "@/components/shared/barra-selecao";
+
 
 
 /** Primeiro e último dia do mês atual como intervalo ISO (filtro padrão). */
@@ -138,6 +140,38 @@ function Pagina() {
       toast.error("Não foi possível restaurar a simulação.");
     }
   }
+
+  // ── Seleção múltipla + exclusão em massa ──────────────────────────────
+  const [selecionados, setSelecionados] = useState<string[]>([]);
+  const [excluindoLote, setExcluindoLote] = useState(false);
+
+  function toggleSelecionado(id: string) {
+    setSelecionados((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
+  }
+  function toggleTodos() {
+    const ids = (data?.itens ?? []).map((s: any) => s.id);
+    setSelecionados((s) => (ids.every((id: string) => s.includes(id)) ? [] : ids));
+  }
+  async function excluirSelecionados() {
+    setExcluindoLote(true);
+    let ok = 0;
+    for (const id of selecionados) {
+      try {
+        await excluir({ data: { id } });
+        ok++;
+      } catch {
+        /* segue para os demais */
+      }
+    }
+    setExcluindoLote(false);
+    setSelecionados([]);
+    queryClient.invalidateQueries({ queryKey: ["simulacoes"] });
+    queryClient.invalidateQueries({ queryKey: ["crm-painel"] });
+    queryClient.invalidateQueries({ queryKey: ["clientes"] });
+    if (ok) toast.success(`${ok} simulação(ões) excluída(s).`);
+    else toast.error("Não foi possível excluir as simulações selecionadas.");
+  }
+
 
 
 
@@ -503,7 +537,19 @@ function Pagina() {
         escopo={escopo}
         verExcluidas={verExcluidas}
         handlers={handlersLinha}
+        selecionados={selecionados}
+        onToggleSelecionado={toggleSelecionado}
+        onToggleTodos={toggleTodos}
       />
+
+      <BarraSelecao
+        quantidade={selecionados.length}
+        onLimpar={() => setSelecionados([])}
+        onExcluir={excluirSelecionados}
+        excluindo={excluindoLote}
+        rotulo="simulação(ões) selecionada(s)"
+      />
+
 
       {/* Cartões (telas pequenas) */}
       <CartoesSimulacoes

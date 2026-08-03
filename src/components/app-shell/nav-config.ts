@@ -37,7 +37,7 @@ import {
   ClipboardList,
   Link as LinkIcon,
   Percent,
-  Sparkles,
+  Bot,
   BookOpen,
 } from "lucide-react";
 
@@ -99,13 +99,13 @@ export const navInterno: NavGroup[] = [
           },
           {
             label: "Consultor IA",
-            icon: Sparkles,
+            icon: Bot,
             to: "/crm/consultor-ia",
             perm: { modulo: "crm.scan_ia" },
           },
           {
             label: "Base de Conhecimento",
-            icon: BookOpen,
+            icon: Bot,
             to: "/admin/consultor-ia-base",
             perm: { modulo: "admin.integracoes" },
           },

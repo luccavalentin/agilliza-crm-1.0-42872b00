@@ -35,6 +35,14 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+
 import { ExportarFinanceiro } from "@/components/financeiro/exportar-financeiro";
 import { formatBRL } from "@/lib/financeiro/format";
 import { cn } from "@/lib/utils";
@@ -126,42 +134,42 @@ function FiltroPeriodo({
   const ativo = !!(de || ate);
 
   return (
-    <div className="flex flex-wrap items-end gap-2 rounded-xl border border-border/70 bg-card/70 p-2 shadow-sm">
-      <div className="flex items-center gap-2">
-        <CalendarRange className="size-4 shrink-0 text-muted-foreground" />
-        <div className="space-y-1">
+    <div className="grid w-full grid-cols-1 gap-2 rounded-xl border border-border/70 bg-card/70 p-2 shadow-sm sm:w-auto sm:flex sm:flex-wrap sm:items-end">
+      <div className="grid grid-cols-2 items-end gap-2 sm:flex sm:items-center">
+        <CalendarRange className="hidden size-4 shrink-0 text-muted-foreground sm:block" />
+        <div className="min-w-0 space-y-1">
           <Label htmlFor="fluxo-de" className="text-[10px] uppercase tracking-wide text-muted-foreground">
             De
           </Label>
           <Input
             id="fluxo-de"
             type="date"
-            className="h-9 w-[9.5rem]"
+            className="h-9 w-full sm:w-[9.5rem]"
             value={rascDe}
             onChange={(e) => setRascDe(e.target.value)}
           />
         </div>
-        <div className="space-y-1">
+        <div className="min-w-0 space-y-1">
           <Label htmlFor="fluxo-ate" className="text-[10px] uppercase tracking-wide text-muted-foreground">
             Até
           </Label>
           <Input
             id="fluxo-ate"
             type="date"
-            className="h-9 w-[9.5rem]"
+            className="h-9 w-full sm:w-[9.5rem]"
             value={rascAte}
             onChange={(e) => setRascAte(e.target.value)}
           />
         </div>
       </div>
       <div className="flex items-center gap-1.5">
-        <Button size="sm" className="h-9" onClick={() => onAplicar(rascDe, rascAte)}>
+        <Button size="sm" className="h-9 flex-1 sm:flex-none" onClick={() => onAplicar(rascDe, rascAte)}>
           Aplicar
         </Button>
         <Button
           size="sm"
           variant="ghost"
-          className="h-9"
+          className="h-9 flex-1 sm:flex-none"
           disabled={!ativo && !rascDe && !rascAte}
           onClick={() => {
             setRascDe("");
@@ -175,6 +183,57 @@ function FiltroPeriodo({
     </div>
   );
 }
+
+/** Detalhamento em modal ao clicar em um card de KPI do fluxo de caixa. */
+function DetalheFluxoDialog({
+  aberto,
+  onClose,
+  titulo,
+  descricao,
+  linhas,
+}: {
+  aberto: boolean;
+  onClose: () => void;
+  titulo: string;
+  descricao?: string;
+  linhas: { rotulo: string; sub?: string; valor: number }[];
+}) {
+  const total = linhas.reduce((s, l) => s + l.valor, 0);
+  return (
+    <Dialog open={aberto} onOpenChange={(o) => (!o ? onClose() : null)}>
+      <DialogContent className="max-h-[85vh] max-w-2xl overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>{titulo}</DialogTitle>
+          {descricao ? <DialogDescription>{descricao}</DialogDescription> : null}
+        </DialogHeader>
+        {linhas.length === 0 ? (
+          <p className="py-8 text-center text-sm text-muted-foreground">Sem dados no período.</p>
+        ) : (
+          <ul className="divide-y divide-border">
+            {linhas.map((l, i) => (
+              <li key={`${l.rotulo}-${i}`} className="flex items-center justify-between gap-4 py-2.5">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium text-foreground">{l.rotulo}</p>
+                  {l.sub ? <p className="truncate text-xs text-muted-foreground">{l.sub}</p> : null}
+                </div>
+                <span className="shrink-0 font-mono text-sm font-semibold tabular-nums text-foreground">
+                  {formatBRL(l.valor)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+        {linhas.length > 0 && (
+          <div className="flex items-center justify-between rounded-lg bg-muted/60 px-3 py-2 text-sm font-semibold">
+            <span>Total</span>
+            <span className="font-mono tabular-nums">{formatBRL(total)}</span>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 
 
 function Pagina() {
@@ -196,6 +255,72 @@ function Pagina() {
   const r = data?.resumo;
   const pontos = data?.pontos ?? [];
   const vazio = !isLoading && pontos.length === 0;
+
+  // Detalhamento dos cards (clicáveis).
+  const [detalhe, setDetalhe] = useState<string | null>(null);
+  const DETALHES: Record<
+    string,
+    { titulo: string; descricao: string; linhas: { rotulo: string; sub?: string; valor: number }[] }
+  > = {
+    saldoRealizado: {
+      titulo: "Saldo realizado por período",
+      descricao: "Movimentações já efetivadas em caixa.",
+      linhas: pontos.map((p: any) => ({
+        rotulo: p.label,
+        sub: `Entradas ${formatBRL(p.entradaReal)} · Saídas ${formatBRL(p.saidaReal)}`,
+        valor: Number(p.entradaReal) - Number(p.saidaReal),
+      })),
+    },
+    resultadoProj: {
+      titulo: "Resultado projetado por período",
+      descricao: "Entradas menos saídas em aberto.",
+      linhas: pontos.map((p: any) => ({
+        rotulo: p.label,
+        sub: `A receber ${formatBRL(p.entradaProj)} · A pagar ${formatBRL(p.saidaProj)}`,
+        valor: Number(p.entradaProj) - Number(p.saidaProj),
+      })),
+    },
+    saldoFinalProj: {
+      titulo: "Saldo acumulado projetado",
+      descricao: "Realizado somado à projeção, período a período.",
+      linhas: pontos.map((p: any) => ({ rotulo: p.label, valor: Number(p.saldoAcum) })),
+    },
+    coberturaPct: {
+      titulo: "Cobertura de saídas",
+      descricao: "Entradas e saídas em aberto por período.",
+      linhas: pontos.map((p: any) => ({
+        rotulo: p.label,
+        sub: `A receber ${formatBRL(p.entradaProj)} · A pagar ${formatBRL(p.saidaProj)}`,
+        valor: Number(p.entradaProj) - Number(p.saidaProj),
+      })),
+    },
+    entradasProj: {
+      titulo: "Entradas em aberto",
+      descricao: "Contas a receber por origem.",
+      linhas: (data?.entradasPorCategoria ?? []).map((c) => ({ rotulo: c.nome, valor: c.valor })),
+    },
+    saidasProj: {
+      titulo: "Saídas em aberto",
+      descricao: "Contas a pagar por categoria.",
+      linhas: (data?.saidasPorCategoria ?? []).map((c) => ({ rotulo: c.nome, valor: c.valor })),
+    },
+    melhor: {
+      titulo: "Melhores períodos",
+      descricao: "Resultado líquido por período (maior primeiro).",
+      linhas: [...pontos]
+        .sort((a: any, b: any) => b.resultado - a.resultado)
+        .map((p: any) => ({ rotulo: p.label, valor: Number(p.resultado) })),
+    },
+    pior: {
+      titulo: "Piores períodos",
+      descricao: "Resultado líquido por período (menor primeiro).",
+      linhas: [...pontos]
+        .sort((a: any, b: any) => a.resultado - b.resultado)
+        .map((p: any) => ({ rotulo: p.label, valor: Number(p.resultado) })),
+    },
+  };
+  const det = detalhe ? DETALHES[detalhe] : null;
+
 
   return (
     <div className="mx-auto w-full max-w-[1600px] space-y-6 p-3 sm:p-4 md:space-y-8 md:p-6">
@@ -282,6 +407,7 @@ function Pagina() {
               hint="Caixa efetivo acumulado"
               tone={(r?.saldoRealizado ?? 0) >= 0 ? "success" : "danger"}
               icon={Wallet}
+              onDetails={() => setDetalhe("saldoRealizado")}
             />
             <HeroMetric
               label="Resultado projetado"
@@ -289,6 +415,7 @@ function Pagina() {
               hint="Entradas − saídas em aberto"
               tone={(r?.resultadoProj ?? 0) >= 0 ? "brand" : "warning"}
               icon={Scale}
+              onDetails={() => setDetalhe("resultadoProj")}
             />
             <HeroMetric
               label="Saldo final projetado"
@@ -296,6 +423,7 @@ function Pagina() {
               hint="Realizado + projeção"
               tone={(r?.saldoFinalProj ?? 0) >= 0 ? "success" : "danger"}
               icon={TrendingUp}
+              onDetails={() => setDetalhe("saldoFinalProj")}
             />
             <HeroMetric
               label="Cobertura de saídas"
@@ -303,6 +431,7 @@ function Pagina() {
               hint="A receber ÷ a pagar (aberto)"
               tone={(r?.coberturaPct ?? 0) >= 100 ? "success" : "warning"}
               icon={Gauge}
+              onDetails={() => setDetalhe("coberturaPct")}
             />
           </div>
 
@@ -311,23 +440,36 @@ function Pagina() {
               label="Entradas em aberto"
               valor={formatBRL(r?.totalEntradaProj ?? 0)}
               tone="success"
+              onDetails={() => setDetalhe("entradasProj")}
             />
             <MiniMetric
               label="Saídas em aberto"
               valor={formatBRL(r?.totalSaidaProj ?? 0)}
               tone="danger"
+              onDetails={() => setDetalhe("saidasProj")}
             />
             <MiniMetric
               label="Melhor período"
               valor={r?.melhorPeriodo ? formatBRL(r.melhorPeriodo.valor) : "—"}
               tone="success"
+              onDetails={() => setDetalhe("melhor")}
             />
             <MiniMetric
               label="Pior período"
               valor={r?.piorPeriodo ? formatBRL(r.piorPeriodo.valor) : "—"}
               tone="danger"
+              onDetails={() => setDetalhe("pior")}
             />
           </div>
+
+          <DetalheFluxoDialog
+            aberto={!!det}
+            onClose={() => setDetalhe(null)}
+            titulo={det?.titulo ?? ""}
+            descricao={det?.descricao}
+            linhas={det?.linhas ?? []}
+          />
+
 
           <SectionTitle>Evolução do caixa</SectionTitle>
           <PanelCard
@@ -335,7 +477,7 @@ function Pagina() {
             subtitulo="Barras = entradas/saídas por período · área = saldo projetado acumulado"
           >
             <FluxoLegenda />
-            <div className="h-[380px] w-full">
+            <div className="h-[260px] w-full sm:h-[320px] lg:h-[380px]">
               {isLoading ? (
                 <div className="h-full w-full animate-pulse rounded-xl bg-muted/50" />
               ) : (

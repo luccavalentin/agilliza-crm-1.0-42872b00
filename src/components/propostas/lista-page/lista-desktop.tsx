@@ -1,6 +1,8 @@
 import { Link, useRouter } from "@tanstack/react-router";
 import { FileText, Undo2, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -30,6 +32,9 @@ type Props = {
   verExcluidas: boolean;
   handleExcluir: (id: string) => Promise<void>;
   handleRestaurar: (id: string) => Promise<void>;
+  selecionados?: string[];
+  onToggleSelecionado?: (id: string) => void;
+  onToggleTodos?: () => void;
 };
 
 export function ListaDesktop({
@@ -40,13 +45,29 @@ export function ListaDesktop({
   verExcluidas,
   handleExcluir,
   handleRestaurar,
+  selecionados,
+  onToggleSelecionado,
+  onToggleTodos,
 }: Props) {
   const router = useRouter();
+  const selecionaveis = !!onToggleSelecionado;
+  const sel = new Set(selecionados ?? []);
+  const todosMarcados = itens.length > 0 && itens.every((p) => sel.has(p.id));
+  const colunas = selecionaveis ? 7 : 6;
   return (
     <Card className="hidden overflow-x-auto rounded-xl border-border/60 shadow-sm md:block">
       <Table>
         <TableHeader>
           <TableRow className="border-border/60 bg-muted/40 hover:bg-muted/40">
+            {selecionaveis && (
+              <TableHead className="w-10">
+                <Checkbox
+                  checked={todosMarcados}
+                  onCheckedChange={() => onToggleTodos?.()}
+                  aria-label="Selecionar todas"
+                />
+              </TableHead>
+            )}
             <TableHead className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
               Número
             </TableHead>
@@ -68,18 +89,20 @@ export function ListaDesktop({
           </TableRow>
         </TableHeader>
 
+
         <TableBody className="group/table">
           {isLoading &&
             Array.from({ length: 5 }).map((_, i) => (
               <TableRow key={i}>
-                <TableCell colSpan={6}>
+                <TableCell colSpan={colunas}>
+
                   <Skeleton className="h-8 w-full rounded-lg" />
                 </TableCell>
               </TableRow>
             ))}
           {!isLoading && totalItens === 0 && (
             <TableRow className="hover:bg-transparent">
-              <TableCell colSpan={6}>
+              <TableCell colSpan={colunas}>
                 <div className="flex flex-col items-center gap-3 py-12 text-center">
                   <div className="flex size-14 items-center justify-center rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/15">
                     <FileText className="h-6 w-6" />
@@ -110,7 +133,17 @@ export function ListaDesktop({
                     router.navigate({ to: "/operacional/propostas/$id", params: { id: p.id } })
                   }
                 >
+                  {selecionaveis && (
+                    <TableCell onClick={(e) => e.stopPropagation()}>
+                      <Checkbox
+                        checked={sel.has(p.id)}
+                        onCheckedChange={() => onToggleSelecionado?.(p.id)}
+                        aria-label={`Selecionar proposta ${p.numero_proposta}`}
+                      />
+                    </TableCell>
+                  )}
                   <TableCell className="relative">
+
                     <span className="absolute inset-y-0 left-0 w-[3px] origin-top scale-y-0 rounded-r-full bg-[var(--banco)] transition-transform duration-200 group-hover/row:scale-y-100" />
                     {(() => {
                       const nb = numeroBancoParaExibir(p.numero_proposta_banco);
