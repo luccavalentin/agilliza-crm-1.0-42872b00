@@ -34,6 +34,8 @@ import { FiltrosLista } from "@/components/simulacao/lista-page/filtros-lista";
 import { TabelaSimulacoes } from "@/components/simulacao/lista-page/tabela-simulacoes";
 import { CartoesSimulacoes } from "@/components/simulacao/lista-page/cartoes-simulacoes";
 import type { HandlersLinha } from "@/components/simulacao/lista-page/tipos";
+import { BarraSelecao } from "@/components/shared/barra-selecao";
+
 
 
 /** Primeiro e último dia do mês atual como intervalo ISO (filtro padrão). */
