@@ -3,7 +3,13 @@ import { assertModuloPermitido } from "@/lib/route-guards";
 import { CentralChatPage } from "@/components/operacional/central-chat/central-chat";
 
 export const Route = createFileRoute("/_authenticated/operacional/chats")({
-  beforeLoad: () => assertModuloPermitido("operacional.chats"),
+  // O módulo de chat foi criado depois; níveis antigos que já viam Demandas
+  // ou Clientes continuam com acesso para não perder a conversa interna.
+  beforeLoad: () =>
+    assertModuloPermitido("operacional.chats", [
+      "operacional.demandas",
+      "crm.clientes",
+    ]),
   head: () => ({
     meta: [
       { title: "Central de Conversas · Operacional" },
