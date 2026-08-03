@@ -219,6 +219,38 @@ function Pagina() {
     }
   }
 
+  // ── Seleção múltipla + exclusão em massa ──────────────────────────────
+  const [selecionados, setSelecionados] = useState<string[]>([]);
+  const [excluindoLote, setExcluindoLote] = useState(false);
+
+  function toggleSelecionado(id: string) {
+    setSelecionados((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
+  }
+  function toggleTodos() {
+    const ids = itens.map((p) => p.id);
+    setSelecionados((s) => (ids.every((id) => s.includes(id)) ? [] : ids));
+  }
+  async function excluirSelecionados() {
+    setExcluindoLote(true);
+    let ok = 0;
+    for (const id of selecionados) {
+      try {
+        await excluir({ data: { id } });
+        ok++;
+      } catch {
+        /* segue para os demais */
+      }
+    }
+    setExcluindoLote(false);
+    setSelecionados([]);
+    queryClient.invalidateQueries({ queryKey: ["propostas"] });
+    queryClient.invalidateQueries({ queryKey: ["crm-painel"] });
+    queryClient.invalidateQueries({ queryKey: ["clientes"] });
+    if (ok) toast.success(`${ok} proposta(s) excluída(s).`);
+    else toast.error("Não foi possível excluir as propostas selecionadas.");
+  }
+
+
   return (
     <div className="mx-auto w-full max-w-[1600px] space-y-4 p-3 sm:space-y-6 sm:p-6">
       {/* Cabeçalho */}
