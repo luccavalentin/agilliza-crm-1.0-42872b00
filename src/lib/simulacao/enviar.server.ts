@@ -654,8 +654,8 @@ export async function enviarSimulacaoImpl({
           ctx,
         );
 
-        const dados = integ ?? simResp;
-        const dadosApi = dados?.simulacao ?? dados?.data ?? dados;
+        let dados = integ ?? simResp;
+        let dadosApi = dados?.simulacao ?? dados?.data ?? dados;
 
         // Detecção de retorno vazio: alguns bancos (ex.: Santander em Home
         // Equity) respondem à /integracao sem processar a simulação, deixando
@@ -663,17 +663,56 @@ export async function enviarSimulacaoImpl({
         // null ou zero. Sem esse guard o registro fica marcado como "simulada"
         // mas exibe zeros/vazio na UI. Marcamos como "erro" com mensagem clara
         // e mostramos qualquer descricaoRespostaBanco devolvida pelo banco.
-        const parcelaRetorno =
-          dadosApi?.valorParcelaBanco ??
-          dadosApi?.valorParcelaBancoMax ??
-          dadosApi?.valorParcelaSimulacao;
-        const taxaRetorno =
-          dadosApi?.taxaJurosAnoBanco ?? dadosApi?.taxaCetAnoBanco;
-        const financRetorno =
-          dadosApi?.valorFinanciamentoBanco ?? dadosApi?.valorFinanciamentoBancoMax;
-        const semParcela = parcelaRetorno == null || Number(parcelaRetorno) <= 0;
-        const semTaxa = taxaRetorno == null || Number(taxaRetorno) <= 0;
-        const semFinanc = financRetorno == null || Number(financRetorno) <= 0;
+        const vazio = (d: any) => {
+          const parcela = d?.valorParcelaBanco ?? d?.valorParcelaBancoMax ?? d?.valorParcelaSimulacao;
+          const taxa = d?.taxaJurosAnoBanco ?? d?.taxaCetAnoBanco;
+          const financ = d?.valorFinanciamentoBanco ?? d?.valorFinanciamentoBancoMax;
+          return (
+            (parcela == null || Number(parcela) <= 0) &&
+            (taxa == null || Number(taxa) <= 0) &&
+            (financ == null || Number(financ) <= 0)
+          );
+        };
+
+        // Alguns bancos (Itaú, principalmente) processam a integração de forma
+        // assíncrona: a resposta do POST /integracao volta ainda "em
+        // processamento" (tipoSituacao "P") e sem valores. A integração não
+        // possui webhook, então consultamos a oportunidade algumas vezes para
+        // capturar o retorno assim que ele chegar. Bancos que já respondem
+        // com valores no POST não entram neste laço.
+        if (vazio(dadosApi)) {
+          for (let tentativa = 0; tentativa < 5 && vazio(dadosApi); tentativa++) {
+            await new Promise((r) => setTimeout(r, 3000));
+            try {
+              const op = await chamarIntegracao<any>(
+                `/oportunidade/${idOportunidade}`,
+                "GET",
+                undefined,
+                ctx,
+              );
+              const lista: any[] =
+                op?.oportunidade?.simulacoes ?? op?.simulacoes ?? [];
+              const achado = lista.find(
+                (s: any) => String(s?.idSimulacao ?? "") === String(idSimulacao),
+              );
+              if (achado && !vazio(achado)) {
+                dados = achado;
+                dadosApi = achado;
+              }
+            } catch (e) {
+              console.warn(
+                "Falha ao consultar retorno da simulação (polling).",
+                e instanceof Error ? e.message : String(e),
+              );
+              break;
+            }
+          }
+        }
+
+        const semParcela = vazio(dadosApi);
+        const semTaxa = semParcela;
+        const semFinanc = semParcela;
+
         if (semParcela && semTaxa && semFinanc) {
           const desc = dadosApi?.descricaoRespostaBanco;
           const motivoBanco =
