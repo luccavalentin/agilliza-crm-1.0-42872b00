@@ -2,10 +2,11 @@ import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Loader2, Save, User } from "lucide-react";
+import { Loader2, Save, User, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { UploadAvatar } from "./upload-avatar";
 import {
   Dialog,
   DialogContent,
@@ -102,23 +103,22 @@ export function EditarPessoaDialog({
           <DialogTitle>Editar pessoa</DialogTitle>
         </DialogHeader>
         <form onSubmit={submeter} className="space-y-4">
-          <div className="flex flex-col items-center justify-center gap-4 py-4">
-            <div className="group relative h-24 w-24 overflow-hidden rounded-full border-2 border-primary/20 bg-muted shadow-inner ring-4 ring-background transition-all hover:border-primary">
-              {avatarUrl ? (
-                <img src={avatarUrl} alt="Avatar" className="h-full w-full object-cover" />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center bg-primary/5 text-primary/40">
-                  <User className="h-12 w-12" />
-                </div>
-              )}
-            </div>
+          <div className="flex flex-col items-center justify-center gap-6 py-4">
+            <UploadAvatar
+              currentUrl={avatarUrl}
+              onUploadComplete={setAvatarUrl}
+              userId={pessoa?.id}
+            />
             <div className="w-full space-y-2">
-              <Label htmlFor="ep-avatar">URL da Foto</Label>
+              <Label htmlFor="ep-avatar" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Ou informe a URL da Foto
+              </Label>
               <Input
                 id="ep-avatar"
                 placeholder="https://exemplo.com/foto.jpg"
                 value={avatarUrl ?? ""}
                 onChange={(e) => setAvatarUrl(e.target.value)}
+                className="bg-muted/30 focus-visible:ring-primary/30"
               />
             </div>
           </div>
