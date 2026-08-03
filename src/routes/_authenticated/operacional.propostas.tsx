@@ -25,6 +25,8 @@ import {
 import { FiltrosPropostas } from "@/components/propostas/lista-page/filtros";
 import { ListaMobile } from "@/components/propostas/lista-page/lista-mobile";
 import { ListaDesktop } from "@/components/propostas/lista-page/lista-desktop";
+import { BarraSelecao } from "@/components/shared/barra-selecao";
+
 import {
   intervaloMesAtual,
   type Escopo,
