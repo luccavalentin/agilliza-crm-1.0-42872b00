@@ -82,7 +82,46 @@ export const criarCompra = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const editarCompra = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z
+      .object({
+        id: z.string().uuid(),
+        descricao: z.string().min(3, "Descreva a solicitação."),
+        valor: z.number().nonnegative(),
+        categoria: z.string().optional().nullable(),
+      })
+      .parse(data),
+  )
+  .handler(async ({ data, context }): Promise<{ ok: true }> => {
+    const { supabase } = context;
+    const { error } = await supabase
+      .from("purchase_requests")
+      .update({
+        descricao: data.descricao,
+        valor: data.valor,
+        categoria: data.categoria ?? null,
+      })
+      .eq("id", data.id)
+      .select("id")
+      .maybeSingle();
+    if (error) throw error;
+    return { ok: true };
+  });
+
+export const excluirCompra = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
+  .handler(async ({ data, context }): Promise<{ ok: true }> => {
+    const { supabase } = context;
+    const { error } = await supabase.from("purchase_requests").delete().eq("id", data.id);
+    if (error) throw error;
+    return { ok: true };
+  });
+
 export const decidirCompra = createServerFn({ method: "POST" })
+
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) =>
     z

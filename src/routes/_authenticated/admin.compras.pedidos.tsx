@@ -3,7 +3,7 @@ import { useState, useMemo } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ShoppingCart, Plus, Search } from "lucide-react";
+import { ShoppingCart, Plus, Search, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,9 +26,17 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { ConfirmDelete } from "@/components/shared/confirm-delete";
 import { assertModuloPermitido } from "@/lib/route-guards";
 import { getMinhaSessao } from "@/lib/session.functions";
-import { listarCompras, criarCompra } from "@/lib/admin/compras.functions";
+import {
+  listarCompras,
+  criarCompra,
+  editarCompra,
+  excluirCompra,
+  type CompraLinha,
+} from "@/lib/admin/compras.functions";
+
 
 export const Route = createFileRoute("/_authenticated/admin/compras/pedidos")({
   head: () => ({ meta: [{ title: "Pedidos de Compras — Agilliza" }] }),
@@ -219,18 +227,19 @@ function Pagina() {
               <TableHead className="text-right">Valor</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Enviado em</TableHead>
+              <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {q.isLoading ? (
               <TableRow>
-                <TableCell colSpan={6}>
+                <TableCell colSpan={7}>
                   <Skeleton className="h-5 w-full" />
                 </TableCell>
               </TableRow>
             ) : meusPedidos.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
+                <TableCell colSpan={7} className="py-10 text-center text-muted-foreground">
                   Nenhum pedido encontrado. Clique em “Novo pedido” para começar.
                 </TableCell>
               </TableRow>
@@ -247,9 +256,26 @@ function Pagina() {
                   <TableCell className="text-muted-foreground">
                     {new Date(c.created_at).toLocaleDateString("pt-BR")}
                   </TableCell>
+                  <TableCell>
+                    <div className="flex items-center justify-end gap-1">
+                      <EditarPedidoDialog
+                        pedido={c}
+                        onSalvo={() => qc.invalidateQueries({ queryKey: ["admin-compras"] })}
+                      />
+                      <ConfirmDelete
+                        descricao={`Excluir o pedido “${c.descricao}”? Essa ação não pode ser desfeita.`}
+                        onConfirm={async () => {
+                          await excluirCompra({ data: { id: c.id } });
+                          toast.success("Pedido excluído.");
+                          qc.invalidateQueries({ queryKey: ["admin-compras"] });
+                        }}
+                      />
+                    </div>
+                  </TableCell>
                 </TableRow>
               ))
             )}
+
           </TableBody>
         </Table>
       </div>
@@ -276,5 +302,96 @@ function KpiCard({
         </Badge>
       </div>
     </div>
+  );
+}
+
+function EditarPedidoDialog({
+  pedido,
+  onSalvo,
+}: {
+  pedido: CompraLinha;
+  onSalvo: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [descricao, setDescricao] = useState(pedido.descricao);
+  const [categoria, setCategoria] = useState(pedido.categoria ?? "");
+  const [valor, setValor] = useState(String(pedido.valor));
+  const [salvando, setSalvando] = useState(false);
+  const pendente = pedido.status === "pendente";
+
+  async function salvar() {
+    setSalvando(true);
+    try {
+      await editarCompra({
+        data: {
+          id: pedido.id,
+          descricao: descricao.trim(),
+          valor: Number(valor.replace(/\./g, "").replace(",", ".")) || 0,
+          categoria: categoria.trim() || null,
+        },
+      });
+      toast.success("Pedido atualizado.");
+      setOpen(false);
+      onSalvo();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Não foi possível salvar o pedido.");
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(o) => {
+        setOpen(o);
+        if (o) {
+          setDescricao(pedido.descricao);
+          setCategoria(pedido.categoria ?? "");
+          setValor(String(pedido.valor));
+        }
+      }}
+    >
+      <DialogTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8"
+          title={pendente ? "Editar pedido" : "Somente pedidos pendentes podem ser editados"}
+          disabled={!pendente}
+        >
+          <Pencil className="h-4 w-4" />
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="w-[calc(100%-2rem)] max-w-md">
+        <DialogHeader>
+          <DialogTitle>Editar pedido</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div className="space-y-1">
+            <Label>Descrição</Label>
+            <Textarea value={descricao} onChange={(e) => setDescricao(e.target.value)} rows={3} />
+          </div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="space-y-1">
+              <Label>Categoria</Label>
+              <Input value={categoria} onChange={(e) => setCategoria(e.target.value)} />
+            </div>
+            <div className="space-y-1">
+              <Label>Valor</Label>
+              <Input inputMode="decimal" value={valor} onChange={(e) => setValor(e.target.value)} />
+            </div>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="ghost" onClick={() => setOpen(false)}>
+            Cancelar
+          </Button>
+          <Button onClick={salvar} disabled={salvando || descricao.trim().length < 3}>
+            {salvando ? "Salvando…" : "Salvar"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
