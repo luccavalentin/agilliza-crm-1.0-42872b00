@@ -126,42 +126,42 @@ function FiltroPeriodo({
   const ativo = !!(de || ate);
 
   return (
-    <div className="flex flex-wrap items-end gap-2 rounded-xl border border-border/70 bg-card/70 p-2 shadow-sm">
-      <div className="flex items-center gap-2">
-        <CalendarRange className="size-4 shrink-0 text-muted-foreground" />
-        <div className="space-y-1">
+    <div className="grid w-full grid-cols-1 gap-2 rounded-xl border border-border/70 bg-card/70 p-2 shadow-sm sm:w-auto sm:flex sm:flex-wrap sm:items-end">
+      <div className="grid grid-cols-2 items-end gap-2 sm:flex sm:items-center">
+        <CalendarRange className="hidden size-4 shrink-0 text-muted-foreground sm:block" />
+        <div className="min-w-0 space-y-1">
           <Label htmlFor="fluxo-de" className="text-[10px] uppercase tracking-wide text-muted-foreground">
             De
           </Label>
           <Input
             id="fluxo-de"
             type="date"
-            className="h-9 w-[9.5rem]"
+            className="h-9 w-full sm:w-[9.5rem]"
             value={rascDe}
             onChange={(e) => setRascDe(e.target.value)}
           />
         </div>
-        <div className="space-y-1">
+        <div className="min-w-0 space-y-1">
           <Label htmlFor="fluxo-ate" className="text-[10px] uppercase tracking-wide text-muted-foreground">
             Até
           </Label>
           <Input
             id="fluxo-ate"
             type="date"
-            className="h-9 w-[9.5rem]"
+            className="h-9 w-full sm:w-[9.5rem]"
             value={rascAte}
             onChange={(e) => setRascAte(e.target.value)}
           />
         </div>
       </div>
       <div className="flex items-center gap-1.5">
-        <Button size="sm" className="h-9" onClick={() => onAplicar(rascDe, rascAte)}>
+        <Button size="sm" className="h-9 flex-1 sm:flex-none" onClick={() => onAplicar(rascDe, rascAte)}>
           Aplicar
         </Button>
         <Button
           size="sm"
           variant="ghost"
-          className="h-9"
+          className="h-9 flex-1 sm:flex-none"
           disabled={!ativo && !rascDe && !rascAte}
           onClick={() => {
             setRascDe("");
@@ -175,6 +175,57 @@ function FiltroPeriodo({
     </div>
   );
 }
+
+/** Detalhamento em modal ao clicar em um card de KPI do fluxo de caixa. */
+function DetalheFluxoDialog({
+  aberto,
+  onClose,
+  titulo,
+  descricao,
+  linhas,
+}: {
+  aberto: boolean;
+  onClose: () => void;
+  titulo: string;
+  descricao?: string;
+  linhas: { rotulo: string; sub?: string; valor: number }[];
+}) {
+  const total = linhas.reduce((s, l) => s + l.valor, 0);
+  return (
+    <Dialog open={aberto} onOpenChange={(o) => (!o ? onClose() : null)}>
+      <DialogContent className="max-h-[85vh] max-w-2xl overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>{titulo}</DialogTitle>
+          {descricao ? <DialogDescription>{descricao}</DialogDescription> : null}
+        </DialogHeader>
+        {linhas.length === 0 ? (
+          <p className="py-8 text-center text-sm text-muted-foreground">Sem dados no período.</p>
+        ) : (
+          <ul className="divide-y divide-border">
+            {linhas.map((l, i) => (
+              <li key={`${l.rotulo}-${i}`} className="flex items-center justify-between gap-4 py-2.5">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium text-foreground">{l.rotulo}</p>
+                  {l.sub ? <p className="truncate text-xs text-muted-foreground">{l.sub}</p> : null}
+                </div>
+                <span className="shrink-0 font-mono text-sm font-semibold tabular-nums text-foreground">
+                  {formatBRL(l.valor)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+        {linhas.length > 0 && (
+          <div className="flex items-center justify-between rounded-lg bg-muted/60 px-3 py-2 text-sm font-semibold">
+            <span>Total</span>
+            <span className="font-mono tabular-nums">{formatBRL(total)}</span>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 
 
 function Pagina() {
