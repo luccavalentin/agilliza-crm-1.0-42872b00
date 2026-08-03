@@ -94,7 +94,8 @@ export function ListaDesktop({
           {isLoading &&
             Array.from({ length: 5 }).map((_, i) => (
               <TableRow key={i}>
-                <TableCell colSpan={6}>
+                <TableCell colSpan={colunas}>
+
                   <Skeleton className="h-8 w-full rounded-lg" />
                 </TableCell>
               </TableRow>
