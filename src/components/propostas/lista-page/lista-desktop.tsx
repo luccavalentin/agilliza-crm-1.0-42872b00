@@ -30,6 +30,9 @@ type Props = {
   verExcluidas: boolean;
   handleExcluir: (id: string) => Promise<void>;
   handleRestaurar: (id: string) => Promise<void>;
+  selecionados?: string[];
+  onToggleSelecionado?: (id: string) => void;
+  onToggleTodos?: () => void;
 };
 
 export function ListaDesktop({
@@ -40,13 +43,29 @@ export function ListaDesktop({
   verExcluidas,
   handleExcluir,
   handleRestaurar,
+  selecionados,
+  onToggleSelecionado,
+  onToggleTodos,
 }: Props) {
   const router = useRouter();
+  const selecionaveis = !!onToggleSelecionado;
+  const sel = new Set(selecionados ?? []);
+  const todosMarcados = itens.length > 0 && itens.every((p) => sel.has(p.id));
+  const colunas = selecionaveis ? 7 : 6;
   return (
     <Card className="hidden overflow-x-auto rounded-xl border-border/60 shadow-sm md:block">
       <Table>
         <TableHeader>
           <TableRow className="border-border/60 bg-muted/40 hover:bg-muted/40">
+            {selecionaveis && (
+              <TableHead className="w-10">
+                <Checkbox
+                  checked={todosMarcados}
+                  onCheckedChange={() => onToggleTodos?.()}
+                  aria-label="Selecionar todas"
+                />
+              </TableHead>
+            )}
             <TableHead className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
               Número
             </TableHead>
@@ -67,6 +86,7 @@ export function ListaDesktop({
             </TableHead>
           </TableRow>
         </TableHeader>
+
 
         <TableBody className="group/table">
           {isLoading &&
