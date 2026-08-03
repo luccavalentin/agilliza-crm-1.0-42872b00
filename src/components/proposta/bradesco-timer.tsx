@@ -52,20 +52,36 @@ export function BradescoRetornoTimer({
   return (
     <div
       className={cn(
-        "flex items-center gap-3 rounded-lg border border-warning/30 bg-warning/10 px-4 py-3 text-sm",
-        className,
+        "flex flex-col items-center justify-center space-y-4 rounded-xl border border-primary/20 bg-gradient-to-b from-card to-muted/30 p-8 text-center shadow-lg transition-all duration-500",
+        className
       )}
     >
-      <Clock className={cn("h-5 w-5 shrink-0 text-warning-foreground", !expirado && "animate-pulse")} />
+      <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground/80">
+        <Clock className={cn("h-4 w-4", !expirado && "animate-pulse text-primary")} />
+        {expirado ? "Tempo estimado atingido" : "Aguardando retorno Bradesco"}
+      </div>
+
       {expirado ? (
-        <p className="text-warning-foreground">
-          O tempo mínimo do Bradesco foi atingido — o retorno pode chegar a qualquer momento.
-        </p>
+        <div className="space-y-2">
+          <div className="text-4xl font-black tracking-tighter text-primary/40 animate-pulse">
+            00:00
+          </div>
+          <p className="max-w-md text-sm font-medium text-foreground">
+            O tempo mínimo foi atingido — o retorno pode chegar a qualquer momento.
+          </p>
+        </div>
       ) : (
-        <p className="text-warning-foreground">
-          O Bradesco tem o tempo mínimo de 15 minutos para retorno. Aguarde:{" "}
-          <span className="font-semibold tabular-nums">{fmt(restante)}</span>
-        </p>
+        <div className="space-y-4">
+          <div className="relative">
+            <div className="text-6xl font-black tracking-tighter tabular-nums text-primary drop-shadow-[0_0_15px_rgba(var(--primary),0.3)]">
+              {fmt(restante)}
+            </div>
+            <div className="absolute -inset-4 -z-10 rounded-full bg-primary/5 blur-3xl" />
+          </div>
+          <p className="max-w-xs text-sm font-medium text-muted-foreground">
+            O banco Bradesco requer um tempo mínimo de 15 minutos para processar a análise inicial.
+          </p>
+        </div>
       )}
     </div>
   );
