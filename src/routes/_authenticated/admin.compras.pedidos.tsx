@@ -227,18 +227,19 @@ function Pagina() {
               <TableHead className="text-right">Valor</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Enviado em</TableHead>
+              <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {q.isLoading ? (
               <TableRow>
-                <TableCell colSpan={6}>
+                <TableCell colSpan={7}>
                   <Skeleton className="h-5 w-full" />
                 </TableCell>
               </TableRow>
             ) : meusPedidos.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
+                <TableCell colSpan={7} className="py-10 text-center text-muted-foreground">
                   Nenhum pedido encontrado. Clique em “Novo pedido” para começar.
                 </TableCell>
               </TableRow>
@@ -255,9 +256,26 @@ function Pagina() {
                   <TableCell className="text-muted-foreground">
                     {new Date(c.created_at).toLocaleDateString("pt-BR")}
                   </TableCell>
+                  <TableCell>
+                    <div className="flex items-center justify-end gap-1">
+                      <EditarPedidoDialog
+                        pedido={c}
+                        onSalvo={() => qc.invalidateQueries({ queryKey: ["admin-compras"] })}
+                      />
+                      <ConfirmDelete
+                        descricao={`Excluir o pedido “${c.descricao}”? Essa ação não pode ser desfeita.`}
+                        onConfirm={async () => {
+                          await excluirCompra({ data: { id: c.id } });
+                          toast.success("Pedido excluído.");
+                          qc.invalidateQueries({ queryKey: ["admin-compras"] });
+                        }}
+                      />
+                    </div>
+                  </TableCell>
                 </TableRow>
               ))
             )}
+
           </TableBody>
         </Table>
       </div>
