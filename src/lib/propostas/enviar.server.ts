@@ -1245,6 +1245,36 @@ export async function sincronizarPropostaImpl({
   // terminal, nunca exibimos uma etapa anterior do funil (ex.: "Simulação"),
   // que contradiz o status e confunde o usuário.
   const statusEfetivo = (novoStatus ?? prop.status) as PropostaStatus;
+
+  // ---- Propaga o desfecho da proposta para as linhas de banco ----
+  // A lista de propostas exibe proposta_bancos.status_banco. Quando o desfecho
+  // (recusa/aprovação/cancelamento) vem da etapa/atividade da oportunidade e não
+  // do snapshot da simulação, as linhas de banco ficavam presas em "em_analise"
+  // e a lista mostrava um status diferente do detalhe. Aqui alinhamos os dois.
+  const DESFECHO_BANCO: Partial<Record<PropostaStatus, string>> = {
+    credito_recusado: "recusada",
+    credito_aprovado: "aprovada",
+    cancelada: "cancelada",
+  };
+  const statusBancoDesfecho = DESFECHO_BANCO[statusEfetivo];
+  if (statusBancoDesfecho) {
+    const patchesById = new Map(patchesBanco.map((p) => [String(p.id), p]));
+    const idsDesatualizados = ((bancosProp ?? []) as any[])
+      .filter((pb) => {
+        const atual = String(
+          (patchesById.get(String(pb.id))?.status_banco as string) ?? pb.status_banco ?? "",
+        );
+        return atual !== statusBancoDesfecho && atual !== "erro";
+      })
+      .map((pb) => pb.id);
+    if (idsDesatualizados.length > 0) {
+      await supabase
+        .from("proposta_bancos")
+        .update({ status_banco: statusBancoDesfecho, situacao_banco: statusBancoDesfecho })
+        .in("id", idsDesatualizados);
+    }
+  }
+
   const ROTULO_DETALHE: Partial<Record<PropostaStatus, string>> = {
     credito_recusado: "Crédito recusado",
     credito_aprovado: "Crédito aprovado",
