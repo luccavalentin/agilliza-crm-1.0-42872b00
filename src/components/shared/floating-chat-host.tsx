@@ -1,6 +1,6 @@
 import { FloatingWindow } from "@/components/shared/pop-out-panel";
 import {
-  useFloatingChat,
+  useFloatingChats,
   fecharChatFlutuante,
 } from "@/components/shared/floating-chat-store";
 import { ConversaMenuAcoesLive } from "@/components/shared/conversa-menu-acoes";
@@ -40,77 +40,104 @@ function ChatComMenu({
  * janela permanece aberta ao navegar entre telas do sistema.
  */
 export function FloatingChatHost() {
-  const flutuante = useFloatingChat();
-  if (!flutuante) return null;
-
-  if (flutuante.kind === "demanda") {
-    return (
-      <FloatingWindow
-        title={`Demanda · ${flutuante.info?.interlocutorNome ?? flutuante.info?.numero ?? "Usuário"}`}
-        onClose={fecharChatFlutuante}
-        startMinimized={flutuante.minimized}
-      >
-        <ChatComMenu
-          chatTipo="demanda"
-          chatId={flutuante.demandaId}
-          nomeReferencia={
-            flutuante.info?.interlocutorNome ??
-            flutuante.info?.titulo ??
-            flutuante.info?.numero ??
-            null
-          }
-        >
-          <div className="h-full min-h-[24rem]">
-            <DemandaChatConversa
-              key={flutuante.demandaId}
-              demandaId={flutuante.demandaId}
-              info={flutuante.info}
-            />
-          </div>
-        </ChatComMenu>
-      </FloatingWindow>
-    );
-  }
-
-  if (flutuante.kind === "dm") {
-    return (
-      <FloatingWindow
-        title={`Mensagem · ${flutuante.info?.nome ?? "Colega"}`}
-        onClose={fecharChatFlutuante}
-        startMinimized={flutuante.minimized}
-      >
-        <ChatComMenu
-          chatTipo="dm"
-          chatId={flutuante.conversaId}
-          nomeReferencia={flutuante.info?.nome ?? null}
-        >
-          <div className="h-full min-h-[24rem]">
-            <DmConversa key={flutuante.conversaId} conversaId={flutuante.conversaId} />
-          </div>
-        </ChatComMenu>
-      </FloatingWindow>
-    );
-  }
+  const janelas = useFloatingChats();
 
   return (
-    <FloatingWindow
-      title={`Conversa · ${flutuante.info?.nome ?? "Cliente"}`}
-      onClose={fecharChatFlutuante}
-      startMinimized={flutuante.minimized}
-    >
-      <ChatComMenu
-        chatTipo="cliente"
-        chatId={flutuante.clienteId}
-        nomeReferencia={flutuante.info?.nome ?? null}
-      >
-        <div className="h-full min-h-[24rem]">
-          <ChatClienteConversa
-            key={flutuante.clienteId}
-            clienteId={flutuante.clienteId}
-            info={flutuante.info}
-          />
-        </div>
-      </ChatComMenu>
-    </FloatingWindow>
+    <>
+      {janelas.map((flutuante, index) => {
+        const key =
+          flutuante.kind === "cliente"
+            ? `cliente-${flutuante.clienteId}`
+            : flutuante.kind === "demanda"
+              ? `demanda-${flutuante.demandaId}`
+              : `dm-${flutuante.conversaId}`;
+
+        const onClose = () => {
+          if (flutuante.kind === "cliente") fecharChatFlutuante("cliente", flutuante.clienteId);
+          else if (flutuante.kind === "demanda") fecharChatFlutuante("demanda", flutuante.demandaId);
+          else fecharChatFlutuante("dm", flutuante.conversaId);
+        };
+
+        // Offset positions slightly if there are multiple windows
+        const offsetStyle = index > 0 ? {
+          transform: `translate(${index * 20}px, ${index * 20}px)`
+        } : undefined;
+
+        if (flutuante.kind === "demanda") {
+          return (
+            <div key={key} style={offsetStyle}>
+              <FloatingWindow
+                title={`Demanda · ${flutuante.info?.interlocutorNome ?? flutuante.info?.numero ?? "Usuário"}`}
+                onClose={onClose}
+                startMinimized={flutuante.minimized}
+              >
+                <ChatComMenu
+                  chatTipo="demanda"
+                  chatId={flutuante.demandaId}
+                  nomeReferencia={
+                    flutuante.info?.interlocutorNome ??
+                    flutuante.info?.titulo ??
+                    flutuante.info?.numero ??
+                    null
+                  }
+                >
+                  <div className="h-full min-h-[24rem]">
+                    <DemandaChatConversa
+                      demandaId={flutuante.demandaId}
+                      info={flutuante.info}
+                    />
+                  </div>
+                </ChatComMenu>
+              </FloatingWindow>
+            </div>
+          );
+        }
+
+        if (flutuante.kind === "dm") {
+          return (
+            <div key={key} style={offsetStyle}>
+              <FloatingWindow
+                title={`Mensagem · ${flutuante.info?.nome ?? "Colega"}`}
+                onClose={onClose}
+                startMinimized={flutuante.minimized}
+              >
+                <ChatComMenu
+                  chatTipo="dm"
+                  chatId={flutuante.conversaId}
+                  nomeReferencia={flutuante.info?.nome ?? null}
+                >
+                  <div className="h-full min-h-[24rem]">
+                    <DmConversa conversaId={flutuante.conversaId} />
+                  </div>
+                </ChatComMenu>
+              </FloatingWindow>
+            </div>
+          );
+        }
+
+        return (
+          <div key={key} style={offsetStyle}>
+            <FloatingWindow
+              title={`Conversa · ${flutuante.info?.nome ?? "Cliente"}`}
+              onClose={onClose}
+              startMinimized={flutuante.minimized}
+            >
+              <ChatComMenu
+                chatTipo="cliente"
+                chatId={flutuante.clienteId}
+                nomeReferencia={flutuante.info?.nome ?? null}
+              >
+                <div className="h-full min-h-[24rem]">
+                  <ChatClienteConversa
+                    clienteId={flutuante.clienteId}
+                    info={flutuante.info}
+                  />
+                </div>
+              </ChatComMenu>
+            </FloatingWindow>
+          </div>
+        );
+      })}
+    </>
   );
 }
