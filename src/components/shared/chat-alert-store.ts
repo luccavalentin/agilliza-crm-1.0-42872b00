@@ -59,7 +59,7 @@ export function signalIncomingChat(
     vistas.clear();
     vistas.add(id);
   }
-  if (!tipoAtivo("chat")) return;
+  // Removida a verificação tipoAtivo("chat") para garantir recebimento universal
   // Requisito: TODA NOTIFICAÇÃO DEVE EMITIR SOM (chat e outras)
   if (!info?.skipSound) playChatSound();
   notificarSO(info?.titulo ?? "Nova mensagem", info?.corpo);

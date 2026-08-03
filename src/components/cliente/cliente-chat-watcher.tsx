@@ -23,7 +23,7 @@ export function ClienteChatWatcher() {
     // Só faz polling agressivo quando a aba está visível. Em segundo plano
     // o alerta sonoro é bloqueado pelo navegador de qualquer forma, então
     // aliviamos servidor/bateria pausando o poll.
-    refetchInterval: (q: any) => (q.state.status === "error" ? false : 4000),
+    refetchInterval: (q: any) => (q.state.status === "error" ? false : 3000), // Aumentamos a frequência para 3s para ser quase imediato
   });
 
 
