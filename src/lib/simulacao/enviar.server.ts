@@ -680,9 +680,20 @@ export async function enviarSimulacaoImpl({
         // possui webhook, então consultamos a oportunidade algumas vezes para
         // capturar o retorno assim que ele chegar. Bancos que já respondem
         // com valores no POST não entram neste laço.
+        // Alguns bancos (Itaú, principalmente) processam a integração de forma
+        // assíncrona: a resposta do POST /integracao volta ainda "em
+        // processamento" (tipoSituacao "P") e sem valores. A integração não
+        // possui webhook, então consultamos a oportunidade algumas vezes para
+        // capturar o retorno assim que ele chegar. Aumentamos o polling para o
+        // Itaú (12 tentativas a cada 8s) pois o tempo de resposta deles variou.
         if (vazio(dadosApi)) {
-          for (let tentativa = 0; tentativa < 10 && vazio(dadosApi); tentativa++) {
-            await new Promise((r) => setTimeout(r, 6000));
+          const isItau = String(b.nome_banco ?? "").toLowerCase().includes("itaú") ||
+                         String(b.nome_banco ?? "").toLowerCase().includes("itau");
+          const maxTentativas = isItau ? 15 : 10;
+          const delay = isItau ? 8000 : 6000;
+
+          for (let tentativa = 0; tentativa < maxTentativas && vazio(dadosApi); tentativa++) {
+            await new Promise((r) => setTimeout(r, delay));
             try {
               const op = await chamarIntegracao<any>(
                 `/oportunidade/${idOportunidade}`,

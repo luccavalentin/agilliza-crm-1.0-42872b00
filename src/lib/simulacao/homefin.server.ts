@@ -241,7 +241,7 @@ export async function chamarIntegracao<T = unknown>(
         Authorization: `Bearer ${token}`,
       },
       body: bodyNormalizado ? JSON.stringify(bodyNormalizado) : undefined,
-      signal: AbortSignal.timeout(30_000),
+      signal: AbortSignal.timeout(90_000),
     });
   } catch (e) {
     await registrarLog({ ...ctx, endpoint, metodo: method, request: bodyNormalizado, erro: String(e) });
