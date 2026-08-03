@@ -103,6 +103,12 @@ export const navInterno: NavGroup[] = [
             to: "/crm/consultor-ia",
             perm: { modulo: "crm.scan_ia" },
           },
+          {
+            label: "Base de Conhecimento",
+            icon: BookOpen,
+            to: "/admin/consultor-ia-base",
+            perm: { modulo: "admin.integracoes" },
+          },
         ],
       },
 
@@ -390,7 +396,7 @@ export const navInterno: NavGroup[] = [
         perm: { modulo: "relatorios.geral" },
         children: [
           {
-            label: "Relatório gerencial de operações",
+            label: "Relatório gerencial",
             icon: LayoutDashboard,
             to: "/relatorios/gerencial",
           },
@@ -413,13 +419,7 @@ export const navInterno: NavGroup[] = [
             perm: { modulo: "relatorios.geral" },
           },
           {
-            label: "Relatório consolidado",
-            icon: LineChart,
-            to: "/relatorios/consolidado",
-            perm: { modulo: "relatorios.geral" },
-          },
-          {
-            label: "Relatórios comerciais",
+            label: "Produção e Comissões (Comercial)",
             icon: Percent,
             to: "/relatorios/comerciais",
             perm: { modulo: "relatorios.geral" },
@@ -482,12 +482,6 @@ export const navInterno: NavGroup[] = [
             label: "Relatórios personalizados",
             icon: SlidersHorizontal,
             to: "/relatorios/personalizados",
-            perm: { modulo: "relatorios.geral" },
-          },
-          {
-            label: "Exportações",
-            icon: FolderOpen,
-            to: "/relatorios/exportacoes",
             perm: { modulo: "relatorios.geral" },
           },
         ],
