@@ -50,7 +50,7 @@ function notificarSO(titulo: string, corpo?: string): void {
 /** Sinaliza a chegada de UMA mensagem de chat recebida (deduplicada por id). */
 export function signalIncomingChat(
   id: string,
-  info?: { titulo?: string; corpo?: string },
+  info?: { titulo?: string; corpo?: string; skipSound?: boolean },
 ): void {
   if (vistas.has(id)) return;
   vistas.add(id);
@@ -60,7 +60,7 @@ export function signalIncomingChat(
     vistas.add(id);
   }
   if (!tipoAtivo("chat")) return;
-  if (tipoComSom("chat")) playChatSound();
+  if (tipoComSom("chat") && !info?.skipSound) playChatSound();
   notificarSO(info?.titulo ?? "Nova mensagem", info?.corpo);
   startFlash();
 }

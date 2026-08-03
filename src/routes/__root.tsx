@@ -8,7 +8,7 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, type ReactNode, lazy, Suspense } from "react";
 import { THEME_INIT_SCRIPT } from "@/lib/theme";
 import { CookieConsent } from "@/components/legal/cookie-consent";
 import { InstallPrompt } from "@/components/pwa/install-prompt";
