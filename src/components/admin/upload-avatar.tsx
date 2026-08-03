@@ -30,7 +30,7 @@ export function UploadAvatar({ currentUrl, onUploadComplete, userId }: UploadAva
       
       const fileExt = file.name.split(".").pop();
       const fileName = `${userId || Math.random()}-${Math.random()}.${fileExt}`;
-      const filePath = `avatars/${fileName}`;
+      const filePath = fileName; // No bucket 'avatars', colocamos na raiz do bucket
 
       const { error: uploadError } = await supabase.storage
         .from("avatars")
