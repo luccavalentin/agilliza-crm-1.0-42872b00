@@ -4,7 +4,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Plus, Copy, Search, MoreHorizontal, Pencil, KeyRound, Ban, CheckCircle2, Trash2, LogIn, Users } from "lucide-react";
+import { Plus, Copy, Search, MoreHorizontal, Pencil, KeyRound, Ban, CheckCircle2, Trash2, LogIn, Users, Loader2, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -252,18 +252,19 @@ function PessoasPage() {
                 <TableBody>
                   {pessoasQuery.isLoading ? (
                     <TableRow>
-                      <TableCell colSpan={podeGerenciar ? 5 : 4} className="py-10 text-center">
-                        <Loader2 className="mx-auto h-6 w-6 animate-spin text-muted-foreground" />
+                      <TableCell colSpan={podeGerenciar ? 5 : 4} className="py-10 text-center text-muted-foreground">
+                        <Loader2 className="mx-auto h-6 w-6 animate-spin" />
+                        <span className="mt-2 block text-xs">Carregando…</span>
                       </TableCell>
                     </TableRow>
-                  ) : pessoasFiltradas.length === 0 ? (
+                  ) : pessoas.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={podeGerenciar ? 5 : 4} className="py-10 text-center text-muted-foreground">
                         Nenhuma pessoa encontrada.
                       </TableCell>
                     </TableRow>
                   ) : (
-                    pessoasFiltradas.map((p) => {
+                    pessoas.map((p: any) => {
                       const ativo = p.ativo && !p.bloqueado_em;
                       const gerenciavel =
                         !p.roles.includes("correspondente") && !p.roles.includes("admin");
@@ -293,8 +294,8 @@ function PessoasPage() {
                           <TableCell>
                             <div className="flex flex-col gap-1">
                               <div className="flex flex-wrap gap-1">
-                                {(p.tipos_pessoa?.length ? p.tipos_pessoa : [p.tipo_pessoa]).map(
-                                  (slug) => (
+                                  {(p.tipos_pessoa?.length ? p.tipos_pessoa : [p.tipo_pessoa]).map(
+                                    (slug: string) => (
                                     <Badge key={slug} variant="secondary" className="px-1.5 py-0 text-[10px] font-medium uppercase tracking-wider">
                                       {rotuloTipo(slug)}
                                     </Badge>
@@ -302,7 +303,7 @@ function PessoasPage() {
                                 )}
                               </div>
                               <span className="text-xs font-medium text-muted-foreground">
-                                {p.nivel_acesso_nome ?? (p.roles.map((r) => ROTULO_PAPEL[r] ?? r).join(", ") || "—")}
+                                {p.nivel_acesso_nome ?? (p.roles.map((r: string) => ROTULO_PAPEL[r] ?? r).join(", ") || "—")}
                               </span>
                             </div>
                           </TableCell>
