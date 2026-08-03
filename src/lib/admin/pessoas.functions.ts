@@ -17,6 +17,7 @@ export const criarSchema = z
     nivel_acesso_id: z.string().uuid("Selecione um nível de acesso."),
     tipo_pessoa: z.string().min(1).default("usuario"),
     tipos_pessoa: z.array(z.string().min(1)).optional(),
+    avatar_url: z.string().url().optional().nullable(),
     com_login: z.boolean().default(true),
     dados_parceiro: z
       .object({
@@ -37,6 +38,7 @@ export type TipoPessoa = string;
 export interface PessoaLista {
   id: string;
   nome: string | null;
+  avatar_url: string | null;
   email: string | null;
   telefone: string | null;
   acesso_tipo: "sistema" | "portal_parceiro";
@@ -77,7 +79,7 @@ export const listarPessoas = createServerFn({ method: "GET" })
 
     const { data: pessoas, error } = await supabase
       .from("profiles")
-      .select("id, nome, email, telefone, acesso_tipo, tipo_pessoa, tipos_pessoa, login_habilitado, ativo, bloqueado_em, nivel_acesso_id")
+      .select("id, nome, avatar_url, email, telefone, acesso_tipo, tipo_pessoa, tipos_pessoa, login_habilitado, ativo, bloqueado_em, nivel_acesso_id")
       .eq("correspondente_id", correspondenteId)
       .order("created_at", { ascending: true });
 
@@ -331,6 +333,7 @@ export const atualizarSchema = z.object({
   nivel_acesso_id: z.string().uuid("Selecione um nível de acesso."),
   tipo_pessoa: z.string().min(1).optional(),
   tipos_pessoa: z.array(z.string().min(1)).optional(),
+  avatar_url: z.string().url().optional().nullable(),
 });
 
 /** Atualiza dados básicos e o nível de acesso (papel/portal) de uma pessoa. */
@@ -370,6 +373,7 @@ export const atualizarPessoa = createServerFn({ method: "POST" })
         telefone: data.telefone ?? null,
         nivel_acesso_id: data.nivel_acesso_id,
         acesso_tipo: acessoTipo,
+        avatar_url: data.avatar_url,
         ...(tiposList.length > 0
           ? { tipo_pessoa: tiposList[0], tipos_pessoa: tiposList }
           : {}),
