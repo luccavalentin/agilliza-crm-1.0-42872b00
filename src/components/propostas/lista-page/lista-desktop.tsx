@@ -102,7 +102,7 @@ export function ListaDesktop({
             ))}
           {!isLoading && totalItens === 0 && (
             <TableRow className="hover:bg-transparent">
-              <TableCell colSpan={6}>
+              <TableCell colSpan={colunas}>
                 <div className="flex flex-col items-center gap-3 py-12 text-center">
                   <div className="flex size-14 items-center justify-center rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/15">
                     <FileText className="h-6 w-6" />
