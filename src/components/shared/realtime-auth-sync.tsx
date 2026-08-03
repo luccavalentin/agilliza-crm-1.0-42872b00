@@ -29,12 +29,12 @@ export function RealtimeAuthSync() {
     function aplicarToken(token: string | null) {
       supabase.realtime.setAuth(token);
       for (const ch of supabase.getChannels()) {
-        // "joined" = canal já ativo antes do token correto ser aplicado.
-        // Fazemos unsubscribe/subscribe para renegociar com o novo JWT.
         const estado = (ch as unknown as { state?: string }).state;
-        if (estado === "joined") {
+        // Reingressa em canais "joined" ou "joining" para garantir que o token seja aplicado
+        // IMEDIATAMENTE e as mensagens filtradas por RLS não sejam perdidas.
+        if (estado === "joined" || estado === "joining") {
           void ch.unsubscribe().then(() => {
-            try { ch.subscribe(); } catch { /* ignora — hook original recria */ }
+            try { ch.subscribe(); } catch { /* ignora */ }
           });
         }
       }
