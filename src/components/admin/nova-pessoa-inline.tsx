@@ -71,6 +71,7 @@ export function NovaPessoaInline({
   const [email, setEmail] = useState("");
   const [tiposPessoa, setTiposPessoa] = useState<string[]>([]);
   const [comLogin, setComLogin] = useState(true);
+  const [avatarUrl, setAvatarUrl] = useState("");
 
   const [comissao, setComissao] = useState("");
   const [nivelId, setNivelId] = useState<string>("");
@@ -215,6 +216,7 @@ export function NovaPessoaInline({
       tipo_pessoa: tiposPessoa[0],
       tipos_pessoa: tiposPessoa,
       com_login: efetivoComLogin,
+      avatar_url: avatarUrl.trim() || undefined,
       dados_parceiro: isParceiro
         ? {
             comissao_padrao: comissao ? Number(comissao) : undefined,
@@ -324,6 +326,35 @@ export function NovaPessoaInline({
               </p>
             )}
           </div>
+        </div>
+
+        {/* Foto do Perfil */}
+        <div className="space-y-2">
+          <Label htmlFor="np-avatar">URL da Foto de Perfil (Opcional)</Label>
+          <div className="flex items-center gap-4">
+            <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-full bg-muted shadow-inner ring-1 ring-border">
+              {avatarUrl ? (
+                <img src={avatarUrl} alt="Preview" className="h-full w-full object-cover" />
+              ) : nome.trim() ? (
+                <div className="flex h-full w-full items-center justify-center bg-primary/10 text-primary font-bold">
+                  {nome.charAt(0)}
+                </div>
+              ) : (
+                <div className="flex h-full w-full items-center justify-center bg-primary/5 text-primary/30">
+                  <UserPlus className="h-6 w-6" />
+                </div>
+              )}
+            </div>
+            <Input
+              id="np-avatar"
+              placeholder="https://exemplo.com/foto.jpg"
+              value={avatarUrl}
+              onChange={(e) => setAvatarUrl(e.target.value)}
+            />
+          </div>
+          <p className="text-[10px] text-muted-foreground">
+            Insira um link direto para a imagem.
+          </p>
         </div>
 
         {/* Campos de parceiro — exibidos quando o nível é do Portal do Parceiro */}
