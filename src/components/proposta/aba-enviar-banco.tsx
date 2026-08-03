@@ -19,6 +19,7 @@ import {
   FolderOpen,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   AlertDialog,
@@ -269,19 +270,24 @@ export function AbaEnviarBanco({
       <Card className="overflow-hidden border-primary/20 bg-gradient-to-br from-primary/[0.07] via-card to-card shadow-sm">
         <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-start gap-3">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15">
+            <span className={cn(
+              "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ring-1",
+              totalPdfs === 0 ? "bg-destructive/10 text-destructive ring-destructive/20" : "bg-primary/10 text-primary ring-primary/15"
+            )}>
               <Landmark className="h-5 w-5" />
             </span>
             <div className="text-sm">
-              <p className="font-semibold tracking-tight text-foreground">
-                Enviar documentos ao banco
+              <p className={cn(
+                "font-semibold tracking-tight",
+                totalPdfs === 0 ? "text-destructive" : "text-foreground"
+              )}>
+                {totalPdfs === 0 ? "Nenhum banco/documento pronto" : "Enviar documentos ao banco"}
               </p>
               <p className="text-muted-foreground">
                 {totalPdfs > 0
                   ? `${totalPdfs} documento(s) em PDF/JPG/PNG prontos para envio.`
-                  : "Nenhum documento em PDF/JPG/PNG disponível ainda."}
+                  : "A proposta precisa de um banco selecionado e documentos em PDF/JPG/PNG."}
               </p>
-
             </div>
           </div>
           <Button
