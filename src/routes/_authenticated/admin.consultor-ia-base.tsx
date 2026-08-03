@@ -15,7 +15,6 @@ import {
   Pencil,
   Plus,
   Search,
-  Sparkles,
   Tag,
   Trash2,
   X,
@@ -51,8 +50,6 @@ import {
   CATEGORIAS_BASE,
   excluirItemBase,
   listarBaseConhecimento,
-  listarSugestoesBase,
-  resolverSugestaoBase,
   salvarItemBase,
   type ItemBase,
 } from "@/lib/consultor-ia/consultor-ia.functions";
@@ -190,11 +187,6 @@ function BibliotecaPage() {
     queryFn: () => listarBaseConhecimento({ data: { incluirInativos: true } }),
   });
 
-  const { data: sugestoes } = useQuery({
-    queryKey: ["consultor-ia-sugestoes"],
-    queryFn: () => listarSugestoesBase(),
-  });
-
   const salvar = useMutation({
     mutationFn: (r: Rascunho) =>
       salvarItemBase({
@@ -224,14 +216,6 @@ function BibliotecaPage() {
       toast.success("Verbete removido da biblioteca.");
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Falha ao remover."),
-  });
-
-  const resolver = useMutation({
-    mutationFn: (v: { id: string; status: "resolvida" | "descartada" }) =>
-      resolverSugestaoBase({ data: v }),
-    onSuccess: async () => {
-      await qc.invalidateQueries({ queryKey: ["consultor-ia-sugestoes"] });
-    },
   });
 
   const base = itens ?? [];
