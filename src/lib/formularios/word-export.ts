@@ -52,6 +52,7 @@ export async function gerarPapelTimbradoWord(dados: PapelTimbradoDados = {}) {
                       width: 120,
                       height: 35,
                     },
+                    type: "png", // Adicionado tipo para satisfazer IImageOptions
                   }),
                 ],
               }),
