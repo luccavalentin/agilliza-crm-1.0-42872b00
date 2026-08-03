@@ -18,7 +18,7 @@ export function BancosProposta({
 }) {
   if (!bancos || bancos.length === 0) {
     return (
-      <span className="inline-flex items-center rounded-md bg-destructive/10 px-1.5 py-0.5 text-[10px] font-medium text-destructive ring-1 ring-inset ring-destructive/20">
+      <span className="inline-flex items-center rounded-md bg-destructive/10 px-1.5 py-0.5 text-[10px] font-medium text-destructive ring-1 ring-inset ring-destructive/20 animate-pulse">
         Nenhum banco selecionado
       </span>
     );

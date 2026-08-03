@@ -252,7 +252,7 @@ function Pagina() {
     // alguns segundos para propagar a inclusão da proposta; ler antes disso
     // devolve estado transitório e faria a UI piscar "erro de envio".
     const t0 = setTimeout(tick, 30_000);
-    iv = setInterval(tick, 20_000);
+    iv = setInterval(tick, 10_000);
     return () => {
       cancelado = true;
       clearTimeout(t0);
@@ -405,8 +405,12 @@ function Pagina() {
                 </span>
               ) : (
                 <div className="flex flex-col items-start gap-1">
-                  <span className="text-destructive font-medium">Nenhum banco selecionado</span>
-                  <p className="text-[10px] text-muted-foreground leading-tight">Vá em "Enviar ao Banco" para escolher um.</p>
+                  <span className="text-destructive font-medium animate-bounce-subtle">
+                    Escolha um banco para prosseguir
+                  </span>
+                  <p className="text-[10px] text-muted-foreground leading-tight">
+                    Vá na aba "Enviar ao Banco" e selecione as opções desejadas.
+                  </p>
                 </div>
               )
             }
