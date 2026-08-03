@@ -83,7 +83,7 @@ export const navInterno: NavGroup[] = [
         label: "Chat e Follow-up Cliente",
         icon: MessagesSquare,
         to: "/crm/chat",
-        perm: { modulo: "crm.clientes" },
+        perm: { modulo: "crm.chat" },
       },
       {
         label: "Scan IA",
@@ -233,7 +233,7 @@ export const navInterno: NavGroup[] = [
         label: "Chats",
         icon: MessagesSquare,
         to: "/operacional/chats",
-        perm: { modulo: "operacional.demandas" },
+        perm: { modulo: "operacional.chats" },
       },
     ],
   },
