@@ -21,9 +21,8 @@ export function UploadAvatar({ currentUrl, onUploadComplete, userId }: UploadAva
     if (!file.type.startsWith("image/")) {
       return toast.error("Por favor, selecione uma imagem válida.");
     }
-    if (file.size > 2 * 1024 * 1024) {
-      return toast.error("A imagem deve ter no máximo 2MB.");
-    }
+
+
 
     try {
       setIsUploading(true);
