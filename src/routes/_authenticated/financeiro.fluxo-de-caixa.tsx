@@ -407,6 +407,7 @@ function Pagina() {
               hint="Caixa efetivo acumulado"
               tone={(r?.saldoRealizado ?? 0) >= 0 ? "success" : "danger"}
               icon={Wallet}
+              onDetails={() => setDetalhe("saldoRealizado")}
             />
             <HeroMetric
               label="Resultado projetado"
@@ -414,6 +415,7 @@ function Pagina() {
               hint="Entradas − saídas em aberto"
               tone={(r?.resultadoProj ?? 0) >= 0 ? "brand" : "warning"}
               icon={Scale}
+              onDetails={() => setDetalhe("resultadoProj")}
             />
             <HeroMetric
               label="Saldo final projetado"
@@ -421,6 +423,7 @@ function Pagina() {
               hint="Realizado + projeção"
               tone={(r?.saldoFinalProj ?? 0) >= 0 ? "success" : "danger"}
               icon={TrendingUp}
+              onDetails={() => setDetalhe("saldoFinalProj")}
             />
             <HeroMetric
               label="Cobertura de saídas"
@@ -428,6 +431,7 @@ function Pagina() {
               hint="A receber ÷ a pagar (aberto)"
               tone={(r?.coberturaPct ?? 0) >= 100 ? "success" : "warning"}
               icon={Gauge}
+              onDetails={() => setDetalhe("coberturaPct")}
             />
           </div>
 
@@ -436,23 +440,36 @@ function Pagina() {
               label="Entradas em aberto"
               valor={formatBRL(r?.totalEntradaProj ?? 0)}
               tone="success"
+              onDetails={() => setDetalhe("entradasProj")}
             />
             <MiniMetric
               label="Saídas em aberto"
               valor={formatBRL(r?.totalSaidaProj ?? 0)}
               tone="danger"
+              onDetails={() => setDetalhe("saidasProj")}
             />
             <MiniMetric
               label="Melhor período"
               valor={r?.melhorPeriodo ? formatBRL(r.melhorPeriodo.valor) : "—"}
               tone="success"
+              onDetails={() => setDetalhe("melhor")}
             />
             <MiniMetric
               label="Pior período"
               valor={r?.piorPeriodo ? formatBRL(r.piorPeriodo.valor) : "—"}
               tone="danger"
+              onDetails={() => setDetalhe("pior")}
             />
           </div>
+
+          <DetalheFluxoDialog
+            aberto={!!det}
+            onClose={() => setDetalhe(null)}
+            titulo={det?.titulo ?? ""}
+            descricao={det?.descricao}
+            linhas={det?.linhas ?? []}
+          />
+
 
           <SectionTitle>Evolução do caixa</SectionTitle>
           <PanelCard
