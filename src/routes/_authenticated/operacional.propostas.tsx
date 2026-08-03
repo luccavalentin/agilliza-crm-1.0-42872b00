@@ -130,7 +130,7 @@ function Pagina() {
     const iv = setInterval(() => {
       if (falhas >= 3) return;
       tick();
-    }, 45_000);
+    }, 20_000);
     return () => {
       cancelado = true;
       clearTimeout(t0);

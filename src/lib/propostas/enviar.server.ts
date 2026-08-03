@@ -1080,8 +1080,9 @@ export async function sincronizarPropostaImpl({
     // (status_banco em enviada/em_analise/aprovada/condicionada/recusada, ou
     // já há protocolo do banco gravado), P/E no polling é apenas leitura
     // transitória do Homefin (a inclusão acabou de acontecer e o snapshot da
-    // simulação ainda não propagou). Ignoramos o "falha" para não regredir o
-    // status para erro no meio do fluxo — o próximo polling reconcilia.
+    // simulação ainda não propagou). No caso do Itaú, ignoramos P/E para evitar
+    // "recusa fantasma" ou status de erro enquanto o banco ainda processa.
+    // Isso garante que o status permaneça em "Enviada" até que um retorno real chegue.
     const STATUS_BANCO_CONFIRMADO = new Set([
       "enviada",
       "em_analise",

@@ -681,8 +681,8 @@ export async function enviarSimulacaoImpl({
         // capturar o retorno assim que ele chegar. Bancos que já respondem
         // com valores no POST não entram neste laço.
         if (vazio(dadosApi)) {
-          for (let tentativa = 0; tentativa < 5 && vazio(dadosApi); tentativa++) {
-            await new Promise((r) => setTimeout(r, 3000));
+          for (let tentativa = 0; tentativa < 10 && vazio(dadosApi); tentativa++) {
+            await new Promise((r) => setTimeout(r, 6000));
             try {
               const op = await chamarIntegracao<any>(
                 `/oportunidade/${idOportunidade}`,
