@@ -60,7 +60,11 @@ export function ChatAlertWatcher({ meuId }: Props) {
           signalIncomingChat(row.id, {
             titulo: `Nova mensagem · ${nome}`,
             corpo: "Você recebeu uma mensagem no chat do cliente.",
+            skipSound: true, // Já vamos emitir som abaixo de qualquer forma
           });
+          
+          // Som explícito para garantir que toca em todo chat aberto
+          import("@/lib/chat-sound").then(m => m.playChatSound());
 
           abrirChatFlutuante(
             row.cliente_id,
@@ -112,7 +116,10 @@ export function ChatAlertWatcher({ meuId }: Props) {
           signalIncomingChat(row.id, {
             titulo: `Nova mensagem · Demanda ${numero}`,
             corpo: interlocutorNome ?? titulo ?? undefined,
+            skipSound: true,
           });
+          
+          import("@/lib/chat-sound").then(m => m.playChatSound());
 
           abrirDemandaChatFlutuante(
             row.demanda_id,
@@ -164,7 +171,10 @@ export function ChatAlertWatcher({ meuId }: Props) {
           signalIncomingChat(row.id, {
             titulo: `Nova mensagem · ${nome}`,
             corpo: "Você recebeu uma mensagem direta.",
+            skipSound: true,
           });
+          
+          import("@/lib/chat-sound").then(m => m.playChatSound());
           abrirDmFlutuante(row.conversa_id, { nome }, { minimized: false });
         },
       )

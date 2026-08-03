@@ -107,7 +107,7 @@ export function TabBtn({
   );
 }
 
-export function ChatFlutuandoAviso() {
+export function ChatFlutuandoAviso({ tipo, id }: { tipo: string; id: string }) {
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-3 p-8 text-center">
       <div className="flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">
@@ -119,7 +119,7 @@ export function ChatFlutuandoAviso() {
           Continua disponível enquanto você navega pelo sistema.
         </p>
       </div>
-      <Button variant="outline" size="sm" onClick={() => fecharChatFlutuante()}>
+      <Button variant="outline" size="sm" onClick={() => fecharChatFlutuante(tipo, id)}>
         Reacoplar janela
       </Button>
     </div>

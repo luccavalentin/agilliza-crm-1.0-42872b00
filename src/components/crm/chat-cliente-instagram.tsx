@@ -19,7 +19,7 @@ import {
 import {
   abrirChatFlutuante,
   fecharChatFlutuante,
-  useFloatingChat,
+  useFloatingChats,
 } from "@/components/shared/floating-chat-store";
 import { ConversaMenuAcoesLive } from "@/components/shared/conversa-menu-acoes";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -259,8 +259,8 @@ function ConversaComSoltar({
   clienteId: string;
   info?: ChatClienteInfo;
 }) {
-  const flutuante = useFloatingChat();
-  const estaFlutuando = flutuante?.kind === "cliente" && flutuante.clienteId === clienteId;
+  const janelas = useFloatingChats();
+  const estaFlutuando = janelas.some(c => c.kind === "cliente" && c.clienteId === clienteId);
 
   if (estaFlutuando) {
     return (
@@ -276,7 +276,7 @@ function ConversaComSoltar({
         </div>
         <button
           type="button"
-          onClick={fecharChatFlutuante}
+          onClick={() => fecharChatFlutuante("cliente", clienteId)}
           className="rounded-md border border-border/60 bg-background px-3 py-1.5 text-xs font-medium text-foreground shadow-sm transition-colors hover:bg-accent"
         >
           Reacoplar janela

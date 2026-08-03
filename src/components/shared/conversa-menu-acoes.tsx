@@ -118,6 +118,9 @@ export function ConversaMenuAcoes({
     qc.invalidateQueries({ queryKey: ["threads-central"] });
     qc.invalidateQueries({ queryKey: ["chat-estado-usuario"] });
     qc.invalidateQueries({ queryKey: ["chat-etiqueta-vinculos"] });
+    // Invalida também os caches das janelas flutuantes que possam estar abertas
+    qc.invalidateQueries({ queryKey: ["demanda-meta"] });
+    qc.invalidateQueries({ queryKey: ["demanda"] });
     onChanged?.();
   };
 

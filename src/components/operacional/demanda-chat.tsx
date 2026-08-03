@@ -5,7 +5,7 @@ import { Maximize2, Search } from "lucide-react";
 import {
   abrirDemandaChatFlutuante,
   fecharChatFlutuante,
-  useFloatingChat,
+  useFloatingChats,
 } from "@/components/shared/floating-chat-store";
 import { ConversaMenuAcoesLive } from "@/components/shared/conversa-menu-acoes";
 import { Button } from "@/components/ui/button";
@@ -41,8 +41,8 @@ export function DemandaChatTab({
   demandaId: string;
   info?: DemandaChatInfo;
 }) {
-  const flutuante = useFloatingChat();
-  const estaFlutuando = flutuante?.kind === "demanda" && flutuante.demandaId === demandaId;
+  const janelas = useFloatingChats();
+  const estaFlutuando = janelas.some(c => c.kind === "demanda" && c.demandaId === demandaId);
 
   if (estaFlutuando) {
     return (
@@ -58,7 +58,7 @@ export function DemandaChatTab({
         </div>
         <button
           type="button"
-          onClick={fecharChatFlutuante}
+          onClick={() => fecharChatFlutuante("demanda", demandaId)}
           className="rounded-md border border-border/60 bg-background px-3 py-1.5 text-xs font-medium text-foreground shadow-sm transition-colors hover:bg-accent"
         >
           Reacoplar janela
