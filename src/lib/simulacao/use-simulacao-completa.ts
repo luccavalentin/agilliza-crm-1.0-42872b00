@@ -620,6 +620,19 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
     toast.success("Dados do cônjuge puxados do cadastro do CRM.");
   }
 
+  // Casado/união estável: puxa o cônjuge do CRM automaticamente (uma vez por cadastro).
+  const autoConjugeRef = useRef<string | null>(null);
+  useEffect(() => {
+    const casado = f.estado_civil === "CA" || f.estado_civil === "UE";
+    if (!casado || !crmVinculado || !crmTemConjuge) return;
+    if (String(f.nome_conjuge ?? "").trim()) return;
+    if (autoConjugeRef.current === f.cliente_id) return;
+    autoConjugeRef.current = f.cliente_id ?? null;
+    setF((prev) => patchPuxarConjugeCRM(prev, crmVinculado));
+    toast.success("Cônjuge puxado automaticamente do cadastro do CRM.");
+  }, [f.estado_civil, f.nome_conjuge, f.cliente_id, crmVinculado, crmTemConjuge]);
+
+
   const podeInverter = useMemo(() => {
     return (
       mostraConjuge &&
