@@ -343,7 +343,7 @@ function PessoasPage() {
                                   </DropdownMenuTrigger>
                                   <DropdownMenuContent align="end">
                                     <DropdownMenuItem onClick={() => setEditando(p)}>
-                                      <Pencil className="mr-2 h-4 w-4" /> Editar
+                                      <Pencil className="mr-2 h-4 w-4" /> Editar e-mail / dados
                                     </DropdownMenuItem>
                                     {p.login_habilitado ? (
                                       <>

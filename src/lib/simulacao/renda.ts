@@ -137,7 +137,8 @@ export function rendaMinimaDoBanco(banco: BancoRendaApi): number | null {
     const apiRenda = numeroPositivo(detalhe?.rendaMinimaExigida);
     if (apiRenda) return apiRenda;
   }
-  return rendaMinimaParaParcela(parcela, teto);
+  const rendaCrua = rendaMinimaParaParcela(parcela, teto);
+  return Math.ceil(rendaCrua / 1000) * 1000;
 }
 
 /**
@@ -245,7 +246,9 @@ export function avaliarRendaMinima(params: {
   const prestacaoTotal = parcelaSistema + seguroMIP + seguroDFI + TAXA_ADMIN_MES;
 
   const tetoComprometimento = sistema === "P" ? COMPROMETIMENTO_MAX_PRICE : COMPROMETIMENTO_MAX;
-  const rendaMinima = rendaMinimaParaParcela(prestacaoTotal, tetoComprometimento);
+  const rendaMinimaCrua = rendaMinimaParaParcela(prestacaoTotal, tetoComprometimento);
+  // Arredonda para cima no milhar mais próximo (ex: 21.382 -> 22.000)
+  const rendaMinima = Math.ceil(rendaMinimaCrua / 1000) * 1000;
   const renda = renda_informada && renda_informada > 0 ? renda_informada : null;
 
   return {

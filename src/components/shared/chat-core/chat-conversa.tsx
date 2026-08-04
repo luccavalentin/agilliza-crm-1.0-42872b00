@@ -445,7 +445,7 @@ export function ChatConversaCore({ adapter }: { adapter: ChatAdapter }) {
           responder: cap.responder,
           editar: cap.editar,
           excluir: cap.excluir,
-          reagir: cap.reagir && !!adapter.reagir,
+          reagir: true,
         }}
       />
 

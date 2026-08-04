@@ -86,8 +86,10 @@ export function prazoMaximoParaProponentes(
   datas: Array<string | null | undefined>,
   hoje: Date = new Date(),
 ): number | null {
-  const maximos = datas
-    .filter((d): d is string => !!d)
+  const todasDatas = datas.filter((d): d is string => !!d);
+  if (todasDatas.length === 0) return null;
+
+  const maximos = todasDatas
     .map((d) => prazoMaximoPorIdade(d, hoje))
     .filter((m): m is number => m != null);
   if (maximos.length === 0) return null;
