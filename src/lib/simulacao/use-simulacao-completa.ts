@@ -465,6 +465,16 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
   }
 
   /**
+   * "Valor a financiar" exibido ao usuário JÁ INCLUI as despesas financiadas.
+   * Ao digitar o total, descontamos as despesas para obter a parcela do
+   * imóvel e recalculamos entrada/imóvel a partir dela.
+   */
+  function aplicarPorFinanciamentoTotal(valorTotal: number) {
+    const despesas = f.fg_financiar_despesas ? Number(f.valor_despesas_financiadas) || 0 : 0;
+    aplicarPorFinanciamento(Math.max(0, (Number(valorTotal) || 0) - despesas));
+  }
+
+  /**
    * Wrapper fino sobre `calcularPorParcela` — a fórmula (PV a partir de PMT
    * alvo) mora em `calculos.ts`.
    */
