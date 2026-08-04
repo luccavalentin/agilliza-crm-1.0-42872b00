@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -25,6 +25,7 @@ import { listarNiveisAcesso } from "@/lib/admin/regras-modulos.functions";
 import { atualizarPessoa, type PessoaLista } from "@/lib/admin/pessoas.functions";
 import { listarTiposPessoa } from "@/lib/admin/tipos-pessoa.functions";
 import { PermissoesResumo } from "@/components/admin/permissoes-resumo";
+import { supabase } from "@/integrations/supabase/client";
 
 export function EditarPessoaDialog({
   pessoa,
@@ -37,11 +38,11 @@ export function EditarPessoaDialog({
   const listar = useServerFn(listarNiveisAcesso);
   const atualizar = useServerFn(atualizarPessoa);
 
-  const [nome, setNome] = useState("");
-  const [telefone, setTelefone] = useState("");
-  const [nivelId, setNivelId] = useState("");
-  const [tiposPessoa, setTiposPessoa] = useState<string[]>(["usuario"]);
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [nome, setNome] = useState(pessoa?.nome ?? "");
+  const [telefone, setTelefone] = useState(pessoa?.telefone ?? "");
+  const [nivelId, setNivelId] = useState(pessoa?.nivel_acesso_id ?? "");
+  const [tiposPessoa, setTiposPessoa] = useState<string[]>(pessoa?.tipos_pessoa ?? ["usuario"]);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(pessoa?.avatar_url ?? null);
 
   const listarTipos = useServerFn(listarTiposPessoa);
   const { data: tipos } = useQuery({
@@ -54,112 +55,84 @@ export function EditarPessoaDialog({
     queryFn: () => listar(),
   });
 
-  useEffect(() => {
-    if (pessoa) {
-      setNome(pessoa.nome ?? "");
-      setTelefone(pessoa.telefone ?? "");
-      setNivelId(pessoa.nivel_acesso_id ?? "");
-      const tps = (pessoa.tipos_pessoa ?? []).filter(Boolean);
-      setTiposPessoa(tps.length > 0 ? tps : [pessoa.tipo_pessoa ?? "usuario"]);
-      setAvatarUrl(pessoa.avatar_url ?? null);
-    }
-  }, [pessoa]);
-
-  const salvar = useMutation({
-    mutationFn: () =>
-      atualizar({
+  const mAtualizar = useMutation({
+    mutationFn: async () => {
+      if (!pessoa) return;
+      return await atualizar({
         data: {
-          id: pessoa!.id,
-          nome: nome.trim(),
-          telefone: telefone.trim() || null,
+          id: pessoa.id,
+          nome,
+          telefone,
           nivel_acesso_id: nivelId,
           tipos_pessoa: tiposPessoa,
-          tipo_pessoa: tiposPessoa[0],
           avatar_url: avatarUrl,
         },
-      }),
-    onSuccess: async () => {
-      await qc.invalidateQueries({ queryKey: ["pessoas"] });
-      toast.success("Pessoa atualizada.");
+      });
+    },
+    onSuccess: () => {
+      toast.success("Pessoa atualizada com sucesso!");
+      qc.invalidateQueries({ queryKey: ["pessoas"] });
       onClose();
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Erro ao atualizar."),
   });
 
-  function submeter(e: React.FormEvent) {
-    e.preventDefault();
-    if (nome.trim().length < 2) return toast.error("Informe o nome completo.");
-    if (tiposPessoa.length === 0) return toast.error("Selecione ao menos um tipo de pessoa.");
-    if (!nivelId) return toast.error("Selecione um nível de acesso.");
-    salvar.mutate();
-  }
-
-  const nivelSelecionado = (niveis ?? []).find((n) => n.id === nivelId);
-
   return (
-    <Dialog open={!!pessoa} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
+    <Dialog open={!!pessoa} onOpenChange={() => onClose()}>
+      <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Editar pessoa</DialogTitle>
         </DialogHeader>
-        <form onSubmit={submeter} className="space-y-4">
-          <div className="flex flex-col items-center justify-center gap-6 py-4">
-            <UploadAvatar
-              currentUrl={avatarUrl}
-              onUploadComplete={setAvatarUrl}
-              userId={pessoa?.id}
-            />
-            <div className="w-full space-y-2">
-              <Label htmlFor="ep-avatar" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Ou informe a URL da Foto
-              </Label>
-              <Input
-                id="ep-avatar"
-                placeholder="https://exemplo.com/foto.jpg"
-                value={avatarUrl ?? ""}
-                onChange={(e) => setAvatarUrl(e.target.value)}
-                className="bg-muted/30 focus-visible:ring-primary/30"
-              />
-            </div>
-          </div>
+        <div className="space-y-4 py-2">
+          <UploadAvatar
+            currentUrl={avatarUrl}
+            onUploadComplete={setAvatarUrl}
+            userId={pessoa?.id}
+          />
           <div className="space-y-2">
             <Label htmlFor="ep-nome">Nome completo</Label>
-            <Input id="ep-nome" value={nome} onChange={(e) => setNome(e.target.value.toUpperCase())} required />
+            <Input id="ep-nome" value={nome} onChange={(e) => setNome(e.target.value)} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="ep-nivel">Nível de acesso</Label>
+            <Select value={nivelId} onValueChange={setNivelId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione um nível" />
+              </SelectTrigger>
+              <SelectContent>
+                {(niveis ?? []).map((n) => (
+                  <SelectItem key={n.id} value={n.id}>
+                    {n.nome}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-2">
             <Label>Tipos de pessoa</Label>
-            <p className="text-xs text-muted-foreground">
-              Selecione um ou mais. Os privilégios somam o acesso mais amplo.
-            </p>
             <div className="flex flex-wrap gap-2">
-              {(tipos ?? [])
-                .filter((t) => t.ativo || tiposPessoa.includes(t.slug))
-                .map((t) => {
-                  const ativo = tiposPessoa.includes(t.slug);
-                  return (
-                    <button
-                      key={t.id}
-                      type="button"
-                      onClick={() =>
-                        setTiposPessoa((prev) => {
-                          if (prev.includes(t.slug)) {
-                            const next = prev.filter((s) => s !== t.slug);
-                            return next.length > 0 ? next : prev;
-                          }
-                          return [...prev, t.slug];
-                        })
-                      }
-                      className={
-                        "rounded-full border px-3 py-1 text-sm transition-colors " +
-                        (ativo
-                          ? "border-primary bg-primary text-primary-foreground"
-                          : "border-border bg-background text-foreground hover:bg-muted")
-                      }
-                    >
-                      {t.nome}
-                    </button>
-                  );
-                })}
+              {(tipos ?? []).map((t) => {
+                const ativo = tiposPessoa.includes(t.codigo);
+                return (
+                  <button
+                    type="button"
+                    key={t.codigo}
+                    onClick={() =>
+                      setTiposPessoa((prev) =>
+                        ativo ? prev.filter((p) => p !== t.codigo) : [...prev, t.codigo],
+                      )
+                    }
+                    className={
+                      "rounded-full border px-3 py-1 text-sm transition-colors " +
+                      (ativo
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-border bg-background text-foreground hover:bg-muted")
+                    }
+                  >
+                    {t.nome}
+                  </button>
+                );
+              })}
             </div>
           </div>
           <div className="space-y-2">
@@ -168,22 +141,28 @@ export function EditarPessoaDialog({
               <Input
                 id="ep-email"
                 type="email"
-                value={nome.includes("@") ? nome : (pessoa?.email ?? "")}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  // Permitir editar e-mail: se o admin mudar, habilitamos o botão de enviar OTP.
-                }}
+                value={pessoa?.email ?? ""}
+                readOnly
+                disabled
               />
-              <Button 
-                type="button" 
-                variant="outline" 
+              <Button
+                type="button"
+                variant="outline"
                 size="sm"
                 onClick={async () => {
                   const targetEmail = prompt("Novo e-mail:", pessoa?.email ?? "");
                   if (targetEmail && targetEmail !== pessoa?.email) {
                     try {
-                      const otp = await context.supabase.auth.admin.updateUserById(pessoa!.id, { email: targetEmail });
-                      if (otp.error) throw otp.error;
+                      // Usar client para atualizar e-mail via auth admin (necessita chave admin no client, ou API)
+                      const { data: adminAuth, error: adminErr } = await supabase.auth.admin.updateUserById(
+                        pessoa!.id,
+                        { email: targetEmail }
+                      );
+                      if (adminErr) throw adminErr;
+                      
+                      // O e-mail de autenticação mudou, agora precisamos atualizar nosso profile
+                      await supabase.from("profiles").update({ email: targetEmail }).eq("id", pessoa!.id);
+                      
                       toast.success("E-mail atualizado. O usuário deve confirmar o link enviado.");
                       onClose();
                     } catch (e: any) {
@@ -200,50 +179,14 @@ export function EditarPessoaDialog({
             <Label htmlFor="ep-tel">Telefone</Label>
             <Input id="ep-tel" value={telefone} onChange={(e) => setTelefone(e.target.value)} />
           </div>
-          <div className="space-y-2">
-            <Label>Nível de acesso</Label>
-            <Select value={nivelId} onValueChange={setNivelId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione o nível de acesso" />
-              </SelectTrigger>
-              <SelectContent>
-                {(niveis ?? []).map((n) => (
-                  <SelectItem key={n.id} value={n.id}>
-                    {n.nome}
-                    {n.acesso_tipo === "portal_parceiro" ? " · Parceiro" : " · Correspondente"}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          {nivelSelecionado && (
-            <div className="space-y-2 rounded-lg border p-4">
-              <div>
-                <p className="text-sm font-medium">
-                  Permissões de acesso — o que esta pessoa pode ver e editar
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  Vinculadas ao nível “{nivelSelecionado.nome}”. Alterar as regras em “Papéis &amp;
-                  Permissões” vale imediatamente para todas as pessoas deste nível.
-                </p>
-              </div>
-              <PermissoesResumo nivel={nivelSelecionado} />
-            </div>
-          )}
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose}>
-              Cancelar
-            </Button>
-            <Button type="submit" disabled={salvar.isPending}>
-              {salvar.isPending ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Save className="mr-2 h-4 w-4" />
-              )}
-              Salvar
-            </Button>
-          </DialogFooter>
-        </form>
+        </div>
+        <DialogFooter>
+          <Button variant="ghost" onClick={onClose}>Cancelar</Button>
+          <Button onClick={() => mAtualizar.mutate()} disabled={mAtualizar.isPending}>
+            {mAtualizar.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Salvar alterações
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
