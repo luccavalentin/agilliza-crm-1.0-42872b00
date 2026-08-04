@@ -67,7 +67,8 @@ export function ehFalhaIntegracaoBanco(sim: any): boolean {
 
 
 export const MSG_FALHA_INTEGRACAO =
-  "A proposta ainda não foi recebida pelo banco devido a uma falha na comunicação. Por favor, tente reenviar.";
+  "A proposta ainda não foi recebida pelo banco devido a uma falha na comunicação. Por favor, revise os dados do cliente e tente reenviar.";
+
 
 
 /** Rótulos amigáveis (pt-BR) para os campos que os bancos costumam recusar. */
