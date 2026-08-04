@@ -29,6 +29,9 @@ interface Props {
   aplicarValorImovel: (v: number) => void;
   aplicarPorEntrada: (v: number) => void;
   aplicarPorFinanciamento: (v: number) => void;
+  aplicarPorFinanciamentoTotal: (v: number) => void;
+  alternarFinanciarDespesas: (marcado: boolean) => void;
+  financiamentoTotalExibido: number;
   aplicarPorParcela: (v: number) => void;
   definirPrazo: (valor: number) => void;
   maxPrazoIdade: number | null | undefined;
@@ -44,6 +47,9 @@ export function FormularioSimulacao({
   aplicarValorImovel,
   aplicarPorEntrada,
   aplicarPorFinanciamento,
+  aplicarPorFinanciamentoTotal,
+  alternarFinanciarDespesas,
+  financiamentoTotalExibido,
   aplicarPorParcela,
   definirPrazo,
   maxPrazoIdade,
@@ -182,10 +188,23 @@ export function FormularioSimulacao({
           <label className="flex items-center gap-2 text-sm text-foreground">
             <Checkbox
               checked={!!w.fg_financiar_despesas}
-              onCheckedChange={(v) => set("fg_financiar_despesas", v === true)}
+              onCheckedChange={(v) => alternarFinanciarDespesas(v === true)}
             />
             Financiar despesas (incluir custos no valor financiado)
           </label>
+          {w.fg_financiar_despesas && (
+            <div className="space-y-1.5 pt-1">
+              <Label>Despesas a financiar (R$)</Label>
+              <CurrencyInput
+                value={w.valor_despesas_financiadas}
+                onChange={(v) => set("valor_despesas_financiadas", v)}
+                placeholder="0,00"
+              />
+              <p className="text-xs text-muted-foreground">
+                Sugestão: 5% do valor do imóvel. Este valor entra no "Valor a financiar".
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Simular pelo valor da parcela (cálculo reverso) */}
@@ -272,13 +291,22 @@ export function FormularioSimulacao({
             Valor a financiar <span className="text-destructive">*</span>
           </Label>
           <CurrencyInput
-            value={w.valor_financiamento}
-            onChange={(v) => aplicarPorFinanciamento(v)}
+            value={financiamentoTotalExibido}
+            onChange={(v) => aplicarPorFinanciamentoTotal(v)}
             placeholder="0,00"
           />
           <p className="text-xs text-muted-foreground">
             Ao digitar aqui, o imóvel e a entrada são preenchidos automaticamente considerando o
             teto do banco ({pctFin}%).
+            {w.fg_financiar_despesas && (w.valor_despesas_financiadas || 0) > 0 && (
+              <>
+                {" "}Já inclui as despesas de{" "}
+                <span className="font-medium text-foreground">
+                  {formatBRL(w.valor_despesas_financiadas)}
+                </span>{" "}
+                (imóvel: {formatBRL(w.valor_financiamento)}).
+              </>
+            )}
           </p>
         </div>
 
