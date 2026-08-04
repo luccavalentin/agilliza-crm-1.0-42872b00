@@ -89,11 +89,10 @@ export function JogadaNumerosDialog({
     const valorImovel = Math.ceil(bruto / 1000) * 1000;
     const entrada = Math.max(0, valorImovel - liberar);
     const pctEntrada = valorImovel > 0 ? (entrada / valorImovel) * 100 : 0;
-    // Parte do financiamento correspondente às custas (informada ao banco como
-    // "custas financiadas"). Reduz a base para o total financiado seguir = liberar.
+    // Custas: o valor informado ao banco deve ser somado ao financiamento liberado
     const custas = incluirCustas ? Math.round(valorImovel * ((Number(custasPct) || 0) / 100)) : 0;
-    const financiamentoBase = Math.max(0, liberar - custas);
-    return { valorImovel, entrada, pctEntrada, custas, financiamentoBase, valido: true };
+    const financiamentoTotal = liberar + custas;
+    return { valorImovel, entrada, pctEntrada, custas, financiamentoTotal, valido: true };
   }, [valorLiberar, ltvPct, incluirCustas, custasPct]);
 
 
@@ -102,7 +101,7 @@ export function JogadaNumerosDialog({
     onAplicar({
       valorImovel: calc.valorImovel,
       valorEntrada: calc.entrada,
-      valorFinanciamento: calc.financiamentoBase,
+      valorFinanciamento: calc.financiamentoTotal,
       financiaCustas: incluirCustas,
       valorCustas: calc.custas,
     });
@@ -196,7 +195,7 @@ export function JogadaNumerosDialog({
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Financiamento liberado</span>
                 <span className="font-semibold tabular-nums text-foreground">
-                  {formatBRL(Number(valorLiberar) || 0)}
+                  {formatBRL(calc.financiamentoTotal)}
                 </span>
               </div>
               {incluirCustas && calc.custas > 0 && (

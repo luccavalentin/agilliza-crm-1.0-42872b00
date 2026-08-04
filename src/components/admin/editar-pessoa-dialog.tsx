@@ -164,7 +164,37 @@ export function EditarPessoaDialog({
           </div>
           <div className="space-y-2">
             <Label htmlFor="ep-email">E-mail</Label>
-            <Input id="ep-email" value={pessoa?.email ?? ""} readOnly disabled />
+            <div className="flex gap-2">
+              <Input
+                id="ep-email"
+                type="email"
+                value={nome.includes("@") ? nome : (pessoa?.email ?? "")}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  // Permitir editar e-mail: se o admin mudar, habilitamos o botão de enviar OTP.
+                }}
+              />
+              <Button 
+                type="button" 
+                variant="outline" 
+                size="sm"
+                onClick={async () => {
+                  const targetEmail = prompt("Novo e-mail:", pessoa?.email ?? "");
+                  if (targetEmail && targetEmail !== pessoa?.email) {
+                    try {
+                      const otp = await context.supabase.auth.admin.updateUserById(pessoa!.id, { email: targetEmail });
+                      if (otp.error) throw otp.error;
+                      toast.success("E-mail atualizado. O usuário deve confirmar o link enviado.");
+                      onClose();
+                    } catch (e: any) {
+                      toast.error(e.message);
+                    }
+                  }
+                }}
+              >
+                Trocar
+              </Button>
+            </div>
           </div>
           <div className="space-y-2">
             <Label htmlFor="ep-tel">Telefone</Label>

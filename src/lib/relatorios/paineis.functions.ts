@@ -502,7 +502,9 @@ export const getPanelDados = createServerFn({ method: "POST" })
         (s, p) => s + (p.valor_financiamento_aprovado ?? p.valor_financiamento ?? 0),
         0,
       );
-      const ticket = contratosCount ? volume / contratosCount : 0;
+      const volumeMedio = volume + volumeSimulado;
+      const totalContatosEsims = contratosCount + simConcluidas;
+      const ticket = totalContatosEsims ? volumeMedio / totalContatosEsims : 0;
       const taxa = enviadas.length ? (aprovadasCount / enviadas.length) * 100 : 0;
       const conversao = simCount ? (contratosCount / simCount) * 100 : 0;
 
@@ -987,7 +989,7 @@ export const getPanelDados = createServerFn({ method: "POST" })
         {
           label: "Contratos emitidos",
           valor: int(contratos),
-          hint: `${brlCompacto(volumeContratos)} · ticket ${brlCompacto(ticket)}`,
+          hint: `${brlCompacto(volumeContratos + volumeSimulado)} · ticket ${brlCompacto(ticket)}`,
           tone: "success",
           delta: mkDelta(contratos, ant.contratos),
         },
@@ -1395,15 +1397,15 @@ export const getPanelDrilldown = createServerFn({ method: "POST" })
           ) || 0),
         0,
       );
-      const qtd = detalhes.length;
-      const ticket = qtd ? soma / qtd : 0;
+      const qtd = detalhes.length + simRows.length;
+      const ticket = qtd ? (soma + volumeSimulado) / qtd : 0;
       return {
         titulo: "Ticket médio",
         subtitulo: "Volume contratado ÷ contratos emitidos",
         valor: brlCompacto(ticket),
         formula: [
-          { label: "Volume contratado", valor: brlCompacto(soma), tone: "success" },
-          { label: "Contratos emitidos", valor: int(qtd), tone: "brand" },
+          { label: "Volume total", valor: brlCompacto(soma + volumeSimulado), tone: "success" },
+          { label: "Contratos + Simulações", valor: int(qtd), tone: "brand" },
           { label: "Ticket médio", valor: brlCompacto(ticket), tone: "success" },
         ],
         itens: detalhes.map(({ cliente, prop }) => {

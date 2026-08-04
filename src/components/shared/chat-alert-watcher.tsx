@@ -69,7 +69,7 @@ export function ChatAlertWatcher({ meuId }: Props) {
           abrirChatFlutuante(
             row.cliente_id,
             { nome },
-            { minimized: false },
+            { minimized: true },
           );
         },
       )
@@ -124,7 +124,7 @@ export function ChatAlertWatcher({ meuId }: Props) {
           abrirDemandaChatFlutuante(
             row.demanda_id,
             { numero, titulo, interlocutorNome, interlocutorFoto },
-            { minimized: false },
+            { minimized: true },
           );
         },
       )
@@ -175,7 +175,7 @@ export function ChatAlertWatcher({ meuId }: Props) {
           });
           
           import("@/lib/chat-sound").then(m => m.playChatSound());
-          abrirDmFlutuante(row.conversa_id, { nome }, { minimized: false });
+          abrirDmFlutuante(row.conversa_id, { nome }, { minimized: true });
         },
       )
       .subscribe();

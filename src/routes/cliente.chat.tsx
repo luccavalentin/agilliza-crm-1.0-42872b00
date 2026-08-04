@@ -291,7 +291,7 @@ function AcoesRapidas() {
       <BotaoAcao icon={Paperclip} label="Enviar documento" to="/cliente/acompanhar-minha-proposta" />
       <BotaoAcao icon={FileText} label="Ver proposta" to="/cliente/acompanhar-minha-proposta" />
       <BotaoAcao icon={UserRound} label="Falar com especialista" to="/cliente/chat" />
-      <BotaoAcao icon={Clock3} label="Solicitar retorno" to="/cliente/chat" />
+      <BotaoAcao icon={Clock3} label="Solicitar retorno" onClick={() => responder.mutate({ mensagem: "Olá, tudo bem? Gostaria de um retorno referente à minha proposta." })} />
     </div>
   );
 }
