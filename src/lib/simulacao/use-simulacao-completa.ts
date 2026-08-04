@@ -804,6 +804,7 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
     ltvMax,
     financiamentoMaximo,
     financiamentoImovelMaximo,
+    financiamentoTotalExibido,
     entradaMinima,
     entradaMinimaEfetiva,
     financiamentoExcedido,
@@ -826,6 +827,7 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
     definirPrazo,
     aplicarEntradaSugerida,
     aplicarPorFinanciamento,
+    aplicarPorFinanciamentoTotal,
     aplicarPorEntrada,
     aplicarPorParcela,
 
