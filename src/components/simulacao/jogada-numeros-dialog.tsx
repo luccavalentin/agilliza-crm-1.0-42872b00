@@ -101,7 +101,8 @@ export function JogadaNumerosDialog({
     onAplicar({
       valorImovel: calc.valorImovel,
       valorEntrada: calc.entrada,
-      valorFinanciamento: calc.financiamentoTotal ?? 0,
+      // Base do imóvel (sem custas) — a tela soma as despesas para exibir o total.
+      valorFinanciamento: Math.max(0, (calc.financiamentoTotal ?? 0) - (calc.custas ?? 0)),
       financiaCustas: incluirCustas,
       valorCustas: calc.custas,
     });
