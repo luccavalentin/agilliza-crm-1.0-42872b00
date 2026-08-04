@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { toast } from "sonner";
 import {
   Search,
   SlidersHorizontal,
@@ -288,7 +289,7 @@ function ItemConversa({
 function AcoesRapidas() {
   const responder = useMutation({
     mutationFn: (p: { mensagem: string }) => 
-      import("@/lib/crm/chat-cliente.functions").then(m => m.enviarChatCliente({ data: { cliente_id: "", mensagem: p.mensagem } })),
+      import("@/lib/portal/cliente.functions").then(m => m.clienteEnviarMensagem({ data: { atendente_id: "", mensagem: p.mensagem } })),
     onSuccess: () => toast.success("Solicitação enviada.")
   });
 

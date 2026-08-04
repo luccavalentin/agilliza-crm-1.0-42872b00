@@ -1123,20 +1123,13 @@ function itemSimulacao(s: any): PanelDrilldownItem {
   };
 }
 
-async function carregarVariaveisDrilldown(supabase: any, queryKey: string[], de: string, ate: string) {
-  const [sims, props, contratosInfo] = await Promise.all([
+async function carregarVariaveisDrilldown(supabase: any, de: string, ate: string) {
+  const [sims] = await Promise.all([
     supabase
       .from("simulacoes")
       .select("id, status, valor_financiamento, created_at")
       .gte("created_at", `${de}T00:00:00`)
       .lte("created_at", `${ate}T23:59:59`),
-    supabase
-      .from("propostas")
-      .select("id, status, valor_financiamento, created_at")
-      .gte("created_at", `${de}T00:00:00`)
-      .lte("created_at", `${ate}T23:59:59`),
-    // Reutiliza a lógica de contratos do painel (simplificada aqui para o drilldown)
-    supabase.rpc("painel_estatisticas_contratos", { _de: de, _ate: ate })
   ]);
 
   const simRows = (sims.data ?? []) as any[];
