@@ -70,23 +70,58 @@ export function patchLimparTitular(prev: Form): Form {
   };
 }
 
-/** Puxa os dados do cônjuge cadastrados no CRM para o formulário. */
+/** Valor "vazio" (null/undefined/string em branco/zero). */
+function vazio(v: unknown) {
+  if (v === null || v === undefined) return true;
+  if (typeof v === "string") return v.trim() === "";
+  if (typeof v === "number") return v === 0;
+  return false;
+}
+
+/**
+ * Puxa os dados do cônjuge cadastrados no CRM para o formulário.
+ * Faz merge: só preenche o que ainda está vazio no formulário, para nunca
+ * apagar o que o usuário já digitou — e completa campo a campo.
+ */
 export function patchPuxarConjugeCRM(prev: Form, crm: any): Form {
   const ecTitular =
     prev.estado_civil === "CA" || prev.estado_civil === "UE" ? prev.estado_civil : "CA";
-  return {
+  const doCrm = {
+    nome_conjuge: crm.conjuge_nome ?? "",
+    cpf_conjuge: crm.conjuge_cpf ? maskCpfCnpj(crm.conjuge_cpf) : "",
+    renda_conjuge: Number(crm.conjuge_renda) || 0,
+    data_nascimento_conjuge: crm.conjuge_data_nascimento ?? "",
+    email_conjuge: crm.conjuge_email || "",
+    celular_conjuge: crm.conjuge_celular ? maskCelular(crm.conjuge_celular) : "",
+  };
+  const next: Form = {
     ...prev,
     possui_conjuge: true,
     compoe_renda: prev.compoe_renda || Number(crm.conjuge_renda) > 0,
     estado_civil: ecTitular,
     estado_civil_conjuge: ecTitular,
-    nome_conjuge: crm.conjuge_nome ?? "",
-    cpf_conjuge: crm.conjuge_cpf ? maskCpfCnpj(crm.conjuge_cpf) : "",
-    renda_conjuge: crm.conjuge_renda ?? 0,
-    data_nascimento_conjuge: crm.conjuge_data_nascimento ?? "",
-    email_conjuge: crm.conjuge_email || EMAIL_PADRAO,
-    celular_conjuge: crm.conjuge_celular ? maskCelular(crm.conjuge_celular) : "",
   };
+  for (const [k, v] of Object.entries(doCrm)) {
+    const atual = (prev as any)[k];
+    const ehEmailPadrao = k === "email_conjuge" && atual === EMAIL_PADRAO;
+    if (!vazio(v) && (vazio(atual) || ehEmailPadrao)) (next as any)[k] = v;
+  }
+  if (vazio(next.email_conjuge)) next.email_conjuge = EMAIL_PADRAO;
+  return next;
+}
+
+/** Indica se ainda há algum campo do cônjuge no CRM que falta no formulário. */
+export function faltaConjugeDoCRM(prev: Form, crm: any): boolean {
+  const proximo = patchPuxarConjugeCRM(prev, crm);
+  return (
+    proximo.nome_conjuge !== prev.nome_conjuge ||
+    proximo.cpf_conjuge !== prev.cpf_conjuge ||
+    proximo.renda_conjuge !== prev.renda_conjuge ||
+    proximo.data_nascimento_conjuge !== prev.data_nascimento_conjuge ||
+    proximo.email_conjuge !== prev.email_conjuge ||
+    proximo.celular_conjuge !== prev.celular_conjuge ||
+    proximo.possui_conjuge !== prev.possui_conjuge
+  );
 }
 
 /** Inverte titular e cônjuge, preservando os demais campos. */

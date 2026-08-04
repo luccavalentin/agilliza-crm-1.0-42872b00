@@ -40,6 +40,8 @@ export function SecaoOperacaoImovel({ ctx }: { ctx: SimulacaoCompletaCtx }) {
     restricaoEspecial,
     aplicarEntradaSugerida,
     aplicarPorFinanciamento,
+    aplicarPorFinanciamentoTotal,
+    financiamentoTotalExibido,
     aplicarPorEntrada,
     aplicarPorParcela,
     aplicarJogadaNumeros,
@@ -336,8 +338,8 @@ export function SecaoOperacaoImovel({ ctx }: { ctx: SimulacaoCompletaCtx }) {
 
         <Campo label="Valor a financiar (R$)">
           <CurrencyInput
-            value={f.valor_financiamento}
-            onChange={(v) => aplicarPorFinanciamento(v)}
+            value={financiamentoTotalExibido}
+            onChange={(v) => aplicarPorFinanciamentoTotal(v)}
             placeholder="Ex: 400.000,00"
           />
           <p className="text-xs text-muted-foreground">
@@ -346,13 +348,11 @@ export function SecaoOperacaoImovel({ ctx }: { ctx: SimulacaoCompletaCtx }) {
             {f.fg_financiar_despesas &&
               (f.valor_despesas_financiadas || 0) > 0 && (
                 <>
-                  {" "}Total com despesas:{" "}
+                  {" "}Já inclui as despesas financiadas de{" "}
                   <span className="font-medium text-foreground">
-                    {formatBRL(
-                      (f.valor_financiamento || 0) +
-                        (Number(f.valor_despesas_financiadas) || 0),
-                    )}
-                  </span>
+                    {formatBRL(Number(f.valor_despesas_financiadas) || 0)}
+                  </span>{" "}
+                  (imóvel: {formatBRL(Number(f.valor_financiamento) || 0)}).
                 </>
               )}
           </p>
@@ -443,7 +443,7 @@ export function SecaoOperacaoImovel({ ctx }: { ctx: SimulacaoCompletaCtx }) {
               onChange={(v) => set("valor_despesas_financiadas", v)}
             />
             <p className="mt-1 text-xs text-muted-foreground">
-              Total financiado:{" "}
+              Total a financiar (já exibido no campo acima):{" "}
               {formatBRL((f.valor_financiamento || 0) + (f.valor_despesas_financiadas || 0))}
             </p>
           </Campo>

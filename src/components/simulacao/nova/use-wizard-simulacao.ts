@@ -19,6 +19,7 @@ export interface WizardState {
   uf: string;
   utiliza_fgts: "S" | "N";
   fg_financiar_despesas: boolean;
+  valor_despesas_financiadas: number;
   valor_imovel: number;
   valor_entrada: number;
   valor_financiamento: number;
@@ -43,6 +44,7 @@ export function useWizardSimulacao(melhorTaxaAno = 0.1199) {
     uf: "",
     utiliza_fgts: "N",
     fg_financiar_despesas: false,
+    valor_despesas_financiadas: 0,
     valor_imovel: 0,
     valor_entrada: 0,
     valor_financiamento: 0,
@@ -94,8 +96,32 @@ export function useWizardSimulacao(melhorTaxaAno = 0.1199) {
         valor_imovel: imovel,
         valor_entrada: entrada,
         valor_financiamento: Math.max(0, imovel - entrada),
+        // Despesas acompanham o percentual sobre o novo valor do imóvel.
+        valor_despesas_financiadas: prev.fg_financiar_despesas
+          ? Math.round(imovel * 0.05)
+          : 0,
       };
     });
+  }
+
+  /** Marca/desmarca o financiamento das despesas (padrão 5% do imóvel). */
+  function alternarFinanciarDespesas(marcado: boolean) {
+    setW((prev) => ({
+      ...prev,
+      fg_financiar_despesas: marcado,
+      valor_despesas_financiadas: marcado
+        ? Math.round((Number(prev.valor_imovel) || 0) * 0.05)
+        : 0,
+    }));
+  }
+
+  /**
+   * O campo "Valor a financiar" exibe o total (imóvel + despesas). Ao digitar,
+   * descontamos as despesas e recalculamos imóvel/entrada a partir da base.
+   */
+  function aplicarPorFinanciamentoTotal(valorTotal: number) {
+    const despesas = w.fg_financiar_despesas ? Number(w.valor_despesas_financiadas) || 0 : 0;
+    aplicarPorFinanciamento(Math.max(0, (Number(valorTotal) || 0) - despesas));
   }
 
   function aplicarEntradaSugerida() {
@@ -128,6 +154,11 @@ export function useWizardSimulacao(melhorTaxaAno = 0.1199) {
   }
 
   const entradaSugerida = Math.round((w.valor_imovel || 0) * pctEntradaSugerida);
+
+  /** Valor a financiar exibido: parcela do imóvel + despesas financiadas. */
+  const financiamentoTotalExibido =
+    (Number(w.valor_financiamento) || 0) +
+    (w.fg_financiar_despesas ? Number(w.valor_despesas_financiadas) || 0 : 0);
 
   const maxPrazoIdade = useMemo(() => prazoMaximoPorIdade(w.data_nascimento), [w.data_nascimento]);
 
@@ -181,6 +212,9 @@ export function useWizardSimulacao(melhorTaxaAno = 0.1199) {
     aplicarValorImovel,
     aplicarPorEntrada,
     aplicarPorFinanciamento,
+    aplicarPorFinanciamentoTotal,
+    alternarFinanciarDespesas,
+    financiamentoTotalExibido,
     aplicarPorParcela,
     definirPrazo,
   };

@@ -37,6 +37,7 @@ import {
   patchSelecionarClienteCRM,
   patchLimparTitular,
   patchPuxarConjugeCRM,
+  faltaConjugeDoCRM,
   patchInverterPrincipal,
 } from "./use-simulacao-completa/cliente-crm";
 import {
@@ -290,6 +291,8 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
     ? Number(f.valor_despesas_financiadas) || 0
     : 0;
   const financiamentoImovelMaximo = Math.max(0, financiamentoMaximo - despesasNoTeto);
+  /** Valor a financiar exibido: parcela do imóvel + despesas financiadas. */
+  const financiamentoTotalExibido = (Number(f.valor_financiamento) || 0) + despesasNoTeto;
   const entradaMinima = useMemo(
     () => Math.max(0, (Number(f.valor_imovel) || 0) - financiamentoMaximo),
     [f.valor_imovel, financiamentoMaximo],
@@ -465,6 +468,16 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
   }
 
   /**
+   * "Valor a financiar" exibido ao usuário JÁ INCLUI as despesas financiadas.
+   * Ao digitar o total, descontamos as despesas para obter a parcela do
+   * imóvel e recalculamos entrada/imóvel a partir dela.
+   */
+  function aplicarPorFinanciamentoTotal(valorTotal: number) {
+    const despesas = f.fg_financiar_despesas ? Number(f.valor_despesas_financiadas) || 0 : 0;
+    aplicarPorFinanciamento(Math.max(0, (Number(valorTotal) || 0) - despesas));
+  }
+
+  /**
    * Wrapper fino sobre `calcularPorParcela` — a fórmula (PV a partir de PMT
    * alvo) mora em `calculos.ts`.
    */
@@ -612,7 +625,8 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
       (crmVinculado.conjuge_nome || crmVinculado.conjuge_cpf || crmVinculado.conjuge_renda),
   );
 
-  const podePuxarConjugeCrm = crmTemConjuge && !String(f.nome_conjuge ?? "").trim();
+  const podePuxarConjugeCrm =
+    crmTemConjuge && (!String(f.nome_conjuge ?? "").trim() || faltaConjugeDoCRM(f, crmVinculado));
 
   function puxarConjugeDoCRM() {
     if (!crmVinculado) return;
@@ -620,17 +634,16 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
     toast.success("Dados do cônjuge puxados do cadastro do CRM.");
   }
 
-  // Casado/união estável: puxa o cônjuge do CRM automaticamente (uma vez por cadastro).
-  const autoConjugeRef = useRef<string | null>(null);
+  // Casado/união estável: completa automaticamente os dados do cônjuge com o
+  // que existe no CRM (merge — nunca sobrescreve o que o usuário digitou).
   useEffect(() => {
     const casado = f.estado_civil === "CA" || f.estado_civil === "UE";
     if (!casado || !crmVinculado || !crmTemConjuge) return;
-    if (String(f.nome_conjuge ?? "").trim()) return;
-    if (autoConjugeRef.current === f.cliente_id) return;
-    autoConjugeRef.current = f.cliente_id ?? null;
+    if (!faltaConjugeDoCRM(f, crmVinculado)) return;
     setF((prev) => patchPuxarConjugeCRM(prev, crmVinculado));
-    toast.success("Cônjuge puxado automaticamente do cadastro do CRM.");
-  }, [f.estado_civil, f.nome_conjuge, f.cliente_id, crmVinculado, crmTemConjuge]);
+    toast.success("Dados do cônjuge preenchidos automaticamente pelo cadastro do CRM.");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [f.estado_civil, f.cliente_id, crmVinculado, crmTemConjuge]);
 
 
   const podeInverter = useMemo(() => {
@@ -792,6 +805,7 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
     ltvMax,
     financiamentoMaximo,
     financiamentoImovelMaximo,
+    financiamentoTotalExibido,
     entradaMinima,
     entradaMinimaEfetiva,
     financiamentoExcedido,
@@ -814,6 +828,7 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
     definirPrazo,
     aplicarEntradaSugerida,
     aplicarPorFinanciamento,
+    aplicarPorFinanciamentoTotal,
     aplicarPorEntrada,
     aplicarPorParcela,
 
