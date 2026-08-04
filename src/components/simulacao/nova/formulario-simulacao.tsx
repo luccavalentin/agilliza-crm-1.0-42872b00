@@ -46,7 +46,6 @@ export function FormularioSimulacao({
   aplicarEntradaSugerida,
   aplicarValorImovel,
   aplicarPorEntrada,
-  aplicarPorFinanciamento,
   aplicarPorFinanciamentoTotal,
   alternarFinanciarDespesas,
   financiamentoTotalExibido,

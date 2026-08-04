@@ -57,6 +57,9 @@ function Pagina() {
     aplicarValorImovel,
     aplicarPorEntrada,
     aplicarPorFinanciamento,
+    aplicarPorFinanciamentoTotal,
+    alternarFinanciarDespesas,
+    financiamentoTotalExibido,
     aplicarPorParcela,
     definirPrazo,
   } = useWizardSimulacao(melhorTaxaAno);
@@ -71,7 +74,7 @@ function Pagina() {
         taxa_ano: taxaAnoDeBanco(b.codigo_banco, taxasReais),
       })),
       {
-        valor_financiamento: w.valor_financiamento,
+        valor_financiamento: financiamentoTotalExibido,
         prazo_meses: w.prazo_meses,
         sistema: w.sistema_amortizacao,
       },
@@ -80,7 +83,7 @@ function Pagina() {
     bancos,
     taxasReais,
     mostrarRapida,
-    w.valor_financiamento,
+    financiamentoTotalExibido,
     w.prazo_meses,
     w.sistema_amortizacao,
   ]);
@@ -104,7 +107,7 @@ function Pagina() {
           nome_cliente: null,
           produto: w.produto,
           valor_imovel: w.valor_imovel,
-          valor_financiamento: w.valor_financiamento,
+          valor_financiamento: financiamentoTotalExibido,
           valor_entrada: w.valor_entrada,
           prazo: w.prazo_meses,
           sistema_amortizacao: w.sistema_amortizacao,
@@ -118,7 +121,7 @@ function Pagina() {
             valor_parcela: c.resultado.primeira_parcela,
             taxa_juros_ano: c.taxa_ano * 100,
             prazo_pagamento_max: w.prazo_meses,
-            valor_financiamento_max: w.valor_financiamento,
+            valor_financiamento_max: financiamentoTotalExibido,
             _sistema: sistemaCode === "P" ? "PRICE" : "SAC",
             // raw_response sintético para o extrator gerar parcelas, CET,
             // taxa mensal, tipo/plano — mesmos campos que o Bradesco devolve.
@@ -128,9 +131,9 @@ function Pagina() {
                 codigoSistemaAmortizacaoBanco: sistemaCode,
                 prazoPagamentoBanco: w.prazo_meses,
                 prazoPagamentoSimulacao: w.prazo_meses,
-                valorFinanciamentoBanco: w.valor_financiamento,
-                valorFinanciamentoSimulacao: w.valor_financiamento,
-                valorTotalFinanciamento: w.valor_financiamento,
+                valorFinanciamentoBanco: financiamentoTotalExibido,
+                valorFinanciamentoSimulacao: financiamentoTotalExibido,
+                valorTotalFinanciamento: financiamentoTotalExibido,
                 valorImovel: w.valor_imovel,
                 valorEntrada: w.valor_entrada,
                 taxaJurosAnoBanco: c.taxa_ano * 100,
@@ -206,6 +209,9 @@ function Pagina() {
             aplicarValorImovel={aplicarValorImovel}
             aplicarPorEntrada={aplicarPorEntrada}
             aplicarPorFinanciamento={aplicarPorFinanciamento}
+            aplicarPorFinanciamentoTotal={aplicarPorFinanciamentoTotal}
+            alternarFinanciarDespesas={alternarFinanciarDespesas}
+            financiamentoTotalExibido={financiamentoTotalExibido}
             aplicarPorParcela={aplicarPorParcela}
             definirPrazo={definirPrazo}
             maxPrazoIdade={maxPrazoIdade}
