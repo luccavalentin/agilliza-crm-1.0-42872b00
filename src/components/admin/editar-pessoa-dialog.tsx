@@ -112,14 +112,14 @@ export function EditarPessoaDialog({
             <Label>Tipos de pessoa</Label>
             <div className="flex flex-wrap gap-2">
               {(tipos ?? []).map((t) => {
-                const ativo = tiposPessoa.includes(t.codigo);
+                const ativo = tiposPessoa.includes(t.slug);
                 return (
                   <button
                     type="button"
-                    key={t.codigo}
+                    key={t.id}
                     onClick={() =>
                       setTiposPessoa((prev) =>
-                        ativo ? prev.filter((p) => p !== t.codigo) : [...prev, t.codigo],
+                        ativo ? prev.filter((p) => p !== t.slug) : [...prev, t.slug],
                       )
                     }
                     className={

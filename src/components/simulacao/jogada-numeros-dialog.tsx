@@ -101,7 +101,7 @@ export function JogadaNumerosDialog({
     onAplicar({
       valorImovel: calc.valorImovel,
       valorEntrada: calc.entrada,
-      valorFinanciamento: calc.financiamentoTotal,
+      valorFinanciamento: calc.financiamentoTotal ?? 0,
       financiaCustas: incluirCustas,
       valorCustas: calc.custas,
     });
