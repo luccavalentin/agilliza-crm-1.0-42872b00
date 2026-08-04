@@ -624,7 +624,8 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
       (crmVinculado.conjuge_nome || crmVinculado.conjuge_cpf || crmVinculado.conjuge_renda),
   );
 
-  const podePuxarConjugeCrm = crmTemConjuge && !String(f.nome_conjuge ?? "").trim();
+  const podePuxarConjugeCrm =
+    crmTemConjuge && (!String(f.nome_conjuge ?? "").trim() || faltaConjugeDoCRM(f, crmVinculado));
 
   function puxarConjugeDoCRM() {
     if (!crmVinculado) return;
@@ -632,17 +633,16 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
     toast.success("Dados do cônjuge puxados do cadastro do CRM.");
   }
 
-  // Casado/união estável: puxa o cônjuge do CRM automaticamente (uma vez por cadastro).
-  const autoConjugeRef = useRef<string | null>(null);
+  // Casado/união estável: completa automaticamente os dados do cônjuge com o
+  // que existe no CRM (merge — nunca sobrescreve o que o usuário digitou).
   useEffect(() => {
     const casado = f.estado_civil === "CA" || f.estado_civil === "UE";
     if (!casado || !crmVinculado || !crmTemConjuge) return;
-    if (String(f.nome_conjuge ?? "").trim()) return;
-    if (autoConjugeRef.current === f.cliente_id) return;
-    autoConjugeRef.current = f.cliente_id ?? null;
+    if (!faltaConjugeDoCRM(f, crmVinculado)) return;
     setF((prev) => patchPuxarConjugeCRM(prev, crmVinculado));
-    toast.success("Cônjuge puxado automaticamente do cadastro do CRM.");
-  }, [f.estado_civil, f.nome_conjuge, f.cliente_id, crmVinculado, crmTemConjuge]);
+    toast.success("Dados do cônjuge preenchidos automaticamente pelo cadastro do CRM.");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [f.estado_civil, f.cliente_id, crmVinculado, crmTemConjuge]);
 
 
   const podeInverter = useMemo(() => {
