@@ -290,6 +290,8 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
     ? Number(f.valor_despesas_financiadas) || 0
     : 0;
   const financiamentoImovelMaximo = Math.max(0, financiamentoMaximo - despesasNoTeto);
+  /** Valor a financiar exibido: parcela do imóvel + despesas financiadas. */
+  const financiamentoTotalExibido = (Number(f.valor_financiamento) || 0) + despesasNoTeto;
   const entradaMinima = useMemo(
     () => Math.max(0, (Number(f.valor_imovel) || 0) - financiamentoMaximo),
     [f.valor_imovel, financiamentoMaximo],
