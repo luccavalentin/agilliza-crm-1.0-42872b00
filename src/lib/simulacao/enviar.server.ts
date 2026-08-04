@@ -325,6 +325,11 @@ export async function enviarSimulacaoImpl({
   }
 
   const correspondente_id = sim.correspondente_id;
+  
+  // Garantia de sanitização de CPFs para evitar erros silenciosos na API (500)
+  sim.cpf_cnpj = (sim.cpf_cnpj ?? "").replace(/\D/g, "");
+  if (sim.cpf_conjuge) sim.cpf_conjuge = (sim.cpf_conjuge ?? "").replace(/\D/g, "");
+
 
   // ===== Financiar despesas =====
   // A API da integração espera a flag como string "S"/"N" (nunca booleano) e, quando
@@ -491,7 +496,9 @@ export async function enviarSimulacaoImpl({
         dataNascimento: sim.data_nascimento,
         email: sim.email,
         celular: (sim.celular ?? "").replace(/\D/g, ""),
-        tipoEstadoCivil: { id: sim.estado_civil },
+        tipoEstadoCivil: sim.estado_civil ? { id: sim.estado_civil } : undefined,
+        regimeCasamento: sim.regime_casamento ? { id: sim.regime_casamento } : undefined,
+
         fgCompoeRenda: Boolean(sim.compoe_renda),
         ...(sim.possui_conjuge
           ? {
@@ -501,7 +508,7 @@ export async function enviarSimulacaoImpl({
               celularConjuge: (sim.celular_conjuge ?? "").replace(/\D/g, ""),
               rendaConjuge: num(sim.renda_conjuge),
               dataNascimentoConjuge: sim.data_nascimento_conjuge,
-              tipoEstadoCivilConjuge: { id: sim.estado_civil_conjuge },
+              tipoEstadoCivilConjuge: sim.estado_civil_conjuge ? { id: sim.estado_civil_conjuge } : undefined,
             }
           : {}),
       };
@@ -526,10 +533,6 @@ export async function enviarSimulacaoImpl({
       // POST da simulação logo abaixo. Abortar aqui deixaria os bancos presos
       // em "aguardando" para sempre.
       try {
-        // Inclui bloco do cônjuge para que oportunidades criadas antes do
-        // preenchimento do cônjuge passem a carregar os dados no reenvio.
-        // Alguns bancos (Itaú) usam esse bloco para montar o objeto `spouse`
-        // e rejeitam a inclusão quando ele não está presente.
         const conjugeBloco =
           sim.possui_conjuge || ["CA", "UE"].includes(String(sim.estado_civil ?? ""))
             ? {
@@ -546,15 +549,24 @@ export async function enviarSimulacaoImpl({
                     : undefined,
               }
             : {};
+
+        const updatePayload = {
+          ...dadosOportunidade,
+          tipoEstadoCivil: sim.estado_civil ? { id: sim.estado_civil } : undefined,
+          regimeCasamento: sim.regime_casamento ? { id: sim.regime_casamento } : undefined,
+          fgCompoeRenda: Boolean(sim.compoe_renda),
+          ...conjugeBloco,
+        };
+
+        // Remove campos undefined para evitar que a API receba "undefined" como string ou falhe no parsing
+        const cleanedPayload = Object.fromEntries(
+          Object.entries(updatePayload).filter(([_, v]) => v !== undefined)
+        );
+
         await chamarIntegracao<any>(
           `/oportunidade/${idOportunidade}`,
           "PUT",
-          {
-            ...dadosOportunidade,
-            tipoEstadoCivil: sim.estado_civil ? { id: sim.estado_civil } : undefined,
-            fgCompoeRenda: Boolean(sim.compoe_renda),
-            ...conjugeBloco,
-          },
+          cleanedPayload,
           ctx,
         );
       } catch (e) {
@@ -563,6 +575,7 @@ export async function enviarSimulacaoImpl({
           e instanceof Error ? e.message : String(e),
         );
       }
+
 
     }
 

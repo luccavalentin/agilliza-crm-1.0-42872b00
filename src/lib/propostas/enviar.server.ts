@@ -114,9 +114,12 @@ function exigeConjugePorEstadoCivil(v: unknown): boolean {
 
 function sistemaAmortizacaoBanco(v: unknown): string {
   const bruto = enumBancoId(v) ?? "S";
-  const s = String(bruto).trim().toUpperCase().charAt(0);
-  return s === "P" ? "P" : "S";
+  const s = String(bruto).trim().toUpperCase();
+  // Aceita "PRICE", "SAC" ou apenas a primeira letra "P", "S"
+  if (s.startsWith("P")) return "P";
+  return "S";
 }
+
 
 // ehFalhaIntegracaoBanco / MSG_FALHA_INTEGRACAO foram extraídos para
 // ./enviar/helpers-retorno.server.ts e são re-exportados no fim do arquivo.
@@ -234,8 +237,9 @@ async function renovarSimulacaoSeConsumida({
     valorFinanciamento,
     prazo,
     codigoSistemaAmortizacaoBanco: {
-      id: sistemaAmortizacaoBanco(prop.sistema_amortizacao ?? simLocal?.sistema_amortizacao ?? sim?.codigoSistemaAmortizacaoBanco),
+      id: sistemaAmortizacaoBanco(prop.sistema_amortizacao ?? simLocal?.sistema_amortizacao ?? sim?.codigoSistemaAmortizacaoBanco ?? sim?.idAmortizacao),
     },
+
     fgFinanciarDespesas: financiarDespesas ? "S" : "N",
     valorDespesasFinanciadas,
     valorTotalFinanciamento: valorFinanciamento + valorDespesasFinanciadas,
@@ -246,7 +250,9 @@ async function renovarSimulacaoSeConsumida({
     valorFinanciamento,
     prazo,
     tipoEstadoCivil: familiaAtual.estadoCivil ? { id: familiaAtual.estadoCivil } : undefined,
+    regimeCasamento: prop.regime_casamento ? { id: prop.regime_casamento } : undefined,
     fgCompoeRenda: familiaAtual.compoeRenda,
+
     fgAutorizacaoDados: true,
   };
   // A oportunidade pode ter sido criada quando o cliente ainda estava casado e
@@ -522,6 +528,8 @@ async function garantirEnderecoParticipantes({
       estadoCivilBanco(prop.estado_civil) ||
       estadoCivilBanco(sim?.estado_civil);
     const estadoCivil = estadoCivilAtualSistema || estadoCivilBanco(part?.tipoEstadoCivil) || null;
+    const regimeCasamento = prop.regime_casamento || part?.tipoRegimeCasamento || null;
+
     const uf = part?.uf || env?.uf || src?.uf || prop.uf || null;
     // Profissão e empresa: prioriza o cadastro atual do sistema sobre o que já
     // está gravado na oportunidade bancária, pois a oportunidade pode conter um

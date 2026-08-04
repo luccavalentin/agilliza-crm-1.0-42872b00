@@ -232,9 +232,12 @@ export async function chamarIntegracao<T = unknown>(
   const url = `${base}${endpoint}`;
   const bodyNormalizado = body ? normalizarPayloadBanco(body) : undefined;
 
+  // Força uma nova tentativa em caso de token expirado (HTTP 401)
+  let retryCount = 0;
   let resp: Response;
-  try {
-    resp = await fetch(url, {
+
+  const performRequest = async (): Promise<Response> => {
+    return fetch(url, {
       method,
       headers: {
         "Content-Type": "application/json",
@@ -243,6 +246,26 @@ export async function chamarIntegracao<T = unknown>(
       body: bodyNormalizado ? JSON.stringify(bodyNormalizado) : undefined,
       signal: AbortSignal.timeout(90_000),
     });
+  };
+
+  try {
+    resp = await performRequest();
+    
+    // Se o token expirou (HTTP 401), limpa o cache e tenta novamente uma única vez
+    if (resp.status === 401 && retryCount === 0) {
+      _tokenCache = null;
+      const { token: newToken } = await obterToken();
+      resp = await fetch(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${newToken}`,
+        },
+        body: bodyNormalizado ? JSON.stringify(bodyNormalizado) : undefined,
+        signal: AbortSignal.timeout(90_000),
+      });
+      retryCount++;
+    }
   } catch (e) {
     await registrarLog({ ...ctx, endpoint, metodo: method, request: bodyNormalizado, erro: String(e) });
     throw new IntegracaoBancariaError("O banco não respondeu no tempo esperado. Tente reenviar.");
@@ -264,6 +287,7 @@ export async function chamarIntegracao<T = unknown>(
   }
   return json;
 }
+
 
 /**
  * Envia um arquivo binário (multipart/form-data) para a integração bancária.
