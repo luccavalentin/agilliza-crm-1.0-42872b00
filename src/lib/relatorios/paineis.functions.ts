@@ -1173,8 +1173,9 @@ export const getPanelDrilldown = createServerFn({ method: "POST" })
     const dentroPeriodo = (iso?: string | null) =>
       !!iso && iso.slice(0, 10) >= de && iso.slice(0, 10) <= ate;
 
-    const { simRows, volumeSimulado } = await carregarVariaveisDrilldown(supabase, queryKey, de, ate);
+    const { simRows, volumeSimulado } = await carregarVariaveisDrilldown(supabase, de, ate);
     const chave = normLabel(data.metrica);
+
 
     const LIMITE = 200;
 

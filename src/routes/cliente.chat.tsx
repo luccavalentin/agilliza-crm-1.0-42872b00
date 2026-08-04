@@ -286,12 +286,26 @@ function ItemConversa({
 }
 
 function AcoesRapidas() {
+  const responder = useMutation({
+    mutationFn: (p: { mensagem: string }) => 
+      import("@/lib/crm/chat-cliente.functions").then(m => m.enviarChatCliente({ data: { cliente_id: "", mensagem: p.mensagem } })),
+    onSuccess: () => toast.success("Solicitação enviada.")
+  });
+
   return (
     <div className="flex flex-wrap items-center gap-1.5">
       <BotaoAcao icon={Paperclip} label="Enviar documento" to="/cliente/acompanhar-minha-proposta" />
       <BotaoAcao icon={FileText} label="Ver proposta" to="/cliente/acompanhar-minha-proposta" />
       <BotaoAcao icon={UserRound} label="Falar com especialista" to="/cliente/chat" />
-      <BotaoAcao icon={Clock3} label="Solicitar retorno" onClick={() => responder.mutate({ mensagem: "Olá, tudo bem? Gostaria de um retorno referente à minha proposta." })} />
+      <Button 
+        variant="outline" 
+        size="sm" 
+        className="h-8 rounded-full border-border/70 bg-background text-xs font-medium"
+        onClick={() => responder.mutate({ mensagem: "Olá, tudo bem? Gostaria de um retorno referente à minha proposta." })}
+      >
+        <Clock3 className="mr-1.5 h-3.5 w-3.5 text-muted-foreground" />
+        Solicitar retorno
+      </Button>
     </div>
   );
 }
