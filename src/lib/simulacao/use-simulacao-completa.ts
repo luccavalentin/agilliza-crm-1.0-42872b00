@@ -37,6 +37,7 @@ import {
   patchSelecionarClienteCRM,
   patchLimparTitular,
   patchPuxarConjugeCRM,
+  faltaConjugeDoCRM,
   patchInverterPrincipal,
 } from "./use-simulacao-completa/cliente-crm";
 import {
