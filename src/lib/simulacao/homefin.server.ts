@@ -102,7 +102,7 @@ function config() {
  * (marca branca). Nunca vazar nomes de provedores/plataforma.
  */
 export function sanitizarMensagemErro(msg: string | null | undefined): string {
-  const fallback = "O banco não respondeu corretamente. Verifique os dados e tente novamente em instantes.";
+  const fallback = "O banco não respondeu corretamente. Verifique se todos os campos estão preenchidos e tente novamente em instantes.";
   if (!msg) return fallback;
   if (/supabase|service[_ ]role|environment variable|cloud/i.test(msg)) {
     return fallback;
