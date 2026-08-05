@@ -1055,7 +1055,8 @@ export function nomeDescritivo(s: any, bancos: any[], rendaOverride?: number | n
     const bancosTxt = (bancos ?? [])
       .map((b) => {
         const d = extrairDetalheBanco(b.raw_response);
-        const taxa = d?.taxaJurosMes ?? (b.taxa_juros_ano ? b.taxa_juros_ano / 12 : 0);
+        // Prioriza taxa mensal real do banco, se não houver calcula a partir da anual (usada na rápida)
+        const taxa = d?.taxaJurosMes ?? (b.taxa_juros_ano ? (Math.pow(1 + b.taxa_juros_ano / 100, 1 / 12) - 1) * 100 : 0);
         const taxaStr = taxa > 0 ? ` Tx ${taxa.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "";
         return `${b.nome_banco}${taxaStr}`;
       })
@@ -1065,14 +1066,8 @@ export function nomeDescritivo(s: any, bancos: any[], rendaOverride?: number | n
 
   const nomes = bancos.map((b) => b?.nome_banco).filter(Boolean);
   const bancoTxt = nomes.length ? Array.from(new Set(nomes)).join(",") : "Simulacao";
-  const tabela = tabelaLabel(s, bancos);
-  const cev = abreviarValor(s.valor_imovel);
-  const finan = abreviarValor(s.valor_financiamento);
-  const prazo = s.prazo ? `${s.prazo} meses` : "-";
-  const renda = abreviarValor(
-    rendaOverride != null && rendaOverride > 0 ? rendaOverride : rendaNecessaria(s, bancos),
-  );
-  return `${bancoTxt}-${tabela}-C e V ${cev} - Finan ${finan} - ${prazo} - renda ${renda}`;
+  const d = extrairDetalheBanco(bancos[0]?.raw_response);
+  return gerarNomeArquivoPdf(bancos[0], s, d);
 }
 
 
