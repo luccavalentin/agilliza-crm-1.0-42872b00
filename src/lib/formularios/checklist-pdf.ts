@@ -46,30 +46,31 @@ export async function gerarChecklistBancoPDF(bancoId: string, clienteNome?: stri
   const bancoNome = (bancoId === "itau" ? "Itaú" : bancoId).toUpperCase();
   const tituloTexto = `CHECKLIST DE DOCUMENTAÇÃO - ${bancoNome}`;
   
-  // Largura do texto para posicionamento dinâmico
-  const textWidth = doc.getTextWidth(tituloTexto);
-  
   // Logo do Banco no Header (Superior Direita)
-  // DEVE VIR APÓS O NOME
   if (bancoBrand?.logo) {
     try {
       const bLogoH = 14; 
       const bLogoW = bLogoH * (bancoBrand.ratio || 1);
       
-      // Alinhamos o conjunto [Texto] [Logo] à direita
-      const totalWidth = textWidth + 5 + bLogoW; // 5mm de gap
-      const startX = pageW - MARGIN - totalWidth;
+      // Ajuste de posicionamento para evitar encavalamento
+      // Título à direita, Logo à esquerda do título com gap
+      const textWidth = doc.getTextWidth(tituloTexto);
+      const totalWidth = textWidth + bLogoW + 5;
       
-      doc.text(tituloTexto, startX, 24);
-      doc.addImage(bancoBrand.logo, "PNG", startX + textWidth + 5, 13, bLogoW, bLogoH);
+      const contentStartX = pageW - MARGIN - totalWidth;
+      
+      // Desenha o texto
+      doc.text(tituloTexto, contentStartX, 24);
+      
+      // Desenha a logo após o texto
+      doc.addImage(bancoBrand.logo, "PNG", contentStartX + textWidth + 5, 13, bLogoW, bLogoH);
     } catch (e) {
-      console.error("Erro ao adicionar logo do banco ao PDF:", e);
-      // Fallback: Apenas texto se a logo falhar
       doc.text(tituloTexto, pageW - MARGIN, 24, { align: "right" });
     }
   } else {
     doc.text(tituloTexto, pageW - MARGIN, 24, { align: "right" });
   }
+
 
 
   let y = 55;
