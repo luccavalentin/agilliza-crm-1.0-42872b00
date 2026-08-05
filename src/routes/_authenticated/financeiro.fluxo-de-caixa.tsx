@@ -650,6 +650,7 @@ function Pagina() {
           </PanelCard>
         </>
       )}
+      </div>
     </div>
   );
 }
