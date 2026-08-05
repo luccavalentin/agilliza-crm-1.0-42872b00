@@ -402,63 +402,79 @@ function Pagina() {
 
   return (
     <div className="mx-auto w-full max-w-none space-y-6 min-h-screen">
-      <PanelHeader
-        eyebrow="Financeiro · Fluxo de Caixa"
-        titulo="Fluxo de caixa"
-        descricao="Caixa realizado e projeção de entradas e saídas em aberto."
-        atualizadoEm={atualizado}
-        actions={
-          <div className="flex flex-wrap items-end gap-3 lg:justify-end">
-            <Tabs value={gran} onValueChange={(v) => setGran(v as typeof gran)}>
-              <TabsList className="h-auto gap-1 rounded-xl bg-muted/30 p-1.5">
-                <TabsTrigger value="dia" className="rounded-lg px-3 py-1.5">
-                  Diário
-                </TabsTrigger>
-                <TabsTrigger value="semana" className="rounded-lg px-3 py-1.5">
-                  Semanal
-                </TabsTrigger>
-                <TabsTrigger value="mes" className="rounded-lg px-3 py-1.5">
-                  Mensal
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
-            <ExportarFinanceiro
-              titulo="Fluxo de caixa"
-              descricao="Entradas, saídas, resultado líquido e saldo acumulado projetado."
-              meta={[
-                `Granularidade: ${gran === "dia" ? "Diária" : gran === "semana" ? "Semanal" : "Mensal"}`,
-                de || ate ? `Período: ${de || "início"} até ${ate || "hoje"}` : "Período: completo",
-              ]}
-              columns={[
-                { key: "label", label: "Período" },
-                { key: "entrada", label: "Entradas", align: "right" as const, format: "brl" as const, footer: "sum" as const },
-                { key: "saida", label: "Saídas", align: "right" as const, format: "brl" as const, footer: "sum" as const },
-                { key: "resultado", label: "Resultado", align: "right" as const, format: "brl" as const, footer: "sum" as const },
-                { key: "saldoAcum", label: "Saldo acumulado", align: "right" as const, format: "brl" as const },
-              ]}
-              rows={(pontos ?? []).map((p: any) => ({
-                label: p.label,
-                entrada: Number(p.entrada) || 0,
-                saida: Number(p.saida) || 0,
-                resultado: Number(p.resultado) || 0,
-                saldoAcum: Number(p.saldoAcum) || 0,
-              }))}
-            />
-            <FiltroPeriodo
-              de={de}
-              ate={ate}
-              onAplicar={(d, a) => {
-                setDe(d);
-                setAte(a);
-              }}
-              onLimpar={() => {
-                setDe("");
-                setAte("");
-              }}
-            />
+      <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between px-4 sm:px-6 pt-6">
+        <div className="space-y-1">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-primary/70">
+            Financeiro · Fluxo de Caixa
+          </p>
+          <h1 className="text-3xl font-black tracking-tight text-foreground uppercase">
+            Fluxo de caixa
+          </h1>
+          <div className="flex items-center gap-3">
+            <p className="text-sm text-muted-foreground max-w-md">
+              Caixa realizado e projeção de entradas e saídas em aberto.
+            </p>
+            {atualizado && (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-600 ring-1 ring-inset ring-emerald-500/20">
+                <span className="size-1 rounded-full bg-emerald-500 animate-pulse" />
+                Atualizado {atualizado}
+              </span>
+            )}
           </div>
-        }
-      />
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3">
+          <Tabs value={gran} onValueChange={(v) => setGran(v as typeof gran)}>
+            <TabsList className="h-10 gap-1 rounded-xl bg-muted/40 p-1">
+              <TabsTrigger value="dia" className="rounded-lg px-4 py-1.5 text-xs font-semibold">
+                Diário
+              </TabsTrigger>
+              <TabsTrigger value="semana" className="rounded-lg px-4 py-1.5 text-xs font-semibold">
+                Semanal
+              </TabsTrigger>
+              <TabsTrigger value="mes" className="rounded-lg px-4 py-1.5 text-xs font-semibold">
+                Mensal
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+
+          <ExportarFinanceiro
+            titulo="Fluxo de caixa"
+            descricao="Entradas, saídas, resultado líquido e saldo acumulado projetado."
+            meta={[
+              `Granularidade: ${gran === "dia" ? "Diária" : gran === "semana" ? "Semanal" : "Mensal"}`,
+              de || ate ? `Período: ${de || "início"} até ${ate || "hoje"}` : "Período: completo",
+            ]}
+            columns={[
+              { key: "label", label: "Período" },
+              { key: "entrada", label: "Entradas", align: "right" as const, format: "brl" as const, footer: "sum" as const },
+              { key: "saida", label: "Saídas", align: "right" as const, format: "brl" as const, footer: "sum" as const },
+              { key: "resultado", label: "Resultado", align: "right" as const, format: "brl" as const, footer: "sum" as const },
+              { key: "saldoAcum", label: "Saldo acumulado", align: "right" as const, format: "brl" as const },
+            ]}
+            rows={(pontos ?? []).map((p: any) => ({
+              label: p.label,
+              entrada: Number(p.entrada) || 0,
+              saida: Number(p.saida) || 0,
+              resultado: Number(p.resultado) || 0,
+              saldoAcum: Number(p.saldoAcum) || 0,
+            }))}
+          />
+
+          <FiltroPeriodo
+            de={de}
+            ate={ate}
+            onAplicar={(d, a) => {
+              setDe(d);
+              setAte(a);
+            }}
+            onLimpar={() => {
+              setDe("");
+              setAte("");
+            }}
+          />
+        </div>
+      </div>
 
       <div className="p-4 sm:p-5 md:space-y-8 md:p-8">
 
