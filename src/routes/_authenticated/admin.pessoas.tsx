@@ -71,8 +71,8 @@ export const Route = createFileRoute("/_authenticated/admin/pessoas")({
 });
 
 const ROTULO_PAPEL: Record<string, string> = {
+  gestor: "Gestão",
   correspondente: "Correspondente",
-  gestor: "Gestor",
   comercial: "Comercial",
   analista: "Analista",
   imobiliaria: "Imobiliária",

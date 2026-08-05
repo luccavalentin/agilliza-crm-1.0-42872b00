@@ -465,6 +465,7 @@ export type AcessoTipo = "sistema" | "portal_parceiro";
 export const PAPEIS_POR_PORTAL: Record<AcessoTipo, { value: PapelNivel; label: string }[]> = {
   sistema: [
     { value: "gestor", label: "Gestor" },
+    { value: "gestor", label: "Gestão" },
     { value: "comercial", label: "Comercial" },
     { value: "analista", label: "Analista" },
   ],
