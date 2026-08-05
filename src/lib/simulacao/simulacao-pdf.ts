@@ -499,6 +499,21 @@ function anexarDetalhesBancos(doc: jsPDF, pageW: number, pageH: number, s: any, 
       formatBRL(p.parcela),
       formatBRL(p.saldoDevedor),
     ];
+
+    const somas = parcelas.reduce((acc, p) => ({
+      amort: acc.amort + (p.amortizacao || 0),
+      juros: acc.juros + (p.juros || 0),
+      parcela: acc.parcela + (p.parcela || 0),
+    }), { amort: 0, juros: 0, parcela: 0 });
+
+    const rodapeSoma = [
+      { content: "TOTAIS", colSpan: 2, styles: { halign: "center", fontStyle: "bold" } },
+      { content: formatBRL(somas.amort), styles: { halign: "right", fontStyle: "bold" } },
+      { content: formatBRL(somas.juros), styles: { halign: "right", fontStyle: "bold" } },
+      { content: formatBRL(somas.parcela), styles: { halign: "right", fontStyle: "bold" } },
+      { content: "", styles: { halign: "right" } }
+    ];
+
     const cabecalho = [["Parc.", "Data", "Amortização", "Juros", "Parcela", "Saldo devedor"]];
     const estiloTabela = {
       styles: {
