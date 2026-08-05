@@ -112,6 +112,8 @@ export function calcularSimulacao({
     total_pago: total,
     total_juros: total - pv,
     taxa_mes: i,
+    renda_minima: Math.max(rendaMin, primeira / 0.30),
+    cet_ano: cetAno,
   };
 }
 
