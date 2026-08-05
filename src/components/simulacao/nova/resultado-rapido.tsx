@@ -139,6 +139,7 @@ function BancoResultadoCard({
         <Info label="Taxa a.a." value={formatPercent(c.taxa_ano)} />
         <Info label="Prazo" value={`${prazoMeses} meses`} />
         <Info label="Financ. máx" value={formatBRL(valorFinanciamento)} />
+        <Info label="Renda mínima" value={formatBRL(c.resultado.primeira_parcela / 0.3)} emphasis />
         <Info label="Última parcela" value={formatBRL(c.resultado.ultima_parcela)} />
       </dl>
 
