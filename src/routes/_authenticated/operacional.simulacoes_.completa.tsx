@@ -284,6 +284,7 @@ function Pagina() {
                 <ResultadoInlineCompleta
                   simulacaoId={simulacaoResultadoIdSecundario}
                   onFechar={fecharResultadoInlineSecundario}
+                  isSecundaria
                 />
               </div>
             )}
