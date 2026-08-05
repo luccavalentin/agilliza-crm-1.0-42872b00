@@ -91,7 +91,21 @@ export function EditarPessoaDialog({
     <Dialog open={!!pessoa} onOpenChange={() => onClose()}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Editar pessoa</DialogTitle>
+          <div className="flex items-center gap-3">
+            <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-full border bg-muted shadow-sm">
+              {avatarUrl ? (
+                <img src={avatarUrl} alt={nome} className="h-full w-full object-cover" />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center bg-primary/10 text-primary">
+                  <User className="h-6 w-6" />
+                </div>
+              )}
+            </div>
+            <div className="flex flex-col text-left">
+              <DialogTitle className="text-xl">{nome || "Editar pessoa"}</DialogTitle>
+              <span className="text-sm text-muted-foreground">{pessoa?.email}</span>
+            </div>
+          </div>
         </DialogHeader>
         <div className="space-y-4 py-2">
           <UploadAvatar
