@@ -152,18 +152,27 @@ export function DicaRendaMinima(props: Props) {
 
   return (
     <div className="flex flex-col gap-1">
-      <div className="mt-2 flex items-center justify-between gap-3 overflow-hidden rounded-lg border border-border/70 bg-card px-3 py-2 shadow-sm">
+      <div className="mt-1 flex items-center justify-between gap-3 overflow-hidden rounded-xl border border-border/70 bg-card/50 px-3 py-2 shadow-sm">
         <div className="flex min-w-0 items-center gap-2">
-          <Icon className={cn("h-4 w-4 shrink-0", s.icon)} aria-hidden />
-          <span className="text-xs font-medium text-muted-foreground">Renda necessária {compoeRendaConjuge ? "familiar" : "titular"}</span>
+          <div className={cn("flex h-6 w-6 items-center justify-center rounded-lg ring-1", s.iconBox)}>
+            <Icon className={cn("h-3.5 w-3.5", s.icon)} aria-hidden />
+          </div>
+          <div className="flex flex-col">
+            <span className="text-[11px] font-medium text-muted-foreground leading-tight">
+              Renda necessária {compoeRendaConjuge ? "familiar" : "titular"}
+            </span>
+            <span className="text-[9px] text-muted-foreground/60 leading-tight">
+              Tabela {sistema === "S" ? "SAC" : "PRICE"}
+            </span>
+          </div>
         </div>
-        <p className={cn("font-mono text-sm font-semibold tabular-nums", s.status)}>
+        <p className={cn("font-mono text-sm font-bold tabular-nums", "text-blue-700 dark:text-blue-400")}>
           {formatBRL(rendaMin)}
         </p>
       </div>
       {compoeRendaConjuge && (
-        <p className="px-1 text-[10px] text-muted-foreground italic">
-          Distribuído: {formatBRL(rendaMin / 2)} para cada proponente
+        <p className="px-1 text-[10px] text-muted-foreground/70 italic">
+          Sugestão: {formatBRL(rendaMin / 2)} para cada proponente
         </p>
       )}
     </div>
