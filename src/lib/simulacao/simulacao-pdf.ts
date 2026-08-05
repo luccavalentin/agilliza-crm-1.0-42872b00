@@ -606,13 +606,14 @@ function anexarDetalhesBancos(doc: jsPDF, pageW: number, pageH: number, s: any, 
 export function baixarSimulacaoPDF(input: SimulacaoPdfInput) {
   const { simulacao: s, bancos } = input;
 
-  // Se for uma simulação rápida (sem raw_response detalhado), gera apenas o comparativo consolidado.
-  // Se for uma simulação completa com um único banco, emite o extrato detalhado com parcelas.
+  // Se for uma simulação completa com um único banco (e não for simulação rápida com AMBOS),
+  // emite o extrato detalhado com parcelas.
   const isRapida = (bancos ?? []).every(b => !b.raw_response?.simulacao);
   if (!isRapida && (bancos ?? []).length === 1) {
     baixarSimulacaoDetalhadaPDF(input);
     return;
   }
+
 
   const produto = produtoLabel(s);
 
@@ -733,7 +734,8 @@ export function baixarSimulacaoSimplificadaPDF({
   filePrefix,
   dataLabel,
 }: SimulacaoPdfInput) {
-  const lista = bancosParaExtrato(bancosDaTabelaSolicitada(s, bancos));
+  const lista = bancosParaExtrato(bancos);
+
   P = getPdfPalette();
   const doc = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
   const pageW = doc.internal.pageSize.getWidth();
@@ -758,6 +760,7 @@ export function baixarSimulacaoSimplificadaPDF({
       { label: "1ª parcela", valor: brlOuTraco(d?.primeiraParcela ?? b?.valor_parcela) },
       { label: "Última parcela", valor: brlOuTraco(d?.ultimaParcela) },
       { label: "Somatório das parcelas", valor: brlOuTraco(d?.somatorioParcelas) },
+      { label: "Renda mínima necessária", valor: brlOuTraco(rendaMinimaDoBanco(b)) },
     ];
     doc.setTextColor(P.destaque);
     doc.setFont("helvetica", "bold");
@@ -766,7 +769,7 @@ export function baixarSimulacaoSimplificadaPDF({
     y += 8;
     const w = pageW - MARGIN * 2;
     const gap = 8;
-    const cardW = (w - gap * 2) / 3;
+    const cardW = (w - gap * 3) / 4;
     const cardH = 40;
     resumo.forEach((it, i) => {
       const x = MARGIN + i * (cardW + gap);
@@ -776,11 +779,12 @@ export function baixarSimulacaoSimplificadaPDF({
       doc.roundedRect(x, y, cardW, cardH, 3, 3, "FD");
       doc.setTextColor(P.cinza);
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(6.5);
+      doc.setFontSize(5.5);
+
       doc.text(it.label.toUpperCase(), x + 10, y + 15, { maxWidth: cardW - 16 });
       doc.setTextColor(P.destaque);
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(12);
+      doc.setFontSize(9);
       doc.text(it.valor, x + 10, y + 32, { maxWidth: cardW - 16 });
     });
     y += cardH + 20;
@@ -804,7 +808,7 @@ function criarDocSimulacaoDetalhada({
   filePrefix,
   dataLabel,
 }: SimulacaoPdfInput) {
-  const lista = bancosParaExtrato(bancosDaTabelaSolicitada(s, bancos));
+  const lista = bancosParaExtrato(bancos);
   P = getPdfPalette();
   const doc = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
   const pageW = doc.internal.pageSize.getWidth();
