@@ -470,41 +470,41 @@ function ComparativoTaxasDialog({ aberto, onClose, idTitular, idSecundario }: { 
 function TaxaCard({ nome, taxa, isWinner }: { nome: string; taxa: number | null; isWinner: boolean }) {
   return (
     <div className={cn(
-      "relative overflow-hidden rounded-[1.5rem] border p-6 transition-all duration-500",
+      "relative overflow-hidden rounded-xl border p-6 transition-all duration-300",
       isWinner 
-        ? "border-primary/30 bg-white shadow-xl shadow-primary/5 dark:bg-slate-800" 
-        : "border-slate-200 bg-slate-50/50 dark:border-slate-700 dark:bg-slate-800/50"
+        ? "border-primary/50 bg-primary/5 shadow-md" 
+        : "border-border bg-card shadow-sm"
     )}>
       {isWinner && (
         <div className="absolute right-4 top-4">
-          <div className="flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-primary">
+          <div className="flex items-center gap-1 rounded-full bg-primary px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-primary-foreground">
             Melhor Taxa
           </div>
         </div>
       )}
       
       <div className="space-y-1">
-        <span className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
+        <span className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
           PERFIL {nome}
         </span>
         <div className="flex items-baseline gap-1">
           <span className={cn(
             "text-4xl font-black tabular-nums tracking-tighter",
-            isWinner ? "text-primary" : "text-slate-400"
+            isWinner ? "text-primary" : "text-foreground"
           )}>
             {taxa ? formatPercent(taxa / 100) : "—"}
           </span>
-          {taxa && <span className="text-sm font-bold text-slate-400">a.a.</span>}
+          {taxa && <span className="text-sm font-bold text-muted-foreground">a.a.</span>}
         </div>
       </div>
       
       <div className="mt-4 flex items-center gap-2">
         <div className={cn(
           "h-1.5 flex-1 rounded-full",
-          isWinner ? "bg-primary/20" : "bg-slate-200 dark:bg-slate-700"
+          isWinner ? "bg-primary/20" : "bg-muted"
         )}>
           <div 
-            className={cn("h-full rounded-full transition-all duration-1000", isWinner ? "w-full bg-primary" : "w-1/2 bg-slate-300 dark:bg-slate-600")}
+            className={cn("h-full rounded-full transition-all duration-1000", isWinner ? "w-full bg-primary" : "w-1/2 bg-muted-foreground/30")}
           />
         </div>
       </div>
