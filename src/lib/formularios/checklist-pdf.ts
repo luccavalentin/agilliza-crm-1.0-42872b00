@@ -4,7 +4,7 @@ import { AGILLIZA_LOGO_LIGHT, AGILLIZA_LOGO_RATIO } from "@/lib/relatorios/brand
 import { resolveBancoBrand } from "@/lib/relatorios/banco-brand";
 import { CHECKLISTS_BANCOS } from "@/lib/formularios/checklists.functions";
 
-export async function gerarChecklistBancoPDF(bancoId: string, clienteNome?: string, docsCustom?: string[]) {
+export async function gerarChecklistBancoPDF(bancoId: string, clienteNome?: string, docsCustom?: (string | { nome: string, obrigatorio: boolean })[]) {
   const doc = new jsPDF("p", "mm", "a4");
   const pageW = doc.internal.pageSize.getWidth();
   const pageH = doc.internal.pageSize.getHeight();
