@@ -18,6 +18,7 @@ import {
   ChevronRight,
   Download,
   Trash2,
+  Pencil,
   User as UserIcon,
   FileText,
   Calculator,
@@ -34,6 +35,7 @@ import { getMinhaSessao } from "@/lib/session.functions";
 import { statusDemanda, TONE_BAR } from "@/components/operacional/status";
 import { PriorityChip, OpAvatar, OpStat } from "@/components/operacional/ui";
 import { NovaDemandaDialog } from "@/components/operacional/nova-demanda-dialog";
+import { EditarDemandaDialog } from "@/components/operacional/editar-demanda-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -131,6 +133,7 @@ function Pagina() {
   const [statusFiltro, setStatusFiltro] = useState<DemandaStatus | "todas">("todas");
   const [tipoFiltro, setTipoFiltro] = useState<string>("todos");
   const [excluirId, setExcluirId] = useState<string | null>(null);
+  const [editandoDemanda, setEditandoDemanda] = useState<any | null>(null);
   const [excluindo, setExcluindo] = useState(false);
 
   const { data: sessao } = useQuery({
@@ -434,20 +437,42 @@ function Pagina() {
                   </span>
                 )}
               </div>
-              {souCriador && (
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setExcluirId(d.id);
-                  }}
-                  aria-label="Excluir demanda"
-                  title="Excluir demanda"
-                  className="absolute right-2 top-2 grid size-7 place-items-center rounded-lg text-muted-foreground opacity-0 transition-all hover:bg-destructive/10 hover:text-destructive focus:opacity-100 group-hover:opacity-100"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </button>
-              )}
+              <div className="absolute right-2 top-2 flex items-center gap-1 opacity-0 transition-all group-hover:opacity-100">
+                {(souCriador || (meuId && d.responsavel_id === meuId)) && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setEditandoDemanda({
+                        id: d.id,
+                        titulo: d.titulo,
+                        descricao: d.descricao,
+                        prioridade: d.prioridade,
+                        sla_horas: d.sla_horas ?? null,
+                      });
+                    }}
+                    aria-label="Editar demanda"
+                    title="Editar demanda"
+                    className="grid size-7 place-items-center rounded-lg text-muted-foreground transition-all hover:bg-primary/10 hover:text-primary focus:opacity-100"
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </button>
+                )}
+                {souCriador && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setExcluirId(d.id);
+                    }}
+                    aria-label="Excluir demanda"
+                    title="Excluir demanda"
+                    className="grid size-7 place-items-center rounded-lg text-muted-foreground transition-all hover:bg-destructive/10 hover:text-destructive focus:opacity-100"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </div>
               <ChevronRight className="mt-1 hidden h-4 w-4 shrink-0 text-muted-foreground/40 transition group-hover:text-primary md:block" />
             </div>
           );
@@ -481,6 +506,19 @@ function Pagina() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {editandoDemanda && (
+        <EditarDemandaDialog
+          demanda={editandoDemanda}
+          onSalva={() => {
+            setEditandoDemanda(null);
+            refetch();
+          }}
+          trigger={<span className="hidden" />}
+          abertoOverride={true}
+          onOpenChangeOverride={(open) => !open && setEditandoDemanda(null)}
+        />
+      )}
 
     </div>
   );
