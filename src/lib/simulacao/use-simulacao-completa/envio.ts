@@ -290,17 +290,6 @@ export async function executarEnvioSimples(ctx: CtxBase): Promise<void> {
       );
     }
 
-    // Download automático imediato para simulação simples
-    if (!modoProposta) {
-      const { baixarSimulacaoDetalhadaPDF } = await import("@/lib/simulacao/simulacao-pdf");
-      const finalSimData = await obterSimulacao({ data: { id } });
-      const simulados = (finalSimData.bancos as any[] ?? []).filter((b: any) => b.status_banco === "simulada");
-      for (const b of simulados) {
-        baixarSimulacaoDetalhadaPDF({ simulacao: finalSimData.simulacao, bancos: [b] });
-        await new Promise((r) => setTimeout(r, 600));
-      }
-    }
-
     // Fluxo "Nova Proposta": após simular, cria a proposta e redireciona.
     if (modoProposta) {
       try {

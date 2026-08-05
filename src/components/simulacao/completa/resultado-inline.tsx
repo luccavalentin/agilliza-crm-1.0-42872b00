@@ -102,12 +102,17 @@ export function ResultadoInlineCompleta({ simulacaoId, onFechar }: Props) {
     jaBaixou.current = true;
     (async () => {
       try {
-        const { baixarSimulacoesDetalhadasZipPDF } = await import("@/lib/simulacao/simulacao-pdf");
-        await baixarSimulacoesDetalhadasZipPDF({ simulacao: data.simulacao, bancos: simulados });
+        const { baixarSimulacaoDetalhadaPDF } = await import("@/lib/simulacao/simulacao-pdf");
+        for (const b of simulados) {
+          baixarSimulacaoDetalhadaPDF({ simulacao: data.simulacao, bancos: [b] });
+          // Pequeno delay para não bloquear downloads simultâneos no navegador
+          await new Promise((r) => setTimeout(r, 600));
+        }
         toast.success(
           `Simulação realizada. ${simulados.length} PDF${simulados.length === 1 ? "" : "s"} liberado${simulados.length === 1 ? "" : "s"} para download.`,
         );
-      } catch {
+      } catch (e) {
+        console.error("[PDF Automático]", e);
         toast.error("Não foi possível baixar automaticamente os PDFs.");
       }
     })();
