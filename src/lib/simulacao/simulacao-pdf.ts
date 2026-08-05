@@ -900,9 +900,11 @@ function criarDocSimulacaoDetalhada({
     drawFooter(doc, pageW, pageH, p, total);
   }
 
+  const pdfNome = sanitizarNomeArquivo(lista.length === 1 ? gerarNomeArquivoPdf(lista[0], s, extrairDetalheBanco(lista[0].raw_response)) : (filePrefix || nomeDescritivo(s, lista)));
+  
   return {
     doc,
-    nome: sanitizarNomeArquivo(lista.length === 1 ? gerarNomeArquivoPdf(lista[0], s, extrairDetalheBanco(lista[0].raw_response)) : (filePrefix || nomeDescritivo(s, lista))),
+    nome: pdfNome,
     totalBancos: lista.length,
   };
 }

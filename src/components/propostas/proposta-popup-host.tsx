@@ -8,10 +8,11 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, AlertCircle, Info, ExternalLink, X, TrendingDown } from "lucide-react";
+import { CheckCircle2, AlertCircle, Info, ExternalLink, X, TrendingDown, FileDown } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { corDoBanco } from "@/lib/bancos/cores";
 import { BancoLogo } from "@/components/bancos/banco-logo";
+import { useState } from "react";
 
 /**
  * Host global para os popups de retorno de propostas e comparativo de taxas.
@@ -19,6 +20,7 @@ import { BancoLogo } from "@/components/bancos/banco-logo";
  */
 export function PropostaPopupHost() {
   const { abertas, remover } = usePropostaNotificacaoStore();
+  const [baixando, setBaixando] = useState(false);
 
   if (abertas.length === 0) return null;
 
@@ -30,11 +32,40 @@ export function PropostaPopupHost() {
   const isComparativo = atual.status.toLowerCase() === "comparativo de taxas concluído";
 
   const bancosComparativo = atual.dados_adicionais?.bancos || [];
+  const simulacaoBase = atual.dados_adicionais?.simulacao;
   
   // Encontra a melhor taxa no comparativo
   const melhorBanco = isComparativo && bancosComparativo.length > 0
     ? [...bancosComparativo].sort((a, b) => (a.taxa_juros_ano || 999) - (b.taxa_juros_ano || 999))[0]
     : null;
+
+  async function baixarComparativo() {
+    if (!simulacaoBase || bancosComparativo.length === 0) return;
+    setBaixando(true);
+    try {
+      const { baixarSimulacaoPDF } = await import("@/lib/simulacao/simulacao-pdf");
+      baixarSimulacaoPDF({
+        simulacao: {
+          ...simulacaoBase,
+          valor_imovel: Number(simulacaoBase.valor_imovel || 0),
+          valor_financiamento: Number(simulacaoBase.valor_financiamento || 0),
+          valor_entrada: Number(simulacaoBase.valor_entrada || 0),
+        },
+        bancos: bancosComparativo.map((b: any) => ({
+          nome_banco: b.nome_banco,
+          status_banco: b.status_banco,
+          valor_parcela: b.valor_parcela,
+          taxa_juros_ano: b.taxa_juros_ano,
+          prazo_pagamento_max: b.prazo_pagamento_max,
+          valor_financiamento_max: b.valor_financiamento_max,
+          _sistema: b._sistema,
+          valor_iof: b.valor_iof
+        }))
+      });
+    } finally {
+      setBaixando(false);
+    }
+  }
 
   return (
     <Dialog open={true} onOpenChange={() => {}}>
@@ -134,6 +165,17 @@ export function PropostaPopupHost() {
           )}
 
           <DialogFooter className="flex-col gap-2 sm:flex-row sm:justify-center">
+            {isComparativo && (
+              <Button
+                variant="outline"
+                className="w-full sm:w-auto border-blue-500/30 text-blue-600 hover:bg-blue-50"
+                onClick={baixarComparativo}
+                disabled={baixando}
+              >
+                <FileDown className="mr-2 h-4 w-4" />
+                {baixando ? "Gerando..." : "Baixar Comparativo"}
+              </Button>
+            )}
             <Button
               variant="outline"
               onClick={() => remover(atual.id)}
@@ -150,7 +192,7 @@ export function PropostaPopupHost() {
                 to={isComparativo ? "/operacional/simulacoes/$id" : "/operacional/propostas/$id"} 
                 params={{ id: atual.id }}
               >
-                {isComparativo ? "Ver Comparativo Completo" : "Ver Detalhes"}
+                {isComparativo ? "Ver Detalhes" : "Ver Proposta"}
                 <ExternalLink className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
               </Link>
             </Button>
