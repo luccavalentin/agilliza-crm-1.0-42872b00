@@ -656,7 +656,7 @@ export function baixarSimulacaoPDF(input: SimulacaoPdfInput) {
   const isMista = s.sistema_amortizacao === "B" || sistemasBancos.length > 1;
   const sistemaKpi = isMista
     ? "SAC + PRICE"
-    : s.sistema_amortizacao === "P"
+    : s.sistema_amortizacao === "P" || sistemasBancos[0] === "PRICE"
       ? "PRICE"
       : "SAC";
 
@@ -666,6 +666,7 @@ export function baixarSimulacaoPDF(input: SimulacaoPdfInput) {
     { label: "Entrada", valor: formatBRL(s.valor_entrada) },
     { label: "Prazo", valor: s.prazo ? `${s.prazo} meses` : "—" },
     { label: "Sistema", valor: sistemaKpi },
+    { label: "Renda mínima necessária", valor: formatBRL(rendaNecessaria(s, bancos ?? [])) },
 
   ];
 
