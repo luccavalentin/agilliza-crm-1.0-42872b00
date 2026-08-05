@@ -160,7 +160,8 @@ function drawTituloExtrato(
   doc.setTextColor(P.cinza);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8);
-  doc.text(`${dataLabel}: ${dataTxt(s.created_at ?? new Date())}`, pageW / 2, y + 12, {
+  const dataSim = s.created_at ? new Date(s.created_at) : new Date();
+  doc.text(`${dataLabel}: ${dataTxt(dataSim)}`, pageW / 2, y + 12, {
     align: "center",
   });
   return y + 24;
@@ -670,7 +671,7 @@ export function baixarSimulacaoPDF(input: SimulacaoPdfInput) {
       parcela: b.valor_parcela != null ? formatBRL(b.valor_parcela) : "—",
       taxa: b.taxa_juros_ano != null ? formatPercent(b.taxa_juros_ano / 100) : "—",
       cet: cet != null ? formatPercent(cet / 100) : "—",
-      renda: b.renda_minima != null ? formatBRL(b.renda_minima) : (rendaMinimaDoBanco(b) ? formatBRL(rendaMinimaDoBanco(b)!) : (d?.rendaMinimaExigida ? formatBRL(d.rendaMinimaExigida) : "—")),
+      renda: b.renda_minima != null ? formatBRL(b.renda_minima) : (rendaMinimaDoBanco(b) != null ? formatBRL(rendaMinimaDoBanco(b)!) : (d?.rendaMinimaExigida ? formatBRL(d.rendaMinimaExigida) : "—")),
       seguros: seguros > 0 ? formatBRL(seguros) : "—",
     };
   });

@@ -344,7 +344,7 @@ export function FormularioSimulacao({
         </div>
 
         <div id="campo-renda-familiar" ref={rendaRef} className="space-y-4 md:col-span-2 scroll-mt-24 pt-2">
-          {w.valor_financiamento > 0 && w.prazo_meses >= PRAZO_MIN ? (
+          {w.valor_financiamento > 0 && w.prazo_meses >= PRAZO_MIN && (
             <DicaRendaMinima
               valorFinanciamento={w.valor_financiamento}
               valorImovel={w.valor_imovel}
@@ -353,7 +353,8 @@ export function FormularioSimulacao({
               sistema={w.sistema_amortizacao}
               rendaInformada={w.sistema_amortizacao === "AMBOS" ? w.renda_familiar_price : w.renda_familiar}
             />
-          ) : (
+          )}
+          {!(w.valor_financiamento > 0 && w.prazo_meses >= PRAZO_MIN) && (
             <p className="text-xs text-muted-foreground text-center">
               A renda mínima necessária será calculada automaticamente com base nos valores informados.
             </p>

@@ -114,8 +114,8 @@ function Pagina() {
           prazo: w.prazo_meses,
           sistema_amortizacao: w.sistema_amortizacao === "AMBOS" ? "SAC e PRICE" : w.sistema_amortizacao,
           renda_familiar: w.sistema_amortizacao === "AMBOS" ? 0 : 0,
-          renda_familiar_sac: w.sistema_amortizacao === "AMBOS" ? 0 : undefined,
-          renda_familiar_price: w.sistema_amortizacao === "AMBOS" ? 0 : undefined,
+          renda_familiar_sac: 0,
+          renda_familiar_price: 0,
           created_at: new Date().toISOString(),
         },
         bancos: comparativo.map(c => ({
