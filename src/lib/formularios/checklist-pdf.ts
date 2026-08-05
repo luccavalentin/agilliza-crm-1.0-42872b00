@@ -34,15 +34,21 @@ export async function gerarChecklistBancoPDF(bancoId: string, clienteNome?: stri
     doc.addImage(AGILLIZA_LOGO_LIGHT, "PNG", MARGIN, 11, logoW, logoH);
   } catch (e) {}
 
-  // Título e Nome do Banco (Superior Direita)
+  // Título e Logo do Banco (Superior Direita)
   doc.setTextColor("#FFFFFF");
   doc.setFont("helvetica", "bold");
   doc.setFontSize(14);
-  doc.text("Checklist de Documentação", pageW - MARGIN, 22, { align: "right" });
+  doc.text("Documentos para segmento de proposta", pageW - MARGIN, 18, { align: "right" });
+  doc.text("credito Imobiliario", pageW - MARGIN, 24, { align: "right" });
   
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(10);
-  doc.text(bancoId.toUpperCase(), pageW - MARGIN, 28, { align: "right" });
+  // Logo do Banco no Header (Superior Direita, abaixo do texto)
+  if (bancoBrand?.logo) {
+    try {
+      const bLogoH = 8;
+      const bLogoW = bLogoH * (bancoBrand.ratio || 1);
+      doc.addImage(bancoBrand.logo, "PNG", pageW - MARGIN - bLogoW, 28, bLogoW, bLogoH);
+    } catch (e) {}
+  }
 
   let y = 55;
 
@@ -52,16 +58,6 @@ export async function gerarChecklistBancoPDF(bancoId: string, clienteNome?: stri
   doc.setFontSize(9);
   doc.text("Relação de documentos necessários para análise de crédito imobiliário.", MARGIN, y);
   y += 10;
-
-  // Logo do Banco (Opcional, se existir)
-  if (bancoBrand?.logo) {
-    try {
-      const bLogoH = 8;
-      const bLogoW = bLogoH * (bancoBrand.ratio || 1);
-      doc.addImage(bancoBrand.logo, "PNG", MARGIN, y, bLogoW, bLogoH);
-      y += 12;
-    } catch (e) {}
-  }
 
   // Dados do Cliente
   if (clienteNome) {
