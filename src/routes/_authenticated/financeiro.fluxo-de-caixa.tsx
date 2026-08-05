@@ -376,17 +376,39 @@ function Pagina() {
 
 
   return (
-    <div className="mx-auto w-full max-w-[1600px] space-y-6 bg-[#f8fafc] min-h-screen">
+    <div className="mx-auto w-full max-w-none space-y-6 bg-[#f8fafc] min-h-screen">
       <div className="p-4 sm:p-5 md:space-y-8 md:p-8">
-      <PanelHeader
-        variant="light"
-        eyebrow="FINANCEIRO · FLUXO DE CAIXA"
-        titulo="Fluxo de caixa"
-        descricao="Caixa realizado e projeção de entradas e saídas em aberto."
-        atualizadoEm={atualizado}
-        actions={
+      <div className="relative mb-8 rounded-3xl border border-border/50 bg-white/50 p-6 shadow-sm backdrop-blur-sm md:p-10">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <div className="h-1 w-6 rounded-full bg-[#000080]" />
+              <span className="text-[10px] font-bold tracking-[0.2em] text-[#000080] uppercase">
+                FINANCEIRO · FLUXO DE CAIXA
+              </span>
+            </div>
+            
+            <div className="space-y-1">
+              <h1 className="text-4xl font-black tracking-tight text-slate-900 md:text-5xl">
+                Fluxo de<br className="md:hidden" /> caixa
+              </h1>
+              <p className="max-w-md text-sm leading-relaxed text-slate-500">
+                Caixa realizado e projeção de entradas e saídas em aberto.
+              </p>
+            </div>
 
-          <div className="flex flex-wrap items-end justify-start gap-2 sm:justify-end">
+            {atualizado && (
+              <div className="inline-flex items-center gap-2 rounded-full border border-border/50 bg-white/80 px-3 py-1 text-[10px] font-medium text-slate-500 shadow-sm">
+                <span className="relative flex h-2 w-2">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+                </span>
+                Atualizado {atualizado}
+              </div>
+            )}
+          </div>
+
+          <div className="flex flex-wrap items-end gap-3 lg:justify-end">
             <Tabs value={gran} onValueChange={(v) => setGran(v as typeof gran)}>
               <TabsList className="h-auto gap-1 rounded-xl bg-muted/30 p-1.5">
                 <TabsTrigger value="dia" className="rounded-lg px-3 py-1.5">
@@ -445,9 +467,8 @@ function Pagina() {
               {limpando ? "Limpando..." : "Limpar Fluxo"}
             </Button>
           </div>
-
-        }
-      />
+        </div>
+      </div>
 
       {(de || ate) && (
         <p className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
