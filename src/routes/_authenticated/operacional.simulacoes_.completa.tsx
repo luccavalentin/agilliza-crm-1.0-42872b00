@@ -336,12 +336,6 @@ function Pagina() {
         idSecundario={simulacaoResultadoIdSecundario}
       />
 
-      <div className="fixed bottom-4 right-4 z-[60] flex flex-col gap-2">
-        <div className="flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1.5 text-[10px] font-medium text-primary shadow-sm backdrop-blur-sm transition-all hover:bg-primary/20">
-          <ShieldCheck className="h-3 w-3" />
-          Conectado à API Bancária (Ambiente Seguro)
-        </div>
-      </div>
     </div>
   );
 }
