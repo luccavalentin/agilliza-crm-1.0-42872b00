@@ -446,9 +446,9 @@ function ComparativoTaxasDialog({ aberto, onClose, idTitular, idSecundario }: { 
                   {taxaTitular && taxaConjuge 
                     ? taxaTitular <= taxaConjuge 
                       ? (taxaTitular === taxaConjuge 
-                          ? `✨ Ambos perfis apresentaram taxas iguais (${formatPercent(taxaTitular/100)} a.a.).`
-                          : `✨ O perfil de ${nomeTitular} apresentou as condições mais vantajosas para o financiamento.`)
-                      : `✨ O perfil de ${nomeConjuge} apresentou as condições mais vantajosas para o financiamento.`
+                          ? `Ambos perfis apresentaram taxas iguais (${formatPercent(taxaTitular/100)} a.a.).`
+                          : `O perfil de ${nomeTitular} apresentou as condições mais vantajosas para o financiamento.`)
+                      : `O perfil de ${nomeConjuge} apresentou as condições mais vantajosas para o financiamento.`
                     : "Aguardando processamento final dos retornos bancários..."}
                 </p>
               </div>
@@ -457,7 +457,7 @@ function ComparativoTaxasDialog({ aberto, onClose, idTitular, idSecundario }: { 
                 onClick={onClose}
                 className="h-12 w-full rounded-xl bg-primary px-8 font-bold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:bg-primary/90 active:scale-95 sm:w-auto"
               >
-                Prosseguir com a Melhor Opção
+                Fechar Comparativo
               </Button>
             </div>
           </div>
