@@ -639,7 +639,10 @@ export function baixarSimulacaoPDF(input: SimulacaoPdfInput) {
     { label: "Entrada", valor: formatBRL(s.valor_entrada) },
     { label: "Prazo", valor: s.prazo ? `${s.prazo} meses` : "—" },
     { label: "Sistema", valor: sistemaKpi },
-    ...(s.renda_familiar ? [{ label: "Renda familiar", valor: formatBRL(s.renda_familiar) }] : []),
+    ...(s.renda_familiar_sac && s.sistema_amortizacao === "SAC e PRICE"
+      ? [{ label: "Renda (SAC)", valor: formatBRL(s.renda_familiar_sac) }]
+      : []),
+    ...(s.renda_familiar ? [{ label: s.sistema_amortizacao === "SAC e PRICE" ? "Renda (PRICE)" : "Renda familiar", valor: formatBRL(s.renda_familiar) }] : []),
   ];
 
   const columns: ReportColumn[] = [
