@@ -120,7 +120,7 @@ export function FormularioSimulacao({
             <SelectContent>
               <SelectItem value="S">SAC</SelectItem>
               <SelectItem value="P">PRICE</SelectItem>
-              <SelectItem value="AMBOS">SAC e PRICE</SelectItem>
+              <SelectItem value="AMBOS">OverPrice (SAC e PRICE)</SelectItem>
             </SelectContent>
           </Select>
           {w.sistema_amortizacao !== "S" && (

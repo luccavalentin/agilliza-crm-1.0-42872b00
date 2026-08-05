@@ -401,7 +401,7 @@ export function SecaoOperacaoImovel({ ctx }: { ctx: SimulacaoCompletaCtx }) {
             <SelectContent>
               <SelectItem value="S">SAC</SelectItem>
               <SelectItem value="P">PRICE</SelectItem>
-              {!modoProposta && <SelectItem value="B">Ambos (SAC + PRICE)</SelectItem>}
+              {!modoProposta && <SelectItem value="B">OverPrice (SAC + PRICE)</SelectItem>}
             </SelectContent>
           </Select>
           {f.sistema_amortizacao === "B" && (
