@@ -49,7 +49,7 @@ function Pagina() {
     if ((simulacaoResultadoId || simulacaoResultadoIdPrice || simulacaoResultadoIdSecundario) && resultadoRef.current) {
       resultadoRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
     }
-  }, [simulacaoResultadoId, simulacaoResultadoIdPrice]);
+  }, [simulacaoResultadoId, simulacaoResultadoIdPrice, simulacaoResultadoIdSecundario]);
 
   const totalBancosResumo =
     f.sistema_amortizacao === "B"
