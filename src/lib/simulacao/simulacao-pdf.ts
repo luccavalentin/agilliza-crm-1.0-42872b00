@@ -663,7 +663,7 @@ export function baixarSimulacaoPDF(input: SimulacaoPdfInput) {
       parcela: b.valor_parcela != null ? formatBRL(b.valor_parcela) : "—",
       taxa: b.taxa_juros_ano != null ? formatPercent(b.taxa_juros_ano / 100) : "—",
       cet: cet != null ? formatPercent(cet / 100) : "—",
-      renda: b.renda_minima != null ? formatBRL(b.renda_minima) : (rendaMinimaDoBanco(b) ? formatBRL(rendaMinimaDoBanco(b)!) : "—"),
+      renda: b.renda_minima != null ? formatBRL(b.renda_minima) : (rendaMinimaDoBanco(b) ? formatBRL(rendaMinimaDoBanco(b)!) : (d?.rendaMinimaExigida ? formatBRL(d.rendaMinimaExigida) : "—")),
       seguros: seguros > 0 ? formatBRL(seguros) : "—",
     };
   });
