@@ -48,7 +48,7 @@ export function drawBrandHeader(
   const logoY = (headerH - logoH) / 2;
   let textoX = 32;
   try {
-    doc.addImage(AGILLIZA_LOGO_LIGHT, "PNG", logoX, logoY, logoW, logoH);
+    doc.addImage(AGILLIZA_LOGO_LIGHT, "PNG", logoX, logoY, logoW, logoH, undefined, "FAST");
     // Separador vertical entre logo e título
     const sepX = logoX + logoW + 18;
     doc.setDrawColor(P.sep);
@@ -277,7 +277,7 @@ export function exportPDF(
       const x = data.cell.x + 5;
       const yy = data.cell.y + (data.cell.height - h) / 2;
       try {
-        doc.addImage(brand.logo, "PNG", x, yy, w, h);
+        doc.addImage(brand.logo, "PNG", x, yy, w, h, undefined, "FAST");
       } catch {
         /* fallback silencioso */
       }
