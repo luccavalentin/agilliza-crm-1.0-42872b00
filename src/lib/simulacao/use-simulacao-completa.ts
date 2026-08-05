@@ -142,6 +142,8 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
       celular: s.celular ?? "",
       possui_conjuge: Boolean(s.possui_conjuge),
       compoe_renda: Boolean(s.compoe_renda),
+      compoe_renda_conjuge: s.compoe_renda_conjuge !== undefined ? Boolean(s.compoe_renda_conjuge) : true,
+
       consentimento_lgpd: Boolean(s.consentimento_lgpd),
       consentimento_scr: Boolean(s.consentimento_scr),
       bancos_ids: (origem.bancos ?? []).map((b: any) => b.banco_id).filter(Boolean),
