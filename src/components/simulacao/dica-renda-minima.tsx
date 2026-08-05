@@ -141,25 +141,12 @@ export function DicaRendaMinima(props: Props) {
   if (!principal) return null;
 
   const rendaMin = principal.rendaMinima;
-  const informada = Number(rendaInformada ?? 0);
+  const informada = 0;
 
-  // Define tom pela folga da renda informada em relação à mínima
+  // Define tom pela folga da renda informada em relação à mínima (padrão info já que não há renda informada)
   let tone: Tone = "info";
   let Icon = Info;
 
-  if (informada > 0 && rendaMin > 0) {
-    const ratio = informada / rendaMin;
-    if (ratio >= 1) {
-      tone = "success";
-      Icon = CheckCircle2;
-    } else if (ratio >= 0.85) {
-      tone = "warning";
-      Icon = TriangleAlert;
-    } else {
-      tone = "danger";
-      Icon = AlertTriangle;
-    }
-  }
 
   const s = TONE_STYLES[tone];
 
