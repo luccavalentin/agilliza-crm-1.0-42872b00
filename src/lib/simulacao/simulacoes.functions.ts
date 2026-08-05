@@ -575,7 +575,7 @@ export const criarSimulacao = createServerFn({ method: "POST" })
       ator_id: userId,
     });
 
-    return { id: sim.id, numero_simulacao: sim.numero_simulacao };
+    return { id: sim.id, numero_simulacao: sim.numero_simulacao, id_secundario };
   });
 
 /** ===== Obter simulação ===== */
