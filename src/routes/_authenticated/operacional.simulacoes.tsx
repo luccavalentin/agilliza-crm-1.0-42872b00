@@ -30,6 +30,7 @@ import {
   EnviarPropostaDialog,
 } from "@/components/simulacao/enviar-proposta-dialog";
 import { EncaminharSimulacaoDialog } from "@/components/simulacao/encaminhar-simulacao-dialog";
+import { baixarSimulacaoDetalhadaPDF } from "@/lib/simulacao/simulacao-pdf";
 import { KpiDetalheDialog } from "@/components/simulacao/kpi-detalhe-dialog";
 import { FiltrosLista } from "@/components/simulacao/lista-page/filtros-lista";
 import { TabelaSimulacoes } from "@/components/simulacao/lista-page/tabela-simulacoes";
@@ -463,7 +464,9 @@ function Pagina() {
           toast.error("Esta simulação não possui bancos para baixar.");
           return;
         }
-        setDetalhePdf({ simulacao: sim, bancos: resp.bancos });
+        // Gera o PDF real com layout profissional para compartilhamento
+        baixarSimulacaoDetalhadaPDF({ simulacao: sim, bancos: resp.bancos });
+        toast.success("PDF gerado com sucesso! Agora você pode compartilhá-lo.");
         return;
       }
 
