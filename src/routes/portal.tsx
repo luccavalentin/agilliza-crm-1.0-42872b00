@@ -54,6 +54,9 @@ function PortalCliente() {
         toast.error(resultado.error ?? "Não foi possível acessar.");
         return;
       }
+      // Salva documento para biometria futura
+      localStorage.setItem("last_logged_in_email", documento);
+      
       navigate({ to: "/cliente/visao-geral", replace: true });
     } catch {
       toast.error("Não foi possível acessar. Tente novamente.");
