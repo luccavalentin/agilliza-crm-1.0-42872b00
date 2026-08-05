@@ -17,17 +17,17 @@ export function ChecklistBancosView() {
   const [bancoParaCompartilhar, setBancoParaCompartilhar] = useState<{ id: string; nome: string } | null>(null);
   
   // Estado para gerenciar itens de checklist por banco (iniciado com os dados fixos)
-  const [checklists, setChecklists] = useState<Record<string, string[]>>({});
+  const [checklists, setChecklists] = useState<Record<string, { nome: string; obrigatorio: boolean }[]>>({});
   const [selecionados, setSelecionados] = useState<Record<string, string[]>>({});
   const [editandoIndex, setEditandoIndex] = useState<number | null>(null);
   const [novoValor, setNovoValor] = useState("");
 
   useEffect(() => {
     // Inicializar checklists e selecionados a partir da config se ainda não estiverem no estado
-    const initial: Record<string, string[]> = {};
+    const initial: Record<string, { nome: string; obrigatorio: boolean }[]> = {};
     const initialSelected: Record<string, string[]> = {};
     Object.keys(CHECKLISTS_BANCOS).forEach(key => {
-      initial[key] = [...CHECKLISTS_BANCOS[key].docs];
+      initial[key] = CHECKLISTS_BANCOS[key].docs.map(doc => ({ nome: doc, obrigatorio: true }));
       initialSelected[key] = [...CHECKLISTS_BANCOS[key].docs];
     });
     setChecklists(initial);
@@ -50,8 +50,12 @@ export function ChecklistBancosView() {
 
   const handleDownload = async (bancoId: string) => {
     try {
-      const docs = selecionados[bancoId] || [];
-      await gerarChecklistBancoPDF(bancoId, undefined, docs);
+      // Filtrar apenas os itens selecionados (que agora são objetos)
+      const todosItems = checklists[bancoId] || [];
+      const nomesSelecionados = selecionados[bancoId] || [];
+      const itemsParaPdf = todosItems.filter(item => nomesSelecionados.includes(item.nome));
+      
+      await gerarChecklistBancoPDF(bancoId, undefined, itemsParaPdf);
       toast.success("Checklist gerado com sucesso!");
     } catch (error) {
       console.error(error);
@@ -93,7 +97,7 @@ export function ChecklistBancosView() {
     if (!bancoSelecionado) return;
     setChecklists(prev => ({
       ...prev,
-      [bancoSelecionado]: [...(prev[bancoSelecionado] || []), "Novo Documento"]
+      [bancoSelecionado]: [...(prev[bancoSelecionado] || []), { nome: "Novo Documento", obrigatorio: true }]
     }));
     setEditandoIndex((checklists[bancoSelecionado]?.length || 0));
     setNovoValor("Novo Documento");
@@ -108,6 +112,15 @@ export function ChecklistBancosView() {
     toast.success("Item removido.");
   };
 
+  const toggleObrigatoriedade = (index: number) => {
+    if (!bancoSelecionado) return;
+    setChecklists(prev => {
+      const novos = [...prev[bancoSelecionado]];
+      novos[index] = { ...novos[index], obrigatorio: !novos[index].obrigatorio };
+      return { ...prev, [bancoSelecionado]: novos };
+    });
+  };
+
   const iniciarEdicao = (index: number, valor: string) => {
     setEditandoIndex(index);
     setNovoValor(valor);
@@ -117,7 +130,7 @@ export function ChecklistBancosView() {
     if (!bancoSelecionado) return;
     setChecklists(prev => {
       const novos = [...prev[bancoSelecionado]];
-      novos[index] = novoValor;
+      novos[index] = { ...novos[index], nome: novoValor };
       return { ...prev, [bancoSelecionado]: novos };
     });
     setEditandoIndex(null);
@@ -125,17 +138,17 @@ export function ChecklistBancosView() {
   };
 
   const brandAtiva = bancoSelecionado ? resolveBancoBrand(bancoSelecionado) : null;
-  const docsAtivos = bancoSelecionado ? (checklists[bancoSelecionado] || []) : [];
+  const itemsAtivos = bancoSelecionado ? (checklists[bancoSelecionado] || []) : [];
   const selecionadosAtivos = bancoSelecionado ? (selecionados[bancoSelecionado] || []) : [];
 
-  const toggleSelecao = (doc: string) => {
+  const toggleSelecao = (docNome: string) => {
     if (!bancoSelecionado) return;
     setSelecionados(prev => {
       const bancoDocs = prev[bancoSelecionado] || [];
-      if (bancoDocs.includes(doc)) {
-        return { ...prev, [bancoSelecionado]: bancoDocs.filter(d => d !== doc) };
+      if (bancoDocs.includes(docNome)) {
+        return { ...prev, [bancoSelecionado]: bancoDocs.filter(d => d !== docNome) };
       }
-      return { ...prev, [bancoSelecionado]: [...bancoDocs, doc] };
+      return { ...prev, [bancoSelecionado]: [...bancoDocs, docNome] };
     });
   };
 
@@ -224,25 +237,25 @@ export function ChecklistBancosView() {
           </CardHeader>
           <CardContent className="p-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4">
-              {docsAtivos.map((doc, idx) => (
+              {itemsAtivos.map((item, idx) => (
                 <div 
                   key={idx} 
                   className={`flex items-start gap-4 p-4 rounded-lg hover:bg-white transition-colors group border border-transparent hover:border-border cursor-pointer ${
-                    !selecionadosAtivos.includes(doc) ? "opacity-50 grayscale-[0.5]" : ""
+                    !selecionadosAtivos.includes(item.nome) ? "opacity-50 grayscale-[0.5]" : ""
                   }`}
-                  onClick={() => toggleSelecao(doc)}
+                  onClick={() => toggleSelecao(item.nome)}
                 >
                   <div 
                     className={`mt-1 h-5 w-5 rounded border-2 flex items-center justify-center transition-colors ${
-                      selecionadosAtivos.includes(doc) ? "border-primary bg-primary" : "border-primary/30 group-hover:border-primary"
+                      selecionadosAtivos.includes(item.nome) ? "border-primary bg-primary" : "border-primary/30 group-hover:border-primary"
                     }`}
                   >
-                    {selecionadosAtivos.includes(doc) && <Check className="h-3 w-3 text-white" />}
+                    {selecionadosAtivos.includes(item.nome) && <Check className="h-3 w-3 text-white" />}
                   </div>
                   
                   <div className="flex-1 space-y-1">
                     {editandoIndex === idx ? (
-                      <div className="flex gap-2 items-center">
+                      <div className="flex gap-2 items-center" onClick={(e) => e.stopPropagation()}>
                         <Input 
                           value={novoValor}
                           onChange={(e) => setNovoValor(e.target.value)}
@@ -263,11 +276,24 @@ export function ChecklistBancosView() {
                     ) : (
                       <div className="flex items-center justify-between">
                         <div className="flex-1">
-                          <p className="font-medium text-slate-700 leading-tight">{doc}</p>
-                          <p className="text-xs text-slate-400">Documento Obrigatório</p>
+                          <p className="font-medium text-slate-700 leading-tight">{item.nome}</p>
+                          <div 
+                            className="flex items-center gap-2 mt-1"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleObrigatoriedade(idx);
+                            }}
+                          >
+                            <div className={`h-4 w-8 rounded-full transition-colors relative flex items-center px-1 ${item.obrigatorio ? 'bg-primary' : 'bg-slate-300'}`}>
+                              <div className={`h-2.5 w-2.5 rounded-full bg-white transition-transform ${item.obrigatorio ? 'translate-x-3.5' : 'translate-x-0'}`} />
+                            </div>
+                            <span className="text-xs text-slate-400">
+                              {item.obrigatorio ? 'Documento Obrigatório' : 'Documento Opcional'}
+                            </span>
+                          </div>
                         </div>
-                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-primary" onClick={() => iniciarEdicao(idx, doc)}>
+                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
+                          <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-primary" onClick={() => iniciarEdicao(idx, item.nome)}>
                             <Edit2 className="h-3.5 w-3.5" />
                           </Button>
                           <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => removerItem(idx)}>
@@ -281,7 +307,7 @@ export function ChecklistBancosView() {
               ))}
             </div>
 
-            {docsAtivos.length === 0 && (
+            {itemsAtivos.length === 0 && (
               <div className="text-center py-10 text-muted-foreground">
                 <p>Nenhum item no checklist. Adicione um novo item acima.</p>
               </div>

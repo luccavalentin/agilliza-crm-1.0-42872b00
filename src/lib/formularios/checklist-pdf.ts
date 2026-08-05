@@ -4,14 +4,19 @@ import { AGILLIZA_LOGO_LIGHT, AGILLIZA_LOGO_RATIO } from "@/lib/relatorios/brand
 import { resolveBancoBrand } from "@/lib/relatorios/banco-brand";
 import { CHECKLISTS_BANCOS } from "@/lib/formularios/checklists.functions";
 
-export async function gerarChecklistBancoPDF(bancoId: string, clienteNome?: string, docsCustom?: string[]) {
+export async function gerarChecklistBancoPDF(bancoId: string, clienteNome?: string, docsCustom?: (string | { nome: string, obrigatorio: boolean })[]) {
   const doc = new jsPDF("p", "mm", "a4");
   const pageW = doc.internal.pageSize.getWidth();
   const pageH = doc.internal.pageSize.getHeight();
   const MARGIN = 20;
 
-  const checklist = docsCustom ? { docs: docsCustom } : CHECKLISTS_BANCOS[bancoId];
-  if (!checklist) throw new Error("Checklist não encontrado para este banco.");
+  const checklistRaw = docsCustom ? { docs: docsCustom } : CHECKLISTS_BANCOS[bancoId];
+  if (!checklistRaw) throw new Error("Checklist não encontrado para este banco.");
+
+  const docsProcessados = checklistRaw.docs.map(item => {
+    if (typeof item === 'string') return { nome: item, obrigatorio: true };
+    return item;
+  });
 
   const bancoBrand = resolveBancoBrand(bancoId);
   
@@ -41,12 +46,13 @@ export async function gerarChecklistBancoPDF(bancoId: string, clienteNome?: stri
   doc.text("Documentos para segmento de proposta", pageW - MARGIN, 18, { align: "right" });
   doc.text("credito Imobiliario", pageW - MARGIN, 24, { align: "right" });
   
-  // Logo do Banco no Header (Superior Direita, abaixo do texto)
+  // Logo do Banco no Header (Superior Direita)
   if (bancoBrand?.logo) {
     try {
-      const bLogoH = 8;
+      // Ajustar posição para a logo do banco aparecer no header
+      const bLogoH = 12;
       const bLogoW = bLogoH * (bancoBrand.ratio || 1);
-      doc.addImage(bancoBrand.logo, "PNG", pageW - MARGIN - bLogoW, 28, bLogoW, bLogoH);
+      doc.addImage(bancoBrand.logo, "PNG", pageW - MARGIN - bLogoW - 5, 12, bLogoW, bLogoH);
     } catch (e) {}
   }
 
@@ -73,10 +79,10 @@ export async function gerarChecklistBancoPDF(bancoId: string, clienteNome?: stri
     startY: y,
     margin: { left: MARGIN, right: MARGIN },
     head: [["", "Documento Necessário", "Obrigatório"]],
-    body: checklist.docs.map(doc => [
+    body: docsProcessados.map(item => [
       "[  ]", 
-      doc,
-      "Sim"
+      item.nome,
+      item.obrigatorio ? "Sim" : "Não"
     ]),
     theme: "striped",
     headStyles: {
@@ -102,8 +108,8 @@ export async function gerarChecklistBancoPDF(bancoId: string, clienteNome?: stri
   // Rodapé
   doc.setFontSize(8);
   doc.setTextColor("#94A3B8");
-  const msg = "Documento gerado automaticamente pelo sistema Agilliza. Sujeito a alterações conforme regras do banco.";
-  doc.text(msg, MARGIN, pageH - 15);
+  // Rodapé removido conforme solicitação
+  // doc.text(msg, MARGIN, pageH - 15);
 
   // Download
   const filename = `Checklist - ${bancoId.toUpperCase()} - ${clienteNome || "Documentos"}.pdf`;
