@@ -84,6 +84,9 @@ function AuthPage() {
       queryClient.setQueryData(["minha-sessao"], sessao);
       if (permissoes) queryClient.setQueryData(["minhas-permissoes"], permissoes);
 
+      // Salva o e-mail para habilitar biometria futura
+      localStorage.setItem("last_logged_in_email", email);
+
       router.invalidate();
       navigate({ to: destinoPosLogin("sistema") });
     } catch {
