@@ -41,13 +41,20 @@ export function PropostaRetornoWatcher({ userId }: Props) {
                 nome_cliente, 
                 usuario_responsavel_id, 
                 usuario_criador_id,
+                renda_total,
+                compoe_renda,
+                renda_conjuge,
                 bancos:simulacao_bancos(
                   id,
                   nome_banco,
                   status_banco,
                   valor_parcela,
                   taxa_juros_ano,
-                  selecionado
+                  selecionado,
+                  _sistema,
+                  prazo_pagamento_max,
+                  valor_financiamento_max,
+                  valor_iof
                 )
               `)
               .eq("id", row.simulacao_id)
@@ -65,9 +72,9 @@ export function PropostaRetornoWatcher({ userId }: Props) {
               status: "Comparativo de Taxas Concluído",
               nome_cliente: sim.nome_cliente || "—",
               banco: "Multi-proponente",
-              // Passamos os bancos para que o host possa renderizar a comparação
               dados_adicionais: {
-                bancos: (sim.bancos || []).filter((b: any) => b.selecionado && b.status_banco === 'simulada')
+                bancos: (sim.bancos || []).filter((b: any) => b.selecionado && b.status_banco === 'simulada'),
+                simulacao: sim
               }
             });
           }
@@ -96,7 +103,7 @@ export function PropostaRetornoWatcher({ userId }: Props) {
             return;
           }
 
-          // Busca dados da proposta para o popup
+          // Busca dados da proposta para the popup
           const { data: prop } = await supabase
             .from("propostas")
             .select("id, numero_proposta, nome_cliente, usuario_responsavel_id, usuario_criador_id")
