@@ -373,41 +373,116 @@ function ComparativoTaxasDialog({ aberto, onClose, idTitular, idSecundario }: { 
 
   return (
     <AlertDialog open={aberto} onOpenChange={(o) => !o && onClose()}>
-      <AlertDialogContent className="max-w-md">
-        <AlertDialogHeader>
-          <AlertDialogTitle className="flex items-center gap-2">
-            <Landmark className="h-5 w-5 text-primary" />
-            Comparativo de Taxas (Teste CPF)
-          </AlertDialogTitle>
-          <AlertDialogDescription className="pt-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex flex-col items-center rounded-lg border border-border p-4 bg-muted/30">
-                <span className="text-xs text-muted-foreground uppercase font-bold">Taxa {nomeTitular}</span>
-                <span className="text-2xl font-bold text-foreground mt-1">
-                  {taxaTitular ? formatPercent(taxaTitular / 100) : "—"}
-                </span>
+      <AlertDialogContent className="max-w-xl border-none bg-transparent p-0 shadow-2xl">
+        <div className="relative overflow-hidden rounded-[2rem] border border-white/20 bg-white/80 p-8 backdrop-blur-2xl dark:bg-slate-900/80">
+          {/* Decorative Background Elements */}
+          <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-primary/10 blur-3xl" />
+          <div className="absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-blue-400/10 blur-3xl" />
+          
+          <div className="relative">
+            <div className="mb-8 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary shadow-lg shadow-primary/20">
+                  <Landmark className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
+                    Análise Comparativa de Taxas
+                  </h3>
+                  <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
+                    Teste Automático de CPF (Titular vs Cônjuge)
+                  </p>
+                </div>
               </div>
-              <div className="flex flex-col items-center rounded-lg border border-border p-4 bg-muted/30">
-                <span className="text-xs text-muted-foreground uppercase font-bold">Taxa {nomeConjuge}</span>
-                <span className="text-2xl font-bold text-foreground mt-1">
-                  {taxaConjuge ? formatPercent(taxaConjuge / 100) : "—"}
-                </span>
-              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-10 w-10 rounded-full hover:bg-slate-200/50 dark:hover:bg-slate-700/50"
+                onClick={onClose}
+              >
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              <TaxaCard 
+                nome={nomeTitular} 
+                taxa={taxaTitular} 
+                isWinner={taxaTitular != null && taxaConjuge != null && taxaTitular <= taxaConjuge} 
+              />
+              <TaxaCard 
+                nome={nomeConjuge} 
+                taxa={taxaConjuge} 
+                isWinner={taxaTitular != null && taxaConjuge != null && taxaConjuge < taxaTitular} 
+              />
             </div>
             
-            <p className="mt-6 text-center text-sm">
-              {taxaTitular && taxaConjuge 
-                ? taxaTitular <= taxaConjuge 
-                  ? `O perfil de ${nomeTitular} retornou a melhor taxa.`
-                  : `O perfil de ${nomeConjuge} retornou a melhor taxa.`
-                : "Aguardando retornos dos bancos para comparação."}
-            </p>
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogAction onClick={onClose}>Fechar Comparativo</AlertDialogAction>
-        </AlertDialogFooter>
+            <div className="mt-8 flex flex-col items-center gap-4">
+              <div className="rounded-2xl bg-slate-900/5 px-6 py-4 text-center backdrop-blur-sm dark:bg-white/5">
+                <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                  {taxaTitular && taxaConjuge 
+                    ? taxaTitular <= taxaConjuge 
+                      ? `✨ O perfil de ${nomeTitular} apresentou as condições mais vantajosas para o financiamento.`
+                      : `✨ O perfil de ${nomeConjuge} apresentou as condições mais vantajosas para o financiamento.`
+                    : "Aguardando processamento final dos retornos bancários..."}
+                </p>
+              </div>
+
+              <Button 
+                onClick={onClose}
+                className="group h-12 rounded-2xl bg-slate-900 px-8 font-bold text-white transition-all hover:scale-105 hover:bg-slate-800 active:scale-95 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
+              >
+                Prosseguir com a Melhor Opção
+              </Button>
+            </div>
+          </div>
+        </div>
       </AlertDialogContent>
     </AlertDialog>
+  );
+}
+
+function TaxaCard({ nome, taxa, isWinner }: { nome: string; taxa: number | null; isWinner: boolean }) {
+  return (
+    <div className={cn(
+      "relative overflow-hidden rounded-[1.5rem] border p-6 transition-all duration-500",
+      isWinner 
+        ? "border-primary/30 bg-white shadow-xl shadow-primary/5 dark:bg-slate-800" 
+        : "border-slate-200 bg-slate-50/50 dark:border-slate-700 dark:bg-slate-800/50"
+    )}>
+      {isWinner && (
+        <div className="absolute right-4 top-4">
+          <div className="flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-primary">
+            Melhor Taxa
+          </div>
+        </div>
+      )}
+      
+      <div className="space-y-1">
+        <span className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
+          PERFIL {nome}
+        </span>
+        <div className="flex items-baseline gap-1">
+          <span className={cn(
+            "text-4xl font-black tabular-nums tracking-tighter",
+            isWinner ? "text-primary" : "text-slate-400"
+          )}>
+            {taxa ? formatPercent(taxa / 100) : "—"}
+          </span>
+          {taxa && <span className="text-sm font-bold text-slate-400">a.a.</span>}
+        </div>
+      </div>
+      
+      <div className="mt-4 flex items-center gap-2">
+        <div className={cn(
+          "h-1.5 flex-1 rounded-full",
+          isWinner ? "bg-primary/20" : "bg-slate-200 dark:bg-slate-700"
+        )}>
+          <div 
+            className={cn("h-full rounded-full transition-all duration-1000", isWinner ? "w-full bg-primary" : "w-1/2 bg-slate-300 dark:bg-slate-600")}
+          />
+        </div>
+      </div>
+    </div>
   );
 }
