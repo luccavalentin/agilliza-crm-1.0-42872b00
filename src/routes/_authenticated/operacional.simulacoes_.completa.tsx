@@ -62,8 +62,10 @@ function Pagina() {
   useEffect(() => {
     // Se já mostramos ou não temos os IDs necessários, não faz nada
     if (jaMostrouPopup.current || !simulacaoResultadoId || !simulacaoResultadoIdSecundario) {
-      if (!simulacaoResultadoId || !simulacaoResultadoIdSecundario) {
-        jaMostrouPopup.current = false; // Reseta se os IDs sumirem (nova simulação)
+      // Se resetou a tela (sem IDs de resultado), permitimos mostrar o popup novamente na próxima vez
+      if (!simulacaoResultadoId && !simulacaoResultadoIdSecundario) {
+        jaMostrouPopup.current = false;
+        setPopupAberto(false);
       }
       return;
     }
