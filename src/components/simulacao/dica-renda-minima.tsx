@@ -62,7 +62,6 @@ export function DicaRendaMinima(props: Props) {
     prazoMeses, 
     taxaAno, 
     sistema, 
-    rendaInformada, 
     bancos,
     compoeRendaConjuge 
   } = props;
@@ -73,7 +72,7 @@ export function DicaRendaMinima(props: Props) {
       valor_imovel: valorImovel,
       prazo_meses: prazoMeses,
       taxa_ano: taxaAno,
-      renda_informada: rendaInformada,
+      renda_informada: 0,
       sistema: "S",
     });
 
@@ -82,7 +81,7 @@ export function DicaRendaMinima(props: Props) {
       valor_imovel: valorImovel,
       prazo_meses: prazoMeses,
       taxa_ano: taxaAno,
-      renda_informada: rendaInformada,
+      renda_informada: 0,
       sistema: "P",
     });
 
@@ -128,14 +127,14 @@ export function DicaRendaMinima(props: Props) {
     );
   }
 
-  const apiEval = rendaMinimaPelosBancos(bancos, rendaInformada);
+  const apiEval = rendaMinimaPelosBancos(bancos, 0);
   const local = avaliarRendaMinima({
     valor_financiamento: valorFinanciamento,
     valor_imovel: valorImovel,
     prazo_meses: prazoMeses,
     taxa_ano: taxaAno,
-    renda_informada: rendaInformada,
-    sistema: sistema,
+    renda_informada: 0,
+    sistema: sistema as any,
   });
 
   const principal = apiEval ?? local;
