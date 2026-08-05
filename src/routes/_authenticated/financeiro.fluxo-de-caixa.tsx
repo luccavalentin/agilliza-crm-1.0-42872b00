@@ -169,8 +169,9 @@ function FiltroPeriodo({
         </div>
       </div>
       <div className="flex items-center gap-1.5">
-        <Button size="sm" className="h-9 flex-1 sm:flex-none" onClick={() => onAplicar(rascDe, rascAte)}>
+        <Button size="sm" className="h-9 flex-1 sm:flex-none bg-[#000080] hover:bg-[#000060]" onClick={() => onAplicar(rascDe, rascAte)}>
           Aplicar
+
         </Button>
         <Button
           size="sm"
