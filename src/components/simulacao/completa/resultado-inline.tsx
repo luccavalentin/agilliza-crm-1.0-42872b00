@@ -39,6 +39,7 @@ import { cn } from "@/lib/utils";
 interface Props {
   simulacaoId: string;
   onFechar: () => void;
+  isSecundaria?: boolean;
 }
 
 function totalFinanciado(b: any): number | null {
@@ -47,7 +48,7 @@ function totalFinanciado(b: any): number | null {
 }
 
 
-export function ResultadoInlineCompleta({ simulacaoId, onFechar }: Props) {
+export function ResultadoInlineCompleta({ simulacaoId, onFechar, isSecundaria }: Props) {
   const router = useRouter();
   const qc = useQueryClient();
   const [reenviandoBanco, setReenviandoBanco] = useState<string | null>(null);
@@ -102,8 +103,13 @@ export function ResultadoInlineCompleta({ simulacaoId, onFechar }: Props) {
     jaBaixou.current = true;
     (async () => {
       try {
+        if (isSecundaria) {
+          console.log("[PDF Automático] Ignorando download de simulação secundária (testagem CPF).");
+          return;
+        }
+
         const { baixarSimulacaoDetalhadaPDF } = await import("@/lib/simulacao/simulacao-pdf");
-        const b = simulados[0]; // Baixa apenas o primeiro (ou o titular principal se filtrado)
+        const b = simulados[0]; 
         if (b) {
           baixarSimulacaoDetalhadaPDF({ simulacao: data.simulacao, bancos: [b] });
           toast.success("Simulação realizada. Extrato do titular disponível para download.");
