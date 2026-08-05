@@ -21,15 +21,15 @@ interface PropostaNotificacaoStore {
  */
 export const usePropostaNotificacaoStore = create<PropostaNotificacaoStore>((set) => ({
   abertas: [],
-  adicionar: (notif) =>
-    set((state) => ({
+  adicionar: (notif: PropostaNotificacao) =>
+    set((state: PropostaNotificacaoStore) => ({
       // Evita duplicados para a mesma proposta no mesmo ciclo
-      abertas: state.abertas.find((n) => n.id === notif.id)
+      abertas: state.abertas.find((n: PropostaNotificacao) => n.id === notif.id)
         ? state.abertas
         : [...state.abertas, notif],
     })),
-  remover: (id) =>
-    set((state) => ({
-      abertas: state.abertas.filter((n) => n.id !== id),
+  remover: (id: string) =>
+    set((state: PropostaNotificacaoStore) => ({
+      abertas: state.abertas.filter((n: PropostaNotificacao) => n.id !== id),
     })),
 }));

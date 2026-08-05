@@ -14,7 +14,7 @@ interface Props {
  */
 export function PropostaRetornoWatcher({ userId }: Props) {
   const seenIds = useRef<Set<string>>(new Set());
-  const adicionarPopup = usePropostaNotificacaoStore((s) => s.adicionar);
+  const adicionarPopup = usePropostaNotificacaoStore((s: any) => s.adicionar);
 
   useEffect(() => {
     if (!userId) return;
