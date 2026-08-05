@@ -67,6 +67,67 @@ export function DicaRendaMinima(props: Props) {
     compoeRendaConjuge 
   } = props;
 
+  if (sistema === "AMBOS") {
+    const evalSac = avaliarRendaMinima({
+      valor_financiamento: valorFinanciamento,
+      valor_imovel: valorImovel,
+      prazo_meses: prazoMeses,
+      taxa_ano: taxaAno,
+      renda_informada: rendaInformada,
+      sistema: "S",
+    });
+
+    const evalPrice = avaliarRendaMinima({
+      valor_financiamento: valorFinanciamento,
+      valor_imovel: valorImovel,
+      prazo_meses: prazoMeses,
+      taxa_ano: taxaAno,
+      renda_informada: rendaInformada,
+      sistema: "P",
+    });
+
+    if (!evalSac || !evalPrice) return null;
+
+    return (
+      <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-1.5 rounded-xl border border-border/70 bg-card/50 p-3 shadow-sm">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                SAC
+              </span>
+              <span className="text-[11px] font-medium text-muted-foreground">
+                Renda {compoeRendaConjuge ? "familiar" : "titular"}
+              </span>
+            </div>
+            <span className={cn("font-mono text-sm font-bold tabular-nums", evalSac.suficiente === false ? "text-destructive" : "text-emerald-600")}>
+              {formatBRL(evalSac.rendaMinima)}
+            </span>
+          </div>
+          
+          <div className="flex items-center justify-between gap-3 border-t border-border/40 pt-1.5">
+            <div className="flex items-center gap-2">
+              <span className="rounded-full bg-purple-100 px-2 py-0.5 text-[10px] font-bold text-purple-700 dark:bg-purple-900/30 dark:text-purple-300">
+                PRICE
+              </span>
+              <span className="text-[11px] font-medium text-muted-foreground">
+                Renda {compoeRendaConjuge ? "familiar" : "titular"}
+              </span>
+            </div>
+            <span className={cn("font-mono text-sm font-bold tabular-nums", evalPrice.suficiente === false ? "text-destructive" : "text-emerald-600")}>
+              {formatBRL(evalPrice.rendaMinima)}
+            </span>
+          </div>
+        </div>
+        {compoeRendaConjuge && (
+          <p className="px-1 text-[10px] text-muted-foreground italic">
+            Sugestão: {formatBRL(Math.max(evalSac.rendaMinima, evalPrice.rendaMinima) / 2)} para cada proponente
+          </p>
+        )}
+      </div>
+    );
+  }
+
   const apiEval = rendaMinimaPelosBancos(bancos, rendaInformada);
   const local = avaliarRendaMinima({
     valor_financiamento: valorFinanciamento,
@@ -74,7 +135,7 @@ export function DicaRendaMinima(props: Props) {
     prazo_meses: prazoMeses,
     taxa_ano: taxaAno,
     renda_informada: rendaInformada,
-    sistema: sistema === "AMBOS" ? "S" : sistema,
+    sistema: sistema,
   });
 
   const principal = apiEval ?? local;
