@@ -39,6 +39,7 @@ import {
   Percent,
   Bot,
   BookOpen,
+  Presentation,
 } from "lucide-react";
 
 /** Permissão exigida por um item (chave = `${modulo}:view`). */
