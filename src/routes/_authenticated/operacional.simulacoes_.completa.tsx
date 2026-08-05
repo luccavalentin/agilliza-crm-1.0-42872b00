@@ -51,26 +51,36 @@ function Pagina() {
 
   const [popupAberto, setPopupAberto] = useState(false);
   const jaMostrouPopup = useRef(false);
-
-  useEffect(() => {
-    if ((simulacaoResultadoId || simulacaoResultadoIdPrice || simulacaoResultadoIdSecundario) && resultadoRef.current) {
-      resultadoRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-  }, [simulacaoResultadoId, simulacaoResultadoIdPrice, simulacaoResultadoIdSecundario]);
+  const checkStatusInterval = useRef<NodeJS.Timeout | null>(null);
 
   // Monitorar retornos para mostrar o popup de comparação
   useEffect(() => {
-    // Se já mostramos ou não temos os IDs necessários, não faz nada
-    if (jaMostrouPopup.current || !simulacaoResultadoId || !simulacaoResultadoIdSecundario) {
-      // Se resetou a tela (sem IDs de resultado), permitimos mostrar o popup novamente na próxima vez
-      if (!simulacaoResultadoId && !simulacaoResultadoIdSecundario) {
-        jaMostrouPopup.current = false;
-        setPopupAberto(false);
+    // Se resetou a tela (sem IDs de resultado), permitimos mostrar o popup novamente na próxima vez
+    if (!simulacaoResultadoId && !simulacaoResultadoIdSecundario) {
+      jaMostrouPopup.current = false;
+      setPopupAberto(false);
+      if (checkStatusInterval.current) {
+        clearInterval(checkStatusInterval.current);
+        checkStatusInterval.current = null;
       }
       return;
     }
 
+    // Se já mostramos ou não temos ambos os IDs necessários para comparar, não inicia monitoramento
+    if (jaMostrouPopup.current || !simulacaoResultadoId || !simulacaoResultadoIdSecundario) {
+      return;
+    }
+
     const checkStatus = async () => {
+      // Evita checagem se o popup já foi exibido ou se fechou no meio do caminho
+      if (jaMostrouPopup.current) {
+        if (checkStatusInterval.current) {
+          clearInterval(checkStatusInterval.current);
+          checkStatusInterval.current = null;
+        }
+        return;
+      }
+
       const { data: sims } = await supabase
         .from("simulacoes")
         .select("id, status")
@@ -81,12 +91,26 @@ function Pagina() {
         if (prontos) {
           jaMostrouPopup.current = true;
           setPopupAberto(true);
+          if (checkStatusInterval.current) {
+            clearInterval(checkStatusInterval.current);
+            checkStatusInterval.current = null;
+          }
         }
       }
     };
 
-    const timer = setInterval(checkStatus, 5000);
-    return () => clearInterval(timer);
+    if (!checkStatusInterval.current) {
+      checkStatusInterval.current = setInterval(checkStatus, 5000);
+      // Roda a primeira vez imediatamente
+      void checkStatus();
+    }
+
+    return () => {
+      if (checkStatusInterval.current) {
+        clearInterval(checkStatusInterval.current);
+        checkStatusInterval.current = null;
+      }
+    };
   }, [simulacaoResultadoId, simulacaoResultadoIdSecundario]);
 
   const totalBancosResumo =
