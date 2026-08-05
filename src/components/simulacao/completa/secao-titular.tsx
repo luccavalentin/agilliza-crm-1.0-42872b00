@@ -104,10 +104,12 @@ export function SecaoTitular({ ctx }: { ctx: SimulacaoCompletaCtx }) {
                 prazoMeses={f.prazo}
                 taxaAno={ctx.melhorTaxaAno}
                 sistema="S"
-                rendaInformada={f.renda_total}
+                rendaInformada={ctx.rendaConsiderada}
+                compoeRendaConjuge={f.compoe_renda && f.compoe_renda_conjuge}
               />
             </div>
           )}
+
           {f.valor_financiamento > 0 && f.sistema_amortizacao === "P" && (
             <div className="pt-1">
               <DicaRendaMinima
