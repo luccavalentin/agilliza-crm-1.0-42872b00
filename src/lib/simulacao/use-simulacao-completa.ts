@@ -865,8 +865,10 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
     // resultado inline
     simulacaoResultadoId,
     simulacaoResultadoIdPrice,
+    simulacaoResultadoIdSecundario,
     fecharResultadoInline: () => setSimulacaoResultadoId(null),
     fecharResultadoInlinePrice: () => setSimulacaoResultadoIdPrice(null),
+    fecharResultadoInlineSecundario: () => setSimulacaoResultadoIdSecundario(null),
     refetchCrm,
   };
 }
