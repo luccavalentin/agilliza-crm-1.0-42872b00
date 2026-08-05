@@ -849,6 +849,20 @@ function criarDocSimulacaoDetalhada({
     y = drawInfoFinanciamento(doc, pageW, s, b, d, y);
 
     const parcelas = d?.parcelas ?? [];
+    const somas = parcelas.reduce((acc, p) => ({
+      amort: acc.amort + (p.amortizacao || 0),
+      juros: acc.juros + (p.juros || 0),
+      parcela: acc.parcela + (p.parcela || 0),
+    }), { amort: 0, juros: 0, parcela: 0 });
+
+    const rodapeSoma = [
+      { content: "TOTAIS", colSpan: 2, styles: { halign: "center" as const, fontStyle: "bold" as const } },
+      { content: formatBRL(somas.amort), styles: { halign: "right" as const, fontStyle: "bold" as const } },
+      { content: formatBRL(somas.juros), styles: { halign: "right" as const, fontStyle: "bold" as const } },
+      { content: formatBRL(somas.parcela), styles: { halign: "right" as const, fontStyle: "bold" as const } },
+      { content: "", styles: { halign: "right" as const } }
+    ];
+
     doc.setTextColor(P.destaque);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(10);
