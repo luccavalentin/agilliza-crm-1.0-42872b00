@@ -105,6 +105,10 @@ function PortalCliente() {
             <Button type="submit" className="w-full" disabled={carregando}>
               {carregando ? "Acessando…" : "Acessar Portal"}
             </Button>
+            <BiometricAuth 
+              onSuccess={(doc) => console.log("Biometria cliente:", doc)}
+              disabled={carregando}
+            />
           </form>
         </TabsContent>
 
