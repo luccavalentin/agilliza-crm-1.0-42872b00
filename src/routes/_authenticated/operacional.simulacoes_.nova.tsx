@@ -102,90 +102,65 @@ function Pagina() {
     try {
       const { baixarSimulacaoDetalhadaPDF, baixarSimulacaoPDF } = await import("@/lib/simulacao/simulacao-pdf");
       
-      // Baixa o comparativo consolidado primeiro
-      baixarSimulacaoPDF({
-        simulacao: {
-          numero_simulacao: null,
-          nome_cliente: "SIMULAÇÃO RÁPIDA",
-          produto: w.produto,
-          valor_imovel: w.valor_imovel,
-          valor_financiamento: financiamentoTotalExibido,
-          valor_entrada: w.valor_entrada,
-          prazo: w.prazo_meses,
-          sistema_amortizacao: w.sistema_amortizacao === "AMBOS" ? "SAC e PRICE" : w.sistema_amortizacao,
-          renda_familiar: w.sistema_amortizacao === "AMBOS" ? 0 : 0,
-          renda_familiar_sac: 0,
-          renda_familiar_price: 0,
-          created_at: new Date().toISOString(),
-        },
-        bancos: comparativo.map(c => ({
-          nome_banco: c.nome_banco,
-          status_banco: "simulada",
-          valor_parcela: c.resultado.primeira_parcela,
-          taxa_juros_ano: c.taxa_ano * 100,
-          prazo_pagamento_max: w.prazo_meses,
-          valor_financiamento_max: financiamentoTotalExibido,
-          _sistema: w.sistema_amortizacao === "AMBOS" ? "SAC e PRICE" : (w.sistema_amortizacao === "P" ? "PRICE" : "SAC"),
-          renda_minima: c.resultado.renda_minima,
-          cet: c.resultado.cet_ano * 100, // Ajuste para escala 0-100 esperada pelo formatador
-        }))
-      });
+      const simulacaoData = {
+        numero_simulacao: null,
+        nome_cliente: "SIMULAÇÃO RÁPIDA",
+        produto: w.produto,
+        valor_imovel: w.valor_imovel,
+        valor_financiamento: financiamentoTotalExibido,
+        valor_entrada: w.valor_entrada,
+        prazo: w.prazo_meses,
+        sistema_amortizacao: w.sistema_amortizacao === "AMBOS" ? "B" : (w.sistema_amortizacao === "P" ? "P" : "S"),
+        created_at: new Date().toISOString(),
+      };
 
-      // Pequeno delay antes de baixar os individuais
-      await new Promise((r) => setTimeout(r, 1200));
+      const bancosParaPDF = comparativo.map(c => ({
+        nome_banco: c.nome_banco,
+        status_banco: "simulada",
+        valor_parcela: c.resultado.primeira_parcela,
+        taxa_juros_ano: c.taxa_ano * 100,
+        prazo_pagamento_max: w.prazo_meses,
+        valor_financiamento_max: financiamentoTotalExibido,
+        _sistema: c.resultado.primeira_parcela === c.resultado.ultima_parcela ? "PRICE" : "SAC",
+        renda_minima: c.resultado.renda_minima,
+        cet: c.resultado.cet_ano * 100,
+      }));
 
-      const bancosParaBaixar = bancoId
-        ? comparativo.filter((c) => c.banco_id === bancoId)
-        : comparativo;
-
-      for (const c of bancosParaBaixar) {
-        const sistemaCode = c.resultado.primeira_parcela === c.resultado.ultima_parcela ? "P" : "S";
-        baixarSimulacaoDetalhadaPDF({
-          simulacao: {
-            numero_simulacao: null,
-            nome_cliente: "SIMULAÇÃO RÁPIDA",
-            produto: w.produto,
-            valor_imovel: w.valor_imovel,
-            valor_financiamento: financiamentoTotalExibido,
-            valor_entrada: w.valor_entrada,
-            prazo: w.prazo_meses,
-            sistema_amortizacao: sistemaCode,
-            created_at: new Date().toISOString(),
-          },
-          bancos: [
-            {
-              nome_banco: c.nome_banco,
-              status_banco: "simulada",
-              valor_parcela: c.resultado.primeira_parcela,
-              taxa_juros_ano: c.taxa_ano * 100,
-              prazo_pagamento_max: w.prazo_meses,
-              valor_financiamento_max: financiamentoTotalExibido,
-              _sistema: sistemaCode === "P" ? "PRICE" : "SAC",
-              raw_response: {
-                simulacao: {
-                  codigoSistemaAmortizacaoSimulacao: sistemaCode,
-                  codigoSistemaAmortizacaoBanco: sistemaCode,
-                  prazoPagamentoBanco: w.prazo_meses,
-                  prazoPagamentoSimulacao: w.prazo_meses,
-                  valorFinanciamentoBanco: financiamentoTotalExibido,
-                  valorFinanciamentoSimulacao: financiamentoTotalExibido,
-                  valorTotalFinanciamento: financiamentoTotalExibido,
-                  valorImovel: w.valor_imovel,
-                  valorEntrada: w.valor_entrada,
-                  taxaJurosAnoBanco: c.taxa_ano * 100,
-                  taxaJurosAnoSimulacao: c.taxa_ano * 100,
-                  valorParcelaBanco: c.resultado.primeira_parcela,
+      // Se clicou em um banco específico, baixa somente o individual dele
+      if (bancoId) {
+        const c = comparativo.find(item => item.banco_id === bancoId);
+        if (c) {
+          const sistemaCode = c.resultado.primeira_parcela === c.resultado.ultima_parcela ? "P" : "S";
+          baixarSimulacaoDetalhadaPDF({
+            simulacao: { ...simulacaoData, sistema_amortizacao: sistemaCode },
+            bancos: [
+              {
+                ...bancosParaPDF.find(b => b.nome_banco === c.nome_banco),
+                raw_response: {
+                  simulacao: {
+                    codigoSistemaAmortizacaoSimulacao: sistemaCode,
+                    codigoSistemaAmortizacaoBanco: sistemaCode,
+                    prazoPagamentoBanco: w.prazo_meses,
+                    valorFinanciamentoBanco: financiamentoTotalExibido,
+                    valorImovel: w.valor_imovel,
+                    valorEntrada: w.valor_entrada,
+                    taxaJurosAnoBanco: c.taxa_ano * 100,
+                    valorParcelaBanco: c.resultado.primeira_parcela,
+                  },
                 },
               },
-            },
-          ],
-        });
-        // Pequeno delay entre downloads automáticos para evitar bloqueio do navegador
-        if (bancosParaBaixar.length > 1) {
-          await new Promise((r) => setTimeout(r, 1200));
+            ],
+          });
         }
+      } else {
+        // Baixa somente o comparativo consolidado (chamado pelo botão principal)
+        baixarSimulacaoPDF({
+          simulacao: simulacaoData,
+          bancos: bancosParaPDF
+        });
       }
-    } catch {
+    } catch (err) {
+      console.error(err);
       toast.error("Não foi possível gerar o PDF da simulação.");
     } finally {
       setBaixando(false);
