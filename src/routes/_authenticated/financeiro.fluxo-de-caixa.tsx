@@ -169,9 +169,8 @@ function FiltroPeriodo({
         </div>
       </div>
       <div className="flex items-center gap-1.5">
-        <Button size="sm" className="h-9 flex-1 sm:flex-none bg-[#000080] hover:bg-[#000060]" onClick={() => onAplicar(rascDe, rascAte)}>
+        <Button size="sm" className="h-9 flex-1 sm:flex-none" onClick={() => onAplicar(rascDe, rascAte)}>
           Aplicar
-
         </Button>
         <Button
           size="sm"
@@ -198,12 +197,14 @@ function DetalheFluxoDialog({
   titulo,
   descricao,
   linhas,
+  queryClient,
 }: {
   aberto: boolean;
   onClose: () => void;
   titulo: string;
   descricao?: string;
   linhas: { rotulo: string; sub?: string; valor: number; details?: { tipo: "pagar" | "receber"; id: string }[] }[];
+  queryClient: any;
 }) {
   const total = linhas.reduce((s, l) => s + l.valor, 0);
   return (
@@ -231,17 +232,38 @@ function DetalheFluxoDialog({
                 {l.details && l.details.length > 0 && (
                   <div className="flex flex-wrap gap-2 pt-1">
                     {l.details.map((d) => (
-                      <Button
-                        key={d.id}
-                        variant="outline"
-                        size="sm"
-                        className="h-7 text-[10px] font-medium"
-                        asChild
-                      >
-                        <a href={`/financeiro/contas-a-${d.tipo === "pagar" ? "pagar" : "receber"}?id=${d.id}`}>
-                          Ver/Editar {d.tipo === "pagar" ? "Saída" : "Entrada"}
-                        </a>
-                      </Button>
+                      <div key={d.id} className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-7 text-[10px] font-medium"
+                          asChild
+                        >
+                          <a href={`/financeiro/contas-a-${d.tipo === "pagar" ? "pagar" : "receber"}?id=${d.id}`}>
+                            Ver/Editar {d.tipo === "pagar" ? "Saída" : "Entrada"}
+                          </a>
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 px-2 text-destructive hover:bg-destructive/10"
+                          onClick={async () => {
+                            if (confirm(`Deseja excluir esta ${d.tipo === "pagar" ? "saída" : "entrada"}?`)) {
+                              try {
+                                const { excluirConta } = await import("@/lib/financeiro/financeiro.functions");
+                                await excluirConta({ data: { tipo: d.tipo, id: d.id } });
+                                toast.success("Excluído com sucesso!");
+                                queryClient.invalidateQueries({ queryKey: ["fin-fluxo-analitico"] });
+                                // O modal fechará ou atualizará sozinho conforme o estado da query
+                              } catch (err: any) {
+                                toast.error(err.message);
+                              }
+                            }
+                          }}
+                        >
+                          <Trash2 className="size-3.5" />
+                        </Button>
+                      </div>
                     ))}
                   </div>
                 )}
@@ -376,29 +398,29 @@ function Pagina() {
 
 
   return (
-    <div className="mx-auto w-full max-w-none space-y-6 bg-[#f8fafc] min-h-screen">
+    <div className="mx-auto w-full max-w-none space-y-6 min-h-screen">
       <div className="p-4 sm:p-5 md:space-y-8 md:p-8">
-      <div className="relative mb-8 rounded-3xl border border-border/50 bg-white/50 p-6 shadow-sm backdrop-blur-sm md:p-10">
+      <div className="relative mb-8 rounded-3xl border border-border/50 bg-card p-6 shadow-sm md:p-10">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <div className="h-1 w-6 rounded-full bg-[#000080]" />
-              <span className="text-[10px] font-bold tracking-[0.2em] text-[#000080] uppercase">
+              <div className="h-1 w-6 rounded-full bg-primary" />
+              <span className="text-[10px] font-bold tracking-[0.2em] text-primary uppercase">
                 FINANCEIRO · FLUXO DE CAIXA
               </span>
             </div>
             
             <div className="space-y-1">
-              <h1 className="text-4xl font-black tracking-tight text-slate-900 md:text-5xl">
+              <h1 className="text-4xl font-black tracking-tight text-foreground md:text-5xl">
                 Fluxo de<br className="md:hidden" /> caixa
               </h1>
-              <p className="max-w-md text-sm leading-relaxed text-slate-500">
+              <p className="max-w-md text-sm leading-relaxed text-muted-foreground">
                 Caixa realizado e projeção de entradas e saídas em aberto.
               </p>
             </div>
 
             {atualizado && (
-              <div className="inline-flex items-center gap-2 rounded-full border border-border/50 bg-white/80 px-3 py-1 text-[10px] font-medium text-slate-500 shadow-sm">
+              <div className="inline-flex items-center gap-2 rounded-full border border-border/50 bg-muted/50 px-3 py-1 text-[10px] font-medium text-muted-foreground shadow-sm">
                 <span className="relative flex h-2 w-2">
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
                   <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
@@ -456,16 +478,6 @@ function Pagina() {
                 setAte("");
               }}
             />
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-9 border-destructive/30 text-destructive hover:bg-destructive/10"
-              onClick={handleLimparFluxo}
-              disabled={limpando || isLoading}
-            >
-              <Trash2 className="mr-2 size-4" />
-              {limpando ? "Limpando..." : "Limpar Fluxo"}
-            </Button>
           </div>
         </div>
       </div>
@@ -480,7 +492,7 @@ function Pagina() {
       )}
 
       {vazio ? (
-        <div className="rounded-2xl border border-border/50 bg-white p-12">
+        <div className="rounded-2xl border border-border/50 bg-card p-12">
           <SectionTitle>Sem movimentações</SectionTitle>
           <div className="flex min-h-[200px] flex-col items-center justify-center space-y-2 text-center">
             <p className="text-sm text-muted-foreground">
@@ -560,6 +572,7 @@ function Pagina() {
             titulo={det?.titulo ?? ""}
             descricao={det?.descricao}
             linhas={det?.linhas ?? []}
+            queryClient={queryClient}
           />
 
 
