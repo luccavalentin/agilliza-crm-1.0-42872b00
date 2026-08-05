@@ -161,7 +161,6 @@ function Pagina() {
       }
     } catch (err) {
       console.error(err);
-    } catch {
       toast.error("Não foi possível gerar o PDF da simulação.");
     } finally {
       setBaixando(false);
