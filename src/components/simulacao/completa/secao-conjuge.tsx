@@ -1,4 +1,4 @@
-import { ArrowLeftRight } from "lucide-react";
+import { ArrowLeftRight, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -13,6 +13,8 @@ import { Campo } from "@/components/simulacao/completa/campo";
 import { DateInput } from "@/components/shared/date-input";
 import { maskCpfCnpj, maskCelular } from "@/lib/simulacao/format";
 import { ESTADOS_CIVIS } from "@/lib/simulacao/schemas";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import type { SimulacaoCompletaCtx } from "@/lib/simulacao/use-simulacao-completa";
 
 export function SecaoConjuge({ ctx }: { ctx: SimulacaoCompletaCtx }) {
@@ -20,23 +22,39 @@ export function SecaoConjuge({ ctx }: { ctx: SimulacaoCompletaCtx }) {
 
   return (
     <section className="space-y-4">
-      <div className="flex flex-col items-start gap-1">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="gap-2"
-          disabled={!podeInverter}
-          onClick={inverterPrincipal}
-        >
-          <ArrowLeftRight className="h-4 w-4" />
-          Inverter principal
-        </Button>
-        {!podeInverter && (
-          <p className="text-xs text-muted-foreground">
-            Preencha nome, CPF e data de nascimento do cônjuge para inverter.
-          </p>
-        )}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-4">
+        <div className="flex items-center gap-3">
+          <Switch
+            id="compoe-renda-conjuge"
+            checked={f.compoe_renda_conjuge}
+            onCheckedChange={(checked) => set("compoe_renda_conjuge", checked)}
+          />
+          <Label
+            htmlFor="compoe-renda-conjuge"
+            className="text-sm font-medium cursor-pointer"
+          >
+            Compor renda com este cônjuge
+          </Label>
+        </div>
+
+        <div className="flex flex-col items-end gap-1">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="gap-2"
+            disabled={!podeInverter}
+            onClick={inverterPrincipal}
+          >
+            <ArrowLeftRight className="h-4 w-4" />
+            Inverter principal (Testar CPF)
+          </Button>
+          {!podeInverter && (
+            <p className="text-[10px] text-muted-foreground">
+              Nome, CPF e Nascimento do cônjuge são obrigatórios para inverter.
+            </p>
+          )}
+        </div>
       </div>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <Campo label="Nome">
@@ -51,8 +69,8 @@ export function SecaoConjuge({ ctx }: { ctx: SimulacaoCompletaCtx }) {
             onChange={(e) => set("cpf_conjuge", maskCpfCnpj(e.target.value))}
           />
         </Campo>
-        {f.compoe_renda && (
-          <Campo label="Renda (R$)">
+        {f.compoe_renda_conjuge && (
+          <Campo label="Renda do Cônjuge (R$)">
             <CurrencyInput
               value={f.renda_conjuge ?? 0}
               onChange={(v) => set("renda_conjuge", v)}
