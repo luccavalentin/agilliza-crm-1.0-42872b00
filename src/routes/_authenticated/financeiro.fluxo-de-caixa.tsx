@@ -377,9 +377,9 @@ function Pagina() {
   return (
     <div className="mx-auto w-full max-w-[1600px] space-y-6 p-4 sm:p-5 md:space-y-10 md:p-8">
       <PanelHeader
-        eyebrow="Financeiro · Fluxo de caixa"
-        titulo="Fluxo de caixa"
-        descricao="Caixa realizado e projeção de entradas e saídas em aberto."
+        eyebrow="Relatório Gerencial · Financeiro"
+        titulo="Fluxo de Caixa"
+        descricao="Acompanhe o saldo realizado e as projeções futuras de entradas e saídas de forma consolidada."
         atualizadoEm={atualizado}
         actions={
           <div className="flex flex-wrap items-end justify-start gap-2 sm:justify-end">
