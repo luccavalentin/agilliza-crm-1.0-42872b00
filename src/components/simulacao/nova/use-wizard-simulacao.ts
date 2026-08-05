@@ -52,6 +52,7 @@ export function useWizardSimulacao(melhorTaxaAno = 0.1199) {
     data_nascimento: "",
     prazo_meses: 360,
     renda_familiar: 0,
+    renda_familiar_price: 0,
     sistema_amortizacao: "S",
     parcela_alvo: 0,
   });
