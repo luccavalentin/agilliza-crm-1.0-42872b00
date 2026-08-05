@@ -72,6 +72,7 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
   const [simulacaoResultadoId, setSimulacaoResultadoId] = useState<string | null>(null);
   // Segundo id de simulação para o modo "Ambos" (uma simulação SAC + uma PRICE).
   const [simulacaoResultadoIdPrice, setSimulacaoResultadoIdPrice] = useState<string | null>(null);
+  const [simulacaoResultadoIdSecundario, setSimulacaoResultadoIdSecundario] = useState<string | null>(null);
 
   const { data: bancos } = useQuery({
     queryKey: ["bancos-ativos"],
