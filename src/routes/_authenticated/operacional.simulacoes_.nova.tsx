@@ -123,7 +123,7 @@ function Pagina() {
           taxa_juros_ano: c.taxa_ano * 100,
           prazo_pagamento_max: w.prazo_meses,
           valor_financiamento_max: financiamentoTotalExibido,
-          _sistema: w.sistema_amortizacao === "P" ? "PRICE" : "SAC",
+          _sistema: w.sistema_amortizacao === "AMBOS" ? "SAC e PRICE" : (w.sistema_amortizacao === "P" ? "PRICE" : "SAC"),
           renda_minima: c.resultado.renda_minima,
           cet: c.resultado.cet_ano * 100, // Ajuste para escala 0-100 esperada pelo formatador
         }))
