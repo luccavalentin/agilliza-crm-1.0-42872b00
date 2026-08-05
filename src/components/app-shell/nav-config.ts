@@ -297,9 +297,15 @@ export const navInterno: NavGroup[] = [
             perm: { modulo: "documentos.formularios" },
           },
           {
-            label: "Modelos Power Point",
+            label: "Modelos com Designer de Apresentações",
             icon: Presentation,
             to: "/formularios/powerpoint",
+            perm: { modulo: "documentos.formularios" },
+          },
+          {
+            label: "Checklist de Documentação",
+            icon: ListChecks,
+            to: "/formularios/checklist",
             perm: { modulo: "documentos.formularios" },
           },
         ],
