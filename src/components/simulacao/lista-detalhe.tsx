@@ -6,6 +6,8 @@ import {
   Pencil,
   Send,
   Trash2,
+  Mail,
+  MessageCircle,
 } from "lucide-react";
 import { 
   SiGmail, 
