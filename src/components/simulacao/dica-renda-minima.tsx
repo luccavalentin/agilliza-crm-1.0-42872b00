@@ -74,7 +74,7 @@ export function DicaRendaMinima(props: Props) {
     prazo_meses: prazoMeses,
     taxa_ano: taxaAno,
     renda_informada: rendaInformada,
-    sistema,
+    sistema: sistema === "AMBOS" ? "S" : sistema,
   });
 
   const principal = apiEval ?? local;
