@@ -123,17 +123,27 @@ export interface ComparativoBancoRapido extends BancoTaxaRef {
 
 export function compararBancosRapido(
   bancos: BancoTaxaRef[],
-  base: { valor_financiamento: number; prazo_meses: number; sistema: SistemaAmortizacao },
+  base: { valor_financiamento: number; prazo_meses: number; sistema: SistemaAmortizacao | "AMBOS" },
 ): ComparativoBancoRapido[] {
-  return bancos
-    .map((b) => ({
-      ...b,
-      resultado: calcularSimulacao({
-        valor_financiamento: base.valor_financiamento,
-        prazo_meses: base.prazo_meses,
-        taxa_ano: b.taxa_ano,
-        sistema: base.sistema,
-      }),
-    }))
-    .sort((a, b) => a.resultado.primeira_parcela - b.resultado.primeira_parcela);
+  const sistemas: SistemaAmortizacao[] =
+    base.sistema === "AMBOS" ? ["S", "P"] : [base.sistema as SistemaAmortizacao];
+
+  const resultados: ComparativoBancoRapido[] = [];
+
+  for (const b of bancos) {
+    for (const s of sistemas) {
+      resultados.push({
+        ...b,
+        nome_banco: base.sistema === "AMBOS" ? `${b.nome_banco} (${s === "S" ? "SAC" : "PRICE"})` : b.nome_banco,
+        resultado: calcularSimulacao({
+          valor_financiamento: base.valor_financiamento,
+          prazo_meses: base.prazo_meses,
+          taxa_ano: b.taxa_ano,
+          sistema: s,
+        }),
+      });
+    }
+  }
+
+  return resultados.sort((a, b) => a.resultado.primeira_parcela - b.resultado.primeira_parcela);
 }
