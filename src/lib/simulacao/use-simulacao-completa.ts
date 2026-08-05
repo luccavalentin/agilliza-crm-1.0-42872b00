@@ -141,7 +141,7 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
       email: s.email || EMAIL_PADRAO,
       celular: s.celular ?? "",
       possui_conjuge: Boolean(s.possui_conjuge),
-      compoe_renda: true, // Força true para carregar interface de renda
+      compoe_renda: true,
       compoe_renda_conjuge: s.compoe_renda_conjuge !== undefined ? Boolean(s.compoe_renda_conjuge) : true,
 
       consentimento_lgpd: Boolean(s.consentimento_lgpd),
