@@ -103,23 +103,14 @@ export function ResultadoInlineCompleta({ simulacaoId, onFechar, isSecundaria }:
     jaBaixou.current = true;
     (async () => {
       try {
+        if (isSecundaria) {
+          console.log("[PDF Automático] Ignorando download de simulação secundária (testagem CPF).");
+          return;
+        }
+
         const { baixarSimulacaoDetalhadaPDF } = await import("@/lib/simulacao/simulacao-pdf");
-        
-        // Verifica se esta simulação é a principal ou a secundária (testagem)
-        // O usuário quer que baixe APENAS o PDF do titular principal da simulação original.
-        const urlParams = new URLSearchParams(window.location.search);
-        const isDuplicada = !!urlParams.get("duplicar");
-        
-        // Se a simulação tem id_secundario no banco, sabemos que houve testagem.
-        // O componente ResultadoInlineCompleta é renderizado para cada ID.
-        // Precisamos saber se este ID é o principal ou o secundário.
-        // Como o ResultadoInlineCompleta não recebe essa info, vamos checar se ele é o primeiro retorno.
-        
-        const b = simulados[0];
+        const b = simulados[0]; 
         if (b) {
-          // Só baixa se for a simulação "Titular" (a primeira renderizada na página pai)
-          // Na página pai completa.tsx, o primeiro bloco usa simulacaoResultadoId
-          // Vamos adicionar uma prop opcional para controle fino ou usar o contexto do hook
           baixarSimulacaoDetalhadaPDF({ simulacao: data.simulacao, bancos: [b] });
           toast.success("Simulação realizada. Extrato do titular disponível para download.");
         }
