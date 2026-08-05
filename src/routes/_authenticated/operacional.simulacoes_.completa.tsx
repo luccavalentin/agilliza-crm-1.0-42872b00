@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, FileText, Send, Home, User, Users, Landmark, ShieldCheck } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { SecaoCabecalho } from "@/components/simulacao/secao-cabecalho";
 import { assertModuloPermitido } from "@/lib/route-guards";
 import { Button } from "@/components/ui/button";
@@ -24,8 +26,9 @@ import { SecaoConsentimentos } from "@/components/simulacao/completa/secao-conse
 import { ResultadoInlineCompleta } from "@/components/simulacao/completa/resultado-inline";
 import { ResultadoInlineAmbos } from "@/components/simulacao/completa/resultado-inline-ambos";
 
-import { formatBRL } from "@/lib/simulacao/format";
+import { formatBRL, formatPercent } from "@/lib/simulacao/format";
 import { useSimulacaoCompleta } from "@/lib/simulacao/use-simulacao-completa";
+import { obterSimulacao } from "@/lib/simulacao/simulacoes.functions";
 
 export const Route = createFileRoute("/_authenticated/operacional/simulacoes_/completa")({
   head: () => ({ meta: [{ title: "Simulação completa — Agilliza" }] }),
@@ -66,7 +69,7 @@ function Pagina() {
         .in("id", [simulacaoResultadoId, simulacaoResultadoIdSecundario]);
 
       if (sims && sims.length === 2) {
-        const prontos = sims.every(s => s.status !== "enviando" && s.status !== "rascunho");
+        const prontos = sims.every((s: any) => s.status !== "enviando" && s.status !== "rascunho");
         if (prontos) {
           jaMostrouPopup.current = true;
           setPopupAberto(true);
