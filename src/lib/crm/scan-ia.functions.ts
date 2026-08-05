@@ -321,8 +321,8 @@ export const processarLeitura = createServerFn({ method: "POST" })
       typeof cfg.modelo === "string" && cfg.modelo.trim().length > 0
         ? cfg.modelo.trim()
         : provedor === "openai"
-          ? "gpt-4o-mini"
-          : "gemini-2.5-flash";
+          ? "gpt-4o"
+          : "gemini-2.0-flash-exp";
     const temperatura = typeof cfg.temperatura === "number" ? cfg.temperatura : 0;
     const promptSistema =
       typeof cfg.prompt_scan === "string" && cfg.prompt_scan.trim().length > 0
