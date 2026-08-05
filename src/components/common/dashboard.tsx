@@ -128,9 +128,9 @@ export function PanelHeader({
   const dark = variant === "dark";
   return (
     <div className={cn(dark ? "op-hero-dark" : "op-hero", "p-4 md:p-6")}>
-      <div className="relative grid gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
+      <div className="relative grid gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
 
-        <div className="min-w-0">
+        <div className={cn("min-w-0 flex flex-col justify-center", !actions && "md:col-span-2")}>
           <p
             className={cn(
               "flex min-w-0 items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.12em] sm:text-[11px] sm:tracking-[0.18em]",
@@ -147,21 +147,21 @@ export function PanelHeader({
           </p>
           <h1
             className={cn(
-              "mt-2 text-2xl font-semibold leading-tight tracking-tight sm:text-[28px]",
+              "mt-3 text-2xl font-bold leading-tight tracking-tight sm:text-3xl md:text-4xl",
               dark ? "text-white" : "text-foreground",
             )}
           >
             {titulo}
           </h1>
-          <p className={cn("mt-1.5 max-w-xl text-sm", dark ? "text-white/70" : "text-muted-foreground")}>
+          <p className={cn("mt-2 max-w-xl text-sm md:text-base leading-relaxed opacity-85", dark ? "text-white/70" : "text-muted-foreground")}>
             {descricao}
           </p>
         </div>
         <div
           className={cn(
-            "grid min-w-0 grid-cols-1 gap-2 text-foreground sm:flex sm:flex-wrap sm:items-center sm:justify-end",
+            "grid min-w-0 grid-cols-1 gap-3 text-foreground sm:flex sm:flex-wrap sm:items-center sm:justify-end self-center",
             dark &&
-              "sm:rounded-2xl sm:border sm:border-white/10 sm:bg-white/[0.06] sm:p-1.5 sm:backdrop-blur-md sm:gap-1.5",
+              "sm:rounded-2xl sm:border sm:border-white/10 sm:bg-white/[0.06] sm:p-2 sm:backdrop-blur-md sm:gap-2",
           )}
         >
           {atualizadoEm && (

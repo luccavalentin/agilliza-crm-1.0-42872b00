@@ -375,7 +375,7 @@ function Pagina() {
 
 
   return (
-    <div className="mx-auto w-full max-w-[1600px] space-y-6 p-3 sm:p-4 md:space-y-8 md:p-6">
+    <div className="mx-auto w-full max-w-[1600px] space-y-6 p-4 sm:p-5 md:space-y-10 md:p-8">
       <PanelHeader
         eyebrow="Financeiro · Fluxo de caixa"
         titulo="Fluxo de caixa"
