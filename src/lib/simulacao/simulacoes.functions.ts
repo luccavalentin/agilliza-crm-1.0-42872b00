@@ -433,6 +433,7 @@ export const criarSimulacao = createServerFn({ method: "POST" })
         })
       : null;
     await replicarVinculos(clienteOrigemId, [titularId, conjugeId]);
+    await vincularConjugeAoTitular(titularId, conjugeId);
 
     const insert = {
       correspondente_id,
