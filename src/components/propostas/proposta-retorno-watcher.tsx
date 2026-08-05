@@ -32,7 +32,7 @@ export function PropostaRetornoWatcher({ userId }: Props) {
         },
         async (payload) => {
           const row = payload.new as any;
-          if (row.tipo === "info" && row.descricao.includes("testou ambos os proponentes")) {
+          if (row.tipo === "info" && row.descricao.includes("Comparativo de taxas concluído")) {
             const { data: sim } = await supabase
               .from("simulacoes")
               .select("id, numero_simulacao, nome_cliente, usuario_responsavel_id, usuario_criador_id")

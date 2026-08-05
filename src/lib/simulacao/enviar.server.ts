@@ -819,32 +819,35 @@ export async function enviarSimulacaoImpl({
     }
 
     // Lógica para comparar CPFs do titular e cônjuge se casado
-    if (sim.possui_conjuge && sim.cpf_conjuge && !bancoIds) {
+    if (sim.possui_conjuge && sim.cpf_conjuge && !envioPorBanco) {
       try {
-        const { data: simulacaoOriginal } = await supabase
-          .from("simulacoes")
-          .select("id, cpf_cnpj, nome_cliente, cpf_conjuge, nome_conjuge")
-          .eq("id", simulacaoId)
-          .single();
+        // Registra o início do comparativo
+        await supabase.from("simulacao_historico").insert({
+          simulacao_id: simulacaoId,
+          tipo: "info",
+          descricao: "Sistema iniciando teste comparativo de CPFs (titular e cônjuge)...",
+          ator_id: userId,
+        });
 
-        if (simulacaoOriginal) {
-          // Inverte titular e cônjuge para testar o outro CPF
-          const { inverterTitularSimulacao } = await import("./simulacoes.functions");
-          await (inverterTitularSimulacao as any)({ id: simulacaoId }, { context: { supabase, userId } });
+        // Inverte titular e cônjuge para testar o outro CPF
+        const { inverterTitularSimulacao } = await import("./simulacoes.functions");
+        await (inverterTitularSimulacao as any)({ id: simulacaoId }, { context: { supabase, userId } });
 
-          // Envia novamente com o titular invertido
-          for (const b of bancos as any[]) {
-            await enviarBanco(b);
-          }
-
-          // Registra no histórico para o watcher disparar o popup
-          await supabase.from("simulacao_historico").insert({
-            simulacao_id: simulacaoId,
-            tipo: "info",
-            descricao: "Sistema testou ambos os proponentes como titulares para encontrar a melhor taxa.",
-            ator_id: userId,
-          });
+        // Envia novamente com o titular invertido
+        for (const b of bancos as any[]) {
+          await enviarBanco(b);
         }
+
+        // Registra no histórico para o watcher disparar o popup (com marcador específico)
+        await supabase.from("simulacao_historico").insert({
+          simulacao_id: simulacaoId,
+          tipo: "info",
+          descricao: "Comparativo de taxas concluído: o sistema testou ambos os proponentes.",
+          ator_id: userId,
+        });
+
+        // Inverte de volta para manter o titular original como primário (opcional, mas evita confusão)
+        await (inverterTitularSimulacao as any)({ id: simulacaoId }, { context: { supabase, userId } });
       } catch (e) {
         console.warn("Falha ao realizar teste comparativo de CPFs:", e);
       }
