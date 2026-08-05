@@ -5,7 +5,14 @@ import { PowerPointModelosView } from "@/components/formularios/powerpoint-model
 import { ChecklistBancosView } from "@/components/formularios/checklist-bancos-view";
 import { BANCOS_FORMULARIO, type BancoFormulario } from "@/lib/formularios/formularios.functions";
 
+import { z } from "zod";
+
 export const Route = createFileRoute("/_authenticated/formularios/$banco")({
+  validateSearch: (search: Record<string, unknown>) => {
+    return z.object({
+      banco: z.string().optional(),
+    }).parse(search);
+  },
   head: () => ({ meta: [{ title: "Formulários — Agilliza" }] }),
   component: Pagina,
 });
