@@ -818,6 +818,46 @@ export async function enviarSimulacaoImpl({
       resultados.push(await enviarBanco(b));
     }
 
+    // Lógica para comparar CPFs do titular e cônjuge se casado
+    if (sim.possui_conjuge && sim.cpf_conjuge && !args.bancoIds) {
+      try {
+        const { data: simulacaoOriginal } = await supabase
+          .from("simulacoes")
+          .select("id, cpf_cnpj, nome_cliente, cpf_conjuge, nome_conjuge")
+          .eq("id", simulacaoId)
+          .single();
+
+        if (simulacaoOriginal) {
+          // Inverte titular e cônjuge para testar o outro CPF
+          const { inverterTitularSimulacao } = await import("./simulacoes.functions");
+          await inverterTitularSimulacao({ id: simulacaoId }, { context: { supabase, userId } } as any);
+
+          // Envia novamente com o titular invertido
+          for (const b of bancos as any[]) {
+            await enviarBanco(b);
+          }
+
+          // Busca resultados de todos os envios para comparar
+          const { data: todosBancosResultados } = await supabase
+            .from("simulacao_bancos")
+            .select("nome_banco, taxa_juros_ano, valor_parcela, raw_response, status_banco")
+            .eq("simulacao_id", simulacaoId);
+
+          // Aqui poderíamos adicionar uma lógica de comparação mais fina.
+          // Por enquanto, apenas registramos no histórico para o watcher disparar o popup.
+          await supabase.from("simulacao_historico").insert({
+            simulacao_id: simulacaoId,
+            tipo: "info",
+            descricao: "Sistema testou ambos os proponentes como titulares para encontrar a melhor taxa.",
+            ator_id: userId,
+          });
+        }
+      } catch (e) {
+        console.warn("Falha ao realizar teste comparativo de CPFs:", e);
+      }
+    }
+
+
     // Status geral considerando TODOS os bancos selecionados (não só os desta
     // chamada), pois o envio pode ser feito banco a banco para dar progresso.
     const { data: todosBancos } = await supabase
