@@ -602,6 +602,7 @@ function anexarDetalhesBancos(doc: jsPDF, pageW: number, pageH: number, s: any, 
           margin: { left: MARGIN, right: MARGIN, top: DETALHE_HEADER_H + 16, bottom: 40 },
           head: cabecalho,
           body: restante.map(linhaParcela),
+          foot: [rodapeSoma],
           ...estiloTabela,
           willDrawPage: (hook) => {
             if (hook.pageNumber > 1) drawPageBackground(doc, pageW, pageH);
