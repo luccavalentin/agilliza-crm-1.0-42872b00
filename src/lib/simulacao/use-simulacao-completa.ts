@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { useRouter } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -46,6 +46,8 @@ import {
 } from "./use-simulacao-completa/envio";
 
 export type { Form };
+
+export interface SimulacaoCompletaCtx extends ReturnType<typeof useSimulacaoCompleta> {}
 
 /**
  * Concentra todo o estado, regras de negócio e efeitos da simulação completa.
@@ -141,7 +143,7 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
       email: s.email || EMAIL_PADRAO,
       celular: s.celular ?? "",
       possui_conjuge: Boolean(s.possui_conjuge),
-      compoe_renda: Boolean(s.compoe_renda),
+      compoe_renda: true,
       compoe_renda_conjuge: s.compoe_renda_conjuge !== undefined ? Boolean(s.compoe_renda_conjuge) : true,
 
       consentimento_lgpd: Boolean(s.consentimento_lgpd),
@@ -187,22 +189,25 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
 
       if (k === "estado_civil") {
         next.possui_conjuge = v === "CA" || v === "UE";
-        // Quando for casado/UE, por padrão ativa compo_renda_conjuge
-        if (next.possui_conjuge) next.compoe_renda_conjuge = true;
+        // Quando for casado/UE, por padrão ativa compoe_renda_conjuge
+        if (next.possui_conjuge) {
+          next.compoe_renda_conjuge = true;
+          next.compoe_renda = true;
+        }
       }
       return next;
 
     });
   }
 
-  // Datas adicionais consideradas no cálculo do prazo máximo: quando o cliente
-  // é casado/união estável, o cônjuge entra na conta MESMO sem compor renda —
-  // o banco usa a idade do MAIS VELHO para o teto de idade ao término.
+  // Datas adicionais consideradas no cálculo do prazo máximo: o banco usa a
+  // idade do MAIS VELHO para o teto de idade ao término, mas apenas se o
+  // proponente estiver compondo renda.
   const datasProponentesPrazo = useMemo(() => {
     const extras: string[] = [];
-    if (f.possui_conjuge && f.data_nascimento_conjuge) extras.push(f.data_nascimento_conjuge);
+    if (f.compoe_renda_conjuge && f.data_nascimento_conjuge) extras.push(f.data_nascimento_conjuge);
     return extras;
-  }, [f.possui_conjuge, f.data_nascimento_conjuge]);
+  }, [f.compoe_renda_conjuge, f.data_nascimento_conjuge]);
 
   const maxPrazoIdade = useMemo(
     () => prazoMaximoParaProponentes([f.data_nascimento, ...datasProponentesPrazo]),
@@ -219,8 +224,8 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
   }, [bancos, f.bancos_ids]);
 
   const rendaConsiderada = useMemo(
-    () => (Number(f.renda_total) || 0) + (f.compoe_renda && f.compoe_renda_conjuge ? Number(f.renda_conjuge) || 0 : 0),
-    [f.renda_total, f.compoe_renda, f.compoe_renda_conjuge, f.renda_conjuge],
+    () => (Number(f.renda_total) || 0) + (f.compoe_renda_conjuge ? Number(f.renda_conjuge) || 0 : 0),
+    [f.renda_total, f.compoe_renda_conjuge, f.renda_conjuge],
   );
 
 
@@ -620,10 +625,10 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
   }
 
 
-  const mostraConjuge = f.possui_conjuge || f.compoe_renda;
+  const mostraConjuge = f.possui_conjuge;
 
   const obterClienteCrmFn = useServerFn(obterClienteCRM);
-  const { data: crmVinculado } = useQuery({
+  const { data: crmVinculado, refetch: refetchCrm } = useQuery({
     queryKey: ["cliente-crm-vinculado", f.cliente_id],
     queryFn: () => obterClienteCrmFn({ data: { id: f.cliente_id as string } }),
     enabled: Boolean(f.cliente_id),
@@ -637,22 +642,24 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
   const podePuxarConjugeCrm =
     crmTemConjuge && (!String(f.nome_conjuge ?? "").trim() || faltaConjugeDoCRM(f, crmVinculado));
 
-  function puxarConjugeDoCRM() {
+  const puxarConjugeDoCRM = useCallback(() => {
     if (!crmVinculado) return;
     setF((prev) => patchPuxarConjugeCRM(prev, crmVinculado));
     toast.success("Dados do cônjuge puxados do cadastro do CRM.");
-  }
+  }, [crmVinculado]);
 
   // Casado/união estável: completa automaticamente os dados do cônjuge com o
   // que existe no CRM (merge — nunca sobrescreve o que o usuário digitou).
   useEffect(() => {
     const casado = f.estado_civil === "CA" || f.estado_civil === "UE";
     if (!casado || !crmVinculado || !crmTemConjuge) return;
-    if (!faltaConjugeDoCRM(f, crmVinculado)) return;
-    setF((prev) => patchPuxarConjugeCRM(prev, crmVinculado));
-    toast.success("Dados do cônjuge preenchidos automaticamente pelo cadastro do CRM.");
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [f.estado_civil, f.cliente_id, crmVinculado, crmTemConjuge]);
+
+    // Se o cônjuge já está preenchido (ou se acabamos de inverter), não aplica o merge automático
+    // para não desfazer a vontade do usuário.
+    if (String(f.nome_conjuge ?? "").trim()) return;
+
+    puxarConjugeDoCRM();
+  }, [f.estado_civil, crmVinculado, crmTemConjuge, f.nome_conjuge, puxarConjugeDoCRM]);
 
 
   const podeInverter = useMemo(() => {
@@ -665,12 +672,12 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
   }, [mostraConjuge, f.nome_conjuge, f.cpf_conjuge, f.data_nascimento_conjuge]);
 
   /** Inverte titular ⇄ cônjuge. */
-  function inverterPrincipal() {
+  const inverterPrincipal = useCallback(() => {
     setF(patchInverterPrincipal);
     setInvertido((v) => !v);
     setErros({});
     toast.success("Titular e cônjuge invertidos. Confira os dados obrigatórios.");
-  }
+  }, []);
 
   /** Seleciona o titular a partir de um cliente do CRM. */
   function selecionarClienteCRM(c: any) {
@@ -859,7 +866,8 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
     simulacaoResultadoIdPrice,
     fecharResultadoInline: () => setSimulacaoResultadoId(null),
     fecharResultadoInlinePrice: () => setSimulacaoResultadoIdPrice(null),
+    refetchCrm,
   };
 }
 
-export type SimulacaoCompletaCtx = ReturnType<typeof useSimulacaoCompleta>;
+

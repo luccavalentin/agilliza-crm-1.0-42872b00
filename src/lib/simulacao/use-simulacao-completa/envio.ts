@@ -87,6 +87,7 @@ export async function executarEnvioAmbos(ctx: CtxBase): Promise<void> {
   setConcluidos(0);
   setEnviando(true);
   const idsGerados: string[] = [];
+  const bancosSimulados: any[] = [];
   let done = 0;
   const agrupador_id =
     f.bancos_sac_ids.length > 0 && f.bancos_price_ids.length > 0
@@ -129,6 +130,11 @@ export async function executarEnvioAmbos(ctx: CtxBase): Promise<void> {
       await Promise.allSettled(
         f.bancos_sac_ids.map((bid: string) =>
           enviarSimulacaoBanco({ data: { simulacao_id: id, banco_ids: [bid] } })
+            .then((resp: any) => {
+              if (resp?.status === "simulada") {
+                bancosSimulados.push({ idSimulacao: id, banco_id: bid, nome_banco: resp.nome_banco || bid });
+              }
+            })
             .catch((e) => {
               toast.error(
                 e instanceof Error
@@ -178,6 +184,11 @@ export async function executarEnvioAmbos(ctx: CtxBase): Promise<void> {
       await Promise.allSettled(
         f.bancos_price_ids.map((bid: string) =>
           enviarSimulacaoBanco({ data: { simulacao_id: id, banco_ids: [bid] } })
+            .then((resp: any) => {
+              if (resp?.status === "simulada") {
+                bancosSimulados.push({ idSimulacao: id, banco_id: bid, nome_banco: resp.nome_banco || bid });
+              }
+            })
             .catch((e) => {
               toast.error(
                 e instanceof Error
@@ -199,6 +210,23 @@ export async function executarEnvioAmbos(ctx: CtxBase): Promise<void> {
     setEnviando(false);
     setConcluidos(0);
     toast.success("Simulações SAC e PRICE geradas. Confira os resultados abaixo.");
+
+    // Download automático dos PDFs gerados no modo Ambos
+    if (bancosSimulados.length > 0) {
+      try {
+        const { baixarSimulacaoDetalhadaPDF } = await import("@/lib/simulacao/simulacao-pdf");
+        for (const bSim of bancosSimulados) {
+          const simData = await obterSimulacao({ data: { id: bSim.idSimulacao } });
+          const bReal = (simData.bancos as any[])?.find((b: any) => b.banco_id === bSim.banco_id);
+          if (bReal) {
+            baixarSimulacaoDetalhadaPDF({ simulacao: simData.simulacao, bancos: [bReal] });
+            await new Promise((r) => setTimeout(r, 600));
+          }
+        }
+      } catch (e) {
+        console.error("[PDF Automático Ambos]", e);
+      }
+    }
   } catch (e) {
     toast.error(e instanceof Error ? e.message : "Não foi possível criar as simulações.");
     setEnviando(false);

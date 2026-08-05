@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useEffect, useState, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
 import { toast } from "sonner";
@@ -115,6 +115,7 @@ export function ResultadoInlineAmbos({ simulacaoIdSac, simulacaoIdPrice, onFecha
   const qc = useQueryClient();
   const [reenviandoBanco, setReenviandoBanco] = useState<string | null>(null);
   const [criandoBanco, setCriandoBanco] = useState<string | null>(null);
+  const jaBaixou = useRef(false);
 
   const qSac = useSimQuery(simulacaoIdSac);
   const qPrice = useSimQuery(simulacaoIdPrice);
@@ -173,6 +174,32 @@ export function ResultadoInlineAmbos({ simulacaoIdSac, simulacaoIdPrice, onFecha
       </Card>
     );
   }
+
+  // Download automático para modo Ambos quando os resultados chegam
+  useEffect(() => {
+    if (jaBaixou.current || (!dataSac && !dataPrice)) return;
+    const bancosSac = bancosDaSimulacaoAtual(dataSac);
+    const bancosPrice = bancosDaSimulacaoAtual(dataPrice);
+    const todosBancos = [...bancosSac, ...bancosPrice];
+    if (todosBancos.length === 0) return;
+    const processando = todosBancos.some(b => b.status_banco === "aguardando" || b.status_banco === "enviando");
+    if (processando) return;
+    const simulados = todosBancos.filter(b => b.status_banco === "simulada");
+    if (simulados.length === 0) return;
+    jaBaixou.current = true;
+    (async () => {
+      try {
+        const { baixarSimulacaoDetalhadaPDF } = await import("@/lib/simulacao/simulacao-pdf");
+        for (const b of simulados) {
+          const simRef = bancosSac.find(x => x.id === b.id) ? dataSac.simulacao : dataPrice.simulacao;
+          baixarSimulacaoDetalhadaPDF({ simulacao: simRef, bancos: [b] });
+          await new Promise((r) => setTimeout(r, 600));
+        }
+      } catch (e) {
+        console.error("[PDF Automático Ambos Inline]", e);
+      }
+    })();
+  }, [dataSac, dataPrice]);
 
   type Linha = {
     sistema: "SAC" | "PRICE";
