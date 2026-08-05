@@ -819,7 +819,7 @@ export async function enviarSimulacaoImpl({
     }
 
     // Lógica para comparar CPFs do titular e cônjuge se casado
-    if (sim.possui_conjuge && sim.cpf_conjuge && !args.bancoIds) {
+    if (sim.possui_conjuge && sim.cpf_conjuge && !bancoIds) {
       try {
         const { data: simulacaoOriginal } = await supabase
           .from("simulacoes")
