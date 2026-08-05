@@ -453,7 +453,7 @@ function ComparativoTaxasDialog({ aberto, onClose, idTitular, idSecundario }: { 
 
               <Button 
                 onClick={onClose}
-                className="group h-12 rounded-2xl bg-slate-900 px-8 font-bold text-white transition-all hover:scale-105 hover:bg-slate-800 active:scale-95 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
+                className="h-12 w-full rounded-xl bg-primary px-8 font-bold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:bg-primary/90 active:scale-95 sm:w-auto"
               >
                 Prosseguir com a Melhor Opção
               </Button>
