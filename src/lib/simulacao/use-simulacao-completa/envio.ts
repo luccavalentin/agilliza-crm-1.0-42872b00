@@ -343,7 +343,7 @@ export async function executarEnvioSimples(ctx: CtxBase): Promise<void> {
     setEnviando(false);
     setConcluidos(0);
     toast.success(
-      "Simulação realizada. Os extratos por banco serão baixados automaticamente assim que os retornos chegarem.",
+      "Simulação realizada. Os retornos dos bancos estão sendo processados.",
     );
   } catch (e) {
     const msg = e instanceof Error ? e.message : null;

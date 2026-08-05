@@ -103,17 +103,13 @@ export function ResultadoInlineCompleta({ simulacaoId, onFechar }: Props) {
     (async () => {
       try {
         const { baixarSimulacaoDetalhadaPDF } = await import("@/lib/simulacao/simulacao-pdf");
-        for (const b of simulados) {
+        const b = simulados[0]; // Baixa apenas o primeiro (ou o titular principal se filtrado)
+        if (b) {
           baixarSimulacaoDetalhadaPDF({ simulacao: data.simulacao, bancos: [b] });
-          // Pequeno delay para não bloquear downloads simultâneos no navegador
-          await new Promise((r) => setTimeout(r, 600));
+          toast.success("Simulação realizada. Extrato do titular disponível para download.");
         }
-        toast.success(
-          `Simulação realizada. ${simulados.length} PDF${simulados.length === 1 ? "" : "s"} liberado${simulados.length === 1 ? "" : "s"} para download.`,
-        );
       } catch (e) {
         console.error("[PDF Automático]", e);
-        toast.error("Não foi possível baixar automaticamente os PDFs.");
       }
     })();
   }, [data]);

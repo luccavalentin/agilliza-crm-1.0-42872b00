@@ -190,10 +190,11 @@ export function ResultadoInlineAmbos({ simulacaoIdSac, simulacaoIdPrice, onFecha
     (async () => {
       try {
         const { baixarSimulacaoDetalhadaPDF } = await import("@/lib/simulacao/simulacao-pdf");
-        for (const b of simulados) {
-          const simRef = bancosSac.find(x => x.id === b.id) ? dataSac.simulacao : dataPrice.simulacao;
-          baixarSimulacaoDetalhadaPDF({ simulacao: simRef, bancos: [b] });
-          await new Promise((r) => setTimeout(r, 600));
+        // Baixa apenas o primeiro de cada sistema (ou apenas o principal)
+        const principal = simulados[0];
+        if (principal) {
+          const simRef = bancosSac.find(x => x.id === principal.id) ? dataSac.simulacao : dataPrice.simulacao;
+          baixarSimulacaoDetalhadaPDF({ simulacao: simRef, bancos: [principal] });
         }
       } catch (e) {
         console.error("[PDF Automático Ambos Inline]", e);
