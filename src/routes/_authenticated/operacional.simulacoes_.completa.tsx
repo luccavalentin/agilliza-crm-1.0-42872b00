@@ -218,29 +218,45 @@ function Pagina() {
         </aside>
       </div>
 
-      {(simulacaoResultadoId || simulacaoResultadoIdPrice) && !modoProposta && (
+      {(simulacaoResultadoId || simulacaoResultadoIdPrice || simulacaoResultadoIdSecundario) && !modoProposta && (
         <div ref={resultadoRef} className="scroll-mt-4 space-y-4">
-          {simulacaoResultadoId && simulacaoResultadoIdPrice ? (
-            <ResultadoInlineAmbos
-              simulacaoIdSac={simulacaoResultadoId}
-              simulacaoIdPrice={simulacaoResultadoIdPrice}
-              onFechar={() => {
-                fecharResultadoInline();
-                fecharResultadoInlinePrice();
-              }}
-            />
-          ) : simulacaoResultadoId ? (
-            <ResultadoInlineCompleta
-              simulacaoId={simulacaoResultadoId}
-              onFechar={fecharResultadoInline}
-            />
-          ) : simulacaoResultadoIdPrice ? (
-            <ResultadoInlineCompleta
-              simulacaoId={simulacaoResultadoIdPrice}
-              onFechar={fecharResultadoInlinePrice}
-            />
-          ) : null}
-          
+          <div className="flex flex-col gap-6">
+            {/* Bloco do Titular Principal */}
+            {simulacaoResultadoId && simulacaoResultadoIdPrice ? (
+              <ResultadoInlineAmbos
+                simulacaoIdSac={simulacaoResultadoId}
+                simulacaoIdPrice={simulacaoResultadoIdPrice}
+                onFechar={() => {
+                  fecharResultadoInline();
+                  fecharResultadoInlinePrice();
+                }}
+              />
+            ) : simulacaoResultadoId ? (
+              <ResultadoInlineCompleta
+                simulacaoId={simulacaoResultadoId}
+                onFechar={fecharResultadoInline}
+              />
+            ) : simulacaoResultadoIdPrice ? (
+              <ResultadoInlineCompleta
+                simulacaoId={simulacaoResultadoIdPrice}
+                onFechar={fecharResultadoInlinePrice}
+              />
+            ) : null}
+
+            {/* Bloco da Simulação Secundária (Cônjuge Invertido) */}
+            {simulacaoResultadoIdSecundario && (
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 border-b border-border/60 pb-2">
+                  <Landmark className="h-4 w-4 text-primary" />
+                  <h3 className="font-semibold text-foreground">Teste de Melhor Taxa (CPF Invertido)</h3>
+                </div>
+                <ResultadoInlineCompleta
+                  simulacaoId={simulacaoResultadoIdSecundario}
+                  onFechar={fecharResultadoInlineSecundario}
+                />
+              </div>
+            )}
+          </div>
         </div>
       )}
 
