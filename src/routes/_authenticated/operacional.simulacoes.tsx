@@ -470,6 +470,8 @@ function Pagina() {
         return;
       }
 
+      const textoBase = `Olá ${clienteNome}! Segue a simulação ${numero} de financiamento no valor de ${valorFinanc}.`;
+
       if (dados.canal === "whatsapp") {
         const fone = dados.whatsapp.replace(/\D/g, "");
         const msg = encodeURIComponent(`${textoBase}`);
