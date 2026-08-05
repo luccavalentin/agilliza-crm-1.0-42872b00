@@ -375,7 +375,8 @@ function Pagina() {
 
 
   return (
-    <div className="mx-auto w-full max-w-[1600px] space-y-6 p-4 sm:p-5 md:space-y-8 md:p-8 bg-gradient-to-b from-background to-muted/20 min-h-screen">
+    <div className="mx-auto w-full max-w-[1600px] space-y-6 bg-gradient-to-b from-background to-muted/20 min-h-screen">
+      <div className="p-4 sm:p-5 md:space-y-8 md:p-8">
       <PanelHeader
         variant="dark"
         eyebrow="Relatório Gerencial · Financeiro"
