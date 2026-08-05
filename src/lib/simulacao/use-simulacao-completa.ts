@@ -870,4 +870,4 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
   };
 }
 
-export type SimulacaoCompletaCtx = ReturnType<typeof useSimulacaoCompleta>;
+
