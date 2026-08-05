@@ -18,16 +18,20 @@ export function ChecklistBancosView() {
   
   // Estado para gerenciar itens de checklist por banco (iniciado com os dados fixos)
   const [checklists, setChecklists] = useState<Record<string, string[]>>({});
+  const [selecionados, setSelecionados] = useState<Record<string, string[]>>({});
   const [editandoIndex, setEditandoIndex] = useState<number | null>(null);
   const [novoValor, setNovoValor] = useState("");
 
   useEffect(() => {
-    // Inicializar checklists a partir da config se ainda não estiverem no estado
+    // Inicializar checklists e selecionados a partir da config se ainda não estiverem no estado
     const initial: Record<string, string[]> = {};
+    const initialSelected: Record<string, string[]> = {};
     Object.keys(CHECKLISTS_BANCOS).forEach(key => {
       initial[key] = [...CHECKLISTS_BANCOS[key].docs];
+      initialSelected[key] = [...CHECKLISTS_BANCOS[key].docs];
     });
     setChecklists(initial);
+    setSelecionados(initialSelected);
   }, []);
 
   useEffect(() => {
@@ -46,7 +50,7 @@ export function ChecklistBancosView() {
 
   const handleDownload = async (bancoId: string) => {
     try {
-      const docs = checklists[bancoId] || [];
+      const docs = selecionados[bancoId] || [];
       await gerarChecklistBancoPDF(bancoId, undefined, docs);
       toast.success("Checklist gerado com sucesso!");
     } catch (error) {
@@ -68,7 +72,7 @@ export function ChecklistBancosView() {
       return;
     }
 
-    const docs = checklists[bancoParaCompartilhar.id] || [];
+    const docs = selecionados[bancoParaCompartilhar.id] || [];
     const listaTexto = docs.map(doc => `• ${doc}`).join('\n');
 
     if (dados.canal === "whatsapp") {
@@ -122,6 +126,18 @@ export function ChecklistBancosView() {
 
   const brandAtiva = bancoSelecionado ? resolveBancoBrand(bancoSelecionado) : null;
   const docsAtivos = bancoSelecionado ? (checklists[bancoSelecionado] || []) : [];
+  const selecionadosAtivos = bancoSelecionado ? (selecionados[bancoSelecionado] || []) : [];
+
+  const toggleSelecao = (doc: string) => {
+    if (!bancoSelecionado) return;
+    setSelecionados(prev => {
+      const bancoDocs = prev[bancoSelecionado] || [];
+      if (bancoDocs.includes(doc)) {
+        return { ...prev, [bancoSelecionado]: bancoDocs.filter(d => d !== doc) };
+      }
+      return { ...prev, [bancoSelecionado]: [...bancoDocs, doc] };
+    });
+  };
 
   return (
     <div className="container py-6 space-y-6 animate-in fade-in duration-500">
@@ -211,10 +227,17 @@ export function ChecklistBancosView() {
               {docsAtivos.map((doc, idx) => (
                 <div 
                   key={idx} 
-                  className="flex items-start gap-4 p-4 rounded-lg hover:bg-white transition-colors group border border-transparent hover:border-border"
+                  className={`flex items-start gap-4 p-4 rounded-lg hover:bg-white transition-colors group border border-transparent hover:border-border cursor-pointer ${
+                    !selecionadosAtivos.includes(doc) ? "opacity-50 grayscale-[0.5]" : ""
+                  }`}
+                  onClick={() => toggleSelecao(doc)}
                 >
-                  <div className="mt-1 h-5 w-5 rounded border-2 border-primary/30 flex items-center justify-center group-hover:border-primary transition-colors">
-                    <div className="h-2 w-2 rounded-full bg-primary opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <div 
+                    className={`mt-1 h-5 w-5 rounded border-2 flex items-center justify-center transition-colors ${
+                      selecionadosAtivos.includes(doc) ? "border-primary bg-primary" : "border-primary/30 group-hover:border-primary"
+                    }`}
+                  >
+                    {selecionadosAtivos.includes(doc) && <Check className="h-3 w-3 text-white" />}
                   </div>
                   
                   <div className="flex-1 space-y-1">
