@@ -298,7 +298,7 @@ function drawInfoFinanciamento(
       ),
     },
     {
-      label: "Renda estimada",
+      label: "Renda mínima necessária",
       valor: brlOuTraco(rendaMinimaDoBanco(b)),
     },
   ];
