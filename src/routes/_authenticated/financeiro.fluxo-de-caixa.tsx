@@ -333,12 +333,23 @@ function Pagina() {
         rotulo: p.label,
         sub: `A receber ${formatBRL(p.entradaProj)} · A pagar ${formatBRL(p.saidaProj)}`,
         valor: Number(p.entradaProj) - Number(p.saidaProj),
+        details: p.movimentacoesProjetadas?.map((m: any) => ({
+          tipo: m.tipo === "saida" ? "pagar" : "receber",
+          id: m.ref_id
+        })).filter((m: any) => !!m.id)
       })),
     },
     saldoFinalProj: {
       titulo: "Saldo acumulado projetado",
       descricao: "Realizado somado à projeção, período a período.",
-      linhas: pontos.map((p: any) => ({ rotulo: p.label, valor: Number(p.saldoAcum) })),
+      linhas: pontos.map((p: any) => ({ 
+        rotulo: p.label, 
+        valor: Number(p.saldoAcum),
+        details: p.movimentacoesProjetadas?.map((m: any) => ({
+          tipo: m.tipo === "saida" ? "pagar" : "receber",
+          id: m.ref_id
+        })).filter((m: any) => !!m.id)
+      })),
     },
     coberturaPct: {
       titulo: "Cobertura de saídas",
@@ -347,17 +358,29 @@ function Pagina() {
         rotulo: p.label,
         sub: `A receber ${formatBRL(p.entradaProj)} · A pagar ${formatBRL(p.saidaProj)}`,
         valor: Number(p.entradaProj) - Number(p.saidaProj),
+        details: p.movimentacoesProjetadas?.map((m: any) => ({
+          tipo: m.tipo === "saida" ? "pagar" : "receber",
+          id: m.ref_id
+        })).filter((m: any) => !!m.id)
       })),
     },
     entradasProj: {
       titulo: "Entradas em aberto",
       descricao: "Contas a receber por origem.",
-      linhas: (data?.entradasPorCategoria ?? []).map((c) => ({ rotulo: c.nome, valor: c.valor })),
+      linhas: (data?.entradasPorCategoria ?? []).map((c: any) => ({ 
+        rotulo: c.nome, 
+        valor: c.valor,
+        details: c.ids?.map((id: string) => ({ tipo: "receber", id }))
+      })),
     },
     saidasProj: {
       titulo: "Saídas em aberto",
       descricao: "Contas a pagar por categoria.",
-      linhas: (data?.saidasPorCategoria ?? []).map((c) => ({ rotulo: c.nome, valor: c.valor })),
+      linhas: (data?.saidasPorCategoria ?? []).map((c: any) => ({ 
+        rotulo: c.nome, 
+        valor: c.valor,
+        details: c.ids?.map((id: string) => ({ tipo: "pagar", id }))
+      })),
     },
     melhor: {
       titulo: "Melhores períodos",
