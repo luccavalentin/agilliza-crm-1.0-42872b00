@@ -2,13 +2,15 @@ import {
   Copy,
   Download,
   Eye,
-  Mail,
-  MessageCircle,
   MoreHorizontal,
   Pencil,
   Send,
   Trash2,
 } from "lucide-react";
+import { 
+  SiGmail, 
+  SiWhatsapp 
+} from "@icons-pack/react-simple-icons";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
