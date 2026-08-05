@@ -24,10 +24,10 @@ export function ChecklistBancosView() {
 
   useEffect(() => {
     // Inicializar checklists e selecionados a partir da config se ainda não estiverem no estado
-    const initial: Record<string, string[]> = {};
+    const initial: Record<string, { nome: string; obrigatorio: boolean }[]> = {};
     const initialSelected: Record<string, string[]> = {};
     Object.keys(CHECKLISTS_BANCOS).forEach(key => {
-      initial[key] = [...CHECKLISTS_BANCOS[key].docs];
+      initial[key] = CHECKLISTS_BANCOS[key].docs.map(doc => ({ nome: doc, obrigatorio: true }));
       initialSelected[key] = [...CHECKLISTS_BANCOS[key].docs];
     });
     setChecklists(initial);
