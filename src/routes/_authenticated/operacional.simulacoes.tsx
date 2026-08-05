@@ -29,6 +29,7 @@ import {
 import {
   EnviarPropostaDialog,
 } from "@/components/simulacao/enviar-proposta-dialog";
+import { EncaminharSimulacaoDialog } from "@/components/simulacao/encaminhar-simulacao-dialog";
 import { KpiDetalheDialog } from "@/components/simulacao/kpi-detalhe-dialog";
 import { FiltrosLista } from "@/components/simulacao/lista-page/filtros-lista";
 import { TabelaSimulacoes } from "@/components/simulacao/lista-page/tabela-simulacoes";
