@@ -112,11 +112,14 @@ export function EditarPessoaDialog({
           </div>
         </DialogHeader>
         <div className="max-h-[70vh] space-y-5 overflow-y-auto px-1 py-4">
-          <UploadAvatar
-            currentUrl={avatarUrl}
-            onUploadComplete={setAvatarUrl}
-            userId={pessoa?.id}
-          />
+          <div className="rounded-xl border border-primary/10 bg-primary/5 p-4 text-center">
+            <Label className="mb-3 block text-xs font-semibold uppercase tracking-wider text-primary">Alterar foto de perfil</Label>
+            <UploadAvatar
+              currentUrl={avatarUrl}
+              onUploadComplete={setAvatarUrl}
+              userId={pessoa?.id}
+            />
+          </div>
           <div className="space-y-2">
             <Label htmlFor="ep-nome">Nome completo</Label>
             <Input id="ep-nome" value={nome} onChange={(e) => setNome(e.target.value)} />
