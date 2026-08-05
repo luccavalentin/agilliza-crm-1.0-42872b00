@@ -77,13 +77,13 @@ export const navInterno: NavGroup[] = [
     id: "crm",
     label: "CRM",
     items: [
-      { label: "Clientes", icon: Users, to: "/crm/clientes", perm: { modulo: "crm.clientes" } },
-      { label: "Painel", icon: KanbanSquare, to: "/crm/painel", perm: { modulo: "crm.clientes" } },
+      { label: "Clientes", icon: Users, to: "/crm/clientes" },
+      { label: "Painel", icon: KanbanSquare, to: "/crm/painel" },
       {
         label: "Chat e Follow-up Cliente",
         icon: MessagesSquare,
         to: "/crm/chat",
-        perm: { modulo: "crm.chat" },
+        perm: { modulo: "crm.clientes" },
       },
       {
         label: "Scan IA",
@@ -370,16 +370,16 @@ export const navInterno: NavGroup[] = [
         to: "/rh",
         perm: { modulo: "rh.dashboard" },
         children: [
-          { label: "Dashboard", icon: Gauge, to: "/rh", perm: { modulo: "rh.dashboard" } },
-          { label: "Funcionários", icon: Users, to: "/rh/funcionarios", perm: { modulo: "rh.funcionarios" } },
-          { label: "Novo funcionário", icon: UserRound, to: "/rh/funcionarios/novo", perm: { modulo: "rh.funcionarios" } },
+          { label: "Dashboard", icon: Gauge, to: "/rh" },
+          { label: "Funcionários", icon: Users, to: "/rh/funcionarios" },
+          { label: "Novo funcionário", icon: UserRound, to: "/rh/funcionarios/novo" },
           // Documentos, Férias, Faltas/Ocorrências, Atestados, Benefícios,
           // Adiantamentos, Descontos, Alterações salariais e Prévia da folha
           // ficam centralizados nas abas da ficha do funcionário.
 
-          { label: "Holerites", icon: FileText, to: "/rh/holerites", perm: { modulo: "rh.holerites" } },
-          { label: "Relatórios", icon: BarChart3, to: "/rh/relatorios", perm: { modulo: "rh.relatorios" } },
-          { label: "Configurações", icon: SlidersHorizontal, to: "/rh/configuracoes", perm: { modulo: "rh.configuracoes" } },
+          { label: "Holerites", icon: FileText, to: "/rh/holerites" },
+          { label: "Relatórios", icon: BarChart3, to: "/rh/relatorios" },
+          { label: "Configurações", icon: SlidersHorizontal, to: "/rh/configuracoes" },
         ],
       },
     ],
