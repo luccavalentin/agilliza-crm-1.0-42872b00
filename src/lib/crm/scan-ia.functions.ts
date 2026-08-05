@@ -384,9 +384,10 @@ export const processarLeitura = createServerFn({ method: "POST" })
 
       const instrucaoBase =
         `Você analisa documentos brasileiros para um correspondente bancário.\n` +
-        `PASSO 1 — Classifique o documento em EXATAMENTE um destes tipos: ${TIPOS_DOCUMENTO.join(", ")}.\n` +
+        `PASSO 1 — Identifique e classifique o documento em EXATAMENTE um destes tipos: ${TIPOS_DOCUMENTO.join(", ")}.\n` +
+        `Analise PDFs com múltiplas páginas, fotos (JPG/PNG/WEBP) e digitalizações.\n` +
         (tipoInformado
-          ? `O operador informou o tipo como "${tipoInformado}", mas classifique de forma independente pelo conteúdo real.\n`
+          ? `O operador informou o tipo como "${tipoInformado}", mas classifique de forma independente pelo conteúdo real (ele pode ter selecionado errado).\n`
           : "") +
         `PASSO 2 — Faça OCR de TODAS as páginas (inclusive digitalizações, carimbos e textos em coluna) ` +
         `e extraia os campos previstos para o tipo que você classificou:\n${mapaTipos}\n` +
