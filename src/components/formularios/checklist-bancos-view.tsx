@@ -124,6 +124,7 @@ export function ChecklistBancosView() {
     toast.success("Item atualizado.");
   };
 
+  const brandAtiva = bancoSelecionado ? resolveBancoBrand(bancoSelecionado) : null;
   const docsAtivos = bancoSelecionado ? (checklists[bancoSelecionado] || []) : [];
   const selecionadosAtivos = bancoSelecionado ? (selecionados[bancoSelecionado] || []) : [];
 
