@@ -53,6 +53,16 @@ export const ResultadoRapido = forwardRef<HTMLDivElement, Props>(function Result
             Estimativa baseada nas taxas médias praticadas pelos bancos.
           </p>
         </div>
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-9 gap-2 rounded-xl border-primary/20 bg-primary/5 text-xs font-semibold text-primary hover:bg-primary/10"
+          onClick={() => onBaixar()}
+          disabled={baixando}
+        >
+          <Download className="h-4 w-4" />
+          {baixando ? "Gerando..." : "Baixar Comparativo"}
+        </Button>
       </div>
 
       <div className="p-4 sm:p-5">
