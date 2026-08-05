@@ -195,23 +195,17 @@ export function SecaoTitular({ ctx }: { ctx: SimulacaoCompletaCtx }) {
         </Campo>
         <Campo label="Composição de renda">
           <div className="flex flex-col gap-2 pt-2">
-            <label className="flex items-center gap-2 text-sm">
-              <Checkbox
+            <label className="flex items-center gap-3 text-sm font-medium">
+              <Switch
                 checked={f.compoe_renda}
-                onCheckedChange={(c) => set("compoe_renda", Boolean(c))}
+                onCheckedChange={(c) => {
+                  set("compoe_renda", Boolean(c));
+                  // Quando ativa/desativa a composição, sincroniza a flag interna do cônjuge
+                  set("compoe_renda_conjuge", Boolean(c));
+                }}
               />
-              Incluir cônjuge/coobrigado na renda
+              Compor renda com cônjuge/coobrigado?
             </label>
-            
-            {f.compoe_renda && f.possui_conjuge && (
-              <label className="flex items-center gap-2 ml-6 text-sm text-muted-foreground">
-                <Checkbox
-                  checked={f.compoe_renda_conjuge}
-                  onCheckedChange={(c) => set("compoe_renda_conjuge", Boolean(c))}
-                />
-                Cônjuge compõe renda?
-              </label>
-            )}
           </div>
         </Campo>
 
