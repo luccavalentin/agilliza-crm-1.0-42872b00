@@ -10,6 +10,7 @@
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { getPdfPalette, type PdfPalette } from "@/lib/relatorios/pdf-theme";
+import { AGILLIZA_LOGO_LIGHT, AGILLIZA_LOGO_RATIO } from "@/lib/relatorios/brand-logo";
 import { formatBRL } from "@/lib/simulacao/format";
 
 const MESES_LONGOS = [
@@ -107,34 +108,47 @@ export function gerarHoleritePdf(input: HoleriteInput): { blob: Blob; filename: 
   let y = M;
 
   // ---------------------------------------------------------------- cabeçalho
-  const headH = 46;
+  const headH = 54;
   doc.setDrawColor(P.borda);
   doc.setLineWidth(0.9);
   doc.setFillColor(P.card);
   doc.rect(M, y, W, headH, "FD");
-  // faixa de identidade
-  doc.setFillColor(P.azul);
+  // faixa de identidade coral
+  doc.setFillColor(P.coral);
   doc.rect(M, y, 4, headH, "F");
 
+  // Logo da empresa
+  const logoH = 26;
+  const logoW = logoH * AGILLIZA_LOGO_RATIO;
+  try {
+    // Fundo azul para o logo ser visível se for o LIGHT logo
+    doc.setFillColor(P.azul);
+    doc.roundedRect(M + 12, y + 8, logoW + 8, logoH + 8, 4, 4, "F");
+    doc.addImage(AGILLIZA_LOGO_LIGHT, "PNG", M + 16, y + 12, logoW, logoH, undefined, "FAST");
+  } catch {
+    /* fallback */
+  }
+
+  const textOffset = logoW + 28;
   doc.setFont("helvetica", "bold");
   doc.setFontSize(11);
   doc.setTextColor(P.destaque);
-  doc.text(empregador.toUpperCase(), M + 14, y + 19);
+  doc.text(empregador.toUpperCase(), M + textOffset, y + 22);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(7.5);
   doc.setTextColor(P.cinza);
-  doc.text("Empregador · Departamento Pessoal", M + 14, y + 31);
-  doc.text("Documento gerado eletronicamente pelo sistema Agilliza", M + 14, y + 40);
+  doc.text("Empregador · Departamento Pessoal", M + textOffset, y + 34);
+  doc.text("Documento gerado eletronicamente pelo sistema Agilliza", M + textOffset, y + 44);
 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(10.5);
   doc.setTextColor(P.texto);
-  doc.text("RECIBO DE PAGAMENTO DE SALÁRIO", pageW - M - 12, y + 19, { align: "right" });
+  doc.text("RECIBO DE PAGAMENTO DE SALÁRIO", pageW - M - 12, y + 22, { align: "right" });
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8);
   doc.setTextColor(P.cinza);
-  doc.text(`Competência: ${compLabel}`, pageW - M - 12, y + 32, { align: "right" });
-  doc.text("Art. 464 da CLT", pageW - M - 12, y + 42, { align: "right" });
+  doc.text(`Competência: ${compLabel}`, pageW - M - 12, y + 35, { align: "right" });
+  doc.text("Art. 464 da CLT", pageW - M - 12, y + 45, { align: "right" });
 
   y += headH;
 
