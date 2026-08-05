@@ -2,6 +2,7 @@ import { useState } from "react";
 import { createFileRoute, useNavigate, useRouter, Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { AuthSplitLayout } from "@/components/auth/AuthSplitLayout";
+import { BiometricAuth } from "@/components/auth/BiometricAuth";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -82,6 +83,9 @@ function AuthPage() {
       // Semeia o cache para o shell interno abrir instantaneamente.
       queryClient.setQueryData(["minha-sessao"], sessao);
       if (permissoes) queryClient.setQueryData(["minhas-permissoes"], permissoes);
+
+      // Salva o e-mail para habilitar biometria futura
+      localStorage.setItem("last_logged_in_email", email);
 
       router.invalidate();
       navigate({ to: destinoPosLogin("sistema") });
@@ -188,6 +192,14 @@ function AuthPage() {
             <Button type="submit" className="w-full" disabled={carregando}>
               {carregando ? "Entrando…" : "Entrar"}
             </Button>
+
+            <BiometricAuth 
+              onSuccess={(email) => {
+                // Implementação futura de login automático via biometria
+                console.log("Biometria ok para:", email);
+              }}
+              disabled={carregando}
+            />
           </form>
         </TabsContent>
 

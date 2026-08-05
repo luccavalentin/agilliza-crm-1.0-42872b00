@@ -3,6 +3,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { AuthSplitLayout } from "@/components/auth/AuthSplitLayout";
+import { BiometricAuth } from "@/components/auth/BiometricAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -72,6 +73,9 @@ function PortalParceiro() {
         toast.error("Este acesso não pertence ao Portal do Parceiro.");
         return;
       }
+      // Salva o e-mail para habilitar biometria futura
+      localStorage.setItem("last_logged_in_email", email);
+      
       await queryClient.invalidateQueries({ queryKey: ["minha-sessao"] });
       toast.success("Bem-vindo(a) de volta.");
     } catch {
@@ -130,6 +134,10 @@ function PortalParceiro() {
         <Button type="submit" className="w-full" disabled={carregando}>
           {carregando ? "Entrando…" : "Entrar"}
         </Button>
+        <BiometricAuth 
+          onSuccess={(email) => console.log("Biometria parceiro:", email)}
+          disabled={carregando}
+        />
       </form>
 
       <p className="mt-6 text-center text-xs text-muted-foreground">

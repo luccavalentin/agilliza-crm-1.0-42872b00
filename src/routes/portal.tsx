@@ -3,6 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { createFileRoute } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { AuthSplitLayout } from "@/components/auth/AuthSplitLayout";
+import { BiometricAuth } from "@/components/auth/BiometricAuth";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -53,6 +54,9 @@ function PortalCliente() {
         toast.error(resultado.error ?? "Não foi possível acessar.");
         return;
       }
+      // Salva documento para biometria futura
+      localStorage.setItem("last_logged_in_email", documento);
+      
       navigate({ to: "/cliente/visao-geral", replace: true });
     } catch {
       toast.error("Não foi possível acessar. Tente novamente.");
@@ -101,6 +105,10 @@ function PortalCliente() {
             <Button type="submit" className="w-full" disabled={carregando}>
               {carregando ? "Acessando…" : "Acessar Portal"}
             </Button>
+            <BiometricAuth 
+              onSuccess={(doc) => console.log("Biometria cliente:", doc)}
+              disabled={carregando}
+            />
           </form>
         </TabsContent>
 
@@ -124,6 +132,10 @@ function PortalCliente() {
             <Button type="submit" className="w-full" disabled={carregando}>
               {carregando ? "Acessando…" : "Acessar Portal"}
             </Button>
+            <BiometricAuth 
+              onSuccess={(doc) => console.log("Biometria cliente PJ:", doc)}
+              disabled={carregando}
+            />
           </form>
         </TabsContent>
       </Tabs>
