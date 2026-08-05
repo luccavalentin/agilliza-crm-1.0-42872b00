@@ -3,6 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { createFileRoute } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { AuthSplitLayout } from "@/components/auth/AuthSplitLayout";
+import { BiometricAuth } from "@/components/auth/BiometricAuth";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
