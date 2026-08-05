@@ -93,6 +93,6 @@ export async function gerarChecklistBancoPDF(bancoId: string, clienteNome?: stri
   doc.text(msg, MARGIN, pageH - 15);
 
   // Download
-  const filename = `Checklist - ${bancoBrand?.nome || bancoId} - ${clienteNome || "Documentos"}.pdf`;
+  const filename = `Checklist - ${bancoId.toUpperCase()} - ${clienteNome || "Documentos"}.pdf`;
   doc.save(filename);
 }
