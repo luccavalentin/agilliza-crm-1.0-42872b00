@@ -11,6 +11,7 @@ import {
   type BancoRendaApi,
 } from "@/lib/simulacao/renda";
 import type { SistemaAmortizacao } from "@/lib/simulacao/simulacao-rapida";
+
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -18,7 +19,7 @@ interface Props {
   valorImovel?: number | null;
   prazoMeses: number;
   taxaAno: number;
-  sistema: SistemaAmortizacao;
+  sistema: SistemaAmortizacao | "AMBOS";
   rendaInformada?: number | null;
   bancos?: BancoRendaApi[] | null;
   compoeRendaConjuge?: boolean;
@@ -73,7 +74,7 @@ export function DicaRendaMinima(props: Props) {
     prazo_meses: prazoMeses,
     taxa_ano: taxaAno,
     renda_informada: rendaInformada,
-    sistema,
+    sistema: sistema === "AMBOS" ? "S" : sistema,
   });
 
   const principal = apiEval ?? local;

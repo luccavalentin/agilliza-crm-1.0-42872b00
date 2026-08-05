@@ -112,7 +112,7 @@ function Pagina() {
           valor_financiamento: financiamentoTotalExibido,
           valor_entrada: w.valor_entrada,
           prazo: w.prazo_meses,
-          sistema_amortizacao: w.sistema_amortizacao,
+          sistema_amortizacao: w.sistema_amortizacao === "AMBOS" ? "SAC e PRICE" : w.sistema_amortizacao,
           renda_familiar: w.renda_familiar,
           created_at: new Date().toISOString(),
         },
@@ -123,7 +123,7 @@ function Pagina() {
           taxa_juros_ano: c.taxa_ano * 100,
           prazo_pagamento_max: w.prazo_meses,
           valor_financiamento_max: financiamentoTotalExibido,
-          _sistema: w.sistema_amortizacao === "P" ? "PRICE" : "SAC",
+          _sistema: w.sistema_amortizacao === "AMBOS" ? "SAC e PRICE" : (w.sistema_amortizacao === "P" ? "PRICE" : "SAC"),
           renda_minima: c.resultado.renda_minima,
           cet: c.resultado.cet_ano * 100, // Ajuste para escala 0-100 esperada pelo formatador
         }))
@@ -137,7 +137,7 @@ function Pagina() {
         : comparativo;
 
       for (const c of bancosParaBaixar) {
-        const sistemaCode = w.sistema_amortizacao === "P" ? "P" : "S";
+        const sistemaCode = c.resultado.primeira_parcela === c.resultado.ultima_parcela ? "P" : "S";
         baixarSimulacaoDetalhadaPDF({
           simulacao: {
             numero_simulacao: null,
@@ -147,7 +147,7 @@ function Pagina() {
             valor_financiamento: financiamentoTotalExibido,
             valor_entrada: w.valor_entrada,
             prazo: w.prazo_meses,
-            sistema_amortizacao: w.sistema_amortizacao,
+            sistema_amortizacao: sistemaCode,
             created_at: new Date().toISOString(),
           },
           bancos: [

@@ -201,7 +201,7 @@ export function avaliarRendaMinima(params: {
   valor_financiamento: number;
   prazo_meses: number;
   taxa_ano: number;
-  sistema: SistemaAmortizacao;
+  sistema: SistemaAmortizacao | "AMBOS";
   renda_informada?: number | null;
   /** Valor do imóvel — usado apenas como fallback se não houver valor financiado. */
   valor_imovel?: number | null;
@@ -235,7 +235,7 @@ export function avaliarRendaMinima(params: {
     valor_financiamento: base,
     prazo_meses,
     taxa_ano,
-    sistema,
+    sistema: sistema === "AMBOS" ? "S" : sistema,
   });
 
   // Encargos obrigatórios inclusos pelos bancos no comprometimento de renda.
