@@ -41,12 +41,12 @@ const MARGIN = 36;
 
 
 // ---------------------------------------------------------------------------
-// Helpers de formatação
+// Helpers de formatação e nomes de arquivo
 // ---------------------------------------------------------------------------
 
 function pctTxt(v: number | null | undefined, sufixo = "a.a.", casas = 4): string {
   if (v == null || Number.isNaN(v)) return "—";
-  return `${v.toLocaleString("pt-BR", {  minimumFractionDigits: 2, maximumFractionDigits: casas })}% ${sufixo}`.trim();
+  return `${v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: casas })}% ${sufixo}`.trim();
 }
 
 function dataTxt(v: unknown): string {
@@ -62,6 +62,31 @@ function produtoLabel(s: any): string {
     : s.produto === "financiamento_imobiliario"
       ? "Financiamento imobiliário"
       : "Operação de crédito";
+}
+
+/**
+ * Gera o nome do arquivo PDF conforme padrão solicitado:
+ * Banco - CV [vImovel] - Finan [vFinan] - Prazo [Prazo] [Sistema] - RENDA [Renda] (+DOC [Doc] se existir)
+ */
+export function gerarNomeArquivoPdf(b: any, s: any, d: DetalheBanco | null): string {
+  const banco = (b?.nome_banco ?? "Banco").trim();
+  const cv = Math.round(d?.valorImovel ?? s.valor_imovel ?? 0);
+  const finan = Math.round(d?.financiamentoTotal ?? d?.valorFinanciamento ?? s.valor_financiamento ?? 0);
+  const prazo = d?.prazoMeses ?? s.prazo ?? 0;
+  const sistema = sistemaDoBanco(b, s);
+
+  const rendaMin = rendaMinimaDoBanco(b);
+  const rendaTxt = rendaMin ? `RENDA ${Math.round(rendaMin / 1000)}k` : "";
+
+  // Verifica se há despesas financiadas para adicionar o +DOC
+  const docVal = d?.despesasFinanciadas ?? 0;
+  const docTxt = docVal > 0 ? ` +DOC ${Math.round(docVal / 1000)}k` : "";
+
+  const fmt = (v: number) =>
+    v.toLocaleString("pt-BR", { maximumFractionDigits: 0 }).replace(/\./g, "");
+
+  // Exemplo: Bradesco - CV 240 - Finan 180 - Prazo 420 SAC - RENDA 5k +DOC 2k
+  return `${banco} - CV ${fmt(cv / 1000)}k - Finan ${fmt(finan / 1000)}k - Prazo ${prazo} ${sistema} - ${rendaTxt}${docTxt}`.trim();
 }
 
 // ---------------------------------------------------------------------------
