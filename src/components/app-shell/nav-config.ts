@@ -301,6 +301,7 @@ export const navInterno: NavGroup[] = [
             icon: Presentation,
             to: "/formularios/powerpoint",
             perm: { modulo: "documentos.formularios" },
+          },
         ],
       },
       {
