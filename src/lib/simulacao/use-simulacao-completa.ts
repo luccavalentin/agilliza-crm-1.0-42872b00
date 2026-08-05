@@ -184,8 +184,13 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
         next.valor_entrada = Math.round((next.valor_imovel || 0) * pctEntradaDefault);
       if (k === "valor_imovel" || k === "valor_entrada")
         next.valor_financiamento = Math.max(0, next.valor_imovel - next.valor_entrada);
-      if (k === "estado_civil") next.possui_conjuge = v === "CA" || v === "UE";
+      if (k === "estado_civil") {
+        next.possui_conjuge = v === "CA" || v === "UE";
+        // Quando for casado/UE, por padrão ativa compo_renda_conjuge
+        if (next.possui_conjuge) next.compoe_renda_conjuge = true;
+      }
       return next;
+
     });
   }
 
