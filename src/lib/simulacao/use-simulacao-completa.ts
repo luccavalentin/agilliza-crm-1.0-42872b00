@@ -185,11 +185,12 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
       if (k === "valor_imovel" || k === "valor_entrada")
         next.valor_financiamento = Math.max(0, (next.valor_imovel || 0) - (next.valor_entrada || 0));
 
-      if (k === "estado_civil") {
         next.possui_conjuge = v === "CA" || v === "UE";
         // Quando for casado/UE, por padrão ativa compo_renda_conjuge
-        if (next.possui_conjuge) next.compoe_renda_conjuge = true;
-      }
+        if (next.possui_conjuge) {
+          next.compoe_renda_conjuge = true;
+          next.compoe_renda = true;
+        }
       return next;
 
     });
@@ -620,7 +621,7 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
   }
 
 
-  const mostraConjuge = f.possui_conjuge || f.compoe_renda;
+  const mostraConjuge = f.possui_conjuge;
 
   const obterClienteCrmFn = useServerFn(obterClienteCRM);
   const { data: crmVinculado } = useQuery({
