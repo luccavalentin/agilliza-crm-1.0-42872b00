@@ -639,7 +639,7 @@ export function baixarSimulacaoPDF(input: SimulacaoPdfInput) {
     { label: "Entrada", valor: formatBRL(s.valor_entrada) },
     { label: "Prazo", valor: s.prazo ? `${s.prazo} meses` : "—" },
     { label: "Sistema", valor: sistemaKpi },
-    { label: "FGTS", valor: s.utiliza_fgts === "S" ? "Sim" : "Não" },
+    ...(s.renda_familiar ? [{ label: "Renda familiar", valor: formatBRL(s.renda_familiar) }] : []),
   ];
 
   const columns: ReportColumn[] = [
