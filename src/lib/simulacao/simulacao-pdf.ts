@@ -429,6 +429,7 @@ function anexarDetalhesBancos(doc: jsPDF, pageW: number, pageH: number, s: any, 
     const d = extrairDetalheBanco(b?.raw_response);
     const sist = sistemaDoBanco(b, s);
     const nomeBanco = `${b?.nome_banco ?? "Banco"}${sist !== "—" ? ` — ${sist}` : ""}`;
+    const rendaMin = rendaMinimaDoBanco(b);
     const parcelas = d?.parcelas ?? [];
 
     doc.addPage("a4", "landscape");
