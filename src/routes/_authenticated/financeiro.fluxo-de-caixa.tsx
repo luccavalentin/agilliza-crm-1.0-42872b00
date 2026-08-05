@@ -140,7 +140,7 @@ function FiltroPeriodo({
   const ativo = !!(de || ate);
 
   return (
-    <div className="grid w-full grid-cols-1 gap-2 rounded-xl border border-border/70 bg-card/70 p-2 shadow-sm sm:flex sm:w-auto sm:flex-wrap sm:items-end">
+    <div className="grid w-full grid-cols-1 gap-2 rounded-xl border border-border/50 bg-muted/30 p-2 sm:flex sm:w-auto sm:flex-wrap sm:items-end">
       <div className="grid grid-cols-2 items-end gap-2 sm:flex sm:items-center">
         <CalendarRange className="hidden size-4 shrink-0 text-muted-foreground sm:block" />
         <div className="min-w-0 space-y-1">
@@ -169,8 +169,9 @@ function FiltroPeriodo({
         </div>
       </div>
       <div className="flex items-center gap-1.5">
-        <Button size="sm" className="h-9 flex-1 sm:flex-none" onClick={() => onAplicar(rascDe, rascAte)}>
+        <Button size="sm" className="h-9 flex-1 sm:flex-none bg-[#000080] hover:bg-[#000060]" onClick={() => onAplicar(rascDe, rascAte)}>
           Aplicar
+
         </Button>
         <Button
           size="sm"
@@ -375,18 +376,19 @@ function Pagina() {
 
 
   return (
-    <div className="mx-auto w-full max-w-[1600px] space-y-6 bg-gradient-to-b from-background to-muted/20 min-h-screen">
+    <div className="mx-auto w-full max-w-[1600px] space-y-6 bg-[#f8fafc] min-h-screen">
       <div className="p-4 sm:p-5 md:space-y-8 md:p-8">
       <PanelHeader
-        variant="dark"
-        eyebrow="Relatório Gerencial · Financeiro"
-        titulo="Fluxo de Caixa Estratégico"
-        descricao="Acompanhe o saldo realizado e as projeções futuras de entradas e saídas de forma consolidada e executiva."
+        variant="light"
+        eyebrow="FINANCEIRO · FLUXO DE CAIXA"
+        titulo="Fluxo de caixa"
+        descricao="Caixa realizado e projeção de entradas e saídas em aberto."
         atualizadoEm={atualizado}
         actions={
+
           <div className="flex flex-wrap items-end justify-start gap-2 sm:justify-end">
             <Tabs value={gran} onValueChange={(v) => setGran(v as typeof gran)}>
-              <TabsList className="h-auto gap-1 rounded-xl bg-muted/50 p-1.5 shadow-sm">
+              <TabsList className="h-auto gap-1 rounded-xl bg-muted/30 p-1.5">
                 <TabsTrigger value="dia" className="rounded-lg px-3 py-1.5">
                   Diário
                 </TabsTrigger>
@@ -457,11 +459,15 @@ function Pagina() {
       )}
 
       {vazio ? (
-        <PanelCard titulo="Sem movimentações">
-          <p className="py-10 text-center text-sm text-muted-foreground">
-            Não há lançamentos realizados nem contas em aberto para projetar.
-          </p>
-        </PanelCard>
+        <div className="rounded-2xl border border-border/50 bg-white p-12">
+          <SectionTitle>Sem movimentações</SectionTitle>
+          <div className="flex min-h-[200px] flex-col items-center justify-center space-y-2 text-center">
+            <p className="text-sm text-muted-foreground">
+              Não há lançamentos realizados nem contas em aberto para projetar.
+            </p>
+          </div>
+        </div>
+
       ) : (
         <>
           <SectionTitle>Posição de caixa</SectionTitle>
@@ -534,6 +540,7 @@ function Pagina() {
             descricao={det?.descricao}
             linhas={det?.linhas ?? []}
           />
+
 
 
           <SectionTitle>Evolução do caixa</SectionTitle>

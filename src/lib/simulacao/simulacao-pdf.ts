@@ -1044,9 +1044,23 @@ function rendaNecessaria(s: any, bancos: any[]): number | null {
 
 /**
  * Nome de arquivo descritivo pedido pela operação, ex.:
- * "Bradesco,Caixa-SAC-C e V 420k - Finan 350k - 420 meses - renda 28k".
+ * "Comparativos bancos Itau Tx 1.20, santander tx 2.0..."
  */
 export function nomeDescritivo(s: any, bancos: any[], rendaOverride?: number | null): string {
+  const isComparativo = (bancos ?? []).length > 1;
+
+  if (isComparativo) {
+    const bancosTxt = (bancos ?? [])
+      .map((b) => {
+        const d = extrairDetalheBanco(b.raw_response);
+        const taxa = d?.taxaJurosMes ?? (b.taxa_juros_ano ? b.taxa_juros_ano / 12 : 0);
+        const taxaStr = taxa > 0 ? ` Tx ${taxa.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "";
+        return `${b.nome_banco}${taxaStr}`;
+      })
+      .join(", ");
+    return `Comparativos bancos ${bancosTxt}`;
+  }
+
   const nomes = bancos.map((b) => b?.nome_banco).filter(Boolean);
   const bancoTxt = nomes.length ? Array.from(new Set(nomes)).join(",") : "Simulacao";
   const tabela = tabelaLabel(s, bancos);
