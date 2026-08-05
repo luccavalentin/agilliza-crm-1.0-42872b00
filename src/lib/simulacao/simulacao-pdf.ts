@@ -462,9 +462,15 @@ function anexarDetalhesBancos(doc: jsPDF, pageW: number, pageH: number, s: any, 
     doc.text("Resumo do Pagamento", MARGIN, gy);
     gy += 8;
     const rGap = 8;
-    const rCardW = (leftW - rGap * 2) / 3;
+    const rCardW = (leftW - rGap * 3) / 4;
     const rCardH = 40;
-    resumo.forEach((it, i) => {
+    
+    const resumoExtendido = [
+      ...resumo,
+      { label: "Renda mínima necessária", valor: brlOuTraco(rendaMin) }
+    ];
+
+    resumoExtendido.forEach((it, i) => {
       const x = MARGIN + i * (rCardW + rGap);
       doc.setFillColor(P.card);
       doc.setDrawColor(P.borda);
@@ -472,12 +478,12 @@ function anexarDetalhesBancos(doc: jsPDF, pageW: number, pageH: number, s: any, 
       doc.roundedRect(x, gy, rCardW, rCardH, 3, 3, "FD");
       doc.setTextColor(P.cinza);
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(6);
-      doc.text(it.label.toUpperCase(), x + 8, gy + 14, { maxWidth: rCardW - 12 });
+      doc.setFontSize(5.5); // Ligeiramente menor para caber melhor em 4 cards
+      doc.text(it.label.toUpperCase(), x + 6, gy + 14, { maxWidth: rCardW - 10 });
       doc.setTextColor(P.destaque);
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(11);
-      doc.text(it.valor, x + 8, gy + 31, { maxWidth: rCardW - 12 });
+      doc.setFontSize(9); // Ajustado para 9 para garantir que caiba com 4 colunas
+      doc.text(it.valor, x + 6, gy + 31, { maxWidth: rCardW - 10 });
     });
     gy += rCardH + 12;
 
