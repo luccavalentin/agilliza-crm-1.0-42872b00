@@ -189,14 +189,27 @@ export function SecaoTitular({ ctx }: { ctx: SimulacaoCompletaCtx }) {
           <Erro erros={erros} campo="celular" />
         </Campo>
         <Campo label="Composição de renda">
-          <label className="flex items-center gap-2 pt-2 text-sm">
-            <Checkbox
-              checked={f.compoe_renda}
-              onCheckedChange={(c) => set("compoe_renda", Boolean(c))}
-            />
-            Incluir cônjuge/coobrigado na renda
-          </label>
+          <div className="flex flex-col gap-2 pt-2">
+            <label className="flex items-center gap-2 text-sm">
+              <Checkbox
+                checked={f.compoe_renda}
+                onCheckedChange={(c) => set("compoe_renda", Boolean(c))}
+              />
+              Incluir cônjuge/coobrigado na renda
+            </label>
+            
+            {f.compoe_renda && f.possui_conjuge && (
+              <label className="flex items-center gap-2 ml-6 text-sm text-muted-foreground">
+                <Checkbox
+                  checked={f.compoe_renda_conjuge}
+                  onCheckedChange={(c) => set("compoe_renda_conjuge", Boolean(c))}
+                />
+                Cônjuge compõe renda?
+              </label>
+            )}
+          </div>
         </Campo>
+
       </div>
       {podePuxarConjugeCrm && (
         <div className="flex flex-col gap-2 rounded-lg border border-primary/30 bg-primary/5 p-3 sm:flex-row sm:items-center sm:justify-between">
