@@ -668,12 +668,12 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
   }, [mostraConjuge, f.nome_conjuge, f.cpf_conjuge, f.data_nascimento_conjuge]);
 
   /** Inverte titular ⇄ cônjuge. */
-  function inverterPrincipal() {
+  const inverterPrincipal = useCallback(() => {
     setF(patchInverterPrincipal);
     setInvertido((v) => !v);
     setErros({});
     toast.success("Titular e cônjuge invertidos. Confira os dados obrigatórios.");
-  }
+  }, []);
 
   /** Seleciona o titular a partir de um cliente do CRM. */
   function selecionarClienteCRM(c: any) {
