@@ -24,7 +24,9 @@ import {
   ArrowUpRight,
   CalendarRange,
   X,
+  Trash2,
 } from "lucide-react";
+
 import { assertModuloPermitido } from "@/lib/route-guards";
 import {
   obterFluxoCaixaAnalitico,
