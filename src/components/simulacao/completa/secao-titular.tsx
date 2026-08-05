@@ -118,10 +118,12 @@ export function SecaoTitular({ ctx }: { ctx: SimulacaoCompletaCtx }) {
                 prazoMeses={f.prazo}
                 taxaAno={ctx.melhorTaxaAno}
                 sistema="P"
-                rendaInformada={f.renda_total}
+                rendaInformada={ctx.rendaConsiderada}
+                compoeRendaConjuge={f.compoe_renda && f.compoe_renda_conjuge}
               />
             </div>
           )}
+
         </Campo>
         {f.sistema_amortizacao === "B" && (
           <Campo label={<>Renda familiar — PRICE (R$) <Ast /></>}>
