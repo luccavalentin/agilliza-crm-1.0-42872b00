@@ -895,7 +895,7 @@ function criarDocSimulacaoDetalhada({
 
   return {
     doc,
-    nome: sanitizarNomeArquivo(filePrefix || nomeDescritivo(s, lista)),
+    nome: sanitizarNomeArquivo(lista.length === 1 ? gerarNomeArquivoPdf(lista[0], s, extrairDetalheBanco(lista[0].raw_response)) : (filePrefix || nomeDescritivo(s, lista))),
     totalBancos: lista.length,
   };
 }
