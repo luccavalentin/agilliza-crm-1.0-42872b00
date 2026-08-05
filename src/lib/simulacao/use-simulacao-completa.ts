@@ -183,7 +183,8 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
       if (k === "valor_imovel" && !entradaTocada)
         next.valor_entrada = Math.round((next.valor_imovel || 0) * pctEntradaDefault);
       if (k === "valor_imovel" || k === "valor_entrada")
-        next.valor_financiamento = Math.max(0, next.valor_imovel - next.valor_entrada);
+        next.valor_financiamento = Math.max(0, (next.valor_imovel || 0) - (next.valor_entrada || 0));
+
       if (k === "estado_civil") {
         next.possui_conjuge = v === "CA" || v === "UE";
         // Quando for casado/UE, por padrão ativa compo_renda_conjuge
