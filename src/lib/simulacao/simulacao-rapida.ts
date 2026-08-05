@@ -70,6 +70,10 @@ export function calcularSimulacao({
   const n = Math.max(1, Math.round(prazo_meses));
   const pv = Math.max(0, valor_financiamento);
 
+  const cetAno = taxa_ano * 1.05; // Estimativa simples para CET na rápida
+  const fatorRenda = sistema === "P" ? 0.25 : 0.30;
+  const rendaMin = (pv * i) / (1 - Math.pow(1 + i, -n)) / fatorRenda;
+
   if (sistema === "P") {
     // PRICE: parcela fixa
     const fator = (i * Math.pow(1 + i, n)) / (Math.pow(1 + i, n) - 1);
@@ -82,6 +86,8 @@ export function calcularSimulacao({
       total_pago: total,
       total_juros: total - pv,
       taxa_mes: i,
+      renda_minima: Math.max(rendaMin, parcela / 0.30),
+      cet_ano: cetAno,
     };
   }
 
