@@ -56,6 +56,8 @@ export const completaSchema = z.object({
   // Cônjuge / composição de renda
   possui_conjuge: z.boolean().default(false),
   compoe_renda: z.boolean().default(false),
+  compoe_renda_conjuge: z.boolean().default(true),
+
   nome_conjuge: z.string().optional().nullable(),
   cpf_conjuge: z.string().optional().nullable(),
   data_nascimento_conjuge: z.string().optional().nullable(),
