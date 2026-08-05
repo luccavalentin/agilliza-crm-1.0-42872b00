@@ -31,6 +31,8 @@ export function EditarDemandaDialog({
   demanda,
   onSalva,
   trigger,
+  abertoOverride,
+  onOpenChangeOverride,
 }: {
   demanda: {
     id: string;
@@ -41,9 +43,13 @@ export function EditarDemandaDialog({
   };
   onSalva: () => void;
   trigger?: ReactNode;
+  abertoOverride?: boolean;
+  onOpenChangeOverride?: (open: boolean) => void;
 }) {
 
-  const [aberto, setAberto] = useState(false);
+  const [abertoInterno, setAbertoInterno] = useState(false);
+  const aberto = abertoOverride ?? abertoInterno;
+  const setAberto = onOpenChangeOverride ?? setAbertoInterno;
   const [titulo, setTitulo] = useState(demanda.titulo);
   const [descricao, setDescricao] = useState(demanda.descricao ?? "");
   const [prioridade, setPrioridade] = useState<Prioridade>(demanda.prioridade);
