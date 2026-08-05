@@ -140,7 +140,7 @@ function FiltroPeriodo({
   const ativo = !!(de || ate);
 
   return (
-    <div className="grid w-full grid-cols-1 gap-2 rounded-xl border border-border/70 bg-card/70 p-2 shadow-sm sm:flex sm:w-auto sm:flex-wrap sm:items-end">
+    <div className="grid w-full grid-cols-1 gap-2 rounded-xl border border-border/50 bg-muted/30 p-2 sm:flex sm:w-auto sm:flex-wrap sm:items-end">
       <div className="grid grid-cols-2 items-end gap-2 sm:flex sm:items-center">
         <CalendarRange className="hidden size-4 shrink-0 text-muted-foreground sm:block" />
         <div className="min-w-0 space-y-1">
