@@ -160,7 +160,8 @@ function drawTituloExtrato(
   doc.setTextColor(P.cinza);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8);
-  doc.text(`${dataLabel}: ${dataTxt(s.created_at ?? new Date())}`, pageW / 2, y + 12, {
+  const dataSim = s.created_at ? new Date(s.created_at) : new Date();
+  doc.text(`${dataLabel}: ${dataTxt(dataSim)}`, pageW / 2, y + 12, {
     align: "center",
   });
   return y + 24;
