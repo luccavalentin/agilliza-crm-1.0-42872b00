@@ -598,9 +598,10 @@ function anexarDetalhesBancos(doc: jsPDF, pageW: number, pageH: number, s: any, 
 export function baixarSimulacaoPDF(input: SimulacaoPdfInput) {
   const { simulacao: s, bancos } = input;
 
-  // Com um único banco não há o que comparar: emitir o extrato detalhado com o
-  // plano completo de parcelas em vez de uma tabela comparativa de uma linha.
-  if ((bancos ?? []).length === 1) {
+  // Se for uma simulação rápida (sem raw_response detalhado), gera apenas o comparativo consolidado.
+  // Se for uma simulação completa com um único banco, emite o extrato detalhado com parcelas.
+  const isRapida = (bancos ?? []).every(b => !b.raw_response?.simulacao);
+  if (!isRapida && (bancos ?? []).length === 1) {
     baixarSimulacaoDetalhadaPDF(input);
     return;
   }
