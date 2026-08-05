@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { useRouter } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -624,7 +624,7 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
   const mostraConjuge = f.possui_conjuge;
 
   const obterClienteCrmFn = useServerFn(obterClienteCRM);
-  const { data: crmVinculado } = useQuery({
+  const { data: crmVinculado, refetch: refetchCrm } = useQuery({
     queryKey: ["cliente-crm-vinculado", f.cliente_id],
     queryFn: () => obterClienteCrmFn({ data: { id: f.cliente_id as string } }),
     enabled: Boolean(f.cliente_id),
@@ -638,11 +638,11 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
   const podePuxarConjugeCrm =
     crmTemConjuge && (!String(f.nome_conjuge ?? "").trim() || faltaConjugeDoCRM(f, crmVinculado));
 
-  function puxarConjugeDoCRM() {
+  const puxarConjugeDoCRM = useCallback(() => {
     if (!crmVinculado) return;
     setF((prev) => patchPuxarConjugeCRM(prev, crmVinculado));
     toast.success("Dados do cônjuge puxados do cadastro do CRM.");
-  }
+  }, [crmVinculado]);
 
   // Casado/união estável: completa automaticamente os dados do cônjuge com o
   // que existe no CRM (merge — nunca sobrescreve o que o usuário digitou).
