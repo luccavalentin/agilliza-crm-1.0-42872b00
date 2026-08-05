@@ -467,9 +467,8 @@ function Pagina() {
               {limpando ? "Limpando..." : "Limpar Fluxo"}
             </Button>
           </div>
-
-        }
-      />
+        </div>
+      </div>
 
       {(de || ate) && (
         <p className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
