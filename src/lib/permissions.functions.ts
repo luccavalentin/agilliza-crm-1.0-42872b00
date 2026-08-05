@@ -19,7 +19,7 @@ export const getMinhasPermissoes = createServerFn({ method: "GET" })
 
     const { data: temTudo } = await supabase.rpc("has_any_role", {
       _user_id: userId,
-      _roles: ["admin", "correspondente"],
+      _roles: ["admin", "correspondente", "gestao"],
     });
 
     if (temTudo) {
