@@ -46,7 +46,7 @@ function Pagina() {
   const resultadoRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if ((simulacaoResultadoId || simulacaoResultadoIdPrice) && resultadoRef.current) {
+    if ((simulacaoResultadoId || simulacaoResultadoIdPrice || simulacaoResultadoIdSecundario) && resultadoRef.current) {
       resultadoRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   }, [simulacaoResultadoId, simulacaoResultadoIdPrice]);
