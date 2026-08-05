@@ -13,31 +13,31 @@ import slide4Asset from "@/assets/modelos/slide-4.png.asset.json";
 
 const MODELOS_PPT = [
   {
-    id: "apresentacao-institucional",
-    titulo: "Apresentação Institucional",
-    descricao: "Design moderno e profissional alinhado à marca Agilliza. Ideal para parcerias e reuniões de alto impacto.",
+    id: "layout-moderno",
+    titulo: "Layout Moderno Agilliza",
+    descricao: "Design minimalista e sofisticado, focado na paleta de cores institucional. Sem conteúdo textual, apenas grids e marcas.",
     url: "/modelos/APRESENTAÇÃO_AGILLIZA.pptx",
     cor: "#0F172A",
     slides: [slide1Asset.url, slide2Asset.url, slide3Asset.url, slide4Asset.url],
-    tamanho: "3.2 MB",
+    tamanho: "1.8 MB",
   },
   {
-    id: "proposta-comercial",
-    titulo: "Proposta Comercial",
-    descricao: "Modelo focado em fechamento de novos negócios, com gatilhos mentais e estrutura de conversão.",
+    id: "layout-dinamico",
+    titulo: "Layout Dinâmico Agilliza",
+    descricao: "Variação com elementos geométricos e tons contrastantes da marca. Ideal para apresentações que exigem maior impacto visual.",
     url: "/modelos/APRESENTAÇÃO_AGILLIZA.pptx",
     cor: "#2563EB",
     slides: [slide1Asset.url, slide2Asset.url, slide3Asset.url, slide4Asset.url],
-    tamanho: "3.2 MB",
+    tamanho: "1.9 MB",
   },
   {
-    id: "treinamento-parceiro",
-    titulo: "Treinamento para Parceiros",
-    descricao: "Conteúdo educativo detalhado sobre os processos e diferenciais da Agilliza.",
+    id: "layout-executivo",
+    titulo: "Layout Executivo Agilliza",
+    descricao: "Estrutura focada em clareza e autoridade. Design limpo com aplicações discretas da identidade visual.",
     url: "/modelos/APRESENTAÇÃO_AGILLIZA.pptx",
-    cor: "#059669",
+    cor: "#1E293B",
     slides: [slide1Asset.url, slide2Asset.url, slide3Asset.url, slide4Asset.url],
-    tamanho: "3.2 MB",
+    tamanho: "1.7 MB",
   },
 ];
 
@@ -66,7 +66,7 @@ export function PowerPointModelosView() {
         icon={<Presentation className="h-5 w-5" />}
         eyebrow="Documentos · Apresentações"
         titulo="Modelos de PowerPoint"
-        descricao="Visualize e baixe modelos profissionais para suas reuniões e treinamentos."
+        descricao="Baixe layouts profissionais com a identidade visual da Agilliza, prontos para receber seu conteúdo."
         accent={modeloAtual.cor}
         acoes={
           <Button onClick={() => baixar(modeloAtual.url, modeloAtual.titulo)} className="gap-2">
