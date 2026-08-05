@@ -18,7 +18,6 @@ export const ESCOPOS: { value: EscopoDados; label: string }[] = [
 ];
 
 export const PAPEIS_ALVO: { value: string; label: string }[] = [
-  { value: "gestor", label: "Gestor" },
   { value: "gestor", label: "Gestão" },
   { value: "comercial", label: "Comercial" },
   { value: "analista", label: "Analista" },
@@ -35,7 +34,6 @@ export const PORTAIS: { value: AcessoTipo; label: string }[] = [
 export const PAPEL_LABEL: Record<string, string> = {
   gestor: "Gestão",
   comercial: "Comercial",
-  comercial: "Comercial",
   analista: "Analista",
   corretor: "Corretor",
   imobiliaria: "Imobiliária",
@@ -48,7 +46,7 @@ export function estadoInicial(nivel: NivelAcesso): MatrizEstado {
   for (const mod of CATALOGO_MODULOS) {
     for (const a of mod.acoes) {
       const atual = nivel.permissoes.find(
-        (p) => p.modulo === mod.modulo && p.acao === a.acao,
+          (p) => p.modulo === mod.modulo && p.acao === a.acao,
       );
       estado[chave(mod.modulo, a.acao)] = {
         permitido: atual?.permitido ?? false,
