@@ -387,7 +387,7 @@ function Pagina() {
 
           <div className="flex flex-wrap items-end justify-start gap-2 sm:justify-end">
             <Tabs value={gran} onValueChange={(v) => setGran(v as typeof gran)}>
-              <TabsList className="h-auto gap-1 rounded-xl bg-muted/50 p-1.5 shadow-sm">
+              <TabsList className="h-auto gap-1 rounded-xl bg-muted/30 p-1.5">
                 <TabsTrigger value="dia" className="rounded-lg px-3 py-1.5">
                   Diário
                 </TabsTrigger>
