@@ -247,7 +247,7 @@ export function ResultadoInlineAmbos({ simulacaoIdSac, simulacaoIdPrice, onFecha
             <h2 className="truncate text-base font-semibold tracking-tight text-foreground">
               Resultado — {numeros}
             </h2>
-            <ToneBadge tone="info">Simulação mista · SAC + PRICE</ToneBadge>
+            <ToneBadge tone="info">OverPrice · SAC + PRICE</ToneBadge>
           </div>
           <p className="mt-0.5 text-xs text-muted-foreground">
             Prazo: <span className="font-medium text-foreground">{ref?.prazo} meses</span>

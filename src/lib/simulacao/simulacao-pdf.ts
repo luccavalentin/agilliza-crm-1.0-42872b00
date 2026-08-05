@@ -86,7 +86,8 @@ export function gerarNomeArquivoPdf(b: any, s: any, d: DetalheBanco | null): str
     v.toLocaleString("pt-BR", { maximumFractionDigits: 0 }).replace(/\./g, "");
 
   // Exemplo: Bradesco - CV 240 - Finan 180 - Prazo 420 SAC - RENDA 5k +DOC 2k
-  return `${banco} - CV ${fmt(cv / 1000)}k - Finan ${fmt(finan / 1000)}k - Prazo ${prazo} ${sistema} - ${rendaTxt}${docTxt}`.trim();
+  const sistemaPdf = sistema === "AMBOS" ? "OverPrice" : sistema;
+  return `${banco} - CV ${fmt(cv / 1000)}k - Finan ${fmt(finan / 1000)}k - Prazo ${prazo} ${sistemaPdf} - ${rendaTxt}${docTxt}`.trim();
 }
 
 // ---------------------------------------------------------------------------
