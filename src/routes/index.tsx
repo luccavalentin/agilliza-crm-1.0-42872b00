@@ -55,7 +55,7 @@ function Landing() {
   return (
     <div className="landing-bg flex min-h-[100dvh] flex-col">
       <LandingFx />
-      <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col items-center justify-center px-4 py-12 sm:py-16">
+      <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col items-center justify-center px-4 py-8 sm:py-12 md:py-16">
         <div className="mb-10 flex flex-col items-center gap-4 text-center sm:mb-14">
           <Logo variant="light" className="h-14 sm:h-16" />
           <h1 className="text-2xl font-bold tracking-tight text-primary-foreground sm:text-4xl">
@@ -66,7 +66,7 @@ function Landing() {
           </p>
         </div>
 
-        <div className="grid w-full max-w-md gap-3 sm:max-w-3xl sm:grid-cols-3 sm:gap-5">
+        <div className="grid w-full max-w-md gap-3 sm:max-w-3xl sm:grid-cols-2 md:grid-cols-3 sm:gap-4 md:gap-5">
           {CARDS.map(({ to, titulo, subtitulo, icon: Icon, destaque }) => (
             <Link key={to} to={to} className="group focus-visible:outline-none">
               <Card

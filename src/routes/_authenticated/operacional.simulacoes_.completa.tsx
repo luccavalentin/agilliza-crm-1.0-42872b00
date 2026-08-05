@@ -125,7 +125,7 @@ function Pagina() {
   ];
 
   return (
-    <div className="mx-auto w-full max-w-none space-y-4 p-4 md:p-8">
+    <div className="mx-auto w-full max-w-none space-y-4 p-3 sm:p-4 md:p-8">
       <Button
         variant="ghost"
         size="sm"
