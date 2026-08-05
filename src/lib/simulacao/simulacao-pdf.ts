@@ -507,11 +507,11 @@ function anexarDetalhesBancos(doc: jsPDF, pageW: number, pageH: number, s: any, 
     }), { amort: 0, juros: 0, parcela: 0 });
 
     const rodapeSoma = [
-      { content: "TOTAIS", colSpan: 2, styles: { halign: "center", fontStyle: "bold" } },
-      { content: formatBRL(somas.amort), styles: { halign: "right", fontStyle: "bold" } },
-      { content: formatBRL(somas.juros), styles: { halign: "right", fontStyle: "bold" } },
-      { content: formatBRL(somas.parcela), styles: { halign: "right", fontStyle: "bold" } },
-      { content: "", styles: { halign: "right" } }
+      { content: "TOTAIS", colSpan: 2, styles: { halign: "center" as const, fontStyle: "bold" as const } },
+      { content: formatBRL(somas.amort), styles: { halign: "right" as const, fontStyle: "bold" as const } },
+      { content: formatBRL(somas.juros), styles: { halign: "right" as const, fontStyle: "bold" as const } },
+      { content: formatBRL(somas.parcela), styles: { halign: "right" as const, fontStyle: "bold" as const } },
+      { content: "", styles: { halign: "right" as const } }
     ];
 
     const cabecalho = [["Parc.", "Data", "Amortização", "Juros", "Parcela", "Saldo devedor"]];
@@ -525,6 +525,7 @@ function anexarDetalhesBancos(doc: jsPDF, pageW: number, pageH: number, s: any, 
         lineWidth: 0.25,
       },
       headStyles: { fillColor: P.azul, textColor: P.headText, fontStyle: "bold" as const, fontSize: 7 },
+      footStyles: { fillColor: P.azul, textColor: P.headText, fontStyle: "bold" as const, fontSize: 7 },
       alternateRowStyles: { fillColor: P.card },
       columnStyles: {
         0: { halign: "right" as const },
