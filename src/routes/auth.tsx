@@ -192,6 +192,14 @@ function AuthPage() {
             <Button type="submit" className="w-full" disabled={carregando}>
               {carregando ? "Entrando…" : "Entrar"}
             </Button>
+
+            <BiometricAuth 
+              onSuccess={(email) => {
+                // Implementação futura de login automático via biometria
+                console.log("Biometria ok para:", email);
+              }}
+              disabled={carregando}
+            />
           </form>
         </TabsContent>
 
