@@ -206,9 +206,15 @@ export function EditarPessoaDialog({
               </Button>
             </div>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="ep-tel">Telefone</Label>
-            <Input id="ep-tel" value={telefone} onChange={(e) => setTelefone(e.target.value)} />
+          <div className="space-y-2 pb-2">
+            <Label htmlFor="ep-tel" className="text-sm font-semibold">Telefone</Label>
+            <Input 
+              id="ep-tel" 
+              value={telefone} 
+              onChange={(e) => setTelefone(e.target.value)}
+              placeholder="(00) 00000-0000"
+              className="rounded-lg"
+            />
           </div>
         </div>
         <DialogFooter>
