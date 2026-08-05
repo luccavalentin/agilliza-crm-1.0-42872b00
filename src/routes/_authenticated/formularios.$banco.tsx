@@ -14,6 +14,7 @@ function Pagina() {
   const { banco } = Route.useParams();
   if (banco === "papel-timbrado") return <PapelTimbradoView />;
   if (banco === "powerpoint") return <PowerPointModelosView />;
+  if (banco === "checklist") return <ChecklistBancosView />;
   if (!BANCOS_FORMULARIO.includes(banco as BancoFormulario)) throw notFound();
   return <FormulariosView banco={banco as BancoFormulario} />;
 }
