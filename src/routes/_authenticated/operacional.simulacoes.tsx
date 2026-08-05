@@ -107,7 +107,7 @@ function Pagina() {
     clienteNome: string;
     clienteEmail: string;
     clienteWhatsapp: string;
-    canal: "email" | "whatsapp";
+    canal: "email" | "whatsapp" | "pdf";
   } | null>(null);
 
 
@@ -448,7 +448,7 @@ function Pagina() {
     }
   };
 
-  const confirmarEncaminhamento = async (dados: { email: string; whatsapp: string; canal: "email" | "whatsapp" }) => {
+  const confirmarEncaminhamento = async (dados: { email: string; whatsapp: string; canal: "email" | "whatsapp" | "pdf" }) => {
     if (!encaminhamento) return;
     try {
       const simulacaoId = encaminhamento.id;
@@ -458,6 +458,15 @@ function Pagina() {
       const valorFinanc = formatBRL(sim.valor_financiamento || 0);
       const numero = sim.numero_simulacao;
       
+      if (dados.canal === "pdf") {
+        if (!resp.bancos?.length) {
+          toast.error("Esta simulação não possui bancos para baixar.");
+          return;
+        }
+        setDetalhePdf({ simulacao: sim, bancos: resp.bancos });
+        return;
+      }
+
       const link = `${window.location.origin}/operacional/simulacoes/${simulacaoId}`;
       const textoBase = `Olá ${clienteNome}! Segue a simulação ${numero} de financiamento no valor de ${valorFinanc}.`;
       
