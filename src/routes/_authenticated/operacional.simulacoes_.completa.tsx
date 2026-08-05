@@ -60,13 +60,20 @@ function Pagina() {
 
   // Monitorar retornos para mostrar o popup de comparação
   useEffect(() => {
-    if (jaMostrouPopup.current || !simulacaoResultadoId || !simulacaoResultadoIdSecundario) return;
+    // Se já mostramos ou não temos os IDs necessários, não faz nada
+    if (jaMostrouPopup.current || !simulacaoResultadoId || !simulacaoResultadoIdSecundario) {
+      // Se resetou a tela (sem IDs de resultado), permitimos mostrar o popup novamente na próxima vez
+      if (!simulacaoResultadoId && !simulacaoResultadoIdSecundario) {
+        jaMostrouPopup.current = false;
+        setPopupAberto(false);
+      }
+      return;
+    }
 
-    // Usar Supabase Realtime ou Intervalo para checar se AMBOS estão prontos
     const checkStatus = async () => {
       const { data: sims } = await supabase
         .from("simulacoes")
-        .select("id, status, nome_cliente, bancos:simulacao_bancos(taxa_juros_ano, status_banco)")
+        .select("id, status")
         .in("id", [simulacaoResultadoId, simulacaoResultadoIdSecundario]);
 
       if (sims && sims.length === 2) {
