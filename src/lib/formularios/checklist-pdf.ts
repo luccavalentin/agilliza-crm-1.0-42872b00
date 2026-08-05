@@ -14,23 +14,27 @@ export async function gerarChecklistBancoPDF(bancoId: string, clienteNome?: stri
   if (!checklist) throw new Error("Checklist não encontrado para este banco.");
 
   const bancoBrand = resolveBancoBrand(bancoId);
-  const corBanco = bancoBrand?.cor || "#0F172A";
+  
+  // Cores da Agilliza
+  const AGILLIZA_NAVY = "#0F172A";
+  const AGILLIZA_CORAL = "#F97316";
 
-  // Header Agilliza (Azul)
-  doc.setFillColor("#0F172A");
+  // Header Agilliza (Azul Marinho)
+  doc.setFillColor(AGILLIZA_NAVY);
   doc.rect(0, 0, pageW, 40, "F");
   
-  // Linha Coral
-  doc.setFillColor("#F97316");
+  // Linha Coral (Agilliza)
+  doc.setFillColor(AGILLIZA_CORAL);
   doc.rect(0, 40, pageW, 2, "F");
 
-  // Logo Agilliza
-  const logoH = 20;
+  // Logo Agilliza (Superior Esquerda)
+  const logoH = 18;
   const logoW = logoH * AGILLIZA_LOGO_RATIO;
   try {
-    doc.addImage(AGILLIZA_LOGO_LIGHT, "PNG", MARGIN, 10, logoW, logoH);
+    doc.addImage(AGILLIZA_LOGO_LIGHT, "PNG", MARGIN, 11, logoW, logoH);
   } catch (e) {}
 
+  // Título e Nome do Banco (Superior Direita)
   doc.setTextColor("#FFFFFF");
   doc.setFont("helvetica", "bold");
   doc.setFontSize(14);
@@ -42,22 +46,33 @@ export async function gerarChecklistBancoPDF(bancoId: string, clienteNome?: stri
 
   let y = 55;
 
-  // Dados do Cliente
-  if (clienteNome) {
-    doc.setTextColor("#0F172A");
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(12);
-    doc.text(`Cliente: ${clienteNome.toUpperCase()}`, MARGIN, y);
-    y += 10;
-  }
-
+  // Descrição
   doc.setTextColor("#64748B");
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
-  doc.text("Relacão de documentos necessários para análise de crédito imobiliário.", MARGIN, y);
+  doc.text("Relação de documentos necessários para análise de crédito imobiliário.", MARGIN, y);
   y += 10;
 
-  // Tabela de Documentos
+  // Logo do Banco (Opcional, se existir)
+  if (bancoBrand?.logo) {
+    try {
+      const bLogoH = 8;
+      const bLogoW = bLogoH * (bancoBrand.ratio || 1);
+      doc.addImage(bancoBrand.logo, "PNG", MARGIN, y, bLogoW, bLogoH);
+      y += 12;
+    } catch (e) {}
+  }
+
+  // Dados do Cliente
+  if (clienteNome) {
+    doc.setTextColor(AGILLIZA_NAVY);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(12);
+    doc.text(`Cliente: ${clienteNome.toUpperCase()}`, MARGIN, y);
+    y += 8;
+  }
+
+  // Tabela de Documentos (Cores da Agilliza)
   autoTable(doc, {
     startY: y,
     margin: { left: MARGIN, right: MARGIN },
@@ -69,24 +84,26 @@ export async function gerarChecklistBancoPDF(bancoId: string, clienteNome?: stri
     ]),
     theme: "striped",
     headStyles: {
-      fillColor: corBanco,
+      fillColor: AGILLIZA_NAVY,
       textColor: "#FFFFFF",
       fontSize: 10,
       fontStyle: "bold"
     },
     bodyStyles: {
       fontSize: 9,
-      cellPadding: 5
+      cellPadding: 5,
+      textColor: "#334155"
     },
     columnStyles: {
       0: { cellWidth: 15, halign: "center" },
       2: { cellWidth: 30, halign: "center" }
+    },
+    alternateRowStyles: {
+      fillColor: "#F8FAFC"
     }
   });
 
   // Rodapé
-  const finalY = (doc as any).lastAutoTable.finalY || y + 50;
-  
   doc.setFontSize(8);
   doc.setTextColor("#94A3B8");
   const msg = "Documento gerado automaticamente pelo sistema Agilliza. Sujeito a alterações conforme regras do banco.";
@@ -96,3 +113,4 @@ export async function gerarChecklistBancoPDF(bancoId: string, clienteNome?: stri
   const filename = `Checklist - ${bancoId.toUpperCase()} - ${clienteNome || "Documentos"}.pdf`;
   doc.save(filename);
 }
+
