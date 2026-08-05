@@ -430,7 +430,18 @@ function Pagina() {
                 setAte("");
               }}
             />
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9 border-destructive/30 text-destructive hover:bg-destructive/10"
+              onClick={handleLimparFluxo}
+              disabled={limpando || isLoading}
+            >
+              <Trash2 className="mr-2 size-4" />
+              {limpando ? "Limpando..." : "Limpar Fluxo"}
+            </Button>
           </div>
+
         }
       />
 
