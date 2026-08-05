@@ -414,8 +414,8 @@ function Pagina() {
             </div>
             
             <div className="space-y-1">
-              <h1 className="text-4xl font-black tracking-tight text-foreground md:text-5xl">
-                Fluxo de<br className="md:hidden" /> caixa
+              <h1 className="text-4xl font-black tracking-tight text-primary md:text-5xl uppercase">
+                Fluxo de caixa
               </h1>
               <p className="max-w-md text-sm leading-relaxed text-muted-foreground">
                 Caixa realizado e projeção de entradas e saídas em aberto.
