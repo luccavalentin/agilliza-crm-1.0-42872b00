@@ -380,7 +380,7 @@ function Pagina() {
       <PanelHeader
         variant="dark"
         eyebrow="Relatório Gerencial · Financeiro"
-        titulo="Fluxo de Caixa"
+        titulo="Fluxo de Caixa Estratégico"
         descricao="Acompanhe o saldo realizado e as projeções futuras de entradas e saídas de forma consolidada e executiva."
         atualizadoEm={atualizado}
         actions={
