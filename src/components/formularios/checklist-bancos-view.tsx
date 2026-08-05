@@ -93,7 +93,7 @@ export function ChecklistBancosView() {
     if (!bancoSelecionado) return;
     setChecklists(prev => ({
       ...prev,
-      [bancoSelecionado]: [...(prev[bancoSelecionado] || []), "Novo Documento"]
+      [bancoSelecionado]: [...(prev[bancoSelecionado] || []), { nome: "Novo Documento", obrigatorio: true }]
     }));
     setEditandoIndex((checklists[bancoSelecionado]?.length || 0));
     setNovoValor("Novo Documento");
@@ -106,6 +106,15 @@ export function ChecklistBancosView() {
       [bancoSelecionado]: prev[bancoSelecionado].filter((_, i) => i !== index)
     }));
     toast.success("Item removido.");
+  };
+
+  const toggleObrigatoriedade = (index: number) => {
+    if (!bancoSelecionado) return;
+    setChecklists(prev => {
+      const novos = [...prev[bancoSelecionado]];
+      novos[index] = { ...novos[index], obrigatorio: !novos[index].obrigatorio };
+      return { ...prev, [bancoSelecionado]: novos };
+    });
   };
 
   const iniciarEdicao = (index: number, valor: string) => {
