@@ -92,7 +92,7 @@ function drawClienteHeader(doc: jsPDF, pageW: number) {
   doc.setTextColor("#FFFFFF");
   doc.text(slogan, startX, midY + 3.5);
   try {
-    doc.addImage(AGILLIZA_LOGO_LIGHT, "PNG", startX + textW + gap, midY - logoH / 2, logoW, logoH);
+    doc.addImage(AGILLIZA_LOGO_LIGHT, "PNG", startX + textW + gap, midY - logoH / 2, logoW, logoH, undefined, "FAST");
   } catch {
     /* fallback silencioso */
   }
@@ -353,7 +353,7 @@ function drawFaixaBanco(doc: jsPDF, pageW: number, nomeBanco: string, y: number)
 
   if (brand) {
     try {
-      doc.addImage(brand.logo, "PNG", startX, midY - logoH / 2, logoW, logoH);
+      doc.addImage(brand.logo, "PNG", startX, midY - logoH / 2, logoW, logoH, undefined, "FAST");
     } catch {
       /* fallback silencioso */
     }
