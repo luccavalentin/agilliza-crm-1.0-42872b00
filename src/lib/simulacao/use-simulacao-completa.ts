@@ -649,11 +649,13 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
   useEffect(() => {
     const casado = f.estado_civil === "CA" || f.estado_civil === "UE";
     if (!casado || !crmVinculado || !crmTemConjuge) return;
-    if (!faltaConjugeDoCRM(f, crmVinculado)) return;
-    setF((prev) => patchPuxarConjugeCRM(prev, crmVinculado));
-    toast.success("Dados do cônjuge preenchidos automaticamente pelo cadastro do CRM.");
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [f.estado_civil, f.cliente_id, crmVinculado, crmTemConjuge]);
+
+    // Se o cônjuge já está preenchido (ou se acabamos de inverter), não aplica o merge automático
+    // para não desfazer a vontade do usuário.
+    if (String(f.nome_conjuge ?? "").trim()) return;
+
+    puxarConjugeDoCRM();
+  }, [f.estado_civil, crmVinculado, crmTemConjuge, f.nome_conjuge, puxarConjugeDoCRM]);
 
 
   const podeInverter = useMemo(() => {
