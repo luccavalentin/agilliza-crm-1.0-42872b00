@@ -21,7 +21,9 @@ interface Props {
   sistema: SistemaAmortizacao;
   rendaInformada?: number | null;
   bancos?: BancoRendaApi[] | null;
+  compoeRendaConjuge?: boolean;
 }
+
 
 type Tone = "success" | "warning" | "danger" | "info";
 
@@ -53,7 +55,16 @@ const TONE_STYLES: Record<Tone, { accent: string; iconBox: string; icon: string;
 };
 
 export function DicaRendaMinima(props: Props) {
-  const { valorFinanciamento, valorImovel, prazoMeses, taxaAno, sistema, rendaInformada, bancos } = props;
+  const { 
+    valorFinanciamento, 
+    valorImovel, 
+    prazoMeses, 
+    taxaAno, 
+    sistema, 
+    rendaInformada, 
+    bancos,
+    compoeRendaConjuge 
+  } = props;
 
   const apiEval = rendaMinimaPelosBancos(bancos, rendaInformada);
   const local = avaliarRendaMinima({
@@ -92,14 +103,22 @@ export function DicaRendaMinima(props: Props) {
   const s = TONE_STYLES[tone];
 
   return (
-    <div className="mt-2 flex items-center justify-between gap-3 overflow-hidden rounded-lg border border-border/70 bg-card px-3 py-2 shadow-sm">
-      <div className="flex min-w-0 items-center gap-2">
-        <Icon className={cn("h-4 w-4 shrink-0", s.icon)} aria-hidden />
-        <span className="text-xs font-medium text-muted-foreground">Renda necessária</span>
+    <div className="flex flex-col gap-1">
+      <div className="mt-2 flex items-center justify-between gap-3 overflow-hidden rounded-lg border border-border/70 bg-card px-3 py-2 shadow-sm">
+        <div className="flex min-w-0 items-center gap-2">
+          <Icon className={cn("h-4 w-4 shrink-0", s.icon)} aria-hidden />
+          <span className="text-xs font-medium text-muted-foreground">Renda necessária {compoeRendaConjuge ? "familiar" : "titular"}</span>
+        </div>
+        <p className={cn("font-mono text-sm font-semibold tabular-nums", s.status)}>
+          {formatBRL(rendaMin)}
+        </p>
       </div>
-      <p className={cn("font-mono text-sm font-semibold tabular-nums", s.status)}>
-        {formatBRL(rendaMin)}
-      </p>
+      {compoeRendaConjuge && (
+        <p className="px-1 text-[10px] text-muted-foreground italic">
+          Distribuído: {formatBRL(rendaMin / 2)} para cada proponente
+        </p>
+      )}
     </div>
   );
 }
+

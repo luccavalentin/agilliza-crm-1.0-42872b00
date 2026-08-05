@@ -55,6 +55,7 @@ export const ESTADO_INICIAL: Form = {
   celular: "",
   possui_conjuge: false,
   compoe_renda: false,
+  compoe_renda_conjuge: true, // Adicionado: se o cônjuge vai compor renda
   bancos_ids: [] as string[],
   bancos_sac_ids: [] as string[],
   bancos_price_ids: [] as string[],
@@ -62,3 +63,4 @@ export const ESTADO_INICIAL: Form = {
   consentimento_scr: false,
   email_verificado_em: null,
 };
+

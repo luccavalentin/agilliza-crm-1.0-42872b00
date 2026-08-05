@@ -142,6 +142,8 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
       celular: s.celular ?? "",
       possui_conjuge: Boolean(s.possui_conjuge),
       compoe_renda: Boolean(s.compoe_renda),
+      compoe_renda_conjuge: s.compoe_renda_conjuge !== undefined ? Boolean(s.compoe_renda_conjuge) : true,
+
       consentimento_lgpd: Boolean(s.consentimento_lgpd),
       consentimento_scr: Boolean(s.consentimento_scr),
       bancos_ids: (origem.bancos ?? []).map((b: any) => b.banco_id).filter(Boolean),
@@ -181,9 +183,15 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
       if (k === "valor_imovel" && !entradaTocada)
         next.valor_entrada = Math.round((next.valor_imovel || 0) * pctEntradaDefault);
       if (k === "valor_imovel" || k === "valor_entrada")
-        next.valor_financiamento = Math.max(0, next.valor_imovel - next.valor_entrada);
-      if (k === "estado_civil") next.possui_conjuge = v === "CA" || v === "UE";
+        next.valor_financiamento = Math.max(0, (next.valor_imovel || 0) - (next.valor_entrada || 0));
+
+      if (k === "estado_civil") {
+        next.possui_conjuge = v === "CA" || v === "UE";
+        // Quando for casado/UE, por padrão ativa compo_renda_conjuge
+        if (next.possui_conjuge) next.compoe_renda_conjuge = true;
+      }
       return next;
+
     });
   }
 
@@ -211,9 +219,10 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
   }, [bancos, f.bancos_ids]);
 
   const rendaConsiderada = useMemo(
-    () => (Number(f.renda_total) || 0) + (f.compoe_renda ? Number(f.renda_conjuge) || 0 : 0),
-    [f.renda_total, f.compoe_renda, f.renda_conjuge],
+    () => (Number(f.renda_total) || 0) + (f.compoe_renda && f.compoe_renda_conjuge ? Number(f.renda_conjuge) || 0 : 0),
+    [f.renda_total, f.compoe_renda, f.compoe_renda_conjuge, f.renda_conjuge],
   );
+
 
   // Restrições operacionais por tipo de operação:
   //  - Terreno (TE/TC): apenas Bradesco opera, LTV 70%, prazo máx 240 meses.

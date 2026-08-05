@@ -384,8 +384,9 @@ async function dadosFamiliaresAtuaisDaProposta({
       estadoCivilBanco(principal?.estado_civil) ||
       estadoCivilBanco(prop.estado_civil) ||
       undefined,
-    compoeRenda: Boolean(prop.compoe_renda),
+    compoeRenda: Boolean(prop.compoe_renda) && (prop.compoe_renda_conjuge !== false),
   };
+
 }
 
 async function sincronizarSnapshotFamiliarLocal({
@@ -591,7 +592,7 @@ async function garantirEnderecoParticipantes({
             textoLivreParaBanco(src?.conjuge_profissao) ||
             textoLivreParaBanco(part?.nomeProfissaoConjuge) ||
             undefined,
-          rendaConjuge: conjuge?.renda ?? src?.conjuge_renda ?? sim?.renda_conjuge ?? part?.rendaConjuge ?? undefined,
+          rendaConjuge: (prop.compoe_renda_conjuge !== false) ? (conjuge?.renda ?? src?.conjuge_renda ?? sim?.renda_conjuge ?? part?.rendaConjuge ?? undefined) : 0,
           nomeEmpresaProfissaoConjuge:
             textoLivreParaBanco(conjuge?.empresa) ||
             textoLivreParaBanco(src?.conjuge_empresa) ||
