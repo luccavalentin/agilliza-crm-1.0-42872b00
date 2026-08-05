@@ -944,7 +944,8 @@ export async function baixarSimulacoesDetalhadasAgrupadasZipPDF(
     const rendaGrupo = rendaNecessaria(g.simulacao, g.bancos);
     for (const banco of g.bancos) {
       try {
-        const base = `${nomeDescritivo(g.simulacao, [banco], rendaGrupo)}.pdf`;
+        const d = extrairDetalheBanco(banco?.raw_response);
+        const base = `${gerarNomeArquivoPdf(banco, g.simulacao, d)}.pdf`;
         const filename = nomeArquivoUnico(base, nomesUsados);
         const { doc } = criarDocSimulacaoDetalhada({
           simulacao: g.simulacao,
