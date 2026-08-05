@@ -50,8 +50,12 @@ export function ChecklistBancosView() {
 
   const handleDownload = async (bancoId: string) => {
     try {
-      const docs = selecionados[bancoId] || [];
-      await gerarChecklistBancoPDF(bancoId, undefined, docs);
+      // Filtrar apenas os itens selecionados (que agora são objetos)
+      const todosItems = checklists[bancoId] || [];
+      const nomesSelecionados = selecionados[bancoId] || [];
+      const itemsParaPdf = todosItems.filter(item => nomesSelecionados.includes(item.nome));
+      
+      await gerarChecklistBancoPDF(bancoId, undefined, itemsParaPdf);
       toast.success("Checklist gerado com sucesso!");
     } catch (error) {
       console.error(error);
