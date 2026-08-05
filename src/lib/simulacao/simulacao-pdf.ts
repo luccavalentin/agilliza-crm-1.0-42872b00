@@ -655,7 +655,7 @@ export function baixarSimulacaoPDF(input: SimulacaoPdfInput) {
   const rows: ReportRow[] = (bancos ?? []).map((b) => {
     const d = extrairDetalheBanco(b.raw_response);
     const cet = d?.cet ?? b.cet;
-    const seguros = (d?.mip ?? 0) + (d?.dfi ?? 0);
+    const seguros = d?.seguroMensal ?? 0;
 
     return {
       banco: b.nome_banco ?? "—",
