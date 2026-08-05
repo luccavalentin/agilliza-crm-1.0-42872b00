@@ -458,15 +458,18 @@ function Pagina() {
       const valorFinanc = formatBRL(sim.valor_financiamento || 0);
       const numero = sim.numero_simulacao;
       
-      const texto = `Olá ${clienteNome}! Segue a simulação ${numero} de financiamento no valor de ${valorFinanc}: ${window.location.origin}/operacional/simulacoes/${simulacaoId}`;
+      const link = `${window.location.origin}/operacional/simulacoes/${simulacaoId}`;
+      const textoBase = `Olá ${clienteNome}! Segue a simulação ${numero} de financiamento no valor de ${valorFinanc}.`;
       
       if (dados.canal === "whatsapp") {
         const fone = dados.whatsapp.replace(/\D/g, "");
-        const url = `https://api.whatsapp.com/send?phone=55${fone}&text=${encodeURIComponent(texto)}`;
+        const msg = encodeURIComponent(`${textoBase}\n\nVocê pode visualizar os detalhes aqui: ${link}`);
+        const url = `https://api.whatsapp.com/send?phone=55${fone}&text=${msg}`;
         window.open(url, "_blank");
       } else {
         const subject = encodeURIComponent(`Simulação de Financiamento - ${numero}`);
-        const url = `https://mail.google.com/mail/?view=cm&fs=1&to=${dados.email}&su=${subject}&body=${encodeURIComponent(texto)}`;
+        const body = encodeURIComponent(`${textoBase}\n\nLink para visualização: ${link}`);
+        const url = `https://mail.google.com/mail/?view=cm&fs=1&to=${dados.email}&su=${subject}&body=${body}`;
         window.open(url, "_blank");
       }
     } catch {
