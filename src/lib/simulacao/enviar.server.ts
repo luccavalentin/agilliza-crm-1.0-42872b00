@@ -830,7 +830,7 @@ export async function enviarSimulacaoImpl({
         if (simulacaoOriginal) {
           // Inverte titular e cônjuge para testar o outro CPF
           const { inverterTitularSimulacao } = await import("./simulacoes.functions");
-          await (inverterTitularSimulacao as any)({ id: simulacaoId });
+          await (inverterTitularSimulacao as any)({ id: simulacaoId }, { context: { supabase, userId } });
 
           // Envia novamente com o titular invertido
           for (const b of bancos as any[]) {
