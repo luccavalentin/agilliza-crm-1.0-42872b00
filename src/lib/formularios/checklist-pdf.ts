@@ -38,7 +38,7 @@ export async function gerarChecklistBancoPDF(bancoId: string, clienteNome?: stri
   
   doc.setFont("helvetica", "normal");
   doc.setFontSize(10);
-  doc.text(bancoBrand?.nome || bancoId.toUpperCase(), pageW - MARGIN, 28, { align: "right" });
+  doc.text(bancoId.toUpperCase(), pageW - MARGIN, 28, { align: "right" });
 
   let y = 55;
 
