@@ -225,7 +225,7 @@ export async function executarEnvioAmbos(ctx: CtxBase): Promise<void> {
 
         for (const [simId, bancoIds] of Object.entries(porSim)) {
           const simData = await obterSimulacao({ data: { id: simId } });
-          const bancosReais = (simData.bancos as any[])?.filter((b: any) => bancoIds.includes(b.banco_id));
+          const bancosReais = (simData.bancos as any[])?.filter((b: any) => (bancoIds as string[]).includes(b.banco_id));
           if (bancosReais?.length > 0) {
             // No modo Ambos, as simulações já vêm com b._sistema ("SAC" ou "PRICE") marcado no backend
             // para que o PDF saia com o rótulo correto.
