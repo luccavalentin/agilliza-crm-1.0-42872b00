@@ -38,7 +38,7 @@ import { AplicarCadastroDialog } from "@/components/crm/scan-ia/aplicar-cadastro
 
 export const Route = createFileRoute("/_authenticated/crm/scan-ia_/$id")({
   head: () => ({ meta: [{ title: "Revisar leitura — Agilliza" }] }),
-  beforeLoad: () => assertModuloPermitido("crm.scan_ia"),
+  beforeLoad: () => assertModuloPermitido("crm.clientes"),
   component: Pagina,
 });
 
