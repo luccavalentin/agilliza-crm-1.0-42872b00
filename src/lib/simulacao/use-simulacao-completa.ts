@@ -801,6 +801,7 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
     await executarEnvioSimples({
       f, idOperacao, modoProposta, router, setErros, setEnviando, setConcluidos,
       setSimulacaoResultadoId, setSimulacaoResultadoIdPrice,
+      setSimulacaoResultadoIdSecundario,
     });
   }
 
