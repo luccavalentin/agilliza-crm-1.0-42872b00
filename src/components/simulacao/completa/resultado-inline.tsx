@@ -258,11 +258,20 @@ export function ResultadoInlineCompleta({ simulacaoId, onFechar, isSecundaria }:
                       destaque
                     />
                   )}
-                  <ResumoCelula
-                    rotulo="Financiar despesas"
-                    valor={s.fg_financiar_despesas ? "Sim" : "Não"}
-                  />
-                  {s.fg_financiar_despesas && (
+                  {isSecundaria ? (
+                    <ResumoCelula 
+                      rotulo="Comparativo de Taxas" 
+                      valor="Perfil Secundário" 
+                      detalhe="Teste de CPF Invertido"
+                      destaque
+                    />
+                  ) : (
+                    <ResumoCelula
+                      rotulo="Financiar despesas"
+                      valor={s.fg_financiar_despesas ? "Sim" : "Não"}
+                    />
+                  )}
+                  {s.fg_financiar_despesas && !isSecundaria && (
                     <ResumoCelula
                       rotulo="Total financiado"
                       destaque
