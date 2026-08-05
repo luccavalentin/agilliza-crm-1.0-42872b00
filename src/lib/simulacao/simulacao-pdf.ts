@@ -598,9 +598,10 @@ function anexarDetalhesBancos(doc: jsPDF, pageW: number, pageH: number, s: any, 
 export function baixarSimulacaoPDF(input: SimulacaoPdfInput) {
   const { simulacao: s, bancos } = input;
 
-  // Com um único banco não há o que comparar: emitir o extrato detalhado com o
-  // plano completo de parcelas em vez de uma tabela comparativa de uma linha.
-  if ((bancos ?? []).length === 1) {
+  // Se for uma simulação rápida (sem raw_response detalhado), gera apenas o comparativo consolidado.
+  // Se for uma simulação completa com um único banco, emite o extrato detalhado com parcelas.
+  const isRapida = (bancos ?? []).every(b => !b.raw_response?.simulacao);
+  if (!isRapida && (bancos ?? []).length === 1) {
     baixarSimulacaoDetalhadaPDF(input);
     return;
   }
@@ -638,28 +639,34 @@ export function baixarSimulacaoPDF(input: SimulacaoPdfInput) {
     { label: "Entrada", valor: formatBRL(s.valor_entrada) },
     { label: "Prazo", valor: s.prazo ? `${s.prazo} meses` : "—" },
     { label: "Sistema", valor: sistemaKpi },
-    { label: "FGTS", valor: s.utiliza_fgts === "S" ? "Sim" : "Não" },
+    ...(s.renda_familiar ? [{ label: "Renda familiar", valor: formatBRL(s.renda_familiar) }] : []),
   ];
 
   const columns: ReportColumn[] = [
     { key: "banco", label: "Banco" },
     ...(isMista ? [{ key: "tabela", label: "Tabela" } as ReportColumn] : []),
-    { key: "situacao", label: "Situação" },
-    { key: "parcela", label: "Parcela", align: "right" },
+    { key: "parcela", label: "Parcela (1ª)", align: "right" },
     { key: "taxa", label: "Taxa a.a.", align: "right" },
-    { key: "prazo", label: "Prazo máx", align: "right" },
-    { key: "financiamento", label: "Financ. máx", align: "right" },
+    { key: "cet", label: "CET a.a.", align: "right" },
+    { key: "renda", label: "Renda Mín.", align: "right" },
+    { key: "seguros", label: "Seguros (mês)", align: "right" },
   ];
 
-  const rows: ReportRow[] = (bancos ?? []).map((b) => ({
-    banco: b.nome_banco ?? "—",
-    ...(isMista ? { tabela: sistemaDoBanco(b, s) } : {}),
-    situacao: LABEL_STATUS_BANCO[b.status_banco ?? ""] ?? (b.status_banco || "—"),
-    parcela: b.valor_parcela != null ? formatBRL(b.valor_parcela) : "—",
-    taxa: b.taxa_juros_ano != null ? formatPercent(b.taxa_juros_ano / 100) : "—",
-    prazo: b.prazo_pagamento_max ? `${b.prazo_pagamento_max}m` : "—",
-    financiamento: b.valor_financiamento_max != null ? formatBRL(b.valor_financiamento_max) : "—",
-  }));
+  const rows: ReportRow[] = (bancos ?? []).map((b) => {
+    const d = extrairDetalheBanco(b.raw_response);
+    const cet = d?.cet ?? b.cet;
+    const seguros = d?.seguroMensal ?? 0;
+
+    return {
+      banco: b.nome_banco ?? "—",
+      ...(isMista ? { tabela: sistemaDoBanco(b, s) } : {}),
+      parcela: b.valor_parcela != null ? formatBRL(b.valor_parcela) : "—",
+      taxa: b.taxa_juros_ano != null ? formatPercent(b.taxa_juros_ano / 100) : "—",
+      cet: cet != null ? formatPercent(cet / 100) : "—",
+      renda: b.renda_minima != null ? formatBRL(b.renda_minima) : (rendaMinimaDoBanco(b) ? formatBRL(rendaMinimaDoBanco(b)!) : (d?.rendaMinimaExigida ? formatBRL(d.rendaMinimaExigida) : "—")),
+      seguros: seguros > 0 ? formatBRL(seguros) : "—",
+    };
+  });
 
   const firstColLogos: Record<string, { logo: string; ratio: number }> = {};
   (bancos ?? []).forEach((b) => {
