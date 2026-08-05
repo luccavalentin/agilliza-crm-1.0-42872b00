@@ -193,23 +193,6 @@ function Pagina() {
   }
 
   function simularRapida() {
-    if (w.sistema_amortizacao === "P" && (!w.renda_familiar || w.renda_familiar <= 0)) {
-      toast.error("Informe a renda familiar mensal para simular na tabela PRICE.");
-      const el = document.getElementById("campo-renda-familiar");
-      el?.scrollIntoView({ behavior: "smooth", block: "center" });
-      setTimeout(() => el?.querySelector("input")?.focus(), 400);
-      return;
-    }
-    if (w.sistema_amortizacao === "AMBOS" && (!w.renda_familiar_price || w.renda_familiar_price <= 0)) {
-      toast.error("Informe a renda para a tabela PRICE para prosseguir com a simulação dupla.");
-      const el = document.getElementById("campo-renda-familiar");
-      el?.scrollIntoView({ behavior: "smooth", block: "center" });
-      setTimeout(() => {
-        const inputs = el?.querySelectorAll("input");
-        if (inputs && inputs.length > 1) inputs[1].focus(); // Foca no input PRICE
-      }, 400);
-      return;
-    }
     jaBaixou.current = false;
     setMostrarRapida(true);
   }
