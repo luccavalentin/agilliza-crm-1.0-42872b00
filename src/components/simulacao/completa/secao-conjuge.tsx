@@ -51,7 +51,7 @@ export function SecaoConjuge({ ctx }: { ctx: SimulacaoCompletaCtx }) {
             onChange={(e) => set("cpf_conjuge", maskCpfCnpj(e.target.value))}
           />
         </Campo>
-        {(f.compoe_renda_conjuge ?? true) && (
+        {f.compoe_renda && (
           <Campo label="Renda (R$)">
             <CurrencyInput
               value={f.renda_conjuge ?? 0}
