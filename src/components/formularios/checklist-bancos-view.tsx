@@ -180,7 +180,11 @@ export function ChecklistBancosView() {
                   style={{ backgroundColor: brand?.cor || "#F1F5F9" }}
                 >
                   {brand?.logo ? (
-                    <img src={brand.logo} alt={b.nome} className="w-full h-full object-contain brightness-0 invert" />
+                    <img 
+                      src={brand.logo} 
+                      alt={b.nome} 
+                      className={`w-full h-full object-contain ${b.id === 'itau' ? '' : 'brightness-0 invert'}`} 
+                    />
                   ) : (
                     <ListChecks className="w-8 h-8 text-white" />
                   )}

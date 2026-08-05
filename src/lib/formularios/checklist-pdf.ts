@@ -43,16 +43,16 @@ export async function gerarChecklistBancoPDF(bancoId: string, clienteNome?: stri
   doc.setTextColor("#FFFFFF");
   doc.setFont("helvetica", "bold");
   doc.setFontSize(14);
-  doc.text("Documentos para segmento de proposta", pageW - MARGIN, 18, { align: "right" });
-  doc.text("credito Imobiliario", pageW - MARGIN, 24, { align: "right" });
+  const bancoNome = (bancoId === "itau" ? "Itaú" : bancoId).toUpperCase();
+  doc.text(`CHECKLIST DE DOCUMENTAÇÃO - ${bancoNome}`, pageW - MARGIN, 24, { align: "right" });
   
   // Logo do Banco no Header (Superior Direita)
   if (bancoBrand?.logo) {
     try {
-      // Ajustar posição para a logo do banco aparecer no header
-      const bLogoH = 12;
+      const bLogoH = 16;
       const bLogoW = bLogoH * (bancoBrand.ratio || 1);
-      doc.addImage(bancoBrand.logo, "PNG", pageW - MARGIN - bLogoW - 5, 12, bLogoW, bLogoH);
+      // Centralizado verticalmente no header de 40mm
+      doc.addImage(bancoBrand.logo, "PNG", MARGIN + 80, 12, bLogoW, bLogoH);
     } catch (e) {}
   }
 
