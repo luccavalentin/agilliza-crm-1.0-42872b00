@@ -39,6 +39,7 @@ import { cn } from "@/lib/utils";
 interface Props {
   simulacaoId: string;
   onFechar: () => void;
+  isSecundaria?: boolean;
 }
 
 function totalFinanciado(b: any): number | null {
