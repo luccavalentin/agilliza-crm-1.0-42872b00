@@ -51,26 +51,36 @@ function Pagina() {
 
   const [popupAberto, setPopupAberto] = useState(false);
   const jaMostrouPopup = useRef(false);
-
-  useEffect(() => {
-    if ((simulacaoResultadoId || simulacaoResultadoIdPrice || simulacaoResultadoIdSecundario) && resultadoRef.current) {
-      resultadoRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-  }, [simulacaoResultadoId, simulacaoResultadoIdPrice, simulacaoResultadoIdSecundario]);
+  const checkStatusInterval = useRef<NodeJS.Timeout | null>(null);
 
   // Monitorar retornos para mostrar o popup de comparação
   useEffect(() => {
-    // Se já mostramos ou não temos os IDs necessários, não faz nada
-    if (jaMostrouPopup.current || !simulacaoResultadoId || !simulacaoResultadoIdSecundario) {
-      // Se resetou a tela (sem IDs de resultado), permitimos mostrar o popup novamente na próxima vez
-      if (!simulacaoResultadoId && !simulacaoResultadoIdSecundario) {
-        jaMostrouPopup.current = false;
-        setPopupAberto(false);
+    // Se resetou a tela (sem IDs de resultado), permitimos mostrar o popup novamente na próxima vez
+    if (!simulacaoResultadoId && !simulacaoResultadoIdSecundario) {
+      jaMostrouPopup.current = false;
+      setPopupAberto(false);
+      if (checkStatusInterval.current) {
+        clearInterval(checkStatusInterval.current);
+        checkStatusInterval.current = null;
       }
       return;
     }
 
+    // Se já mostramos ou não temos ambos os IDs necessários para comparar, não inicia monitoramento
+    if (jaMostrouPopup.current || !simulacaoResultadoId || !simulacaoResultadoIdSecundario) {
+      return;
+    }
+
     const checkStatus = async () => {
+      // Evita checagem se o popup já foi exibido ou se fechou no meio do caminho
+      if (jaMostrouPopup.current) {
+        if (checkStatusInterval.current) {
+          clearInterval(checkStatusInterval.current);
+          checkStatusInterval.current = null;
+        }
+        return;
+      }
+
       const { data: sims } = await supabase
         .from("simulacoes")
         .select("id, status")
@@ -81,12 +91,26 @@ function Pagina() {
         if (prontos) {
           jaMostrouPopup.current = true;
           setPopupAberto(true);
+          if (checkStatusInterval.current) {
+            clearInterval(checkStatusInterval.current);
+            checkStatusInterval.current = null;
+          }
         }
       }
     };
 
-    const timer = setInterval(checkStatus, 5000);
-    return () => clearInterval(timer);
+    if (!checkStatusInterval.current) {
+      checkStatusInterval.current = setInterval(checkStatus, 5000);
+      // Roda a primeira vez imediatamente
+      void checkStatus();
+    }
+
+    return () => {
+      if (checkStatusInterval.current) {
+        clearInterval(checkStatusInterval.current);
+        checkStatusInterval.current = null;
+      }
+    };
   }, [simulacaoResultadoId, simulacaoResultadoIdSecundario]);
 
   const totalBancosResumo =
@@ -376,23 +400,19 @@ function ComparativoTaxasDialog({ aberto, onClose, idTitular, idSecundario }: { 
 
   return (
     <AlertDialog open={aberto} onOpenChange={(o) => !o && onClose()}>
-      <AlertDialogContent className="max-w-xl border-none bg-transparent p-0 shadow-2xl">
-        <div className="relative overflow-hidden rounded-[2rem] border border-white/20 bg-white/80 p-8 backdrop-blur-2xl dark:bg-slate-900/80">
-          {/* Decorative Background Elements */}
-          <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-primary/10 blur-3xl" />
-          <div className="absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-blue-400/10 blur-3xl" />
-          
+      <AlertDialogContent className="max-w-xl border border-border bg-card p-0 shadow-2xl">
+        <div className="relative overflow-hidden p-8">
           <div className="relative">
             <div className="mb-8 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary shadow-lg shadow-primary/20">
-                  <Landmark className="h-6 w-6 text-white" />
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                  <Landmark className="h-6 w-6" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
+                  <h3 className="text-xl font-bold tracking-tight text-foreground">
                     Análise Comparativa de Taxas
                   </h3>
-                  <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
+                  <p className="text-sm font-medium text-muted-foreground">
                     Teste Automático de CPF (Titular vs Cônjuge)
                   </p>
                 </div>
@@ -400,10 +420,10 @@ function ComparativoTaxasDialog({ aberto, onClose, idTitular, idSecundario }: { 
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-10 w-10 rounded-full hover:bg-slate-200/50 dark:hover:bg-slate-700/50"
+                className="h-10 w-10 rounded-full"
                 onClick={onClose}
               >
-                <X className="h-5 w-5" />
+                <X className="h-5 w-5 text-muted-foreground" />
               </Button>
             </div>
 
@@ -421,11 +441,13 @@ function ComparativoTaxasDialog({ aberto, onClose, idTitular, idSecundario }: { 
             </div>
             
             <div className="mt-8 flex flex-col items-center gap-4">
-              <div className="rounded-2xl bg-slate-900/5 px-6 py-4 text-center backdrop-blur-sm dark:bg-white/5">
-                <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+              <div className="rounded-xl border border-border bg-muted/30 px-6 py-4 text-center">
+                <p className="text-sm font-semibold text-foreground">
                   {taxaTitular && taxaConjuge 
                     ? taxaTitular <= taxaConjuge 
-                      ? `✨ O perfil de ${nomeTitular} apresentou as condições mais vantajosas para o financiamento.`
+                      ? (taxaTitular === taxaConjuge 
+                          ? `✨ Ambos perfis apresentaram taxas iguais (${formatPercent(taxaTitular/100)} a.a.).`
+                          : `✨ O perfil de ${nomeTitular} apresentou as condições mais vantajosas para o financiamento.`)
                       : `✨ O perfil de ${nomeConjuge} apresentou as condições mais vantajosas para o financiamento.`
                     : "Aguardando processamento final dos retornos bancários..."}
                 </p>
@@ -433,7 +455,7 @@ function ComparativoTaxasDialog({ aberto, onClose, idTitular, idSecundario }: { 
 
               <Button 
                 onClick={onClose}
-                className="group h-12 rounded-2xl bg-slate-900 px-8 font-bold text-white transition-all hover:scale-105 hover:bg-slate-800 active:scale-95 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
+                className="h-12 w-full rounded-xl bg-primary px-8 font-bold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:bg-primary/90 active:scale-95 sm:w-auto"
               >
                 Prosseguir com a Melhor Opção
               </Button>
@@ -448,41 +470,41 @@ function ComparativoTaxasDialog({ aberto, onClose, idTitular, idSecundario }: { 
 function TaxaCard({ nome, taxa, isWinner }: { nome: string; taxa: number | null; isWinner: boolean }) {
   return (
     <div className={cn(
-      "relative overflow-hidden rounded-[1.5rem] border p-6 transition-all duration-500",
+      "relative overflow-hidden rounded-xl border p-6 transition-all duration-300",
       isWinner 
-        ? "border-primary/30 bg-white shadow-xl shadow-primary/5 dark:bg-slate-800" 
-        : "border-slate-200 bg-slate-50/50 dark:border-slate-700 dark:bg-slate-800/50"
+        ? "border-primary/50 bg-primary/5 shadow-md" 
+        : "border-border bg-card shadow-sm"
     )}>
       {isWinner && (
         <div className="absolute right-4 top-4">
-          <div className="flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-primary">
+          <div className="flex items-center gap-1 rounded-full bg-primary px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-primary-foreground">
             Melhor Taxa
           </div>
         </div>
       )}
       
       <div className="space-y-1">
-        <span className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
+        <span className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
           PERFIL {nome}
         </span>
         <div className="flex items-baseline gap-1">
           <span className={cn(
             "text-4xl font-black tabular-nums tracking-tighter",
-            isWinner ? "text-primary" : "text-slate-400"
+            isWinner ? "text-primary" : "text-foreground"
           )}>
             {taxa ? formatPercent(taxa / 100) : "—"}
           </span>
-          {taxa && <span className="text-sm font-bold text-slate-400">a.a.</span>}
+          {taxa && <span className="text-sm font-bold text-muted-foreground">a.a.</span>}
         </div>
       </div>
       
       <div className="mt-4 flex items-center gap-2">
         <div className={cn(
           "h-1.5 flex-1 rounded-full",
-          isWinner ? "bg-primary/20" : "bg-slate-200 dark:bg-slate-700"
+          isWinner ? "bg-primary/20" : "bg-muted"
         )}>
           <div 
-            className={cn("h-full rounded-full transition-all duration-1000", isWinner ? "w-full bg-primary" : "w-1/2 bg-slate-300 dark:bg-slate-600")}
+            className={cn("h-full rounded-full transition-all duration-1000", isWinner ? "w-full bg-primary" : "w-1/2 bg-muted-foreground/30")}
           />
         </div>
       </div>
