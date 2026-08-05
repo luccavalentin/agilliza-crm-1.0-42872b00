@@ -384,8 +384,9 @@ async function dadosFamiliaresAtuaisDaProposta({
       estadoCivilBanco(principal?.estado_civil) ||
       estadoCivilBanco(prop.estado_civil) ||
       undefined,
-    compoeRenda: Boolean(prop.compoe_renda),
+    compoeRenda: Boolean(prop.compoe_renda) && (prop.compoe_renda_conjuge !== false),
   };
+
 }
 
 async function sincronizarSnapshotFamiliarLocal({
