@@ -149,7 +149,7 @@ function Pagina() {
         });
         // Pequeno delay entre downloads automáticos para evitar bloqueio do navegador
         if (bancosParaBaixar.length > 1) {
-          await new Promise((r) => setTimeout(r, 800));
+          await new Promise((r) => setTimeout(r, 1200));
         }
       }
     } catch {
