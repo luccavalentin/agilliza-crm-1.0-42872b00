@@ -123,6 +123,11 @@ export function FormularioSimulacao({
               <SelectItem value="AMBOS">SAC e PRICE</SelectItem>
             </SelectContent>
           </Select>
+          {w.sistema_amortizacao !== "S" && (
+            <p className="text-[10px] text-muted-foreground mt-1">
+              * Itaú opera exclusivamente via tabela SAC.
+            </p>
+          )}
         </div>
 
         <div className="space-y-1.5">
