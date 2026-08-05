@@ -383,6 +383,15 @@ export const criarSimulacao = createServerFn({ method: "POST" })
       if (errUpsert) throw new Error(`Falha ao replicar vínculos do cliente: ${errUpsert.message}`);
     };
 
+    const vincularConjugeAoTitular = async (titularId: string | null, conjugeId: string | null) => {
+      if (!titularId || !conjugeId || titularId === conjugeId) return;
+      // Garante que o cônjuge apareça como uma "target" (vínculo) do titular e vice-versa se necessário,
+      // ou apenas que compartilhem o mesmo parceiro (que já é feito pelo replicarVinculos).
+      // Mas o usuário pediu "ter uma target vinculado ao parceiro dele".
+      // Isso geralmente significa que o cônjuge deve ter o mesmo parceiro_id vinculado.
+      await replicarVinculos(titularId, [conjugeId]);
+    };
+
     const titularId = await upsertClienteCRM({
       nome: dd.nome_cliente,
       documento: dd.cpf_cnpj,
@@ -424,6 +433,7 @@ export const criarSimulacao = createServerFn({ method: "POST" })
         })
       : null;
     await replicarVinculos(clienteOrigemId, [titularId, conjugeId]);
+    await vincularConjugeAoTitular(titularId, conjugeId);
 
     const insert = {
       correspondente_id,
