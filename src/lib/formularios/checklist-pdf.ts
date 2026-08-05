@@ -79,10 +79,10 @@ export async function gerarChecklistBancoPDF(bancoId: string, clienteNome?: stri
     startY: y,
     margin: { left: MARGIN, right: MARGIN },
     head: [["", "Documento Necessário", "Obrigatório"]],
-    body: checklist.docs.map(doc => [
+    body: docsProcessados.map(item => [
       "[  ]", 
-      doc,
-      "Sim"
+      item.nome,
+      item.obrigatorio ? "Sim" : "Não"
     ]),
     theme: "striped",
     headStyles: {
