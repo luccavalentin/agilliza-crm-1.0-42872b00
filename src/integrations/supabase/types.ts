@@ -6512,6 +6512,7 @@ export type Database = {
           codigo_oportunidade_homefin: string | null
           comercial_id: string | null
           compoe_renda: boolean
+          compoe_renda_conjuge: boolean | null
           consentimento_em: string | null
           consentimento_ip: string | null
           consentimento_lgpd: boolean
@@ -6576,6 +6577,7 @@ export type Database = {
           codigo_oportunidade_homefin?: string | null
           comercial_id?: string | null
           compoe_renda?: boolean
+          compoe_renda_conjuge?: boolean | null
           consentimento_em?: string | null
           consentimento_ip?: string | null
           consentimento_lgpd?: boolean
@@ -6640,6 +6642,7 @@ export type Database = {
           codigo_oportunidade_homefin?: string | null
           comercial_id?: string | null
           compoe_renda?: boolean
+          compoe_renda_conjuge?: boolean | null
           consentimento_em?: string | null
           consentimento_ip?: string | null
           consentimento_lgpd?: boolean
