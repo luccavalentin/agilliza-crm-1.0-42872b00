@@ -470,15 +470,68 @@ function Pagina() {
 
       ) : (
         <>
-          <div className="rounded-2xl border border-border/50 bg-white p-6">
-            <SectionTitle>Sem movimentações</SectionTitle>
-            <div className="flex min-h-[200px] flex-col items-center justify-center space-y-2 text-center">
-              <p className="text-sm text-muted-foreground">
-                Não há lançamentos realizados nem contas em aberto para projetar.
-              </p>
-            </div>
+          <SectionTitle>Posição de caixa</SectionTitle>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <HeroMetric
+              label="Saldo realizado"
+              valor={formatBRL(r?.saldoRealizado ?? 0)}
+              hint="Caixa efetivo acumulado"
+              tone={(r?.saldoRealizado ?? 0) >= 0 ? "success" : "danger"}
+              icon={Wallet}
+              onDetails={() => setDetalhe("saldoRealizado")}
+            />
+            <HeroMetric
+              label="Resultado projetado"
+              valor={formatBRL(r?.resultadoProj ?? 0)}
+              hint="Entradas − saídas em aberto"
+              tone={(r?.resultadoProj ?? 0) >= 0 ? "brand" : "warning"}
+              icon={Scale}
+              onDetails={() => setDetalhe("resultadoProj")}
+            />
+            <HeroMetric
+              label="Saldo final projetado"
+              valor={formatBRL(r?.saldoFinalProj ?? 0)}
+              hint="Realizado + projeção"
+              tone={(r?.saldoFinalProj ?? 0) >= 0 ? "success" : "danger"}
+              icon={TrendingUp}
+              onDetails={() => setDetalhe("saldoFinalProj")}
+            />
+            <HeroMetric
+              label="Cobertura de saídas"
+              valor={`${(r?.coberturaPct ?? 0).toFixed(0)}%`}
+              hint="A receber ÷ a pagar (aberto)"
+              tone={(r?.coberturaPct ?? 0) >= 100 ? "success" : "warning"}
+              icon={Gauge}
+              onDetails={() => setDetalhe("coberturaPct")}
+            />
           </div>
 
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            <MiniMetric
+              label="Entradas em aberto"
+              valor={formatBRL(r?.totalEntradaProj ?? 0)}
+              tone="success"
+              onDetails={() => setDetalhe("entradasProj")}
+            />
+            <MiniMetric
+              label="Saídas em aberto"
+              valor={formatBRL(r?.totalSaidaProj ?? 0)}
+              tone="danger"
+              onDetails={() => setDetalhe("saidasProj")}
+            />
+            <MiniMetric
+              label="Melhor período"
+              valor={r?.melhorPeriodo ? formatBRL(r.melhorPeriodo.valor) : "—"}
+              tone="success"
+              onDetails={() => setDetalhe("melhor")}
+            />
+            <MiniMetric
+              label="Pior período"
+              valor={r?.piorPeriodo ? formatBRL(r.piorPeriodo.valor) : "—"}
+              tone="danger"
+              onDetails={() => setDetalhe("pior")}
+            />
+          </div>
 
           <DetalheFluxoDialog
             aberto={!!det}
@@ -487,6 +540,7 @@ function Pagina() {
             descricao={det?.descricao}
             linhas={det?.linhas ?? []}
           />
+
 
 
           <SectionTitle>Evolução do caixa</SectionTitle>
