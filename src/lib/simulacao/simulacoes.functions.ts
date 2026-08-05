@@ -280,7 +280,6 @@ export const criarSimulacao = createServerFn({ method: "POST" })
     // Importante: quando o titular é invertido na tela, `cliente_id` ainda pode
     // apontar para o titular original. Por isso a referência da simulação deve
     // ser recalculada pelo CPF/CNPJ atual e o cônjuge também deve virar cliente.
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     let cliente_id = dd.cliente_id ?? null;
     const clienteOrigemId = cliente_id;
     const casado = Boolean(dd.possui_conjuge);
