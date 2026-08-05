@@ -459,11 +459,15 @@ function Pagina() {
       )}
 
       {vazio ? (
-        <PanelCard titulo="Sem movimentações">
-          <p className="py-10 text-center text-sm text-muted-foreground">
-            Não há lançamentos realizados nem contas em aberto para projetar.
-          </p>
-        </PanelCard>
+        <div className="rounded-2xl border border-border/50 bg-white p-12">
+          <SectionTitle>Sem movimentações</SectionTitle>
+          <div className="flex min-h-[200px] flex-col items-center justify-center space-y-2 text-center">
+            <p className="text-sm text-muted-foreground">
+              Não há lançamentos realizados nem contas em aberto para projetar.
+            </p>
+          </div>
+        </div>
+
       ) : (
         <>
           <div className="rounded-2xl border border-border/50 bg-white p-6">
