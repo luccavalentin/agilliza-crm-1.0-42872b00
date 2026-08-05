@@ -311,7 +311,7 @@ function Pagina() {
     { titulo: string; descricao: string; linhas: { rotulo: string; sub?: string; valor: number }[] }
   > = {
     saldoRealizado: {
-      titulo: "FLUXO DE CAIXA ELE DIZ QUE TEVE UMA ENTRADA MAS QUERO QUE ELE ESPECIFIQUE EXATAMENTE PARA QUAL ENTRADA!!!! ME PERMITA EDITAR, EXCLUIR E ETC",
+      titulo: "Detalhamento de Entradas e Saídas",
       descricao: "Movimentações já efetivadas em caixa.",
       linhas: pontos.map((p: any) => ({
         rotulo: p.label,
@@ -375,11 +375,13 @@ function Pagina() {
 
 
   return (
-    <div className="mx-auto w-full max-w-[1600px] space-y-6 p-4 sm:p-5 md:space-y-10 md:p-8">
+    <div className="mx-auto w-full max-w-[1600px] space-y-6 bg-gradient-to-b from-background to-muted/20 min-h-screen">
+      <div className="p-4 sm:p-5 md:space-y-8 md:p-8">
       <PanelHeader
-        eyebrow="Financeiro · Fluxo de caixa"
-        titulo="Fluxo de caixa"
-        descricao="Caixa realizado e projeção de entradas e saídas em aberto."
+        variant="dark"
+        eyebrow="Relatório Gerencial · Financeiro"
+        titulo="Fluxo de Caixa Estratégico"
+        descricao="Acompanhe o saldo realizado e as projeções futuras de entradas e saídas de forma consolidada e executiva."
         atualizadoEm={atualizado}
         actions={
           <div className="flex flex-wrap items-end justify-start gap-2 sm:justify-end">
@@ -648,6 +650,7 @@ function Pagina() {
           </PanelCard>
         </>
       )}
+      </div>
     </div>
   );
 }
