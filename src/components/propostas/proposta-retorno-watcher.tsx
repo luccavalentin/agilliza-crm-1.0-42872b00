@@ -14,10 +14,49 @@ interface Props {
  */
 export function PropostaRetornoWatcher({ userId }: Props) {
   const seenIds = useRef<Set<string>>(new Set());
+  const seenSimIds = useRef<Set<string>>(new Set());
   const adicionarPopup = usePropostaNotificacaoStore((s: any) => s.adicionar);
 
   useEffect(() => {
     if (!userId) return;
+
+    // Monitora alterações em simulacao_historico para testes de CPF
+    const channelSim = supabase
+      .channel("rt-simulacao-historico")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "simulacao_historico",
+        },
+        async (payload) => {
+          const row = payload.new as any;
+          if (row.tipo === "info" && row.descricao.includes("testou ambos os proponentes")) {
+            const { data: sim } = await supabase
+              .from("simulacoes")
+              .select("id, numero_simulacao, nome_cliente, usuario_responsavel_id, usuario_criador_id")
+              .eq("id", row.simulacao_id)
+              .maybeSingle();
+
+            if (!sim || (sim.usuario_responsavel_id !== userId && sim.usuario_criador_id !== userId)) return;
+
+            const uniqueKey = `sim-info-${row.id}`;
+            if (seenSimIds.current.has(uniqueKey)) return;
+            seenSimIds.current.add(uniqueKey);
+
+            adicionarPopup({
+              id: sim.id,
+              numero: sim.numero_simulacao,
+              status: "Comparativo de Taxas Concluído",
+              nome_cliente: sim.nome_cliente || "—",
+              banco: "Multi-proponente",
+            });
+          }
+        }
+      )
+      .subscribe();
+
 
     // Monitora alterações em proposta_bancos (onde o retorno do banco chega)
     const channel = supabase
