@@ -233,25 +233,25 @@ export function ChecklistBancosView() {
           </CardHeader>
           <CardContent className="p-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4">
-              {docsAtivos.map((doc, idx) => (
+              {itemsAtivos.map((item, idx) => (
                 <div 
                   key={idx} 
                   className={`flex items-start gap-4 p-4 rounded-lg hover:bg-white transition-colors group border border-transparent hover:border-border cursor-pointer ${
-                    !selecionadosAtivos.includes(doc) ? "opacity-50 grayscale-[0.5]" : ""
+                    !selecionadosAtivos.includes(item.nome) ? "opacity-50 grayscale-[0.5]" : ""
                   }`}
-                  onClick={() => toggleSelecao(doc)}
+                  onClick={() => toggleSelecao(item.nome)}
                 >
                   <div 
                     className={`mt-1 h-5 w-5 rounded border-2 flex items-center justify-center transition-colors ${
-                      selecionadosAtivos.includes(doc) ? "border-primary bg-primary" : "border-primary/30 group-hover:border-primary"
+                      selecionadosAtivos.includes(item.nome) ? "border-primary bg-primary" : "border-primary/30 group-hover:border-primary"
                     }`}
                   >
-                    {selecionadosAtivos.includes(doc) && <Check className="h-3 w-3 text-white" />}
+                    {selecionadosAtivos.includes(item.nome) && <Check className="h-3 w-3 text-white" />}
                   </div>
                   
                   <div className="flex-1 space-y-1">
                     {editandoIndex === idx ? (
-                      <div className="flex gap-2 items-center">
+                      <div className="flex gap-2 items-center" onClick={(e) => e.stopPropagation()}>
                         <Input 
                           value={novoValor}
                           onChange={(e) => setNovoValor(e.target.value)}
@@ -272,11 +272,24 @@ export function ChecklistBancosView() {
                     ) : (
                       <div className="flex items-center justify-between">
                         <div className="flex-1">
-                          <p className="font-medium text-slate-700 leading-tight">{doc}</p>
-                          <p className="text-xs text-slate-400">Documento Obrigatório</p>
+                          <p className="font-medium text-slate-700 leading-tight">{item.nome}</p>
+                          <div 
+                            className="flex items-center gap-2 mt-1"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleObrigatoriedade(idx);
+                            }}
+                          >
+                            <div className={`h-4 w-8 rounded-full transition-colors relative flex items-center px-1 ${item.obrigatorio ? 'bg-primary' : 'bg-slate-300'}`}>
+                              <div className={`h-2.5 w-2.5 rounded-full bg-white transition-transform ${item.obrigatorio ? 'translate-x-3.5' : 'translate-x-0'}`} />
+                            </div>
+                            <span className="text-xs text-slate-400">
+                              {item.obrigatorio ? 'Documento Obrigatório' : 'Documento Opcional'}
+                            </span>
+                          </div>
                         </div>
-                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-primary" onClick={() => iniciarEdicao(idx, doc)}>
+                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
+                          <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-primary" onClick={() => iniciarEdicao(idx, item.nome)}>
                             <Edit2 className="h-3.5 w-3.5" />
                           </Button>
                           <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => removerItem(idx)}>
@@ -290,7 +303,7 @@ export function ChecklistBancosView() {
               ))}
             </div>
 
-            {docsAtivos.length === 0 && (
+            {itemsAtivos.length === 0 && (
               <div className="text-center py-10 text-muted-foreground">
                 <p>Nenhum item no checklist. Adicione um novo item acima.</p>
               </div>
