@@ -21,7 +21,9 @@ interface Props {
   sistema: SistemaAmortizacao;
   rendaInformada?: number | null;
   bancos?: BancoRendaApi[] | null;
+  compoeRendaConjuge?: boolean;
 }
+
 
 type Tone = "success" | "warning" | "danger" | "info";
 
