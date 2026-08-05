@@ -400,23 +400,19 @@ function ComparativoTaxasDialog({ aberto, onClose, idTitular, idSecundario }: { 
 
   return (
     <AlertDialog open={aberto} onOpenChange={(o) => !o && onClose()}>
-      <AlertDialogContent className="max-w-xl border-none bg-transparent p-0 shadow-2xl">
-        <div className="relative overflow-hidden rounded-[2rem] border border-white/20 bg-white/80 p-8 backdrop-blur-2xl dark:bg-slate-900/80">
-          {/* Decorative Background Elements */}
-          <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-primary/10 blur-3xl" />
-          <div className="absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-blue-400/10 blur-3xl" />
-          
+      <AlertDialogContent className="max-w-xl border border-border bg-card p-0 shadow-2xl">
+        <div className="relative overflow-hidden p-8">
           <div className="relative">
             <div className="mb-8 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary shadow-lg shadow-primary/20">
-                  <Landmark className="h-6 w-6 text-white" />
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                  <Landmark className="h-6 w-6" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
+                  <h3 className="text-xl font-bold tracking-tight text-foreground">
                     Análise Comparativa de Taxas
                   </h3>
-                  <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
+                  <p className="text-sm font-medium text-muted-foreground">
                     Teste Automático de CPF (Titular vs Cônjuge)
                   </p>
                 </div>
@@ -424,10 +420,10 @@ function ComparativoTaxasDialog({ aberto, onClose, idTitular, idSecundario }: { 
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-10 w-10 rounded-full hover:bg-slate-200/50 dark:hover:bg-slate-700/50"
+                className="h-10 w-10 rounded-full"
                 onClick={onClose}
               >
-                <X className="h-5 w-5" />
+                <X className="h-5 w-5 text-muted-foreground" />
               </Button>
             </div>
 
