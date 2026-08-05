@@ -337,6 +337,9 @@ export async function executarEnvioSimples(ctx: CtxBase): Promise<void> {
     }
 
     ctx.setSimulacaoResultadoId(id);
+    if (id_secundario && ctx.setSimulacaoResultadoIdSecundario) {
+      ctx.setSimulacaoResultadoIdSecundario(id_secundario);
+    }
     setEnviando(false);
     setConcluidos(0);
     toast.success(
