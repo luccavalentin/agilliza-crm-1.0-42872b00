@@ -499,6 +499,21 @@ function anexarDetalhesBancos(doc: jsPDF, pageW: number, pageH: number, s: any, 
       formatBRL(p.parcela),
       formatBRL(p.saldoDevedor),
     ];
+
+    const somas = parcelas.reduce((acc, p) => ({
+      amort: acc.amort + (p.amortizacao || 0),
+      juros: acc.juros + (p.juros || 0),
+      parcela: acc.parcela + (p.parcela || 0),
+    }), { amort: 0, juros: 0, parcela: 0 });
+
+    const rodapeSoma = [
+      { content: "TOTAIS", colSpan: 2, styles: { halign: "center" as const, fontStyle: "bold" as const } },
+      { content: formatBRL(somas.amort), styles: { halign: "right" as const, fontStyle: "bold" as const } },
+      { content: formatBRL(somas.juros), styles: { halign: "right" as const, fontStyle: "bold" as const } },
+      { content: formatBRL(somas.parcela), styles: { halign: "right" as const, fontStyle: "bold" as const } },
+      { content: "", styles: { halign: "right" as const } }
+    ];
+
     const cabecalho = [["Parc.", "Data", "Amortização", "Juros", "Parcela", "Saldo devedor"]];
     const estiloTabela = {
       styles: {
@@ -510,6 +525,7 @@ function anexarDetalhesBancos(doc: jsPDF, pageW: number, pageH: number, s: any, 
         lineWidth: 0.25,
       },
       headStyles: { fillColor: P.azul, textColor: P.headText, fontStyle: "bold" as const, fontSize: 7 },
+      footStyles: { fillColor: P.azul, textColor: P.headText, fontStyle: "bold" as const, fontSize: 7 },
       alternateRowStyles: { fillColor: P.card },
       columnStyles: {
         0: { halign: "right" as const },
@@ -571,6 +587,7 @@ function anexarDetalhesBancos(doc: jsPDF, pageW: number, pageH: number, s: any, 
           margin: { left: rightX, right: MARGIN, top: DETALHE_HEADER_H + 16, bottom: bottomSafe },
           head: cabecalho,
           body: primeira.map(linhaParcela),
+          foot: restante.length === 0 ? [rodapeSoma] : undefined,
           ...estiloTabela,
         });
       }
@@ -585,6 +602,7 @@ function anexarDetalhesBancos(doc: jsPDF, pageW: number, pageH: number, s: any, 
           margin: { left: MARGIN, right: MARGIN, top: DETALHE_HEADER_H + 16, bottom: 40 },
           head: cabecalho,
           body: restante.map(linhaParcela),
+          foot: [rodapeSoma],
           ...estiloTabela,
           willDrawPage: (hook) => {
             if (hook.pageNumber > 1) drawPageBackground(doc, pageW, pageH);
@@ -831,6 +849,20 @@ function criarDocSimulacaoDetalhada({
     y = drawInfoFinanciamento(doc, pageW, s, b, d, y);
 
     const parcelas = d?.parcelas ?? [];
+    const somas = parcelas.reduce((acc, p) => ({
+      amort: acc.amort + (p.amortizacao || 0),
+      juros: acc.juros + (p.juros || 0),
+      parcela: acc.parcela + (p.parcela || 0),
+    }), { amort: 0, juros: 0, parcela: 0 });
+
+    const rodapeSoma = [
+      { content: "TOTAIS", colSpan: 2, styles: { halign: "center" as const, fontStyle: "bold" as const } },
+      { content: formatBRL(somas.amort), styles: { halign: "right" as const, fontStyle: "bold" as const } },
+      { content: formatBRL(somas.juros), styles: { halign: "right" as const, fontStyle: "bold" as const } },
+      { content: formatBRL(somas.parcela), styles: { halign: "right" as const, fontStyle: "bold" as const } },
+      { content: "", styles: { halign: "right" as const } }
+    ];
+
     doc.setTextColor(P.destaque);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(10);
@@ -885,7 +917,9 @@ function criarDocSimulacaoDetalhada({
           lineWidth: 0.25,
         },
         headStyles: { fillColor: P.azul, textColor: P.headText, fontStyle: "bold", fontSize: 6.5 },
+        foot: [rodapeSoma],
         alternateRowStyles: { fillColor: P.card },
+        footStyles: { fillColor: P.azul, textColor: P.headText, fontStyle: "bold", fontSize: 6.5 },
         columnStyles: {
           0: { halign: "right" },
           2: { halign: "right" },
