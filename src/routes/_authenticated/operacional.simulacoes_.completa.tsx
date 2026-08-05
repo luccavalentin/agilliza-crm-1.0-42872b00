@@ -441,11 +441,13 @@ function ComparativoTaxasDialog({ aberto, onClose, idTitular, idSecundario }: { 
             </div>
             
             <div className="mt-8 flex flex-col items-center gap-4">
-              <div className="rounded-2xl bg-slate-900/5 px-6 py-4 text-center backdrop-blur-sm dark:bg-white/5">
-                <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+              <div className="rounded-xl border border-border bg-muted/30 px-6 py-4 text-center">
+                <p className="text-sm font-semibold text-foreground">
                   {taxaTitular && taxaConjuge 
                     ? taxaTitular <= taxaConjuge 
-                      ? `✨ O perfil de ${nomeTitular} apresentou as condições mais vantajosas para o financiamento.`
+                      ? (taxaTitular === taxaConjuge 
+                          ? `✨ Ambos perfis apresentaram taxas iguais (${formatPercent(taxaTitular/100)} a.a.).`
+                          : `✨ O perfil de ${nomeTitular} apresentou as condições mais vantajosas para o financiamento.`)
                       : `✨ O perfil de ${nomeConjuge} apresentou as condições mais vantajosas para o financiamento.`
                     : "Aguardando processamento final dos retornos bancários..."}
                 </p>
