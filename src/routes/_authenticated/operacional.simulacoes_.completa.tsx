@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, FileText, Send, Home, User, Users, Landmark, ShieldCheck } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { SecaoCabecalho } from "@/components/simulacao/secao-cabecalho";
 import { assertModuloPermitido } from "@/lib/route-guards";
 import { Button } from "@/components/ui/button";
@@ -24,8 +26,9 @@ import { SecaoConsentimentos } from "@/components/simulacao/completa/secao-conse
 import { ResultadoInlineCompleta } from "@/components/simulacao/completa/resultado-inline";
 import { ResultadoInlineAmbos } from "@/components/simulacao/completa/resultado-inline-ambos";
 
-import { formatBRL } from "@/lib/simulacao/format";
+import { formatBRL, formatPercent } from "@/lib/simulacao/format";
 import { useSimulacaoCompleta } from "@/lib/simulacao/use-simulacao-completa";
+import { obterSimulacao } from "@/lib/simulacao/simulacoes.functions";
 
 export const Route = createFileRoute("/_authenticated/operacional/simulacoes_/completa")({
   head: () => ({ meta: [{ title: "Simulação completa — Agilliza" }] }),
@@ -45,11 +48,38 @@ function Pagina() {
   const { router, modoProposta, f, enviando, concluidos, mostraConjuge, confirmRenda, setConfirmRenda, enviar, executarEnvio, simulacaoResultadoId, simulacaoResultadoIdPrice, simulacaoResultadoIdSecundario, fecharResultadoInline, fecharResultadoInlinePrice, fecharResultadoInlineSecundario } = ctx;
   const resultadoRef = useRef<HTMLDivElement>(null);
 
+  const [popupAberto, setPopupAberto] = useState(false);
+  const jaMostrouPopup = useRef(false);
+
   useEffect(() => {
     if ((simulacaoResultadoId || simulacaoResultadoIdPrice || simulacaoResultadoIdSecundario) && resultadoRef.current) {
       resultadoRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   }, [simulacaoResultadoId, simulacaoResultadoIdPrice, simulacaoResultadoIdSecundario]);
+
+  // Monitorar retornos para mostrar o popup de comparação
+  useEffect(() => {
+    if (jaMostrouPopup.current || !simulacaoResultadoId || !simulacaoResultadoIdSecundario) return;
+
+    // Usar Supabase Realtime ou Intervalo para checar se AMBOS estão prontos
+    const checkStatus = async () => {
+      const { data: sims } = await supabase
+        .from("simulacoes")
+        .select("id, status, nome_cliente, bancos:simulacao_bancos(taxa_juros_ano, status_banco)")
+        .in("id", [simulacaoResultadoId, simulacaoResultadoIdSecundario]);
+
+      if (sims && sims.length === 2) {
+        const prontos = sims.every((s: any) => s.status !== "enviando" && s.status !== "rascunho");
+        if (prontos) {
+          jaMostrouPopup.current = true;
+          setPopupAberto(true);
+        }
+      }
+    };
+
+    const timer = setInterval(checkStatus, 5000);
+    return () => clearInterval(timer);
+  }, [simulacaoResultadoId, simulacaoResultadoIdSecundario]);
 
   const totalBancosResumo =
     f.sistema_amortizacao === "B"
@@ -295,6 +325,82 @@ function Pagina() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Popup de Comparação de Taxas (Dual CPF) */}
+      <ComparativoTaxasDialog 
+        aberto={popupAberto} 
+        onClose={() => setPopupAberto(false)} 
+        idTitular={simulacaoResultadoId}
+        idSecundario={simulacaoResultadoIdSecundario}
+      />
     </div>
+  );
+}
+
+function ComparativoTaxasDialog({ aberto, onClose, idTitular, idSecundario }: { aberto: boolean; onClose: () => void; idTitular: string | null; idSecundario: string | null }) {
+  const { data: titular } = useQuery({
+    queryKey: ["simulacao", idTitular],
+    queryFn: () => obterSimulacao({ data: { id: idTitular! } }),
+    enabled: aberto && !!idTitular
+  });
+
+  const { data: secundario } = useQuery({
+    queryKey: ["simulacao", idSecundario],
+    queryFn: () => obterSimulacao({ data: { id: idSecundario! } }),
+    enabled: aberto && !!idSecundario
+  });
+
+  const getMelhorTaxa = (sim: any) => {
+    const bancos = (sim?.bancos as any[]) ?? [];
+    const taxas = bancos
+      .filter(b => b.status_banco === "simulada" && b.taxa_juros_ano)
+      .map(b => b.taxa_juros_ano);
+    return taxas.length > 0 ? Math.min(...taxas) : null;
+  };
+
+  const taxaTitular = getMelhorTaxa(titular);
+  const taxaConjuge = getMelhorTaxa(secundario);
+  
+  const nomeTitular = titular?.simulacao?.nome_cliente?.split(" ")[0] ?? "Titular";
+  const nomeConjuge = secundario?.simulacao?.nome_cliente?.split(" ")[0] ?? "Cônjuge";
+
+  return (
+    <AlertDialog open={aberto} onOpenChange={(o) => !o && onClose()}>
+      <AlertDialogContent className="max-w-md">
+        <AlertDialogHeader>
+          <AlertDialogTitle className="flex items-center gap-2">
+            <Landmark className="h-5 w-5 text-primary" />
+            Comparativo de Taxas (Teste CPF)
+          </AlertDialogTitle>
+          <AlertDialogDescription className="pt-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex flex-col items-center rounded-lg border border-border p-4 bg-muted/30">
+                <span className="text-xs text-muted-foreground uppercase font-bold">Taxa {nomeTitular}</span>
+                <span className="text-2xl font-bold text-foreground mt-1">
+                  {taxaTitular ? formatPercent(taxaTitular / 100) : "—"}
+                </span>
+              </div>
+              <div className="flex flex-col items-center rounded-lg border border-border p-4 bg-muted/30">
+                <span className="text-xs text-muted-foreground uppercase font-bold">Taxa {nomeConjuge}</span>
+                <span className="text-2xl font-bold text-foreground mt-1">
+                  {taxaConjuge ? formatPercent(taxaConjuge / 100) : "—"}
+                </span>
+              </div>
+            </div>
+            
+            <p className="mt-6 text-center text-sm">
+              {taxaTitular && taxaConjuge 
+                ? taxaTitular <= taxaConjuge 
+                  ? `O perfil de ${nomeTitular} retornou a melhor taxa.`
+                  : `O perfil de ${nomeConjuge} retornou a melhor taxa.`
+                : "Aguardando retornos dos bancos para comparação."}
+            </p>
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogAction onClick={onClose}>Fechar Comparativo</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }
