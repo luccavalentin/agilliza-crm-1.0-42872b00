@@ -124,82 +124,118 @@ export function PowerPointModelosView() {
 
       {/* Preview Section */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <Card className="lg:col-span-2 overflow-hidden border-none shadow-xl bg-slate-900 aspect-video relative group">
-          <div className="absolute inset-0 flex flex-col items-center justify-center text-white p-12 text-center space-y-4">
-             <div className="w-20 h-20 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-sm mb-4">
-                <Presentation className="h-10 w-10" />
-             </div>
-             <h2 className="text-3xl font-bold tracking-tight">{modeloAtual.titulo}</h2>
-             <p className="text-slate-400 max-w-md mx-auto">{modeloAtual.descricao}</p>
-             <div className="pt-8">
+        <Card className="lg:col-span-2 overflow-hidden border-none shadow-2xl bg-[#0F172A] relative group min-h-[400px]">
+          {/* Main Slide Preview */}
+          <div className="absolute inset-0 p-8 flex flex-col items-center justify-center">
+            <div className="relative w-full max-w-3xl aspect-video rounded-lg overflow-hidden shadow-2xl border border-white/10 group-hover:scale-[1.02] transition-transform duration-500">
+              <img 
+                src={modeloAtual.slides[0]} 
+                alt={modeloAtual.titulo}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-6">
+                <p className="text-white font-medium text-lg">Preview da Capa</p>
+              </div>
+            </div>
+
+            <div className="mt-8 flex flex-col items-center space-y-4">
+              <h2 className="text-2xl font-bold text-white tracking-tight">{modeloAtual.titulo}</h2>
+              <p className="text-slate-400 text-sm max-w-md text-center">{modeloAtual.descricao}</p>
+              
+              <div className="flex gap-4 pt-4">
                 <Button 
                   size="lg" 
-                  className="bg-white text-slate-900 hover:bg-slate-200 gap-2"
+                  className="bg-white text-slate-900 hover:bg-slate-200 gap-2 font-semibold shadow-lg shadow-white/10"
                   onClick={() => baixar(modeloAtual.url, modeloAtual.titulo)}
                 >
                   <Play className="h-4 w-4 fill-current" />
                   Iniciar Download
                 </Button>
-             </div>
+                <Button 
+                  size="lg" 
+                  variant="outline"
+                  className="border-white/20 text-white hover:bg-white/10 gap-2 backdrop-blur-sm"
+                >
+                  <Eye className="h-4 w-4" />
+                  Pré-visualizar Slides
+                </Button>
+              </div>
+            </div>
           </div>
           
-          {/* Mockup de slides em baixo */}
-          <div className="absolute bottom-6 left-6 right-6 flex gap-4 overflow-hidden opacity-40 group-hover:opacity-60 transition-opacity">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="flex-1 aspect-video bg-slate-800 rounded border border-white/10 flex items-center justify-center">
-                <span className="text-[10px] font-mono text-slate-500">SLIDE 0{i}</span>
+          {/* Slide Thumbnails Overlay */}
+          <div className="absolute bottom-6 left-6 right-6 flex gap-4 opacity-60 group-hover:opacity-100 transition-opacity pointer-events-none">
+            {modeloAtual.slides.slice(1, 5).map((slide, i) => (
+              <div key={i} className="flex-1 aspect-video rounded border border-white/20 overflow-hidden shadow-lg bg-slate-800">
+                <img src={slide} alt={`Slide ${i + 2}`} className="w-full h-full object-cover grayscale-[0.5] group-hover:grayscale-0 transition-all" />
               </div>
             ))}
           </div>
         </Card>
 
-        <Card className="h-full">
-          <CardHeader>
-            <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-              Detalhes do Modelo
-            </CardTitle>
+        <Card className="h-full border-border/60 shadow-lg">
+          <CardHeader className="border-b border-border/50 bg-muted/30">
+            <div className="flex items-center gap-2">
+              <Layers className="h-4 w-4 text-primary" />
+              <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Ficha Técnica do Modelo
+              </CardTitle>
+            </div>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-6 pt-6">
             <div className="space-y-4">
-              <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary/50 border border-border/50">
-                <div className="p-2 rounded bg-primary/10 text-primary">
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary/30 border border-border/50 hover:border-primary/30 transition-colors">
+                <div className="p-2.5 rounded-lg bg-primary/10 text-primary">
                   <FileType className="h-4 w-4" />
                 </div>
                 <div>
-                  <p className="text-xs font-medium">Formato</p>
+                  <p className="text-xs font-semibold text-foreground">Formato do Arquivo</p>
                   <p className="text-[11px] text-muted-foreground">Microsoft PowerPoint (.pptx)</p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary/50 border border-border/50">
-                <div className="p-2 rounded bg-primary/10 text-primary">
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary/30 border border-border/50 hover:border-primary/30 transition-colors">
+                <div className="p-2.5 rounded-lg bg-primary/10 text-primary">
                   <Download className="h-4 w-4" />
                 </div>
                 <div>
-                  <p className="text-xs font-medium">Tamanho</p>
-                  <p className="text-[11px] text-muted-foreground">~2.4 MB</p>
+                  <p className="text-xs font-semibold text-foreground">Tamanho do Arquivo</p>
+                  <p className="text-[11px] text-muted-foreground">{modeloAtual.tamanho}</p>
                 </div>
               </div>
             </div>
 
-            <div className="space-y-2">
-              <h4 className="text-xs font-semibold text-foreground">Incluso no modelo:</h4>
-              <ul className="text-xs text-muted-foreground space-y-1.5 list-disc pl-4">
-                <li>Design institucional Agilliza</li>
-                <li>Paleta de cores oficial</li>
-                <li>Fontes padronizadas</li>
-                <li>Layouts de transição</li>
-                <li>Gráficos editáveis</li>
+            <div className="space-y-3">
+              <h4 className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Recursos Inclusos:</h4>
+              <ul className="grid grid-cols-1 gap-2">
+                {[
+                  "Design exclusivo Agilliza",
+                  "Paleta de cores institucional",
+                  "Gráficos 100% editáveis",
+                  "Iconografia personalizada",
+                  "Layouts mestre padronizados",
+                  "Fontes seguras incorporadas"
+                ].map((item, idx) => (
+                  <li key={idx} className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <div className="h-1 w-1 rounded-full bg-primary" />
+                    {item}
+                  </li>
+                ))}
               </ul>
             </div>
             
-            <Button 
-              variant="outline" 
-              className="w-full mt-4"
-              onClick={() => baixar(modeloAtual.url, modeloAtual.titulo)}
-            >
-              Baixar agora
-            </Button>
+            <div className="pt-4 space-y-3">
+              <Button 
+                className="w-full h-11 shadow-md shadow-primary/20 font-bold"
+                onClick={() => baixar(modeloAtual.url, modeloAtual.titulo)}
+              >
+                <FileDown className="mr-2 h-4 w-4" />
+                Baixar agora
+              </Button>
+              <p className="text-[10px] text-center text-muted-foreground px-4">
+                Ao baixar, você concorda com as diretrizes de uso da marca Agilliza.
+              </p>
+            </div>
           </CardContent>
         </Card>
       </div>
