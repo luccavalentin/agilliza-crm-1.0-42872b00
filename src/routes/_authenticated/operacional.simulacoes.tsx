@@ -629,6 +629,18 @@ function Pagina() {
         bancos={detalhePdf?.bancos ?? []}
         modo="detalhada"
       />
+
+      {encaminhamento && (
+        <EncaminharSimulacaoDialog
+          aberto={!!encaminhamento}
+          onOpenChange={(open) => !open && setEncaminhamento(null)}
+          onConfirm={confirmarEncaminhamento}
+          clienteNome={encaminhamento.clienteNome}
+          clienteEmail={encaminhamento.clienteEmail}
+          clienteWhatsapp={encaminhamento.clienteWhatsapp}
+          canal={encaminhamento.canal}
+        />
+      )}
     </div>
   );
 }
