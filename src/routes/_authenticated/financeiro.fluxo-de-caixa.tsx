@@ -311,7 +311,7 @@ function Pagina() {
     { titulo: string; descricao: string; linhas: { rotulo: string; sub?: string; valor: number }[] }
   > = {
     saldoRealizado: {
-      titulo: "FLUXO DE CAIXA ELE DIZ QUE TEVE UMA ENTRADA MAS QUERO QUE ELE ESPECIFIQUE EXATAMENTE PARA QUAL ENTRADA!!!! ME PERMITA EDITAR, EXCLUIR E ETC",
+      titulo: "Detalhamento de Entradas e Saídas",
       descricao: "Movimentações já efetivadas em caixa.",
       linhas: pontos.map((p: any) => ({
         rotulo: p.label,
