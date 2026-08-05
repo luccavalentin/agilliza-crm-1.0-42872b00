@@ -39,6 +39,7 @@ import {
   Percent,
   Bot,
   BookOpen,
+  Presentation,
 } from "lucide-react";
 
 /** Permissão exigida por um item (chave = `${modulo}:view`). */
@@ -293,6 +294,12 @@ export const navInterno: NavGroup[] = [
             label: "Papel Timbrado",
             icon: FileText,
             to: "/formularios/papel-timbrado",
+            perm: { modulo: "documentos.formularios" },
+          },
+          {
+            label: "Modelos Power Point",
+            icon: Presentation,
+            to: "/formularios/powerpoint",
             perm: { modulo: "documentos.formularios" },
           },
         ],
