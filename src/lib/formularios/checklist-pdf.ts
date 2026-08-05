@@ -44,14 +44,15 @@ export async function gerarChecklistBancoPDF(bancoId: string, clienteNome?: stri
   doc.setFont("helvetica", "bold");
   doc.setFontSize(14);
   const bancoNome = (bancoId === "itau" ? "Itaú" : bancoId).toUpperCase();
-  doc.text(`CHECKLIST DE DOCUMENTAÇÃO - ${bancoNome}`, pageW - MARGIN, 21, { align: "right" });
+  doc.text(`CHECKLIST DE DOCUMENTAÇÃO - ${bancoNome}`, pageW - MARGIN, 24, { align: "right" });
   
   // Logo do Banco no Header (Superior Direita)
   if (bancoBrand?.logo) {
     try {
-      const bLogoH = 14;
+      const bLogoH = 16;
       const bLogoW = bLogoH * (bancoBrand.ratio || 1);
-      doc.addImage(bancoBrand.logo, "PNG", pageW - MARGIN - bLogoW - 5, 23, bLogoW, bLogoH);
+      // Centralizado verticalmente no header de 40mm
+      doc.addImage(bancoBrand.logo, "PNG", MARGIN + 80, 12, bLogoW, bLogoH);
     } catch (e) {}
   }
 
