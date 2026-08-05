@@ -100,7 +100,35 @@ function Pagina() {
     if (comparativo.length === 0) return;
     setBaixando(true);
     try {
-      const { baixarSimulacaoDetalhadaPDF } = await import("@/lib/simulacao/simulacao-pdf");
+      const { baixarSimulacaoDetalhadaPDF, baixarSimulacaoPDF } = await import("@/lib/simulacao/simulacao-pdf");
+      
+      // Baixa o comparativo consolidado primeiro
+      baixarSimulacaoPDF({
+        simulacao: {
+          numero_simulacao: null,
+          nome_cliente: "SIMULAÇÃO RÁPIDA",
+          produto: w.produto,
+          valor_imovel: w.valor_imovel,
+          valor_financiamento: financiamentoTotalExibido,
+          valor_entrada: w.valor_entrada,
+          prazo: w.prazo_meses,
+          sistema_amortizacao: w.sistema_amortizacao,
+          created_at: new Date().toISOString(),
+        },
+        bancos: comparativo.map(c => ({
+          nome_banco: c.nome_banco,
+          status_banco: "simulada",
+          valor_parcela: c.resultado.primeira_parcela,
+          taxa_juros_ano: c.taxa_ano * 100,
+          prazo_pagamento_max: w.prazo_meses,
+          valor_financiamento_max: financiamentoTotalExibido,
+          _sistema: w.sistema_amortizacao === "P" ? "PRICE" : "SAC",
+        }))
+      });
+
+      // Pequeno delay antes de baixar os individuais
+      await new Promise((r) => setTimeout(r, 1200));
+
       const bancosParaBaixar = bancoId
         ? comparativo.filter((c) => c.banco_id === bancoId)
         : comparativo;
