@@ -13,6 +13,7 @@ export interface HandlersLinha {
   onEnviarProposta: (id: string, numero: string) => void | Promise<void>;
   onExcluir: (id: string) => Promise<void>;
   onRestaurar: (id: string) => void | Promise<void>;
+  onEncaminhar: (id: string, canal: "email" | "whatsapp") => void | Promise<void>;
 }
 
 

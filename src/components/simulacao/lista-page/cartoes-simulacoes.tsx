@@ -123,12 +123,13 @@ export function CartoesSimulacoes({
                       onBaixarComparativo={() => handlers.onBaixarComparativo(s.id)}
                       onBaixarDetalhada={() => handlers.onBaixarDetalhada(s.id)}
                       onDuplicar={() => handlers.onDuplicar(s.id)}
-                      onEnviarProposta={() =>
-                        handlers.onEnviarProposta(s.id, s.numero_simulacao)
-                      }
-                      onExcluir={() => handlers.onExcluir(s.id)}
-                      numero={s.numero_simulacao}
-                    />
+                        onEnviarProposta={() =>
+                          handlers.onEnviarProposta(s.id, s.numero_simulacao)
+                        }
+                        onExcluir={() => handlers.onExcluir(s.id)}
+                        onEncaminhar={(id, canal) => handlers.onEncaminhar(s.id, canal)}
+                        numero={s.numero_simulacao}
+                      />
                   </>
                 )}
               </div>
