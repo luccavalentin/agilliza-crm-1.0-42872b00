@@ -13,6 +13,8 @@ import { THEME_INIT_SCRIPT } from "@/lib/theme";
 import { CookieConsent } from "@/components/legal/cookie-consent";
 import { InstallPrompt } from "@/components/pwa/install-prompt";
 import { RealtimeAuthSync } from "@/components/shared/realtime-auth-sync";
+import { PropostaRetornoWatcher } from "@/components/propostas/proposta-retorno-watcher";
+import { PropostaPopupHost } from "@/components/propostas/proposta-popup-host";
 const FloatingChatHost = lazy(() => import("@/components/shared/floating-chat-host").then(m => ({ default: m.FloatingChatHost })));
 
 import appCss from "../styles.css?url";
@@ -160,6 +162,8 @@ function RootComponent() {
     return iniciarLimpezaBadge();
   }, []);
 
+  const userId = (queryClient.getQueryData(["auth-user"]) as any)?.id;
+
   useEffect(() => {
     // Recarrega uma única vez quando um chunk dinâmico antigo (deploy anterior)
     // falha ao carregar — evita a tela em branco após novos deploys.
@@ -202,6 +206,8 @@ function RootComponent() {
       <Toaster closeButton />
       <CookieConsent />
       <InstallPrompt />
+      <PropostaRetornoWatcher userId={userId} />
+      <PropostaPopupHost />
 
 
     </QueryClientProvider>
