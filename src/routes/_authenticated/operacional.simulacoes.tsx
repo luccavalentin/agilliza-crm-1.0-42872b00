@@ -435,26 +435,42 @@ function Pagina() {
       try {
         const dados = await obter({ data: { id } });
         const sim = dados.simulacao;
-        const clienteNome = sim.nome_cliente || "Cliente";
-        const valorFinanc = formatBRL(sim.valor_financiamento || 0);
-        const numero = sim.numero_simulacao;
-        
-        const texto = `Olá ${clienteNome}! Segue o link da sua simulação ${numero} de financiamento no valor de ${valorFinanc}: ${window.location.origin}/operacional/simulacoes/${id}`;
-        
-        if (canal === "whatsapp") {
-          const fone = sim.celular?.replace(/\D/g, "");
-          const url = fone 
-            ? `https://api.whatsapp.com/send?phone=55${fone}&text=${encodeURIComponent(texto)}`
-            : `https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`;
-          window.open(url, "_blank");
-        } else {
-          const subject = encodeURIComponent(`Simulação de Financiamento - ${numero}`);
-          const url = `mailto:${sim.email || ""}?subject=${subject}&body=${encodeURIComponent(texto)}`;
-          window.location.href = url;
-        }
+        setEncaminhamento({
+          id,
+          clienteNome: sim.nome_cliente || "Cliente",
+          clienteEmail: sim.email || "",
+          clienteWhatsapp: sim.celular || "",
+          canal,
+        });
       } catch {
-        toast.error("Não foi possível encaminhar a simulação.");
+        toast.error("Não foi possível carregar os dados da simulação.");
       }
+    }
+  };
+
+  const confirmarEncaminhamento = async (dados: { email: string; whatsapp: string; canal: "email" | "whatsapp" }) => {
+    if (!encaminhamento) return;
+    try {
+      const simulacaoId = encaminhamento.id;
+      const resp = await obter({ data: { id: simulacaoId } });
+      const sim = resp.simulacao;
+      const clienteNome = sim.nome_cliente || "Cliente";
+      const valorFinanc = formatBRL(sim.valor_financiamento || 0);
+      const numero = sim.numero_simulacao;
+      
+      const texto = `Olá ${clienteNome}! Segue a simulação ${numero} de financiamento no valor de ${valorFinanc}: ${window.location.origin}/operacional/simulacoes/${simulacaoId}`;
+      
+      if (dados.canal === "whatsapp") {
+        const fone = dados.whatsapp.replace(/\D/g, "");
+        const url = `https://api.whatsapp.com/send?phone=55${fone}&text=${encodeURIComponent(texto)}`;
+        window.open(url, "_blank");
+      } else {
+        const subject = encodeURIComponent(`Simulação de Financiamento - ${numero}`);
+        const url = `https://mail.google.com/mail/?view=cm&fs=1&to=${dados.email}&su=${subject}&body=${encodeURIComponent(texto)}`;
+        window.open(url, "_blank");
+      }
+    } catch {
+      toast.error("Erro ao processar encaminhamento.");
     }
   };
 
