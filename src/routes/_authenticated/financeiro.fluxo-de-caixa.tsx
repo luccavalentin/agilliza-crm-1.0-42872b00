@@ -375,7 +375,7 @@ function Pagina() {
 
 
   return (
-    <div className="mx-auto w-full max-w-[1600px] space-y-6 p-4 sm:p-5 md:space-y-10 md:p-8">
+    <div className="mx-auto w-full max-w-[1600px] space-y-6 p-4 sm:p-5 md:space-y-8 md:p-8 bg-gradient-to-b from-background to-muted/20 min-h-screen">
       <PanelHeader
         eyebrow="Relatório Gerencial · Financeiro"
         titulo="Fluxo de Caixa"
