@@ -54,6 +54,7 @@ export interface DemandaItem {
   escalonada: boolean;
   created_at: string;
   nao_lidas: number;
+  sla_horas: number | null;
   ultima_mensagem_em: string | null;
 }
 
@@ -142,7 +143,7 @@ export const listarDemandas = createServerFn({ method: "GET" })
     let query = supabase
       .from("demandas")
       .select(
-        "id, numero, tipo, titulo, descricao, status, prioridade, cliente_id, proposta_id, simulacao_id, responsavel_id, criador_id, prazo_sla, sla_inicio, concluida_em, escalonada, created_at, clientes(nome), propostas(numero_proposta), simulacoes(numero_simulacao)",
+        "id, numero, tipo, titulo, descricao, status, prioridade, cliente_id, proposta_id, simulacao_id, responsavel_id, criador_id, prazo_sla, sla_inicio, sla_horas, concluida_em, escalonada, created_at, clientes(nome), propostas(numero_proposta), simulacoes(numero_simulacao)",
       )
       .limit(300);
 
@@ -235,6 +236,7 @@ export const listarDemandas = createServerFn({ method: "GET" })
       escalonada: r.escalonada,
       created_at: r.created_at,
       nao_lidas: naoLidasMap.get(r.id) ?? 0,
+      sla_horas: r.sla_horas ?? null,
       ultima_mensagem_em: ultimaMap.get(r.id) ?? null,
     }));
   });
