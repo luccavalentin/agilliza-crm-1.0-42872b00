@@ -197,12 +197,14 @@ function DetalheFluxoDialog({
   titulo,
   descricao,
   linhas,
+  queryClient,
 }: {
   aberto: boolean;
   onClose: () => void;
   titulo: string;
   descricao?: string;
   linhas: { rotulo: string; sub?: string; valor: number; details?: { tipo: "pagar" | "receber"; id: string }[] }[];
+  queryClient: any;
 }) {
   const total = linhas.reduce((s, l) => s + l.valor, 0);
   return (
@@ -570,6 +572,7 @@ function Pagina() {
             titulo={det?.titulo ?? ""}
             descricao={det?.descricao}
             linhas={det?.linhas ?? []}
+            queryClient={queryClient}
           />
 
 
