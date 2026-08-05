@@ -793,6 +793,7 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
     await executarEnvioAmbos({
       f, idOperacao, router, setErros, setEnviando, setConcluidos,
       setSimulacaoResultadoId, setSimulacaoResultadoIdPrice,
+      setSimulacaoResultadoIdSecundario,
     });
   }
 
