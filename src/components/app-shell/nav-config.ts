@@ -307,6 +307,22 @@ export const navInterno: NavGroup[] = [
             icon: ListChecks,
             to: "/formularios/checklist",
             perm: { modulo: "documentos.formularios" },
+            children: [
+              {
+                label: "Inter",
+                icon: Landmark,
+                to: "/formularios/checklist",
+                search: { banco: "inter" },
+                perm: { modulo: "documentos.formularios" },
+              },
+              {
+                label: "Caixa",
+                icon: Landmark,
+                to: "/formularios/checklist",
+                search: { banco: "caixa" },
+                perm: { modulo: "documentos.formularios" },
+              },
+            ],
           },
         ],
       },
