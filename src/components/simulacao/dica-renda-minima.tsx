@@ -19,7 +19,7 @@ interface Props {
   valorImovel?: number | null;
   prazoMeses: number;
   taxaAno: number;
-  sistema: SistemaAmortizacao;
+  sistema: SistemaAmortizacao | "AMBOS";
   rendaInformada?: number | null;
   bancos?: BancoRendaApi[] | null;
   compoeRendaConjuge?: boolean;
