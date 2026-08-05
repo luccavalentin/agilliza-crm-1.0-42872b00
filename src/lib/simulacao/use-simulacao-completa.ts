@@ -141,7 +141,7 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
       email: s.email || EMAIL_PADRAO,
       celular: s.celular ?? "",
       possui_conjuge: Boolean(s.possui_conjuge),
-      compoe_renda: Boolean(s.compoe_renda),
+      compoe_renda: true, // Força true para carregar interface de renda
       compoe_renda_conjuge: s.compoe_renda_conjuge !== undefined ? Boolean(s.compoe_renda_conjuge) : true,
 
       consentimento_lgpd: Boolean(s.consentimento_lgpd),
@@ -219,8 +219,8 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
   }, [bancos, f.bancos_ids]);
 
   const rendaConsiderada = useMemo(
-    () => (Number(f.renda_total) || 0) + (f.compoe_renda && f.compoe_renda_conjuge ? Number(f.renda_conjuge) || 0 : 0),
-    [f.renda_total, f.compoe_renda, f.compoe_renda_conjuge, f.renda_conjuge],
+    () => (Number(f.renda_total) || 0) + (f.compoe_renda_conjuge ? Number(f.renda_conjuge) || 0 : 0),
+    [f.renda_total, f.compoe_renda_conjuge, f.renda_conjuge],
   );
 
 
