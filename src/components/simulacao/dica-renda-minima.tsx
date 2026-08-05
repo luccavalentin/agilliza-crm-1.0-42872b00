@@ -154,8 +154,8 @@ export function DicaRendaMinima(props: Props) {
     <div className="flex flex-col gap-1">
       <div className="mt-1 flex items-center justify-between gap-3 overflow-hidden rounded-xl border border-border/70 bg-card/50 px-3 py-2 shadow-sm">
         <div className="flex min-w-0 items-center gap-2">
-          <div className={cn("flex h-6 w-6 items-center justify-center rounded-lg ring-1", s.iconBox)}>
-            <Icon className={cn("h-3.5 w-3.5", s.icon)} aria-hidden />
+          <div className={cn("flex h-6 w-6 items-center justify-center rounded-lg ring-1 bg-primary/10 ring-primary/20")}>
+            <Info className={cn("h-3.5 w-3.5 text-primary")} aria-hidden />
           </div>
           <div className="flex flex-col">
             <span className="text-[11px] font-medium text-muted-foreground leading-tight">
@@ -166,7 +166,7 @@ export function DicaRendaMinima(props: Props) {
             </span>
           </div>
         </div>
-        <p className={cn("font-mono text-sm font-bold tabular-nums", "text-blue-700 dark:text-blue-400")}>
+        <p className={cn("font-mono text-sm font-bold tabular-nums text-emerald-600")}>
           {formatBRL(rendaMin)}
         </p>
       </div>
