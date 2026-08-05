@@ -864,6 +864,7 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
     simulacaoResultadoIdPrice,
     fecharResultadoInline: () => setSimulacaoResultadoId(null),
     fecharResultadoInlinePrice: () => setSimulacaoResultadoIdPrice(null),
+    refetchCrm,
   };
 }
 
