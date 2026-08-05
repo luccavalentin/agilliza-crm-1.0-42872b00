@@ -252,9 +252,15 @@ const criarSchema = z.object({
 export const criarSimulacao = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => criarSchema.parse(d))
-  .handler(async ({ data, context }): Promise<{ id: string; numero_simulacao: string }> => {
+  .handler(async ({ data, context }): Promise<{ id: string; numero_simulacao: string; id_secundario?: string }> => {
     const { supabase, userId } = context;
     const dd = data.dados;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    // Se estivermos em modo completa e for casado, verificamos se o usuário pediu
+    // explicitamente para testar ambos os CPFs.
+    const testarAmbos = data.modo === "completa" && Boolean(dd.possui_conjuge) && Boolean(dd.compoe_renda_conjuge);
+
 
     const { data: prof } = await supabase
       .from("profiles")
