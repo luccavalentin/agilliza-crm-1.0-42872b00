@@ -10,7 +10,7 @@ export async function gerarChecklistBancoPDF(bancoId: string, clienteNome?: stri
   const pageH = doc.internal.pageSize.getHeight();
   const MARGIN = 20;
 
-  const checklist = CHECKLISTS_BANCOS[bancoId];
+  const checklist = docsCustom ? { docs: docsCustom } : CHECKLISTS_BANCOS[bancoId];
   if (!checklist) throw new Error("Checklist não encontrado para este banco.");
 
   const bancoBrand = resolveBancoBrand(bancoId);
