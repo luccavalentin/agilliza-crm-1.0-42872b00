@@ -101,6 +101,15 @@ function Pagina() {
     Array<{ simulacao_banco_id: string; banco_id: string; nome_banco: string; proposta_id: string; numero: string }>
   >([]);
 
+  // Encaminhamento: e-mail ou whatsapp
+  const [encaminhamento, setEncaminhamento] = useState<{
+    id: string;
+    clienteNome: string;
+    clienteEmail: string;
+    clienteWhatsapp: string;
+    canal: "email" | "whatsapp";
+  } | null>(null);
+
 
   const { data, isLoading } = useQuery({
     queryKey: ["simulacoes", escopo, busca, desde, ate, responsavel, verExcluidas],
