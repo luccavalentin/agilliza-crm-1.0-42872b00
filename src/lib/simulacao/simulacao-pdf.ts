@@ -1058,7 +1058,11 @@ export function nomeDescritivo(s: any, bancos: any[], rendaOverride?: number | n
         // Prioriza taxa mensal real do banco, se não houver calcula a partir da anual (usada na rápida)
         const taxa = d?.taxaJurosMes ?? (b.taxa_juros_ano ? (Math.pow(1 + b.taxa_juros_ano / 100, 1 / 12) - 1) * 100 : 0);
         const taxaStr = taxa > 0 ? ` Tx ${taxa.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "";
-        return `${b.nome_banco}${taxaStr}`;
+        
+        const sistema = b._sistema || "SAC";
+        const suffix = sistema === "SAC e PRICE" ? " (S+P)" : (sistema === "SAC" || sistema === "PRICE" ? ` (${sistema})` : "");
+        
+        return `${b.nome_banco}${suffix}${taxaStr}`;
       })
       .join(", ");
     return `Comparativos bancos ${bancosTxt}`;
