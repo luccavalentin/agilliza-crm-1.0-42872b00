@@ -126,7 +126,7 @@ export function ChecklistBancosView() {
     if (!bancoSelecionado) return;
     setChecklists(prev => {
       const novos = [...prev[bancoSelecionado]];
-      novos[index] = novoValor;
+      novos[index] = { ...novos[index], nome: novoValor };
       return { ...prev, [bancoSelecionado]: novos };
     });
     setEditandoIndex(null);
@@ -134,17 +134,17 @@ export function ChecklistBancosView() {
   };
 
   const brandAtiva = bancoSelecionado ? resolveBancoBrand(bancoSelecionado) : null;
-  const docsAtivos = bancoSelecionado ? (checklists[bancoSelecionado] || []) : [];
+  const itemsAtivos = bancoSelecionado ? (checklists[bancoSelecionado] || []) : [];
   const selecionadosAtivos = bancoSelecionado ? (selecionados[bancoSelecionado] || []) : [];
 
-  const toggleSelecao = (doc: string) => {
+  const toggleSelecao = (docNome: string) => {
     if (!bancoSelecionado) return;
     setSelecionados(prev => {
       const bancoDocs = prev[bancoSelecionado] || [];
-      if (bancoDocs.includes(doc)) {
-        return { ...prev, [bancoSelecionado]: bancoDocs.filter(d => d !== doc) };
+      if (bancoDocs.includes(docNome)) {
+        return { ...prev, [bancoSelecionado]: bancoDocs.filter(d => d !== docNome) };
       }
-      return { ...prev, [bancoSelecionado]: [...bancoDocs, doc] };
+      return { ...prev, [bancoSelecionado]: [...bancoDocs, docNome] };
     });
   };
 
