@@ -216,12 +216,21 @@ export async function executarEnvioAmbos(ctx: CtxBase): Promise<void> {
     if (bancosSimulados.length > 0) {
       try {
         const { baixarSimulacaoDetalhadaPDF } = await import("@/lib/simulacao/simulacao-pdf");
-        for (const bSim of bancosSimulados) {
-          const simData = await obterSimulacao({ data: { id: bSim.idSimulacao } });
-          const bReal = (simData.bancos as any[])?.find((b: any) => b.banco_id === bSim.banco_id);
-          if (bReal) {
-            baixarSimulacaoDetalhadaPDF({ simulacao: simData.simulacao, bancos: [bReal] });
-            await new Promise((r) => setTimeout(r, 600));
+        // Agrupa bancos por id de simulação para evitar múltiplas chamadas com dados repetidos
+        const porSim = bancosSimulados.reduce((acc, curr) => {
+          if (!acc[curr.idSimulacao]) acc[curr.idSimulacao] = [];
+          acc[curr.idSimulacao].push(curr.banco_id);
+          return acc;
+        }, {} as Record<string, string[]>);
+
+        for (const [simId, bancoIds] of Object.entries(porSim)) {
+          const simData = await obterSimulacao({ data: { id: simId } });
+          const bancosReais = (simData.bancos as any[])?.filter((b: any) => (bancoIds as string[]).includes(b.banco_id));
+          if (bancosReais?.length > 0) {
+            // No modo Ambos, as simulações já vêm com b._sistema ("SAC" ou "PRICE") marcado no backend
+            // para que o PDF saia com o rótulo correto.
+            await baixarSimulacaoDetalhadaPDF({ simulacao: simData.simulacao, bancos: bancosReais });
+            await new Promise((r) => setTimeout(r, 800));
           }
         }
       } catch (e) {

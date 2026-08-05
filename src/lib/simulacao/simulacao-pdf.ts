@@ -1014,7 +1014,7 @@ export async function baixarSimulacoesDetalhadasAgrupadasZipPDF(
         total += 1;
         // Intervalo entre downloads: o Chromium ignora/renomeia arquivos
         // quando múltiplos <a download> são disparados no mesmo tick.
-        await new Promise((r) => setTimeout(r, 450));
+        await new Promise((r) => setTimeout(r, 800));
       } catch (err) {
         falhas += 1;
         console.error("[PDF] falha ao gerar PDF do banco", banco?.nome_banco, err);
