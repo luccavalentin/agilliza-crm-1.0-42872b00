@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { useSearch } from "@tanstack/react-router";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ListChecks, Download, Share2, Mail, MessageCircle, FileText } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { ListChecks, Download, Share2, Mail, MessageCircle, FileText, Plus, Trash2, Edit2, Check, X } from "lucide-react";
 import { CHECKLISTS_BANCOS } from "@/lib/formularios/checklists.functions";
 import { resolveBancoBrand } from "@/lib/relatorios/banco-brand";
 import { gerarChecklistBancoPDF } from "@/lib/formularios/checklist-pdf";
@@ -14,6 +15,20 @@ export function ChecklistBancosView() {
   const [bancoSelecionado, setBancoSelecionado] = useState<string | null>(null);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [bancoParaCompartilhar, setBancoParaCompartilhar] = useState<{ id: string; nome: string } | null>(null);
+  
+  // Estado para gerenciar itens de checklist por banco (iniciado com os dados fixos)
+  const [checklists, setChecklists] = useState<Record<string, string[]>>({});
+  const [editandoIndex, setEditandoIndex] = useState<number | null>(null);
+  const [novoValor, setNovoValor] = useState("");
+
+  useEffect(() => {
+    // Inicializar checklists a partir da config se ainda não estiverem no estado
+    const initial: Record<string, string[]> = {};
+    Object.keys(CHECKLISTS_BANCOS).forEach(key => {
+      initial[key] = [...CHECKLISTS_BANCOS[key].docs];
+    });
+    setChecklists(initial);
+  }, []);
 
   useEffect(() => {
     if (search.banco && CHECKLISTS_BANCOS[search.banco]) {
@@ -31,7 +46,8 @@ export function ChecklistBancosView() {
 
   const handleDownload = async (bancoId: string) => {
     try {
-      await gerarChecklistBancoPDF(bancoId);
+      const docs = checklists[bancoId] || [];
+      await gerarChecklistBancoPDF(bancoId, undefined, docs);
       toast.success("Checklist gerado com sucesso!");
     } catch (error) {
       console.error(error);
@@ -52,29 +68,67 @@ export function ChecklistBancosView() {
       return;
     }
 
+    const docs = checklists[bancoParaCompartilhar.id] || [];
+    const listaTexto = docs.map(doc => `• ${doc}`).join('\n');
+
     if (dados.canal === "whatsapp") {
-      const msg = encodeURIComponent(`Olá! Segue o checklist de documentos para financiamento no banco ${bancoParaCompartilhar.nome}.\n\nPor favor, baixe o PDF em anexo no sistema Agilliza.`);
+      const msg = encodeURIComponent(`Olá! Segue o checklist de documentos para financiamento no banco ${bancoParaCompartilhar.nome}:\n\n${listaTexto}\n\nAtenciosamente, Agilliza.`);
       window.open(`https://api.whatsapp.com/send?phone=55${dados.whatsapp}&text=${msg}`, "_blank");
       toast.success("Redirecionando para o WhatsApp...");
     }
 
     if (dados.canal === "email") {
       const subject = encodeURIComponent(`Checklist de Documentos - ${bancoParaCompartilhar.nome}`);
-      const body = encodeURIComponent(`Olá,\n\nSegue a relação de documentos necessários para o banco ${bancoParaCompartilhar.nome}.\n\nAtenciosamente,\nEquipe Agilliza`);
+      const body = encodeURIComponent(`Olá,\n\nSegue a relação de documentos necessários para o banco ${bancoParaCompartilhar.nome}:\n\n${listaTexto}\n\nAtenciosamente,\nEquipe Agilliza`);
       window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=${dados.email}&su=${subject}&body=${body}`, "_blank");
       toast.success("Redirecionando para o Gmail...");
     }
   };
 
-  const checklistAtivo = bancoSelecionado ? CHECKLISTS_BANCOS[bancoSelecionado] : null;
+  const adicionarItem = () => {
+    if (!bancoSelecionado) return;
+    setChecklists(prev => ({
+      ...prev,
+      [bancoSelecionado]: [...(prev[bancoSelecionado] || []), "Novo Documento"]
+    }));
+    setEditandoIndex((checklists[bancoSelecionado]?.length || 0));
+    setNovoValor("Novo Documento");
+  };
+
+  const removerItem = (index: number) => {
+    if (!bancoSelecionado) return;
+    setChecklists(prev => ({
+      ...prev,
+      [bancoSelecionado]: prev[bancoSelecionado].filter((_, i) => i !== index)
+    }));
+    toast.success("Item removido.");
+  };
+
+  const iniciarEdicao = (index: number, valor: string) => {
+    setEditandoIndex(index);
+    setNovoValor(valor);
+  };
+
+  const salvarEdicao = (index: number) => {
+    if (!bancoSelecionado) return;
+    setChecklists(prev => {
+      const novos = [...prev[bancoSelecionado]];
+      novos[index] = novoValor;
+      return { ...prev, [bancoSelecionado]: novos };
+    });
+    setEditandoIndex(null);
+    toast.success("Item atualizado.");
+  };
+
   const brandAtiva = bancoSelecionado ? resolveBancoBrand(bancoSelecionado) : null;
+  const docsAtivos = bancoSelecionado ? (checklists[bancoSelecionado] || []) : [];
 
   return (
     <div className="container py-6 space-y-6 animate-in fade-in duration-500">
       <div className="flex flex-col gap-2">
         <h1 className="text-3xl font-bold tracking-tight">Checklist de Documentação</h1>
         <p className="text-muted-foreground">
-          Selecione um banco para visualizar e compartilhar a lista de documentos necessários.
+          Selecione um banco para visualizar, editar e compartilhar a lista de documentos necessários.
         </p>
       </div>
 
@@ -104,7 +158,6 @@ export function ChecklistBancosView() {
                 </div>
                 <div className="space-y-1">
                   <h3 className="font-semibold">{b.nome}</h3>
-                  <p className="text-xs text-muted-foreground">Relacão Oficial</p>
                 </div>
               </CardContent>
             </Card>
@@ -112,7 +165,7 @@ export function ChecklistBancosView() {
         })}
       </div>
 
-      {bancoSelecionado && checklistAtivo && (
+      {bancoSelecionado && (
         <Card className="animate-in slide-in-from-bottom-4 duration-500 border-none shadow-xl bg-white/50 backdrop-blur-sm">
           <CardHeader className="flex flex-row items-center justify-between border-b bg-muted/30 px-8 py-6 rounded-t-xl">
             <div className="space-y-1">
@@ -124,10 +177,18 @@ export function ChecklistBancosView() {
                 Checklist {bancos.find(b => b.id === bancoSelecionado)?.nome}
               </CardTitle>
               <CardDescription>
-                Relação completa de documentos para análise de crédito.
+                Personalize a relação de documentos antes de baixar ou enviar.
               </CardDescription>
             </div>
             <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                onClick={adicionarItem}
+                className="hover:bg-primary/5 border-primary/20 text-primary"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Novo Item
+              </Button>
               <Button 
                 variant="outline" 
                 onClick={() => handleShare(bancoSelecionado, bancos.find(b => b.id === bancoSelecionado)?.nome || "")}
@@ -147,7 +208,7 @@ export function ChecklistBancosView() {
           </CardHeader>
           <CardContent className="p-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4">
-              {checklistAtivo.docs.map((doc, idx) => (
+              {docsAtivos.map((doc, idx) => (
                 <div 
                   key={idx} 
                   className="flex items-start gap-4 p-4 rounded-lg hover:bg-white transition-colors group border border-transparent hover:border-border"
@@ -155,13 +216,53 @@ export function ChecklistBancosView() {
                   <div className="mt-1 h-5 w-5 rounded border-2 border-primary/30 flex items-center justify-center group-hover:border-primary transition-colors">
                     <div className="h-2 w-2 rounded-full bg-primary opacity-0 group-hover:opacity-100 transition-opacity" />
                   </div>
-                  <div className="space-y-1">
-                    <p className="font-medium text-slate-700 leading-none">{doc}</p>
-                    <p className="text-xs text-slate-400">Documento Obrigatório</p>
+                  
+                  <div className="flex-1 space-y-1">
+                    {editandoIndex === idx ? (
+                      <div className="flex gap-2 items-center">
+                        <Input 
+                          value={novoValor}
+                          onChange={(e) => setNovoValor(e.target.value)}
+                          className="h-8"
+                          autoFocus
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') salvarEdicao(idx);
+                            if (e.key === 'Escape') setEditandoIndex(null);
+                          }}
+                        />
+                        <Button size="icon" variant="ghost" className="h-8 w-8 text-green-600" onClick={() => salvarEdicao(idx)}>
+                          <Check className="h-4 w-4" />
+                        </Button>
+                        <Button size="icon" variant="ghost" className="h-8 w-8 text-red-600" onClick={() => setEditandoIndex(null)}>
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <p className="font-medium text-slate-700 leading-tight">{doc}</p>
+                          <p className="text-xs text-slate-400">Documento Obrigatório</p>
+                        </div>
+                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-primary" onClick={() => iniciarEdicao(idx, doc)}>
+                            <Edit2 className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => removerItem(idx)}>
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
             </div>
+
+            {docsAtivos.length === 0 && (
+              <div className="text-center py-10 text-muted-foreground">
+                <p>Nenhum item no checklist. Adicione um novo item acima.</p>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
