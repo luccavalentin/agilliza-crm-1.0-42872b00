@@ -152,6 +152,11 @@ export function ChecklistBancosView() {
     });
   };
 
+  const handleToggleDoc = (e: React.MouseEvent, docNome: string) => {
+    e.stopPropagation();
+    toggleSelecao(docNome);
+  };
+
   return (
     <div className="container py-6 space-y-6 animate-in fade-in duration-500">
       <div className="flex flex-col gap-2">
@@ -245,7 +250,7 @@ export function ChecklistBancosView() {
                 <div 
                   key={idx} 
                   className={`flex items-start gap-4 p-4 rounded-lg hover:bg-white transition-colors group border border-transparent hover:border-border cursor-pointer ${
-                    !selecionadosAtivos.includes(item.nome) ? "opacity-50 grayscale-[0.5]" : ""
+                    !selecionadosAtivos.includes(item.nome) ? "bg-slate-50/50 border-slate-100" : "bg-white shadow-sm border-slate-200"
                   }`}
                   onClick={() => toggleSelecao(item.nome)}
                 >

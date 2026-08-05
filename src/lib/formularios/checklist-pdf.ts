@@ -44,16 +44,25 @@ export async function gerarChecklistBancoPDF(bancoId: string, clienteNome?: stri
   doc.setFont("helvetica", "bold");
   doc.setFontSize(14);
   const bancoNome = (bancoId === "itau" ? "Itaú" : bancoId).toUpperCase();
-  doc.text(`CHECKLIST DE DOCUMENTAÇÃO - ${bancoNome}`, pageW - MARGIN, 24, { align: "right" });
+  
+  // Se for Itaú, damos um espaço extra para a logo não encavalar no texto
+  const textX = pageW - MARGIN;
+  doc.text(`CHECKLIST DE DOCUMENTAÇÃO - ${bancoNome}`, textX, 24, { align: "right" });
   
   // Logo do Banco no Header (Superior Direita)
   if (bancoBrand?.logo) {
     try {
-      const bLogoH = 16;
+      const bLogoH = 14; // Reduzido ligeiramente
       const bLogoW = bLogoH * (bancoBrand.ratio || 1);
-      // Centralizado verticalmente no header de 40mm
-      doc.addImage(bancoBrand.logo, "PNG", MARGIN + 80, 12, bLogoW, bLogoH);
-    } catch (e) {}
+      
+      // Calculamos a largura do texto para posicionar a logo ANTES dele sem sobrepor
+      const textWidth = doc.getTextWidth(`CHECKLIST DE DOCUMENTAÇÃO - ${bancoNome}`);
+      const logoX = textX - textWidth - bLogoW - 5; // 5mm de gap
+      
+      doc.addImage(bancoBrand.logo, "PNG", logoX, 13, bLogoW, bLogoH);
+    } catch (e) {
+      console.error("Erro ao adicionar logo do banco ao PDF:", e);
+    }
   }
 
   let y = 55;
