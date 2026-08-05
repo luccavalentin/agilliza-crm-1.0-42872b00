@@ -26,6 +26,7 @@ export interface WizardState {
   data_nascimento: string;
   prazo_meses: number;
   renda_familiar: number;
+  renda_familiar_price: number;
   sistema_amortizacao: "S" | "P" | "AMBOS";
   parcela_alvo: number;
 }
