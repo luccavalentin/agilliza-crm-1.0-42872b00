@@ -265,6 +265,29 @@ function Pagina() {
   const [gran, setGran] = useState<"dia" | "semana" | "mes">("mes");
   const [de, setDe] = useState("");
   const [ate, setAte] = useState("");
+  const [limpando, setLimpando] = useState(false);
+  const queryClient = useQueryClient();
+
+  const mutationLimpar = useMutation({
+    mutationFn: () => limparFluxoCaixa(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["fin-fluxo-analitico"] });
+      toast.success("Fluxo de caixa limpo com sucesso!");
+      setLimpando(false);
+    },
+    onError: (err: any) => {
+      toast.error(`Erro ao limpar fluxo de caixa: ${err.message}`);
+      setLimpando(false);
+    },
+  });
+
+  const handleLimparFluxo = () => {
+    if (confirm("Deseja realmente limpar COMPLETAMENTE o fluxo de caixa? Esta ação não pode ser desfeita e irá zerar o saldo acumulado.")) {
+      setLimpando(true);
+      mutationLimpar.mutate();
+    }
+  };
+
   const { data, isLoading, dataUpdatedAt } = useQuery({
     queryKey: ["fin-fluxo-analitico", gran, de, ate],
     queryFn: () =>
