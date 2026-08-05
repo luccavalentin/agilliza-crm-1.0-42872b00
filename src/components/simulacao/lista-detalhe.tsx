@@ -2,13 +2,17 @@ import {
   Copy,
   Download,
   Eye,
-  Mail,
-  MessageCircle,
   MoreHorizontal,
   Pencil,
   Send,
   Trash2,
+  Mail,
+  MessageCircle,
 } from "lucide-react";
+import { 
+  SiGmail, 
+  SiWhatsapp 
+} from "@icons-pack/react-simple-icons";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -232,10 +236,10 @@ export function AcoesSimulacao({
             <DropdownMenuPortal>
               <DropdownMenuSubContent>
                 <DropdownMenuItem onSelect={() => onEncaminhar?.(numero, "email")}>
-                  <Mail className="mr-2 h-4 w-4" /> E-mail
+                  <SiGmail className="mr-2 h-4 w-4 text-[#EA4335]" /> E-mail (Gmail)
                 </DropdownMenuItem>
                 <DropdownMenuItem onSelect={() => onEncaminhar?.(numero, "whatsapp")}>
-                  <MessageCircle className="mr-2 h-4 w-4" /> WhatsApp
+                  <SiWhatsapp className="mr-2 h-4 w-4 text-[#25D366]" /> WhatsApp
                 </DropdownMenuItem>
               </DropdownMenuSubContent>
             </DropdownMenuPortal>
