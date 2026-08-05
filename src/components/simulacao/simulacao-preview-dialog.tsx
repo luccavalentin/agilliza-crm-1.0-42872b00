@@ -65,7 +65,8 @@ export function SimulacaoPreviewDialog({ simulacaoId, open, onOpenChange }: Prop
     const { baixarSimulacaoDetalhadaPDF } = await import("@/lib/simulacao/simulacao-pdf");
     for (const b of bancos) {
       baixarSimulacaoDetalhadaPDF({ simulacao: sim, bancos: [b] });
-      await new Promise((r) => setTimeout(r, 450));
+      // Aumentado o delay para 800ms para garantir que o navegador não bloqueie múltiplos downloads
+      await new Promise((r) => setTimeout(r, 800));
     }
   }
 

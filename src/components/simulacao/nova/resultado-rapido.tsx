@@ -20,8 +20,8 @@ interface Props {
   prazoMeses: number;
   sistema?: "SAC" | "PRICE";
   baixando: boolean;
-  onBaixar: () => void;
-  onEnviar: () => void;
+  onBaixar: (bancoId?: string) => void;
+  onEnviar: (bancoId?: string) => void;
 }
 
 export const ResultadoRapido = forwardRef<HTMLDivElement, Props>(function ResultadoRapido(
@@ -33,43 +33,25 @@ export const ResultadoRapido = forwardRef<HTMLDivElement, Props>(function Result
       ref={ref}
       className="scroll-mt-4 overflow-hidden border-primary/30 shadow-lg ring-1 ring-primary/10"
     >
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 bg-gradient-to-br from-primary/10 via-card to-card px-5 py-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 bg-gradient-to-br from-primary/10 via-card to-card px-6 py-5">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <TrendingUp className="h-4 w-4 text-primary" />
-            <h2 className="truncate text-base font-semibold tracking-tight text-foreground">
+            <TrendingUp className="h-5 w-5 text-primary" />
+            <h2 className="truncate text-lg font-bold tracking-tight text-foreground">
               Resultado — Simulação rápida
             </h2>
-            <span className="rounded-full bg-muted px-2.5 py-0.5 text-[11px] font-medium text-muted-foreground">
+            <span className="rounded-full bg-primary/10 px-3 py-0.5 text-[12px] font-semibold text-primary ring-1 ring-inset ring-primary/20">
               {sistema} · {prazoMeses} meses
             </span>
           </div>
-          <p className="mt-0.5 text-xs text-muted-foreground">
+          <p className="mt-1 text-sm text-muted-foreground">
             Financiamento:{" "}
-            <span className="font-medium tabular-nums text-foreground">
+            <span className="font-bold tabular-nums text-foreground">
               {formatBRL(valorFinanciamento)}
             </span>
             {" · "}
-            Estimativa baseada nas taxas médias praticadas pelos bancos. Para enviar ao banco,
-            prossiga para a simulação completa.
+            Estimativa baseada nas taxas médias praticadas pelos bancos.
           </p>
-        </div>
-        <div className="flex items-center gap-2">
-          {comparativo.length > 0 && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-1.5"
-              onClick={onBaixar}
-              disabled={baixando}
-            >
-              <Download className="h-3.5 w-3.5" />
-              {baixando ? "Gerando…" : "Baixar"}
-            </Button>
-          )}
-          <Button size="sm" className="gap-1.5" onClick={onEnviar}>
-            <Send className="h-3.5 w-3.5" /> Enviar ao banco
-          </Button>
         </div>
       </div>
 
@@ -79,7 +61,7 @@ export const ResultadoRapido = forwardRef<HTMLDivElement, Props>(function Result
             Nenhum banco habilitado. Ative bancos em Configurações → Bancos.
           </p>
         ) : (
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
             {comparativo.map((c, i) => (
               <BancoResultadoCard
                 key={c.banco_id}
@@ -87,7 +69,8 @@ export const ResultadoRapido = forwardRef<HTMLDivElement, Props>(function Result
                 melhor={i === 0 && comparativo.length > 1}
                 prazoMeses={prazoMeses}
                 valorFinanciamento={valorFinanciamento}
-                onEnviar={onEnviar}
+                onBaixar={onBaixar}
+                baixando={baixando}
               />
             ))}
           </div>
@@ -102,27 +85,29 @@ function BancoResultadoCard({
   melhor,
   prazoMeses,
   valorFinanciamento,
-  onEnviar,
+  onBaixar,
+  baixando,
 }: {
   c: Comparativo;
   melhor: boolean;
   prazoMeses: number;
   valorFinanciamento: number;
-  onEnviar: () => void;
+  onBaixar: (bancoId?: string) => void;
+  baixando: boolean;
 }) {
   const cor = corDoBanco(c.nome_banco);
   return (
     <div
       className={cn(
-        "flex flex-col gap-3 rounded-xl border border-border/60 bg-card p-4 transition hover:shadow-md",
-        melhor && "ring-1 ring-primary/40",
+        "flex flex-col gap-4 rounded-2xl border border-border/80 bg-card p-5 transition-all duration-300 hover:shadow-xl hover:-translate-y-1",
+        melhor && "ring-2 ring-primary/40 bg-gradient-to-b from-primary/[0.02] to-card",
       )}
     >
       <div className="flex items-start justify-between gap-2">
-        <div className="flex min-w-0 items-center gap-2">
-          <BancoLogo nome={c.nome_banco} size="md" />
+        <div className="flex min-w-0 items-center gap-3">
+          <BancoLogo nome={c.nome_banco} size="lg" />
           <div className="min-w-0">
-            <div className="truncate text-sm font-semibold" style={{ color: cor }}>
+            <div className="truncate text-base font-bold tracking-tight" style={{ color: cor }}>
               {c.nome_banco}
             </div>
             <div className="mt-0.5">
@@ -139,7 +124,7 @@ function BancoResultadoCard({
         )}
       </div>
 
-      <dl className="flex flex-col divide-y divide-border/60 rounded-lg border border-border/50 bg-muted/20">
+      <dl className="flex flex-col divide-y divide-border/60 rounded-xl border border-border/50 bg-muted/30">
         <Info label="Parcela inicial" value={formatBRL(c.resultado.primeira_parcela)} emphasis />
         <Info label="Taxa a.a." value={formatPercent(c.taxa_ano)} />
         <Info label="Prazo" value={`${prazoMeses} meses`} />
@@ -147,9 +132,15 @@ function BancoResultadoCard({
         <Info label="Última parcela" value={formatBRL(c.resultado.ultima_parcela)} />
       </dl>
 
-      <div className="mt-auto flex items-center justify-end pt-1">
-        <Button size="sm" variant="ghost" className="h-8 gap-1 px-2 text-xs" onClick={onEnviar}>
-          <Send className="h-3 w-3" /> Enviar
+      <div className="mt-auto flex items-center justify-end pt-2">
+        <Button
+          size="sm"
+          variant="default"
+          className="h-9 w-full gap-2 rounded-xl text-xs font-semibold shadow-sm transition-transform active:scale-95"
+          onClick={() => onBaixar(c.banco_id)}
+          disabled={baixando}
+        >
+          <Download className="h-4 w-4" /> {baixando ? "Gerando..." : "Baixar PDF"}
         </Button>
       </div>
     </div>
@@ -158,12 +149,12 @@ function BancoResultadoCard({
 
 function Info({ label, value, emphasis }: { label: string; value: string; emphasis?: boolean }) {
   return (
-    <div className="flex items-baseline justify-between gap-3 px-3 py-2">
-      <dt className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</dt>
+    <div className="flex items-baseline justify-between gap-3 px-4 py-2.5">
+      <dt className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</dt>
       <dd
         className={cn(
-          "truncate text-right text-sm tabular-nums text-foreground",
-          emphasis ? "font-semibold text-primary" : "font-medium",
+          "truncate text-right text-[15px] tabular-nums text-foreground",
+          emphasis ? "font-bold text-primary" : "font-semibold",
         )}
       >
         {value}
