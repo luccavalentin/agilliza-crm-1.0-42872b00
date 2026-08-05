@@ -40,7 +40,7 @@ import {
 
 export const Route = createFileRoute("/_authenticated/crm/scan-ia")({
   head: () => ({ meta: [{ title: "Scan IA — Agilliza" }] }),
-  beforeLoad: () => assertModuloPermitido("crm.scan_ia"),
+  beforeLoad: () => assertModuloPermitido("crm.clientes"),
   component: Pagina,
 });
 
