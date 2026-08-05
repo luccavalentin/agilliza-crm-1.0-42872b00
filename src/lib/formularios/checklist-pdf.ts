@@ -108,8 +108,8 @@ export async function gerarChecklistBancoPDF(bancoId: string, clienteNome?: stri
   // Rodapé
   doc.setFontSize(8);
   doc.setTextColor("#94A3B8");
-  const msg = "Documento gerado automaticamente pelo sistema Agilliza. Sujeito a alterações conforme regras do banco.";
-  doc.text(msg, MARGIN, pageH - 15);
+  // Rodapé removido conforme solicitação
+  // doc.text(msg, MARGIN, pageH - 15);
 
   // Download
   const filename = `Checklist - ${bancoId.toUpperCase()} - ${clienteNome || "Documentos"}.pdf`;
