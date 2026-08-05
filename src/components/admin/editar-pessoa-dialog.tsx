@@ -38,11 +38,21 @@ export function EditarPessoaDialog({
   const listar = useServerFn(listarNiveisAcesso);
   const atualizar = useServerFn(atualizarPessoa);
 
-  const [nome, setNome] = useState(pessoa?.nome ?? "");
-  const [telefone, setTelefone] = useState(pessoa?.telefone ?? "");
-  const [nivelId, setNivelId] = useState(pessoa?.nivel_acesso_id ?? "");
-  const [tiposPessoa, setTiposPessoa] = useState<string[]>(pessoa?.tipos_pessoa ?? ["usuario"]);
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(pessoa?.avatar_url ?? null);
+  const [nome, setNome] = useState("");
+  const [telefone, setTelefone] = useState("");
+  const [nivelId, setNivelId] = useState("");
+  const [tiposPessoa, setTiposPessoa] = useState<string[]>(["usuario"]);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (pessoa) {
+      setNome(pessoa.nome ?? "");
+      setTelefone(pessoa.telefone ?? "");
+      setNivelId(pessoa.nivel_acesso_id ?? "");
+      setTiposPessoa(pessoa.tipos_pessoa ?? ["usuario"]);
+      setAvatarUrl(pessoa.avatar_url ?? null);
+    }
+  }, [pessoa]);
 
   const listarTipos = useServerFn(listarTiposPessoa);
   const { data: tipos } = useQuery({
