@@ -125,7 +125,7 @@ function Pagina() {
           valor_financiamento_max: financiamentoTotalExibido,
           _sistema: w.sistema_amortizacao === "P" ? "PRICE" : "SAC",
           renda_minima: c.resultado.renda_minima,
-          cet: c.resultado.cet_ano,
+          cet: c.resultado.cet_ano * 100, // Ajuste para escala 0-100 esperada pelo formatador
         }))
       });
 
