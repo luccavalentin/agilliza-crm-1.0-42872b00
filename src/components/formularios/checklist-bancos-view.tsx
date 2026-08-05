@@ -17,7 +17,7 @@ export function ChecklistBancosView() {
   const [bancoParaCompartilhar, setBancoParaCompartilhar] = useState<{ id: string; nome: string } | null>(null);
   
   // Estado para gerenciar itens de checklist por banco (iniciado com os dados fixos)
-  const [checklists, setChecklists] = useState<Record<string, string[]>>({});
+  const [checklists, setChecklists] = useState<Record<string, { nome: string; obrigatorio: boolean }[]>>({});
   const [selecionados, setSelecionados] = useState<Record<string, string[]>>({});
   const [editandoIndex, setEditandoIndex] = useState<number | null>(null);
   const [novoValor, setNovoValor] = useState("");
