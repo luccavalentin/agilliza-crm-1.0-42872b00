@@ -110,7 +110,7 @@ function Pagina() {
         baixarSimulacaoDetalhadaPDF({
           simulacao: {
             numero_simulacao: null,
-            nome_cliente: null,
+            nome_cliente: "SIMULAÇÃO RÁPIDA",
             produto: w.produto,
             valor_imovel: w.valor_imovel,
             valor_financiamento: financiamentoTotalExibido,
