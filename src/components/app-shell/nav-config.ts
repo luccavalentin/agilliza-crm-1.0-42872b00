@@ -295,6 +295,11 @@ export const navInterno: NavGroup[] = [
             to: "/formularios/papel-timbrado",
             perm: { modulo: "documentos.formularios" },
           },
+          {
+            label: "Modelos Power Point",
+            icon: Presentation,
+            to: "/formularios/powerpoint",
+            perm: { modulo: "documentos.formularios" },
         ],
       },
       {
