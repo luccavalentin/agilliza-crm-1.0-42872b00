@@ -645,22 +645,28 @@ export function baixarSimulacaoPDF(input: SimulacaoPdfInput) {
   const columns: ReportColumn[] = [
     { key: "banco", label: "Banco" },
     ...(isMista ? [{ key: "tabela", label: "Tabela" } as ReportColumn] : []),
-    { key: "situacao", label: "Situação" },
-    { key: "parcela", label: "Parcela", align: "right" },
+    { key: "parcela", label: "Parcela (1ª)", align: "right" },
     { key: "taxa", label: "Taxa a.a.", align: "right" },
-    { key: "prazo", label: "Prazo máx", align: "right" },
-    { key: "financiamento", label: "Financ. máx", align: "right" },
+    { key: "cet", label: "CET a.a.", align: "right" },
+    { key: "renda", label: "Renda Mín.", align: "right" },
+    { key: "seguros", label: "Seguros (mês)", align: "right" },
   ];
 
-  const rows: ReportRow[] = (bancos ?? []).map((b) => ({
-    banco: b.nome_banco ?? "—",
-    ...(isMista ? { tabela: sistemaDoBanco(b, s) } : {}),
-    situacao: LABEL_STATUS_BANCO[b.status_banco ?? ""] ?? (b.status_banco || "—"),
-    parcela: b.valor_parcela != null ? formatBRL(b.valor_parcela) : "—",
-    taxa: b.taxa_juros_ano != null ? formatPercent(b.taxa_juros_ano / 100) : "—",
-    prazo: b.prazo_pagamento_max ? `${b.prazo_pagamento_max}m` : "—",
-    financiamento: b.valor_financiamento_max != null ? formatBRL(b.valor_financiamento_max) : "—",
-  }));
+  const rows: ReportRow[] = (bancos ?? []).map((b) => {
+    const d = extrairDetalheBanco(b.raw_response);
+    const cet = d?.cet ?? b.cet;
+    const seguros = (d?.mip ?? 0) + (d?.dfi ?? 0);
+
+    return {
+      banco: b.nome_banco ?? "—",
+      ...(isMista ? { tabela: sistemaDoBanco(b, s) } : {}),
+      parcela: b.valor_parcela != null ? formatBRL(b.valor_parcela) : "—",
+      taxa: b.taxa_juros_ano != null ? formatPercent(b.taxa_juros_ano / 100) : "—",
+      cet: cet != null ? formatPercent(cet / 100) : "—",
+      renda: b.renda_minima != null ? formatBRL(b.renda_minima) : (rendaMinimaDoBanco(b) ? formatBRL(rendaMinimaDoBanco(b)!) : "—"),
+      seguros: seguros > 0 ? formatBRL(seguros) : "—",
+    };
+  });
 
   const firstColLogos: Record<string, { logo: string; ratio: number }> = {};
   (bancos ?? []).forEach((b) => {
