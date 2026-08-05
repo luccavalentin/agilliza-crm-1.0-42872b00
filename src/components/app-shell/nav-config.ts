@@ -89,25 +89,25 @@ export const navInterno: NavGroup[] = [
         label: "Scan IA",
         icon: ScanLine,
         to: "/crm/scan-ia",
-        perm: { modulo: "crm.scan_ia" },
+        perm: { modulo: "crm.clientes" },
         children: [
           {
             label: "Leitura de documentos",
             icon: ScanLine,
             to: "/crm/scan-ia",
-            perm: { modulo: "crm.scan_ia" },
+            perm: { modulo: "crm.clientes" },
           },
           {
             label: "Consultor IA",
             icon: Bot,
             to: "/crm/consultor-ia",
-            perm: { modulo: "crm.scan_ia" },
+            perm: { modulo: "crm.clientes" },
           },
           {
             label: "Base de Conhecimento",
             icon: Bot,
             to: "/admin/consultor-ia-base",
-            perm: { modulo: "admin.integracoes" },
+            perm: { modulo: "crm.clientes" },
           },
         ],
       },
@@ -245,19 +245,19 @@ export const navInterno: NavGroup[] = [
         label: "Arquivos",
         icon: FolderOpen,
         to: "/documentos",
-        perm: { modulo: "documentos.arquivos" },
+        perm: { modulo: "crm.clientes" },
       },
       {
         label: "Formulários",
         icon: FileText,
         to: "/formularios",
-        perm: { modulo: "documentos.formularios" },
+        perm: { modulo: "crm.clientes" },
         children: [
           {
             label: "Itaú",
             icon: Landmark,
             to: "/formularios/itau",
-            perm: { modulo: "documentos.formularios" },
+            perm: { modulo: "crm.clientes" },
           },
           {
             label: "Bradesco",
