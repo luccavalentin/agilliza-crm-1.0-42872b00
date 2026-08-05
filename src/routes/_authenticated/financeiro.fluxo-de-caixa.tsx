@@ -402,37 +402,12 @@ function Pagina() {
 
   return (
     <div className="mx-auto w-full max-w-none space-y-6 min-h-screen">
-      <div className="p-4 sm:p-5 md:space-y-8 md:p-8">
-      <div className="relative mb-8 rounded-3xl border border-border/50 bg-card p-6 shadow-sm md:p-10">
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <div className="h-1 w-6 rounded-full bg-primary" />
-              <span className="text-[10px] font-bold tracking-[0.2em] text-primary uppercase">
-                FINANCEIRO · FLUXO DE CAIXA
-              </span>
-            </div>
-            
-            <div className="space-y-1">
-              <h1 className="text-4xl font-black tracking-tight text-primary md:text-5xl uppercase">
-                Fluxo de caixa
-              </h1>
-              <p className="max-w-md text-sm leading-relaxed text-muted-foreground">
-                Caixa realizado e projeção de entradas e saídas em aberto.
-              </p>
-            </div>
-
-            {atualizado && (
-              <div className="inline-flex items-center gap-2 rounded-full border border-border/50 bg-muted/50 px-3 py-1 text-[10px] font-medium text-muted-foreground shadow-sm">
-                <span className="relative flex h-2 w-2">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
-                </span>
-                Atualizado {atualizado}
-              </div>
-            )}
-          </div>
-
+      <PanelHeader
+        eyebrow="Financeiro · Fluxo de Caixa"
+        titulo="Fluxo de caixa"
+        descricao="Caixa realizado e projeção de entradas e saídas em aberto."
+        atualizadoEm={atualizado}
+        actions={
           <div className="flex flex-wrap items-end gap-3 lg:justify-end">
             <Tabs value={gran} onValueChange={(v) => setGran(v as typeof gran)}>
               <TabsList className="h-auto gap-1 rounded-xl bg-muted/30 p-1.5">
@@ -482,8 +457,10 @@ function Pagina() {
               }}
             />
           </div>
-        </div>
-      </div>
+        }
+      />
+
+      <div className="p-4 sm:p-5 md:space-y-8 md:p-8">
 
       {(de || ate) && (
         <p className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
