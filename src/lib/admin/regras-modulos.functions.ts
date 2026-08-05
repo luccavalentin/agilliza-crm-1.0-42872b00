@@ -458,14 +458,14 @@ export interface PermissaoAtual {
   escopo_dados: EscopoDados;
 }
 
-export type PapelNivel = "gestor" | "comercial" | "analista" | "imobiliaria" | "corretor" | "gestao";
+export type PapelNivel = "gestor" | "comercial" | "analista" | "imobiliaria" | "corretor";
 export type AcessoTipo = "sistema" | "portal_parceiro";
 
 /** Papéis disponíveis por portal. */
 export const PAPEIS_POR_PORTAL: Record<AcessoTipo, { value: PapelNivel; label: string }[]> = {
   sistema: [
     { value: "gestor", label: "Gestor" },
-    { value: "gestao", label: "Gestão" },
+    { value: "gestor", label: "Gestão" },
     { value: "comercial", label: "Comercial" },
     { value: "analista", label: "Analista" },
   ],
