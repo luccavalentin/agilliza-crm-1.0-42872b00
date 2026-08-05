@@ -642,7 +642,14 @@ export function baixarSimulacaoPDF(input: SimulacaoPdfInput) {
     ...(s.renda_familiar_sac && s.sistema_amortizacao === "SAC e PRICE"
       ? [{ label: "Renda (SAC)", valor: formatBRL(s.renda_familiar_sac) }]
       : []),
-    ...(s.renda_familiar ? [{ label: s.sistema_amortizacao === "SAC e PRICE" ? "Renda (PRICE)" : "Renda familiar", valor: formatBRL(s.renda_familiar) }] : []),
+    ...(s.renda_familiar
+      ? [
+          {
+            label: s.sistema_amortizacao === "SAC e PRICE" ? "Renda (PRICE)" : "Renda familiar",
+            valor: formatBRL(s.renda_familiar),
+          },
+        ]
+      : []),
   ];
 
   const columns: ReportColumn[] = [
