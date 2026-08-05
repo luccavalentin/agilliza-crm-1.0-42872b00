@@ -87,27 +87,31 @@ export function EditarPessoaDialog({
     onError: (e) => toast.error(e instanceof Error ? e.message : "Erro ao atualizar."),
   });
 
+  if (!pessoa) return null;
+
   return (
     <Dialog open={!!pessoa} onOpenChange={() => onClose()}>
       <DialogContent className="max-w-md">
-        <DialogHeader>
-          <div className="flex items-center gap-3">
-            <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-full border bg-muted shadow-sm">
+        <DialogHeader className="pb-4 border-b">
+          <div className="flex items-center gap-4">
+            <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-full border-2 border-primary/20 bg-muted shadow-sm ring-2 ring-background">
               {avatarUrl ? (
                 <img src={avatarUrl} alt={nome} className="h-full w-full object-cover" />
               ) : (
                 <div className="flex h-full w-full items-center justify-center bg-primary/10 text-primary">
-                  <User className="h-6 w-6" />
+                  <User className="h-8 w-8" />
                 </div>
               )}
             </div>
             <div className="flex flex-col text-left">
-              <DialogTitle className="text-xl">{nome || "Editar pessoa"}</DialogTitle>
-              <span className="text-sm text-muted-foreground">{pessoa?.email}</span>
+              <DialogTitle className="text-xl font-bold tracking-tight text-foreground">
+                {nome || "Editar pessoa"}
+              </DialogTitle>
+              <span className="text-sm font-medium text-muted-foreground">{pessoa.email || "Sem e-mail cadastrado"}</span>
             </div>
           </div>
         </DialogHeader>
-        <div className="space-y-4 py-2">
+        <div className="max-h-[70vh] space-y-5 overflow-y-auto px-1 py-4">
           <UploadAvatar
             currentUrl={avatarUrl}
             onUploadComplete={setAvatarUrl}
