@@ -2,6 +2,8 @@ import {
   Copy,
   Download,
   Eye,
+  Mail,
+  MessageCircle,
   MoreHorizontal,
   Pencil,
   Send,
@@ -13,6 +15,11 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuPortal,
+  DropdownMenuSubContent,
 } from "@/components/ui/dropdown-menu";
 import { ConfirmDelete } from "@/components/shared/confirm-delete";
 import { SimulacaoStatusBadge } from "@/components/simulacao/status-badge";
@@ -161,6 +168,7 @@ export function AcoesSimulacao({
   onEnviarProposta,
   onExcluir,
   numero,
+  onEncaminhar,
 }: {
   onVisualizar: () => void;
   onEditar: () => void;
@@ -169,6 +177,7 @@ export function AcoesSimulacao({
   onDuplicar: () => void;
   onEnviarProposta: () => void;
   onExcluir: () => Promise<void>;
+  onEncaminhar?: (id: string, canal: "email" | "whatsapp") => void;
   numero: string;
 }) {
   return (
@@ -213,6 +222,26 @@ export function AcoesSimulacao({
           <DropdownMenuItem onSelect={onDuplicar}>
             <Copy className="mr-2 h-4 w-4" /> Duplicar
           </DropdownMenuItem>
+
+          <DropdownMenuSeparator />
+          
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger>
+              <Send className="mr-2 h-4 w-4" /> Encaminhar para...
+            </DropdownMenuSubTrigger>
+            <DropdownMenuPortal>
+              <DropdownMenuSubContent>
+                <DropdownMenuItem onSelect={() => onEncaminhar?.(numero, "email")}>
+                  <Mail className="mr-2 h-4 w-4" /> E-mail
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => onEncaminhar?.(numero, "whatsapp")}>
+                  <MessageCircle className="mr-2 h-4 w-4" /> WhatsApp
+                </DropdownMenuItem>
+              </DropdownMenuSubContent>
+            </DropdownMenuPortal>
+          </DropdownMenuSub>
+
+          <DropdownMenuSeparator />
           <ConfirmDelete
             titulo="Excluir simulação"
             descricao={`A simulação ${numero} será removida permanentemente.`}

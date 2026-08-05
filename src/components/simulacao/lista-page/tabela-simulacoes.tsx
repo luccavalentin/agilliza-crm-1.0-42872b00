@@ -195,6 +195,7 @@ export function TabelaSimulacoes({
                           handlers.onEnviarProposta(s.id, s.numero_simulacao)
                         }
                         onExcluir={() => handlers.onExcluir(s.id)}
+                        onEncaminhar={(id, canal) => handlers.onEncaminhar(s.id, canal)}
                         numero={s.numero_simulacao}
                       />
                     </div>
