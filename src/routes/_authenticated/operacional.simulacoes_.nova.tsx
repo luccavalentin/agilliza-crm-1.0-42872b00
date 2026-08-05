@@ -96,54 +96,62 @@ function Pagina() {
     router.navigate({ to: "/operacional/simulacoes/completa" });
   }
 
-  async function baixarSimulacao() {
+  async function baixarSimulacao(bancoId?: string) {
     if (comparativo.length === 0) return;
     setBaixando(true);
     try {
       const { baixarSimulacaoDetalhadaPDF } = await import("@/lib/simulacao/simulacao-pdf");
-      baixarSimulacaoDetalhadaPDF({
-        simulacao: {
-          numero_simulacao: null,
-          nome_cliente: null,
-          produto: w.produto,
-          valor_imovel: w.valor_imovel,
-          valor_financiamento: financiamentoTotalExibido,
-          valor_entrada: w.valor_entrada,
-          prazo: w.prazo_meses,
-          sistema_amortizacao: w.sistema_amortizacao,
-          created_at: new Date().toISOString(),
-        },
-        bancos: comparativo.map((c) => {
-          const sistemaCode = w.sistema_amortizacao === "P" ? "P" : "S";
-          return {
-            nome_banco: c.nome_banco,
-            status_banco: "simulada",
-            valor_parcela: c.resultado.primeira_parcela,
-            taxa_juros_ano: c.taxa_ano * 100,
-            prazo_pagamento_max: w.prazo_meses,
-            valor_financiamento_max: financiamentoTotalExibido,
-            _sistema: sistemaCode === "P" ? "PRICE" : "SAC",
-            // raw_response sintético para o extrator gerar parcelas, CET,
-            // taxa mensal, tipo/plano — mesmos campos que o Bradesco devolve.
-            raw_response: {
-              simulacao: {
-                codigoSistemaAmortizacaoSimulacao: sistemaCode,
-                codigoSistemaAmortizacaoBanco: sistemaCode,
-                prazoPagamentoBanco: w.prazo_meses,
-                prazoPagamentoSimulacao: w.prazo_meses,
-                valorFinanciamentoBanco: financiamentoTotalExibido,
-                valorFinanciamentoSimulacao: financiamentoTotalExibido,
-                valorTotalFinanciamento: financiamentoTotalExibido,
-                valorImovel: w.valor_imovel,
-                valorEntrada: w.valor_entrada,
-                taxaJurosAnoBanco: c.taxa_ano * 100,
-                taxaJurosAnoSimulacao: c.taxa_ano * 100,
-                valorParcelaBanco: c.resultado.primeira_parcela,
+      const bancosParaBaixar = bancoId
+        ? comparativo.filter((c) => c.banco_id === bancoId)
+        : comparativo;
+
+      for (const c of bancosParaBaixar) {
+        const sistemaCode = w.sistema_amortizacao === "P" ? "P" : "S";
+        baixarSimulacaoDetalhadaPDF({
+          simulacao: {
+            numero_simulacao: null,
+            nome_cliente: null,
+            produto: w.produto,
+            valor_imovel: w.valor_imovel,
+            valor_financiamento: financiamentoTotalExibido,
+            valor_entrada: w.valor_entrada,
+            prazo: w.prazo_meses,
+            sistema_amortizacao: w.sistema_amortizacao,
+            created_at: new Date().toISOString(),
+          },
+          bancos: [
+            {
+              nome_banco: c.nome_banco,
+              status_banco: "simulada",
+              valor_parcela: c.resultado.primeira_parcela,
+              taxa_juros_ano: c.taxa_ano * 100,
+              prazo_pagamento_max: w.prazo_meses,
+              valor_financiamento_max: financiamentoTotalExibido,
+              _sistema: sistemaCode === "P" ? "PRICE" : "SAC",
+              raw_response: {
+                simulacao: {
+                  codigoSistemaAmortizacaoSimulacao: sistemaCode,
+                  codigoSistemaAmortizacaoBanco: sistemaCode,
+                  prazoPagamentoBanco: w.prazo_meses,
+                  prazoPagamentoSimulacao: w.prazo_meses,
+                  valorFinanciamentoBanco: financiamentoTotalExibido,
+                  valorFinanciamentoSimulacao: financiamentoTotalExibido,
+                  valorTotalFinanciamento: financiamentoTotalExibido,
+                  valorImovel: w.valor_imovel,
+                  valorEntrada: w.valor_entrada,
+                  taxaJurosAnoBanco: c.taxa_ano * 100,
+                  taxaJurosAnoSimulacao: c.taxa_ano * 100,
+                  valorParcelaBanco: c.resultado.primeira_parcela,
+                },
               },
             },
-          };
-        }),
-      });
+          ],
+        });
+        // Pequeno delay entre downloads automáticos para evitar bloqueio do navegador
+        if (bancosParaBaixar.length > 1) {
+          await new Promise((r) => setTimeout(r, 600));
+        }
+      }
     } catch {
       toast.error("Não foi possível gerar o PDF da simulação.");
     } finally {
@@ -218,10 +226,10 @@ function Pagina() {
             melhorTaxaAno={melhorTaxaAno}
           />
 
-          <div className="pt-1">
+          <div className="mt-2 flex justify-center">
             <Button
               variant="default"
-              className="h-12 w-full gap-2 text-sm font-semibold"
+              className="h-12 w-full max-w-xs gap-2 rounded-2xl bg-primary text-sm font-bold shadow-lg ring-1 ring-primary/20 transition-all hover:scale-[1.02] hover:shadow-xl active:scale-[0.98] md:w-64"
               disabled={!valido}
               onClick={simularRapida}
             >
@@ -231,7 +239,7 @@ function Pagina() {
         </div>
 
         {mostrarRapida && (
-          <div className="min-w-0 lg:sticky lg:top-4">
+          <div className="min-w-0 lg:sticky lg:top-8">
             <ResultadoRapido
               ref={resultadoRef}
               comparativo={comparativo}
