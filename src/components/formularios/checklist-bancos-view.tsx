@@ -10,7 +10,7 @@ import { EncaminharChecklistDialog } from "./encaminhar-checklist-dialog";
 import { toast } from "sonner";
 
 export function ChecklistBancosView() {
-  const search = useSearch({ from: "/_authenticated/formularios/$banco" }) as any;
+  const search = useSearch({ from: "/_authenticated/formularios/$banco" });
   const [bancoSelecionado, setBancoSelecionado] = useState<string | null>(null);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [bancoParaCompartilhar, setBancoParaCompartilhar] = useState<{ id: string; nome: string } | null>(null);
