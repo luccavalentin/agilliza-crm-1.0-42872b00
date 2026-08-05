@@ -62,7 +62,6 @@ export function DicaRendaMinima(props: Props) {
     prazoMeses, 
     taxaAno, 
     sistema, 
-    rendaInformada, 
     bancos,
     compoeRendaConjuge 
   } = props;
@@ -73,7 +72,7 @@ export function DicaRendaMinima(props: Props) {
       valor_imovel: valorImovel,
       prazo_meses: prazoMeses,
       taxa_ano: taxaAno,
-      renda_informada: rendaInformada,
+      renda_informada: 0,
       sistema: "S",
     });
 
@@ -82,7 +81,7 @@ export function DicaRendaMinima(props: Props) {
       valor_imovel: valorImovel,
       prazo_meses: prazoMeses,
       taxa_ano: taxaAno,
-      renda_informada: rendaInformada,
+      renda_informada: 0,
       sistema: "P",
     });
 
@@ -128,39 +127,26 @@ export function DicaRendaMinima(props: Props) {
     );
   }
 
-  const apiEval = rendaMinimaPelosBancos(bancos, rendaInformada);
+  const apiEval = rendaMinimaPelosBancos(bancos, 0);
   const local = avaliarRendaMinima({
     valor_financiamento: valorFinanciamento,
     valor_imovel: valorImovel,
     prazo_meses: prazoMeses,
     taxa_ano: taxaAno,
-    renda_informada: rendaInformada,
-    sistema: sistema,
+    renda_informada: 0,
+    sistema: sistema as any,
   });
 
   const principal = apiEval ?? local;
   if (!principal) return null;
 
   const rendaMin = principal.rendaMinima;
-  const informada = Number(rendaInformada ?? 0);
+  const informada = 0;
 
-  // Define tom pela folga da renda informada em relação à mínima
+  // Define tom pela folga da renda informada em relação à mínima (padrão info já que não há renda informada)
   let tone: Tone = "info";
   let Icon = Info;
 
-  if (informada > 0 && rendaMin > 0) {
-    const ratio = informada / rendaMin;
-    if (ratio >= 1) {
-      tone = "success";
-      Icon = CheckCircle2;
-    } else if (ratio >= 0.85) {
-      tone = "warning";
-      Icon = TriangleAlert;
-    } else {
-      tone = "danger";
-      Icon = AlertTriangle;
-    }
-  }
 
   const s = TONE_STYLES[tone];
 
