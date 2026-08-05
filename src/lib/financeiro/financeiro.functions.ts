@@ -1234,6 +1234,45 @@ async function desvincularContaDeComissoes(
     .in("ref_id", ids);
 }
 
+/** Limpa completamente o fluxo de caixa do correspondente. */
+export const limparFluxoCaixa = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<{ ok: true }> => {
+    const { supabase, userId } = context;
+    const correspondente_id = await correspondenteId(supabase, userId);
+    
+    // Limpa a tabela de fluxo de caixa
+    const { error: e1 } = await supabase
+      .from("fluxo_caixa")
+      .delete()
+      .eq("correspondente_id", correspondente_id);
+    if (e1) throw new Error(e1.message);
+
+    // Também limpa os históricos de baixas das contas para garantir consistência total
+    // já que o fluxo de caixa é alimentado por baixas/estornos.
+    await supabase
+      .from("financial_payables")
+      .update({ valor_pago: 0, status: "aberta", data_pagamento: null })
+      .eq("correspondente_id", correspondente_id);
+
+    await supabase
+      .from("financial_receivables")
+      .update({ valor_pago: 0, status: "aberta", data_pagamento: null })
+      .eq("correspondente_id", correspondente_id);
+
+    await registrarAuditoria(
+      supabase,
+      correspondente_id,
+      "fluxo_caixa",
+      correspondente_id,
+      "limpeza_total",
+      { executado_por: userId }
+    );
+
+    return { ok: true };
+  });
+
+
 
 
 /** ===== Fluxo de caixa analítico (ERP) ===== */

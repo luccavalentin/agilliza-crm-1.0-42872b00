@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Bar,
   XAxis,
@@ -24,20 +24,26 @@ import {
   ArrowUpRight,
   CalendarRange,
   X,
+  Trash2,
 } from "lucide-react";
+
 import { assertModuloPermitido } from "@/lib/route-guards";
 import {
   obterFluxoCaixaAnalitico,
   type FluxoAnalitico,
+  limparFluxoCaixa,
 } from "@/lib/financeiro/financeiro.functions";
+
 import { PanelHeader, SectionTitle, HeroMetric, MiniMetric, PanelCard } from "@/components/common/dashboard";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
+
   DialogDescription,
   DialogHeader,
   DialogTitle,
@@ -259,6 +265,29 @@ function Pagina() {
   const [gran, setGran] = useState<"dia" | "semana" | "mes">("mes");
   const [de, setDe] = useState("");
   const [ate, setAte] = useState("");
+  const [limpando, setLimpando] = useState(false);
+  const queryClient = useQueryClient();
+
+  const mutationLimpar = useMutation({
+    mutationFn: () => limparFluxoCaixa(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["fin-fluxo-analitico"] });
+      toast.success("Fluxo de caixa limpo com sucesso!");
+      setLimpando(false);
+    },
+    onError: (err: any) => {
+      toast.error(`Erro ao limpar fluxo de caixa: ${err.message}`);
+      setLimpando(false);
+    },
+  });
+
+  const handleLimparFluxo = () => {
+    if (confirm("Deseja realmente limpar COMPLETAMENTE o fluxo de caixa? Esta ação não pode ser desfeita e irá zerar o saldo acumulado.")) {
+      setLimpando(true);
+      mutationLimpar.mutate();
+    }
+  };
+
   const { data, isLoading, dataUpdatedAt } = useQuery({
     queryKey: ["fin-fluxo-analitico", gran, de, ate],
     queryFn: () =>
@@ -401,7 +430,18 @@ function Pagina() {
                 setAte("");
               }}
             />
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9 border-destructive/30 text-destructive hover:bg-destructive/10"
+              onClick={handleLimparFluxo}
+              disabled={limpando || isLoading}
+            >
+              <Trash2 className="mr-2 size-4" />
+              {limpando ? "Limpando..." : "Limpar Fluxo"}
+            </Button>
           </div>
+
         }
       />
 
