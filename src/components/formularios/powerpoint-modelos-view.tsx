@@ -46,13 +46,17 @@ export function PowerPointModelosView() {
   const modeloAtual = MODELOS_PPT.find((m) => m.id === selecionado)!;
 
   const baixar = (url: string, titulo: string) => {
-    // Forçar download automático
+    // Forçar download automático garantindo que o link seja absoluto ou resolvido corretamente
     const link = document.createElement("a");
     link.href = url;
-    link.download = url.split("/").pop() || "apresentacao.pptx";
+    // O atributo download ajuda o navegador a entender que deve baixar, não abrir
+    link.setAttribute("download", url.split("/").pop() || "apresentacao.pptx");
+    link.target = "_blank";
     document.body.appendChild(link);
     link.click();
-    document.body.removeChild(link);
+    setTimeout(() => {
+      document.body.removeChild(link);
+    }, 100);
     toast.success(`Download de "${titulo}" iniciado.`);
   };
 
@@ -155,9 +159,10 @@ export function PowerPointModelosView() {
                   size="lg" 
                   variant="outline"
                   className="border-white/20 text-white hover:bg-white/10 gap-2 backdrop-blur-sm"
+                  onClick={() => window.open(modeloAtual.slides[0], '_blank')}
                 >
                   <Eye className="h-4 w-4" />
-                  Pré-visualizar Slides
+                  Abrir Pré-visualização
                 </Button>
               </div>
             </div>
