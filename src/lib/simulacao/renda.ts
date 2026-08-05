@@ -235,7 +235,7 @@ export function avaliarRendaMinima(params: {
     valor_financiamento: base,
     prazo_meses,
     taxa_ano,
-    sistema,
+    sistema: sistema === "AMBOS" ? "S" : sistema,
   });
 
   // Encargos obrigatórios inclusos pelos bancos no comprometimento de renda.
