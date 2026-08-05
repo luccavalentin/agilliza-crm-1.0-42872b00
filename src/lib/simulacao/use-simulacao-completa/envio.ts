@@ -28,6 +28,7 @@ interface CtxBase {
   setConcluidos: (v: number) => void;
   setSimulacaoResultadoId: (v: string | null) => void;
   setSimulacaoResultadoIdPrice: (v: string | null) => void;
+  setSimulacaoResultadoIdSecundario?: (v: string | null) => void;
 }
 
 function bloquearSemCepHomeEquity(f: Form, setErros: (v: Record<string, string>) => void): boolean {
