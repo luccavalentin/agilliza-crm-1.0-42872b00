@@ -917,7 +917,9 @@ function criarDocSimulacaoDetalhada({
           lineWidth: 0.25,
         },
         headStyles: { fillColor: P.azul, textColor: P.headText, fontStyle: "bold", fontSize: 6.5 },
+        foot: [rodapeSoma],
         alternateRowStyles: { fillColor: P.card },
+        footStyles: { fillColor: P.azul, textColor: P.headText, fontStyle: "bold", fontSize: 6.5 },
         columnStyles: {
           0: { halign: "right" },
           2: { halign: "right" },
