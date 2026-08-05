@@ -10,17 +10,17 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Mail, MessageCircle, Send } from "lucide-react";
+import { FileText, Mail, MessageCircle, Send } from "lucide-react";
 import { toast } from "sonner";
 
 interface EncaminharSimulacaoDialogProps {
   aberto: boolean;
   onOpenChange: (open: boolean) => void;
-  onConfirm: (dados: { email: string; whatsapp: string; canal: "email" | "whatsapp" }) => void;
+  onConfirm: (dados: { email: string; whatsapp: string; canal: "email" | "whatsapp" | "pdf" }) => void;
   clienteNome: string;
   clienteEmail: string;
   clienteWhatsapp: string;
-  canal: "email" | "whatsapp";
+  canal: "email" | "whatsapp" | "pdf";
 }
 
 export function EncaminharSimulacaoDialog({
@@ -49,6 +49,7 @@ export function EncaminharSimulacaoDialog({
   };
 
   const isWhatsapp = canal === "whatsapp";
+  const isPdf = canal === "pdf";
 
   return (
     <Dialog open={aberto} onOpenChange={onOpenChange}>
@@ -57,10 +58,12 @@ export function EncaminharSimulacaoDialog({
           <DialogTitle className="flex items-center gap-2">
             {isWhatsapp ? (
               <MessageCircle className="h-5 w-5 text-[#25D366]" />
+            ) : isPdf ? (
+              <FileText className="h-5 w-5 text-primary" />
             ) : (
               <Mail className="h-5 w-5 text-[#EA4335]" />
             )}
-            Encaminhar Simulação
+            {isPdf ? "Baixar PDF para Compartilhar" : "Encaminhar Simulação"}
           </DialogTitle>
           <DialogDescription>
             Confirme os dados de contato para encaminhar a simulação de <strong>{clienteNome}</strong>.
@@ -68,27 +71,35 @@ export function EncaminharSimulacaoDialog({
         </DialogHeader>
 
         <div className="grid gap-4 py-4">
-          <div className="grid gap-2">
-            <Label htmlFor="email" className={!isWhatsapp ? "font-bold" : ""}>E-mail de destino</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="exemplo@email.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className={canal === "email" ? "ring-2 ring-primary/20" : ""}
-            />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="whatsapp" className={isWhatsapp ? "font-bold" : ""}>WhatsApp (com DDD)</Label>
-            <Input
-              id="whatsapp"
-              placeholder="11999999999"
-              value={whatsapp}
-              onChange={(e) => setWhatsapp(e.target.value.replace(/\D/g, ""))}
-              className={canal === "whatsapp" ? "ring-2 ring-[#25D366]/20" : ""}
-            />
-          </div>
+          {!isPdf ? (
+            <>
+              <div className="grid gap-2">
+                <Label htmlFor="email" className={canal === "email" ? "font-bold" : ""}>E-mail de destino</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="exemplo@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className={canal === "email" ? "ring-2 ring-primary/20" : ""}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="whatsapp" className={isWhatsapp ? "font-bold" : ""}>WhatsApp (com DDD)</Label>
+                <Input
+                  id="whatsapp"
+                  placeholder="11999999999"
+                  value={whatsapp}
+                  onChange={(e) => setWhatsapp(e.target.value.replace(/\D/g, ""))}
+                  className={canal === "whatsapp" ? "ring-2 ring-[#25D366]/20" : ""}
+                />
+              </div>
+            </>
+          ) : (
+            <div className="py-2 text-sm text-muted-foreground">
+              A simulação será gerada em formato PDF oficial com layout profissional pronto para compartilhamento.
+            </div>
+          )}
         </div>
 
         <DialogFooter>
@@ -97,10 +108,19 @@ export function EncaminharSimulacaoDialog({
           </Button>
           <Button 
             onClick={handleConfirm}
-            className={isWhatsapp ? "bg-[#25D366] hover:bg-[#20ba5a] text-white" : "bg-[#EA4335] hover:bg-[#d93025] text-white"}
+            className={isWhatsapp ? "bg-[#25D366] hover:bg-[#20ba5a] text-white" : isPdf ? "bg-primary" : "bg-[#EA4335] hover:bg-[#d93025] text-white"}
           >
-            <Send className="mr-2 h-4 w-4" />
-            Encaminhar via {isWhatsapp ? "WhatsApp" : "Gmail"}
+            {isPdf ? (
+              <>
+                <FileText className="mr-2 h-4 w-4" />
+                Gerar PDF agora
+              </>
+            ) : (
+              <>
+                <Send className="mr-2 h-4 w-4" />
+                Encaminhar via {isWhatsapp ? "WhatsApp" : "Gmail"}
+              </>
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

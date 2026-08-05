@@ -30,6 +30,7 @@ import {
   EnviarPropostaDialog,
 } from "@/components/simulacao/enviar-proposta-dialog";
 import { EncaminharSimulacaoDialog } from "@/components/simulacao/encaminhar-simulacao-dialog";
+import { baixarSimulacaoDetalhadaPDF } from "@/lib/simulacao/simulacao-pdf";
 import { KpiDetalheDialog } from "@/components/simulacao/kpi-detalhe-dialog";
 import { FiltrosLista } from "@/components/simulacao/lista-page/filtros-lista";
 import { TabelaSimulacoes } from "@/components/simulacao/lista-page/tabela-simulacoes";
@@ -107,7 +108,7 @@ function Pagina() {
     clienteNome: string;
     clienteEmail: string;
     clienteWhatsapp: string;
-    canal: "email" | "whatsapp";
+    canal: "email" | "whatsapp" | "pdf";
   } | null>(null);
 
 
@@ -448,7 +449,7 @@ function Pagina() {
     }
   };
 
-  const confirmarEncaminhamento = async (dados: { email: string; whatsapp: string; canal: "email" | "whatsapp" }) => {
+  const confirmarEncaminhamento = async (dados: { email: string; whatsapp: string; canal: "email" | "whatsapp" | "pdf" }) => {
     if (!encaminhamento) return;
     try {
       const simulacaoId = encaminhamento.id;
@@ -458,15 +459,29 @@ function Pagina() {
       const valorFinanc = formatBRL(sim.valor_financiamento || 0);
       const numero = sim.numero_simulacao;
       
-      const texto = `Olá ${clienteNome}! Segue a simulação ${numero} de financiamento no valor de ${valorFinanc}: ${window.location.origin}/operacional/simulacoes/${simulacaoId}`;
+      if (dados.canal === "pdf") {
+        if (!resp.bancos?.length) {
+          toast.error("Esta simulação não possui bancos para baixar.");
+          return;
+        }
+        // Gera o PDF real com layout profissional para compartilhamento
+        baixarSimulacaoDetalhadaPDF({ simulacao: sim, bancos: resp.bancos });
+        toast.success("PDF gerado com sucesso! Agora você pode compartilhá-lo.");
+        return;
+      }
+
+      const link = `${window.location.origin}/operacional/simulacoes/${simulacaoId}`;
+      const textoBase = `Olá ${clienteNome}! Segue a simulação ${numero} de financiamento no valor de ${valorFinanc}.`;
       
       if (dados.canal === "whatsapp") {
         const fone = dados.whatsapp.replace(/\D/g, "");
-        const url = `https://api.whatsapp.com/send?phone=55${fone}&text=${encodeURIComponent(texto)}`;
+        const msg = encodeURIComponent(`${textoBase}\n\nVocê pode visualizar os detalhes aqui: ${link}`);
+        const url = `https://api.whatsapp.com/send?phone=55${fone}&text=${msg}`;
         window.open(url, "_blank");
       } else {
         const subject = encodeURIComponent(`Simulação de Financiamento - ${numero}`);
-        const url = `https://mail.google.com/mail/?view=cm&fs=1&to=${dados.email}&su=${subject}&body=${encodeURIComponent(texto)}`;
+        const body = encodeURIComponent(`${textoBase}\n\nLink para visualização: ${link}`);
+        const url = `https://mail.google.com/mail/?view=cm&fs=1&to=${dados.email}&su=${subject}&body=${body}`;
         window.open(url, "_blank");
       }
     } catch {

@@ -181,7 +181,7 @@ export function AcoesSimulacao({
   onDuplicar: () => void;
   onEnviarProposta: () => void;
   onExcluir: () => Promise<void>;
-  onEncaminhar?: (id: string, canal: "email" | "whatsapp") => void;
+  onEncaminhar?: (id: string, canal: "email" | "whatsapp" | "pdf") => void;
   numero: string;
 }) {
   return (
@@ -220,7 +220,7 @@ export function AcoesSimulacao({
           <DropdownMenuItem onSelect={onBaixarComparativo}>
             <Download className="mr-2 h-4 w-4" /> Baixar PDF comparativo
           </DropdownMenuItem>
-          <DropdownMenuItem onSelect={onBaixarDetalhada}>
+          <DropdownMenuItem onSelect={() => onEncaminhar?.(numero, "pdf")}>
             <Download className="mr-2 h-4 w-4" /> Baixar PDF detalhado
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={onDuplicar}>
