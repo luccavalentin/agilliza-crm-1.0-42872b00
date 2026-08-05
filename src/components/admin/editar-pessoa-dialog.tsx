@@ -38,11 +38,21 @@ export function EditarPessoaDialog({
   const listar = useServerFn(listarNiveisAcesso);
   const atualizar = useServerFn(atualizarPessoa);
 
-  const [nome, setNome] = useState(pessoa?.nome ?? "");
-  const [telefone, setTelefone] = useState(pessoa?.telefone ?? "");
-  const [nivelId, setNivelId] = useState(pessoa?.nivel_acesso_id ?? "");
-  const [tiposPessoa, setTiposPessoa] = useState<string[]>(pessoa?.tipos_pessoa ?? ["usuario"]);
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(pessoa?.avatar_url ?? null);
+  const [nome, setNome] = useState("");
+  const [telefone, setTelefone] = useState("");
+  const [nivelId, setNivelId] = useState("");
+  const [tiposPessoa, setTiposPessoa] = useState<string[]>(["usuario"]);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (pessoa) {
+      setNome(pessoa.nome ?? "");
+      setTelefone(pessoa.telefone ?? "");
+      setNivelId(pessoa.nivel_acesso_id ?? "");
+      setTiposPessoa(pessoa.tipos_pessoa ?? ["usuario"]);
+      setAvatarUrl(pessoa.avatar_url ?? null);
+    }
+  }, [pessoa]);
 
   const listarTipos = useServerFn(listarTiposPessoa);
   const { data: tipos } = useQuery({
@@ -77,18 +87,39 @@ export function EditarPessoaDialog({
     onError: (e) => toast.error(e instanceof Error ? e.message : "Erro ao atualizar."),
   });
 
+  if (!pessoa) return null;
+
   return (
     <Dialog open={!!pessoa} onOpenChange={() => onClose()}>
       <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>Editar pessoa</DialogTitle>
+        <DialogHeader className="pb-4 border-b">
+          <div className="flex items-center gap-4">
+            <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-full border-2 border-primary/20 bg-muted shadow-sm ring-2 ring-background">
+              {avatarUrl ? (
+                <img src={avatarUrl} alt={nome} className="h-full w-full object-cover" />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center bg-primary/10 text-primary">
+                  <User className="h-8 w-8" />
+                </div>
+              )}
+            </div>
+            <div className="flex flex-col text-left">
+              <DialogTitle className="text-xl font-bold tracking-tight text-foreground">
+                {nome || "Editar pessoa"}
+              </DialogTitle>
+              <span className="text-sm font-medium text-muted-foreground">{pessoa.email || "Sem e-mail cadastrado"}</span>
+            </div>
+          </div>
         </DialogHeader>
-        <div className="space-y-4 py-2">
-          <UploadAvatar
-            currentUrl={avatarUrl}
-            onUploadComplete={setAvatarUrl}
-            userId={pessoa?.id}
-          />
+        <div className="max-h-[70vh] space-y-5 overflow-y-auto px-1 py-4">
+          <div className="rounded-xl border border-primary/10 bg-primary/5 p-4 text-center">
+            <Label className="mb-3 block text-xs font-semibold uppercase tracking-wider text-primary">Alterar foto de perfil</Label>
+            <UploadAvatar
+              currentUrl={avatarUrl}
+              onUploadComplete={setAvatarUrl}
+              userId={pessoa?.id}
+            />
+          </div>
           <div className="space-y-2">
             <Label htmlFor="ep-nome">Nome completo</Label>
             <Input id="ep-nome" value={nome} onChange={(e) => setNome(e.target.value)} />
@@ -175,9 +206,15 @@ export function EditarPessoaDialog({
               </Button>
             </div>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="ep-tel">Telefone</Label>
-            <Input id="ep-tel" value={telefone} onChange={(e) => setTelefone(e.target.value)} />
+          <div className="space-y-2 pb-2">
+            <Label htmlFor="ep-tel" className="text-sm font-semibold">Telefone</Label>
+            <Input 
+              id="ep-tel" 
+              value={telefone} 
+              onChange={(e) => setTelefone(e.target.value)}
+              placeholder="(00) 00000-0000"
+              className="rounded-lg"
+            />
           </div>
         </div>
         <DialogFooter>
