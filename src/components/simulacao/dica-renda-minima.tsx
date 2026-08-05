@@ -11,6 +11,7 @@ import {
   type BancoRendaApi,
 } from "@/lib/simulacao/renda";
 import type { SistemaAmortizacao } from "@/lib/simulacao/simulacao-rapida";
+
 import { cn } from "@/lib/utils";
 
 interface Props {
