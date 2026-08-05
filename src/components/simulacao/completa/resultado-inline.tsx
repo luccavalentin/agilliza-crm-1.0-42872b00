@@ -48,7 +48,7 @@ function totalFinanciado(b: any): number | null {
 }
 
 
-export function ResultadoInlineCompleta({ simulacaoId, onFechar }: Props) {
+export function ResultadoInlineCompleta({ simulacaoId, onFechar, isSecundaria }: Props) {
   const router = useRouter();
   const qc = useQueryClient();
   const [reenviandoBanco, setReenviandoBanco] = useState<string | null>(null);
