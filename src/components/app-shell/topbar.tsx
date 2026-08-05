@@ -62,7 +62,7 @@ export function Topbar({
       <Button
         variant="ghost"
         size="icon"
-        className="min-h-11 min-w-11 lg:hidden"
+        className="h-10 w-10 shrink-0 lg:hidden"
         aria-label="Abrir menu de navegação"
         onClick={onToggleMobile}
       >
@@ -71,7 +71,7 @@ export function Topbar({
       <Button
         variant="ghost"
         size="icon"
-        className="hidden min-h-10 min-w-10 lg:inline-flex"
+        className="hidden h-10 w-10 shrink-0 lg:inline-flex"
         aria-label={collapsed ? "Expandir menu" : "Recolher menu"}
         aria-pressed={collapsed}
         onClick={onToggleCollapse}
@@ -104,7 +104,7 @@ export function Topbar({
               <Button
                 variant="ghost"
                 size="icon"
-                className="min-h-11 min-w-11 rounded-full sm:min-h-10 sm:min-w-10"
+                className="h-9 w-9 shrink-0 rounded-full sm:h-10 sm:w-10"
                 aria-label="Menu da conta"
               >
                 <Avatar className="h-8 w-8">

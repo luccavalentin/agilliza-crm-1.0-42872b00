@@ -127,7 +127,7 @@ export function PanelHeader({
 }) {
   const dark = variant === "dark";
   return (
-    <div className={cn(dark ? "op-hero-dark" : "op-hero", "p-4 md:p-6")}>
+    <div className={cn(dark ? "op-hero-dark" : "op-hero", "p-3 sm:p-4 md:p-6")}>
       <div className="relative grid gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
 
         <div className={cn("min-w-0 flex flex-col justify-center", !actions && "md:col-span-2")}>
@@ -147,7 +147,7 @@ export function PanelHeader({
           </p>
           <h1
             className={cn(
-              "mt-3 text-2xl font-bold leading-tight tracking-tight sm:text-3xl md:text-4xl",
+              "mt-2 text-xl font-bold leading-tight tracking-tight sm:mt-3 sm:text-2xl md:text-3xl lg:text-4xl",
               dark ? "text-white" : "text-foreground",
             )}
           >
