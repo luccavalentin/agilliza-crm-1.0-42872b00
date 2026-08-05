@@ -586,6 +586,7 @@ function anexarDetalhesBancos(doc: jsPDF, pageW: number, pageH: number, s: any, 
           margin: { left: rightX, right: MARGIN, top: DETALHE_HEADER_H + 16, bottom: bottomSafe },
           head: cabecalho,
           body: primeira.map(linhaParcela),
+          foot: restante.length === 0 ? [rodapeSoma] : undefined,
           ...estiloTabela,
         });
       }
