@@ -52,6 +52,8 @@ export interface ResultadoCalculo {
   total_pago: number;
   total_juros: number;
   taxa_mes: number;
+  renda_minima: number;
+  cet_ano: number;
 }
 
 function taxaMensal(taxaAno: number): number {
