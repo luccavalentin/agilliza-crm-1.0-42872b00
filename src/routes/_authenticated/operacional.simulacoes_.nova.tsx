@@ -124,6 +124,8 @@ function Pagina() {
           prazo_pagamento_max: w.prazo_meses,
           valor_financiamento_max: financiamentoTotalExibido,
           _sistema: w.sistema_amortizacao === "P" ? "PRICE" : "SAC",
+          renda_minima: c.resultado.renda_minima,
+          cet: c.resultado.cet_ano,
         }))
       });
 
