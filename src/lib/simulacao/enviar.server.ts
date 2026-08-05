@@ -830,21 +830,14 @@ export async function enviarSimulacaoImpl({
         if (simulacaoOriginal) {
           // Inverte titular e cônjuge para testar o outro CPF
           const { inverterTitularSimulacao } = await import("./simulacoes.functions");
-          await inverterTitularSimulacao({ id: simulacaoId }, { context: { supabase, userId } } as any);
+          await (inverterTitularSimulacao as any)({ id: simulacaoId });
 
           // Envia novamente com o titular invertido
           for (const b of bancos as any[]) {
             await enviarBanco(b);
           }
 
-          // Busca resultados de todos os envios para comparar
-          const { data: todosBancosResultados } = await supabase
-            .from("simulacao_bancos")
-            .select("nome_banco, taxa_juros_ano, valor_parcela, raw_response, status_banco")
-            .eq("simulacao_id", simulacaoId);
-
-          // Aqui poderíamos adicionar uma lógica de comparação mais fina.
-          // Por enquanto, apenas registramos no histórico para o watcher disparar o popup.
+          // Registra no histórico para o watcher disparar o popup
           await supabase.from("simulacao_historico").insert({
             simulacao_id: simulacaoId,
             tipo: "info",
@@ -856,6 +849,7 @@ export async function enviarSimulacaoImpl({
         console.warn("Falha ao realizar teste comparativo de CPFs:", e);
       }
     }
+
 
 
     // Status geral considerando TODOS os bancos selecionados (não só os desta
