@@ -140,7 +140,7 @@ function FiltroPeriodo({
   const ativo = !!(de || ate);
 
   return (
-    <div className="grid w-full grid-cols-1 gap-2 rounded-xl border border-border/70 bg-card/70 p-2 shadow-sm sm:w-auto sm:flex sm:flex-wrap sm:items-end">
+    <div className="grid w-full grid-cols-1 gap-2 rounded-xl border border-border/70 bg-card/70 p-2 shadow-sm sm:flex sm:w-auto sm:flex-wrap sm:items-end">
       <div className="grid grid-cols-2 items-end gap-2 sm:flex sm:items-center">
         <CalendarRange className="hidden size-4 shrink-0 text-muted-foreground sm:block" />
         <div className="min-w-0 space-y-1">
@@ -382,7 +382,7 @@ function Pagina() {
         descricao="Caixa realizado e projeção de entradas e saídas em aberto."
         atualizadoEm={atualizado}
         actions={
-          <div className="flex flex-wrap items-end justify-end gap-2">
+          <div className="flex flex-wrap items-end justify-start gap-2 sm:justify-end">
             <Tabs value={gran} onValueChange={(v) => setGran(v as typeof gran)}>
               <TabsList className="h-auto gap-1 rounded-xl bg-muted/50 p-1.5 shadow-sm">
                 <TabsTrigger value="dia" className="rounded-lg px-3 py-1.5">

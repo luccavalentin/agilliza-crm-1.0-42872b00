@@ -62,8 +62,11 @@ export function SimulacaoPreviewDialog({ simulacaoId, open, onOpenChange }: Prop
 
   async function baixarConsolidado() {
     if (!sim) return;
-    const { baixarSimulacaoPDF } = await import("@/lib/simulacao/simulacao-pdf");
-    baixarSimulacaoPDF({ simulacao: sim, bancos });
+    const { baixarSimulacaoDetalhadaPDF } = await import("@/lib/simulacao/simulacao-pdf");
+    for (const b of bancos) {
+      baixarSimulacaoDetalhadaPDF({ simulacao: sim, bancos: [b] });
+      await new Promise((r) => setTimeout(r, 450));
+    }
   }
 
   return (
