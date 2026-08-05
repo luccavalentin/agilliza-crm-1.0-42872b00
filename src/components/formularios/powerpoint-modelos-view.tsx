@@ -1,32 +1,43 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FileDown, Presentation, Check, Play } from "lucide-react";
+import { FileDown, Presentation, Check, Play, Eye, Layers } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { OpHero } from "@/components/operacional/ui";
 
+import slide1Asset from "@/assets/modelos/slide-1.png.asset.json";
+import slide2Asset from "@/assets/modelos/slide-2.png.asset.json";
+import slide3Asset from "@/assets/modelos/slide-3.png.asset.json";
+import slide4Asset from "@/assets/modelos/slide-4.png.asset.json";
+
 const MODELOS_PPT = [
   {
     id: "apresentacao-institucional",
     titulo: "Apresentação Institucional",
-    descricao: "Modelo padrão para apresentações de corretores e parceiros.",
-    url: "/modelos/agilliza-institucional.pptx",
+    descricao: "Design moderno e profissional alinhado à marca Agilliza. Ideal para parcerias e reuniões de alto impacto.",
+    url: "/modelos/APRESENTAÇÃO_AGILLIZA.pptx",
     cor: "#0F172A",
+    slides: [slide1Asset.url, slide2Asset.url, slide3Asset.url, slide4Asset.url],
+    tamanho: "3.2 MB",
   },
   {
     id: "proposta-comercial",
     titulo: "Proposta Comercial",
-    descricao: "Modelo focado em fechamento de novos negócios.",
-    url: "/modelos/agilliza-proposta.pptx",
+    descricao: "Modelo focado em fechamento de novos negócios, com gatilhos mentais e estrutura de conversão.",
+    url: "/modelos/APRESENTAÇÃO_AGILLIZA.pptx",
     cor: "#2563EB",
+    slides: [slide1Asset.url, slide2Asset.url, slide3Asset.url, slide4Asset.url],
+    tamanho: "3.2 MB",
   },
   {
     id: "treinamento-parceiro",
     titulo: "Treinamento para Parceiros",
-    descricao: "Conteúdo educativo sobre os processos da Agilliza.",
-    url: "/modelos/agilliza-treinamento.pptx",
+    descricao: "Conteúdo educativo detalhado sobre os processos e diferenciais da Agilliza.",
+    url: "/modelos/APRESENTAÇÃO_AGILLIZA.pptx",
     cor: "#059669",
+    slides: [slide1Asset.url, slide2Asset.url, slide3Asset.url, slide4Asset.url],
+    tamanho: "3.2 MB",
   },
 ];
 
