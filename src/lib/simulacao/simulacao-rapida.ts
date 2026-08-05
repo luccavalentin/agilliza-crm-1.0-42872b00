@@ -125,13 +125,24 @@ export function compararBancosRapido(
   bancos: BancoTaxaRef[],
   base: { valor_financiamento: number; prazo_meses: number; sistema: SistemaAmortizacao | "AMBOS" },
 ): ComparativoBancoRapido[] {
-  const sistemas: SistemaAmortizacao[] =
-    base.sistema === "AMBOS" ? ["S", "P"] : [base.sistema as SistemaAmortizacao];
-
   const resultados: ComparativoBancoRapido[] = [];
 
   for (const b of bancos) {
-    for (const s of sistemas) {
+    // ITAÚ (341) não tem PRICE. Se o sistema for PRICE, ignoramos o Itaú.
+    // Se for AMBOS, simulamos apenas o SAC para o Itaú.
+    const isItau = String(b.codigo_banco) === "341";
+    
+    let sistemasParaEsteBanco: SistemaAmortizacao[];
+    if (base.sistema === "AMBOS") {
+      sistemasParaEsteBanco = isItau ? ["S"] : ["S", "P"];
+    } else {
+      sistemasParaEsteBanco = [base.sistema as SistemaAmortizacao];
+    }
+
+    for (const s of sistemasParaEsteBanco) {
+      // Pular Itaú se o sistema solicitado explicitamente for PRICE
+      if (isItau && s === "P") continue;
+
       resultados.push({
         ...b,
         nome_banco: base.sistema === "AMBOS" ? `${b.nome_banco} (${s === "S" ? "SAC" : "PRICE"})` : b.nome_banco,
