@@ -218,9 +218,10 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
   }, [bancos, f.bancos_ids]);
 
   const rendaConsiderada = useMemo(
-    () => (Number(f.renda_total) || 0) + (f.compoe_renda ? Number(f.renda_conjuge) || 0 : 0),
-    [f.renda_total, f.compoe_renda, f.renda_conjuge],
+    () => (Number(f.renda_total) || 0) + (f.compoe_renda && f.compoe_renda_conjuge ? Number(f.renda_conjuge) || 0 : 0),
+    [f.renda_total, f.compoe_renda, f.compoe_renda_conjuge, f.renda_conjuge],
   );
+
 
   // Restrições operacionais por tipo de operação:
   //  - Terreno (TE/TC): apenas Bradesco opera, LTV 70%, prazo máx 240 meses.
