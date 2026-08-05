@@ -343,22 +343,61 @@ export function FormularioSimulacao({
           </p>
         </div>
 
-        <div id="campo-renda-familiar" ref={rendaRef} className="space-y-2 md:col-span-2 scroll-mt-24">
-          <Label>
-            Renda familiar mensal {isPrice ? <span className="text-destructive">*</span> : <span className="text-muted-foreground">(opcional)</span>}
-          </Label>
-          <CurrencyInput
-            ref={rendaInputRef}
-            value={w.renda_familiar}
-            onChange={(v) => set("renda_familiar", v)}
-            placeholder="0,00"
-            className={isPrice && (!w.renda_familiar || w.renda_familiar <= 0) ? "border-destructive focus-visible:ring-destructive" : undefined}
-          />
+        <div id="campo-renda-familiar" ref={rendaRef} className="space-y-4 md:col-span-2 scroll-mt-24 pt-2">
+          {w.sistema_amortizacao === "AMBOS" ? (
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <span className="flex h-2 w-2 rounded-full bg-blue-500" />
+                  Renda Familiar (SAC) <span className="text-muted-foreground">(opcional)</span>
+                </Label>
+                <CurrencyInput
+                  value={w.renda_familiar}
+                  onChange={(v) => set("renda_familiar", v)}
+                  placeholder="0,00"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <span className="flex h-2 w-2 rounded-full bg-purple-500" />
+                  Renda Familiar (PRICE) <span className="text-destructive">*</span>
+                </Label>
+                <CurrencyInput
+                  ref={rendaInputRef}
+                  value={w.renda_familiar_price}
+                  onChange={(v) => set("renda_familiar_price", v)}
+                  placeholder="0,00"
+                  className={!w.renda_familiar_price || w.renda_familiar_price <= 0 ? "border-destructive focus-visible:ring-destructive" : undefined}
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <Label>
+                Renda familiar mensal {isPrice ? <span className="text-destructive">*</span> : <span className="text-muted-foreground">(opcional)</span>}
+              </Label>
+              <CurrencyInput
+                ref={rendaInputRef}
+                value={w.renda_familiar}
+                onChange={(v) => set("renda_familiar", v)}
+                placeholder="0,00"
+                className={isPrice && (!w.renda_familiar || w.renda_familiar <= 0) ? "border-destructive focus-visible:ring-destructive" : undefined}
+              />
+            </div>
+          )}
+
           {isPrice && (!w.renda_familiar || w.renda_familiar <= 0) && (
             <p className="text-xs font-medium text-destructive">
               Informe a renda familiar para simular na tabela PRICE.
             </p>
           )}
+
+          {w.sistema_amortizacao === "AMBOS" && (!w.renda_familiar_price || w.renda_familiar_price <= 0) && (
+            <p className="text-xs font-medium text-destructive">
+              Informe a renda para a tabela PRICE para prosseguir com a simulação dupla.
+            </p>
+          )}
+
           {w.valor_financiamento > 0 && w.prazo_meses >= PRAZO_MIN ? (
             <DicaRendaMinima
               valorFinanciamento={w.valor_financiamento}
@@ -366,7 +405,7 @@ export function FormularioSimulacao({
               prazoMeses={w.prazo_meses}
               taxaAno={melhorTaxaAno}
               sistema={w.sistema_amortizacao}
-              rendaInformada={w.renda_familiar}
+              rendaInformada={w.sistema_amortizacao === "AMBOS" ? w.renda_familiar_price : w.renda_familiar}
             />
           ) : (
             <p className="text-xs text-muted-foreground">
