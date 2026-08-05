@@ -2,6 +2,7 @@ import { createFileRoute, notFound } from "@tanstack/react-router";
 import { FormulariosView } from "@/components/formularios/formularios-view";
 import { PapelTimbradoView } from "@/components/formularios/papel-timbrado-view";
 import { PowerPointModelosView } from "@/components/formularios/powerpoint-modelos-view";
+import { ChecklistBancosView } from "@/components/formularios/checklist-bancos-view";
 import { BANCOS_FORMULARIO, type BancoFormulario } from "@/lib/formularios/formularios.functions";
 
 export const Route = createFileRoute("/_authenticated/formularios/$banco")({
