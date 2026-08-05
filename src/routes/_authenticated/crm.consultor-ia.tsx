@@ -63,7 +63,7 @@ export const Route = createFileRoute("/_authenticated/crm/consultor-ia")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  beforeLoad: () => assertModuloPermitido("crm.scan_ia"),
+  beforeLoad: () => assertModuloPermitido("crm.clientes"),
   component: ConsultorIaPage,
 });
 

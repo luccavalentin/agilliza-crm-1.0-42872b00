@@ -321,8 +321,8 @@ export const processarLeitura = createServerFn({ method: "POST" })
       typeof cfg.modelo === "string" && cfg.modelo.trim().length > 0
         ? cfg.modelo.trim()
         : provedor === "openai"
-          ? "gpt-4o-mini"
-          : "gemini-2.5-flash";
+          ? "gpt-4o"
+          : "gemini-2.0-flash-exp";
     const temperatura = typeof cfg.temperatura === "number" ? cfg.temperatura : 0;
     const promptSistema =
       typeof cfg.prompt_scan === "string" && cfg.prompt_scan.trim().length > 0
@@ -384,9 +384,10 @@ export const processarLeitura = createServerFn({ method: "POST" })
 
       const instrucaoBase =
         `Você analisa documentos brasileiros para um correspondente bancário.\n` +
-        `PASSO 1 — Classifique o documento em EXATAMENTE um destes tipos: ${TIPOS_DOCUMENTO.join(", ")}.\n` +
+        `PASSO 1 — Identifique e classifique o documento em EXATAMENTE um destes tipos: ${TIPOS_DOCUMENTO.join(", ")}.\n` +
+        `Analise PDFs com múltiplas páginas, fotos (JPG/PNG/WEBP) e digitalizações.\n` +
         (tipoInformado
-          ? `O operador informou o tipo como "${tipoInformado}", mas classifique de forma independente pelo conteúdo real.\n`
+          ? `O operador informou o tipo como "${tipoInformado}", mas classifique de forma independente pelo conteúdo real (ele pode ter selecionado errado).\n`
           : "") +
         `PASSO 2 — Faça OCR de TODAS as páginas (inclusive digitalizações, carimbos e textos em coluna) ` +
         `e extraia os campos previstos para o tipo que você classificou:\n${mapaTipos}\n` +

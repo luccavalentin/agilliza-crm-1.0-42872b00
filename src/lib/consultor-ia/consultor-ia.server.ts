@@ -153,8 +153,8 @@ export async function prepararConsulta(
     typeof cfg.modelo === "string" && cfg.modelo.trim()
       ? cfg.modelo.trim()
       : provedor === "openai"
-        ? "gpt-4o-mini"
-        : "gemini-2.5-flash";
+        ? "gpt-4o"
+        : "gemini-2.0-flash-exp";
   const apiKeySalva = typeof cfgRow?.api_key === "string" ? cfgRow.api_key.trim() : "";
   const apiKey =
     apiKeySalva ||
