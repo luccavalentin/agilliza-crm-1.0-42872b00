@@ -35,7 +35,21 @@ export function PropostaRetornoWatcher({ userId }: Props) {
           if (row.tipo === "info" && row.descricao.includes("Comparativo de taxas concluído")) {
             const { data: sim } = await supabase
               .from("simulacoes")
-              .select("id, numero_simulacao, nome_cliente, usuario_responsavel_id, usuario_criador_id")
+              .select(`
+                id, 
+                numero_simulacao, 
+                nome_cliente, 
+                usuario_responsavel_id, 
+                usuario_criador_id,
+                bancos:simulacao_bancos(
+                  id,
+                  nome_banco,
+                  status_banco,
+                  valor_parcela,
+                  taxa_juros_ano,
+                  selecionado
+                )
+              `)
               .eq("id", row.simulacao_id)
               .maybeSingle();
 
@@ -51,6 +65,10 @@ export function PropostaRetornoWatcher({ userId }: Props) {
               status: "Comparativo de Taxas Concluído",
               nome_cliente: sim.nome_cliente || "—",
               banco: "Multi-proponente",
+              // Passamos os bancos para que o host possa renderizar a comparação
+              dados_adicionais: {
+                bancos: (sim.bancos || []).filter((b: any) => b.selecionado && b.status_banco === 'simulada')
+              }
             });
           }
         }
