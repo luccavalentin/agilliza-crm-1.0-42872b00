@@ -10,9 +10,16 @@ import { EncaminharChecklistDialog } from "./encaminhar-checklist-dialog";
 import { toast } from "sonner";
 
 export function ChecklistBancosView() {
+  const search = useSearch({ from: "/_authenticated/formularios/$banco" }) as any;
   const [bancoSelecionado, setBancoSelecionado] = useState<string | null>(null);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [bancoParaCompartilhar, setBancoParaCompartilhar] = useState<{ id: string; nome: string } | null>(null);
+
+  useEffect(() => {
+    if (search.banco && CHECKLISTS_BANCOS[search.banco]) {
+      setBancoSelecionado(search.banco);
+    }
+  }, [search.banco]);
 
   const bancos = [
     { id: "itau", nome: "Itaú" },
