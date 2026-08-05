@@ -47,6 +47,8 @@ import {
 
 export type { Form };
 
+export interface SimulacaoCompletaCtx extends ReturnType<typeof useSimulacaoCompleta> {}
+
 /**
  * Concentra todo o estado, regras de negócio e efeitos da simulação completa.
  * A UI (rota + seções) apenas consome este contrato — responsabilidade única.
