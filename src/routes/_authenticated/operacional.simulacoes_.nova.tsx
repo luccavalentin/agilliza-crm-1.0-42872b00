@@ -137,7 +137,7 @@ function Pagina() {
         : comparativo;
 
       for (const c of bancosParaBaixar) {
-        const sistemaCode = w.sistema_amortizacao === "P" ? "P" : "S";
+        const sistemaCode = c.resultado.primeira_parcela === c.resultado.ultima_parcela ? "P" : "S";
         baixarSimulacaoDetalhadaPDF({
           simulacao: {
             numero_simulacao: null,
