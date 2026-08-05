@@ -375,15 +375,16 @@ function Pagina() {
 
 
   return (
-    <div className="mx-auto w-full max-w-[1600px] space-y-6 bg-gradient-to-b from-background to-muted/20 min-h-screen">
+    <div className="mx-auto w-full max-w-[1600px] space-y-6 bg-[#f8fafc] min-h-screen">
       <div className="p-4 sm:p-5 md:space-y-8 md:p-8">
       <PanelHeader
-        variant="dark"
-        eyebrow="Relatório Gerencial · Financeiro"
-        titulo="Fluxo de Caixa Estratégico"
-        descricao="Acompanhe o saldo realizado e as projeções futuras de entradas e saídas de forma consolidada e executiva."
+        variant="light"
+        eyebrow="FINANCEIRO · FLUXO DE CAIXA"
+        titulo="Fluxo de caixa"
+        descricao="Caixa realizado e projeção de entradas e saídas em aberto."
         atualizadoEm={atualizado}
         actions={
+
           <div className="flex flex-wrap items-end justify-start gap-2 sm:justify-end">
             <Tabs value={gran} onValueChange={(v) => setGran(v as typeof gran)}>
               <TabsList className="h-auto gap-1 rounded-xl bg-muted/50 p-1.5 shadow-sm">
