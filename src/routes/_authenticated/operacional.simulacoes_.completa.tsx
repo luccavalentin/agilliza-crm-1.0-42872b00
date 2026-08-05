@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, FileText, Send, Home, User, Users, Landmark, ShieldCheck } from "lucide-react";
+import { ArrowLeft, FileText, Send, Home, User, Users, Landmark, ShieldCheck, X } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { SecaoCabecalho } from "@/components/simulacao/secao-cabecalho";
@@ -29,6 +29,7 @@ import { ResultadoInlineAmbos } from "@/components/simulacao/completa/resultado-
 import { formatBRL, formatPercent } from "@/lib/simulacao/format";
 import { useSimulacaoCompleta } from "@/lib/simulacao/use-simulacao-completa";
 import { obterSimulacao } from "@/lib/simulacao/simulacoes.functions";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/operacional/simulacoes_/completa")({
   head: () => ({ meta: [{ title: "Simulação completa — Agilliza" }] }),
