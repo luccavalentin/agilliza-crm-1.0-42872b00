@@ -113,6 +113,7 @@ function Pagina() {
           valor_entrada: w.valor_entrada,
           prazo: w.prazo_meses,
           sistema_amortizacao: w.sistema_amortizacao,
+          renda_familiar: w.renda_familiar,
           created_at: new Date().toISOString(),
         },
         bancos: comparativo.map(c => ({
