@@ -385,10 +385,32 @@ export const criarSimulacao = createServerFn({ method: "POST" })
 
     const vincularConjugeAoTitular = async (titularId: string | null, conjugeId: string | null) => {
       if (!titularId || !conjugeId || titularId === conjugeId) return;
-      // Garante que o cônjuge apareça como uma "target" (vínculo) do titular e vice-versa se necessário,
-      // ou apenas que compartilhem o mesmo parceiro (que já é feito pelo replicarVinculos).
-      // Mas o usuário pediu "ter uma target vinculado ao parceiro dele".
-      // Isso geralmente significa que o cônjuge deve ter o mesmo parceiro_id vinculado.
+      
+      // Vincula o titular ao cônjuge com tipo_vinculo 'conjuge'
+      const { error: err1 } = await supabaseAdmin
+        .from("cliente_parceiros")
+        .upsert({
+          cliente_id: titularId,
+          parceiro_id: conjugeId,
+          tipo_vinculo: 'conjuge',
+          correspondente_id,
+        }, { onConflict: "cliente_id,parceiro_id,tipo_vinculo" });
+
+      // Vincula o cônjuge ao titular com tipo_vinculo 'conjuge'
+      const { error: err2 } = await supabaseAdmin
+        .from("cliente_parceiros")
+        .upsert({
+          cliente_id: conjugeId,
+          parceiro_id: titularId,
+          tipo_vinculo: 'conjuge',
+          correspondente_id,
+        }, { onConflict: "cliente_id,parceiro_id,tipo_vinculo" });
+
+      if (err1 || err2) {
+        console.error("Falha ao vincular cônjuges:", err1?.message || err2?.message);
+      }
+
+      // Além do vínculo mútuo, garante que ambos compartilhem os mesmos parceiros (imobiliárias, etc)
       await replicarVinculos(titularId, [conjugeId]);
     };
 
