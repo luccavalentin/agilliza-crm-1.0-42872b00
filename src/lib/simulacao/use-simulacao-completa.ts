@@ -72,6 +72,7 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
   const [simulacaoResultadoId, setSimulacaoResultadoId] = useState<string | null>(null);
   // Segundo id de simulação para o modo "Ambos" (uma simulação SAC + uma PRICE).
   const [simulacaoResultadoIdPrice, setSimulacaoResultadoIdPrice] = useState<string | null>(null);
+  const [simulacaoResultadoIdSecundario, setSimulacaoResultadoIdSecundario] = useState<string | null>(null);
 
   const { data: bancos } = useQuery({
     queryKey: ["bancos-ativos"],
@@ -792,6 +793,7 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
     await executarEnvioAmbos({
       f, idOperacao, router, setErros, setEnviando, setConcluidos,
       setSimulacaoResultadoId, setSimulacaoResultadoIdPrice,
+      setSimulacaoResultadoIdSecundario,
     });
   }
 
@@ -799,6 +801,7 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
     await executarEnvioSimples({
       f, idOperacao, modoProposta, router, setErros, setEnviando, setConcluidos,
       setSimulacaoResultadoId, setSimulacaoResultadoIdPrice,
+      setSimulacaoResultadoIdSecundario,
     });
   }
 
@@ -864,8 +867,10 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
     // resultado inline
     simulacaoResultadoId,
     simulacaoResultadoIdPrice,
+    simulacaoResultadoIdSecundario,
     fecharResultadoInline: () => setSimulacaoResultadoId(null),
     fecharResultadoInlinePrice: () => setSimulacaoResultadoIdPrice(null),
+    fecharResultadoInlineSecundario: () => setSimulacaoResultadoIdSecundario(null),
     refetchCrm,
   };
 }

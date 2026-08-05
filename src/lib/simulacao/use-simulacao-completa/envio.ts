@@ -28,6 +28,7 @@ interface CtxBase {
   setConcluidos: (v: number) => void;
   setSimulacaoResultadoId: (v: string | null) => void;
   setSimulacaoResultadoIdPrice: (v: string | null) => void;
+  setSimulacaoResultadoIdSecundario?: (v: string | null) => void;
 }
 
 function bloquearSemCepHomeEquity(f: Form, setErros: (v: Record<string, string>) => void): boolean {
@@ -247,7 +248,7 @@ export async function executarEnvioSimples(ctx: CtxBase): Promise<void> {
   setConcluidos(0);
   setEnviando(true);
   try {
-    const { id } = await criarSimulacao({
+    const { id, id_secundario } = await criarSimulacao({
       data: {
         modo: "completa",
         dados: {
@@ -259,36 +260,40 @@ export async function executarEnvioSimples(ctx: CtxBase): Promise<void> {
     });
     sessionStorage.removeItem("simulacao_wizard");
     const idsBancos = f.bancos_ids.length > 0 ? f.bancos_ids : [];
+
+    // Envio para a simulação principal
+    const promises = [];
     if (idsBancos.length === 0) {
-      try {
-        await enviarSimulacaoBanco({ data: { simulacao_id: id } });
-      } catch (e) {
-        toast.error(
-          e instanceof Error
-            ? e.message
-            : "Falha ao enviar ao banco. Você pode reenviar na tela da simulação.",
-        );
-      }
-      setConcluidos(1);
+      promises.push(enviarSimulacaoBanco({ data: { simulacao_id: id } }));
     } else {
-      let feitos = 0;
-      await Promise.allSettled(
-        idsBancos.map((bid: string) =>
-          enviarSimulacaoBanco({ data: { simulacao_id: id, banco_ids: [bid] } })
-            .catch((e) => {
-              toast.error(
-                e instanceof Error
-                  ? e.message
-                  : "Falha ao enviar a um dos bancos. Você pode reenviar na tela da simulação.",
-              );
-            })
-            .finally(() => {
-              feitos++;
-              setConcluidos(feitos);
-            }),
-        ),
-      );
+      for (const bid of idsBancos) {
+        promises.push(enviarSimulacaoBanco({ data: { simulacao_id: id, banco_ids: [bid] } }));
+      }
     }
+
+    // Se houver simulação secundária (comparação automática de CPFs), envia também
+    if (id_secundario) {
+      if (idsBancos.length === 0) {
+        promises.push(enviarSimulacaoBanco({ data: { simulacao_id: id_secundario } }));
+      } else {
+        for (const bid of idsBancos) {
+          promises.push(enviarSimulacaoBanco({ data: { simulacao_id: id_secundario, banco_ids: [bid] } }));
+        }
+      }
+    }
+
+    let feitos = 0;
+    await Promise.allSettled(
+      promises.map((p) =>
+        p.catch((e) => {
+          console.error("[Envio Banco]", e);
+        }).finally(() => {
+          feitos++;
+          setConcluidos(Math.min(feitos, idsBancos.length > 0 ? idsBancos.length : 1));
+        })
+      )
+    );
+
 
     // Fluxo "Nova Proposta": após simular, cria a proposta e redireciona.
     if (modoProposta) {
@@ -332,6 +337,9 @@ export async function executarEnvioSimples(ctx: CtxBase): Promise<void> {
     }
 
     ctx.setSimulacaoResultadoId(id);
+    if (id_secundario && ctx.setSimulacaoResultadoIdSecundario) {
+      ctx.setSimulacaoResultadoIdSecundario(id_secundario);
+    }
     setEnviando(false);
     setConcluidos(0);
     toast.success(

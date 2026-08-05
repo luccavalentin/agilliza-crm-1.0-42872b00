@@ -252,9 +252,15 @@ const criarSchema = z.object({
 export const criarSimulacao = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => criarSchema.parse(d))
-  .handler(async ({ data, context }): Promise<{ id: string; numero_simulacao: string }> => {
+  .handler(async ({ data, context }): Promise<{ id: string; numero_simulacao: string; id_secundario?: string }> => {
     const { supabase, userId } = context;
     const dd = data.dados;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    // Se estivermos em modo completa e for casado, verificamos se o usuário pediu
+    // explicitamente para testar ambos os CPFs.
+    const testarAmbos = data.modo === "completa" && Boolean(dd.possui_conjuge) && Boolean(dd.compoe_renda_conjuge);
+
 
     const { data: prof } = await supabase
       .from("profiles")
@@ -274,7 +280,6 @@ export const criarSimulacao = createServerFn({ method: "POST" })
     // Importante: quando o titular é invertido na tela, `cliente_id` ainda pode
     // apontar para o titular original. Por isso a referência da simulação deve
     // ser recalculada pelo CPF/CNPJ atual e o cônjuge também deve virar cliente.
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     let cliente_id = dd.cliente_id ?? null;
     const clienteOrigemId = cliente_id;
     const casado = Boolean(dd.possui_conjuge);
@@ -484,6 +489,65 @@ export const criarSimulacao = createServerFn({ method: "POST" })
       .single();
     if (error) throw new Error(error.message);
 
+    let id_secundario: string | undefined;
+
+    // Se testarAmbos estiver ativo, cria uma segunda simulação com os papéis invertidos
+    if (testarAmbos) {
+      const insertInvertido = {
+        ...insert,
+        // Inverte titular ⇄ cônjuge
+        cliente_id: conjugeId || cliente_id,
+        cpf_cnpj: dd.cpf_conjuge || null,
+        nome_cliente: dd.nome_conjuge || null,
+        email: dd.email_conjuge || null,
+        celular: dd.celular_conjuge || null,
+        data_nascimento: dd.data_nascimento_conjuge || null,
+        renda_total: dd.renda_conjuge || null,
+        estado_civil: dd.estado_civil_conjuge || dd.estado_civil,
+
+        nome_conjuge: dd.nome_cliente || null,
+        cpf_conjuge: dd.cpf_cnpj || null,
+        data_nascimento_conjuge: dd.data_nascimento || null,
+        email_conjuge: dd.email || null,
+        celular_conjuge: dd.celular || null,
+        renda_conjuge: dd.renda_total || null,
+        estado_civil_conjuge: dd.estado_civil ?? null,
+        
+        // Mantém vínculo via agrupador para que a UI saiba que são parte da mesma "comparação"
+        agrupador_id: insert.agrupador_id || sim.id,
+      };
+
+      const { data: simSec, error: errorSec } = await supabaseAdmin
+        .from("simulacoes")
+        .insert(insertInvertido as any)
+        .select("id")
+        .single();
+      
+      if (!errorSec && simSec) {
+        id_secundario = simSec.id;
+        // Replica os bancos selecionados para a simulação invertida
+        if (dd.bancos_ids && dd.bancos_ids.length > 0) {
+          const { data: bancosAtivos } = await supabase
+            .from("vw_bancos_ativos")
+            .select("id, codigo_banco, nome_banco, id_banco")
+            .in("id", dd.bancos_ids);
+          
+          if (bancosAtivos && bancosAtivos.length > 0) {
+            await supabaseAdmin.from("simulacao_bancos").insert(
+              bancosAtivos.map((b) => ({
+                simulacao_id: simSec.id,
+                banco_id: b.id,
+                codigo_banco: b.codigo_banco,
+                nome_banco: b.nome_banco,
+                homefin_id_banco: b.id_banco,
+                status_banco: "aguardando",
+              })),
+            );
+          }
+        }
+      }
+    }
+
     // registra bancos selecionados
     if (dd.bancos_ids && dd.bancos_ids.length > 0) {
       const { data: bancos } = await supabase
@@ -511,7 +575,7 @@ export const criarSimulacao = createServerFn({ method: "POST" })
       ator_id: userId,
     });
 
-    return { id: sim.id, numero_simulacao: sim.numero_simulacao };
+    return { id: sim.id, numero_simulacao: sim.numero_simulacao, id_secundario };
   });
 
 /** ===== Obter simulação ===== */
