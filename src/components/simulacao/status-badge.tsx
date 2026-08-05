@@ -19,7 +19,7 @@ export function SimulacaoStatusBadge({ status }: { status: string }) {
 const BANCO_MAPA: Record<string, { tone: Tone; label: string }> = {
   aguardando: { tone: "info", label: "Aguardando" },
   simulada: { tone: "success", label: "Simulação" },
-  erro: { tone: "danger", label: "Erro" },
+  erro: { tone: "danger", label: "que erro é esse?" },
   expirada: { tone: "muted", label: "Expirada" },
 };
 
