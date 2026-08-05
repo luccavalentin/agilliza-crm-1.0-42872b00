@@ -31,7 +31,9 @@ import { assertModuloPermitido } from "@/lib/route-guards";
 import {
   obterFluxoCaixaAnalitico,
   type FluxoAnalitico,
+  limparFluxoCaixa,
 } from "@/lib/financeiro/financeiro.functions";
+
 import { PanelHeader, SectionTitle, HeroMetric, MiniMetric, PanelCard } from "@/components/common/dashboard";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
