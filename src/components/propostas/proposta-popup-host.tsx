@@ -8,12 +8,14 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, AlertCircle, Info, ExternalLink } from "lucide-react";
+import { CheckCircle2, AlertCircle, Info, ExternalLink, X, TrendingDown } from "lucide-react";
 import { Link } from "@tanstack/react-router";
+import { corDoBanco } from "@/lib/bancos/cores";
+import { BancoLogo } from "@/components/bancos/banco-logo";
 
 /**
- * Host global para os popups de retorno de propostas.
- * Exibe um modal no meio da tela com design personalizado.
+ * Host global para os popups de retorno de propostas e comparativo de taxas.
+ * Exibe um modal centralizado que exige fechamento manual via 'X' ou botão.
  */
 export function PropostaPopupHost() {
   const { abertas, remover } = usePropostaNotificacaoStore();
@@ -23,62 +25,137 @@ export function PropostaPopupHost() {
   // Mostra um por um (pilha)
   const atual = abertas[0];
 
-  const isPositive = ["aprovada", "aprovado", "simulada"].includes(atual.status.toLowerCase());
+  const isPositive = ["aprovada", "aprovado", "simulada", "comparativo de taxas concluído"].includes(atual.status.toLowerCase());
   const isNegative = ["recusada", "recusado", "erro"].includes(atual.status.toLowerCase());
+  const isComparativo = atual.status.toLowerCase() === "comparativo de taxas concluído";
+
+  const bancosComparativo = atual.dados_adicionais?.bancos || [];
+  
+  // Encontra a melhor taxa no comparativo
+  const melhorBanco = isComparativo && bancosComparativo.length > 0
+    ? [...bancosComparativo].sort((a, b) => (a.taxa_juros_ano || 999) - (b.taxa_juros_ano || 999))[0]
+    : null;
 
   return (
-    <Dialog open={true} onOpenChange={() => remover(atual.id)}>
-      <DialogContent className="sm:max-w-[450px] border-primary/20 bg-background/95 backdrop-blur-md shadow-2xl">
-        <DialogHeader className="space-y-4">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary ring-8 ring-primary/5">
-            {isPositive ? (
-              <CheckCircle2 className="h-8 w-8 text-emerald-500" />
-            ) : isNegative ? (
-              <AlertCircle className="h-8 w-8 text-destructive" />
-            ) : (
-              <Info className="h-8 w-8 text-primary" />
-            )}
-          </div>
-          <div className="text-center">
-            <DialogTitle className="text-2xl font-bold tracking-tight">
-              Retorno do Banco
-            </DialogTitle>
-            <DialogDescription className="mt-2 text-base">
-              A proposta <span className="font-semibold text-foreground">{atual.numero}</span> do banco{" "}
-              <span className="font-semibold text-foreground">{atual.banco}</span> acaba de retornar um novo status.
-            </DialogDescription>
-          </div>
-        </DialogHeader>
+    <Dialog open={true} onOpenChange={() => {}}>
+      <DialogContent 
+        className="sm:max-w-[500px] border-primary/20 bg-background/95 backdrop-blur-md shadow-2xl p-0 overflow-hidden"
+        onPointerDownOutside={(e) => e.preventDefault()} // Impede fechar clicando fora
+        onEscapeKeyDown={(e) => e.preventDefault()} // Impede fechar via ESC
+      >
+        <button 
+          onClick={() => remover(atual.id)}
+          className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground z-50"
+        >
+          <X className="h-4 w-4" />
+          <span className="sr-only">Fechar</span>
+        </button>
 
-        <div className="my-6 rounded-xl border border-primary/10 bg-primary/5 p-4 text-center">
-          <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Status Atual</p>
-          <p className={`mt-1 text-xl font-bold ${isPositive ? 'text-emerald-600' : isNegative ? 'text-destructive' : 'text-primary'}`}>
-            {atual.status.toUpperCase()}
-          </p>
-          <p className="mt-2 text-sm text-foreground/80 italic">
-            Cliente: {atual.nome_cliente}
-          </p>
+        <div className="p-6">
+          <DialogHeader className="space-y-4">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary ring-8 ring-primary/5">
+              {isComparativo ? (
+                <TrendingDown className="h-8 w-8 text-blue-500" />
+              ) : isPositive ? (
+                <CheckCircle2 className="h-8 w-8 text-emerald-500" />
+              ) : isNegative ? (
+                <AlertCircle className="h-8 w-8 text-destructive" />
+              ) : (
+                <Info className="h-8 w-8 text-primary" />
+              )}
+            </div>
+            <div className="text-center">
+              <DialogTitle className="text-2xl font-bold tracking-tight">
+                {isComparativo ? "Comparativo de Taxas" : "Retorno do Banco"}
+              </DialogTitle>
+              <DialogDescription className="mt-2 text-base">
+                {isComparativo ? (
+                  <>
+                    O teste de proponentes para <span className="font-semibold text-foreground">{atual.nome_cliente}</span> foi concluído com sucesso.
+                  </>
+                ) : (
+                  <>
+                    A proposta <span className="font-semibold text-foreground">{atual.numero}</span> do banco{" "}
+                    <span className="font-semibold text-foreground">{atual.banco}</span> acaba de retornar um novo status.
+                  </>
+                )}
+              </DialogDescription>
+            </div>
+          </DialogHeader>
+
+          {isComparativo && bancosComparativo.length > 0 ? (
+            <div className="my-6 space-y-3">
+              <p className="text-center text-sm font-medium text-muted-foreground mb-4">
+                Melhores taxas identificadas:
+              </p>
+              <div className="space-y-2 max-h-[200px] overflow-y-auto pr-2 custom-scrollbar">
+                {bancosComparativo.map((b: any) => (
+                  <div 
+                    key={b.id} 
+                    className={`flex items-center justify-between p-3 rounded-lg border ${
+                      b.id === melhorBanco?.id 
+                        ? 'bg-blue-500/10 border-blue-500/30 ring-1 ring-blue-500/20' 
+                        : 'bg-muted/50 border-border'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <BancoLogo nome={b.nome_banco} size="sm" />
+                      <div>
+                        <p className="text-sm font-bold" style={{ color: corDoBanco(b.nome_banco) }}>
+                          {b.nome_banco}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">
+                          {b.id === melhorBanco?.id ? 'Melhor Condição' : 'Taxa de Mercado'}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-bold text-foreground">
+                        {b.taxa_juros_ano?.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}% a.a.
+                      </p>
+                      <p className="text-[11px] text-muted-foreground">
+                        Parcela: {b.valor_parcela?.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="my-6 rounded-xl border border-primary/10 bg-primary/5 p-4 text-center">
+              <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Status Atual</p>
+              <p className={`mt-1 text-xl font-bold ${isPositive ? 'text-emerald-600' : isNegative ? 'text-destructive' : 'text-primary'}`}>
+                {atual.status.toUpperCase()}
+              </p>
+              <p className="mt-2 text-sm text-foreground/80 italic">
+                Cliente: {atual.nome_cliente}
+              </p>
+            </div>
+          )}
+
+          <DialogFooter className="flex-col gap-2 sm:flex-row sm:justify-center">
+            <Button
+              variant="outline"
+              onClick={() => remover(atual.id)}
+              className="w-full sm:w-auto"
+            >
+              Fechar
+            </Button>
+            <Button
+              asChild
+              className="w-full sm:w-auto group bg-primary hover:bg-primary/90"
+              onClick={() => remover(atual.id)}
+            >
+              <Link 
+                to={isComparativo ? "/operacional/simulacoes/$id" : "/operacional/propostas/$id"} 
+                params={{ id: atual.id }}
+              >
+                {isComparativo ? "Ver Comparativo Completo" : "Ver Detalhes"}
+                <ExternalLink className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+              </Link>
+            </Button>
+          </DialogFooter>
         </div>
-
-        <DialogFooter className="flex-col gap-2 sm:flex-row sm:justify-center">
-          <Button
-            variant="outline"
-            onClick={() => remover(atual.id)}
-            className="w-full sm:w-auto"
-          >
-            Fechar
-          </Button>
-          <Button
-            asChild
-            className="w-full sm:w-auto group"
-            onClick={() => remover(atual.id)}
-          >
-            <Link to="/operacional/propostas/$id" params={{ id: atual.id }}>
-              Ver Detalhes
-              <ExternalLink className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-            </Link>
-          </Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

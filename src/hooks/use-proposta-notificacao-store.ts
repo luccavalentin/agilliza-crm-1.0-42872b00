@@ -6,6 +6,7 @@ interface PropostaNotificacao {
   status: string;
   nome_cliente: string;
   banco: string;
+  dados_adicionais?: any;
 }
 
 interface PropostaNotificacaoStore {
