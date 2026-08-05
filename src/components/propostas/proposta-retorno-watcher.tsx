@@ -120,8 +120,10 @@ export function PropostaRetornoWatcher({ userId }: Props) {
 
     return () => {
       supabase.removeChannel(channel);
+      supabase.removeChannel(channelSim);
     };
   }, [userId, adicionarPopup]);
+
 
   return null;
 }
