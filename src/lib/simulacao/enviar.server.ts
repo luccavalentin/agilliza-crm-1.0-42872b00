@@ -476,8 +476,6 @@ export async function enviarSimulacaoImpl({
         .join(", ")}. Por favor, revise o cadastro do cliente e tente novamente.`;
       throw new Error(msg);
     }
-            .join(", ")}.`
-        : "";
 
     const enderecoImovelGarantia =
       sim.produto === "home_equity" ? await montarEnderecoImovelGarantia(sim, cliente) : null;
