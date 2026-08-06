@@ -606,11 +606,25 @@ export function AlertRow({
       )}
     </div>
   );
-  return to ? (
-    <Link to={to} className="block transition-opacity hover:opacity-80">
-      {conteudo}
-    </Link>
-  ) : (
-    conteudo
-  );
+  if (to) {
+    return (
+      <Link to={to} className="block transition-opacity hover:opacity-80">
+        {conteudo}
+      </Link>
+    );
+  }
+
+  if (onClick) {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        className="block w-full text-left transition-opacity hover:opacity-80"
+      >
+        {conteudo}
+      </button>
+    );
+  }
+
+  return conteudo;
 }
