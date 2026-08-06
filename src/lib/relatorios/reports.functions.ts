@@ -3,6 +3,9 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import {
   resolverIntervalo,
+  inicioDiaBR,
+  fimDiaBR,
+  dataBR,
   type ReportFiltros,
   type ReportResult,
   type ChartSerie,
