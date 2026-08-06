@@ -60,8 +60,8 @@ export function UploadAvatar({ currentUrl, onUploadComplete, userId }: UploadAva
       const file = new File([croppedImageBlob], "avatar.webp", { type: "image/webp" });
       const imagem = await otimizarImagem(file);
       const fileExt = "webp";
-      const fileName = `${userId || crypto.randomUUID()}-${crypto.randomUUID()}.${fileExt}`;
-      const filePath = fileName;
+      const owner = userId || crypto.randomUUID();
+      const filePath = `${owner}/avatar-${crypto.randomUUID()}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from("avatars")
@@ -69,13 +69,8 @@ export function UploadAvatar({ currentUrl, onUploadComplete, userId }: UploadAva
 
       if (uploadError) throw uploadError;
 
-      const { data: signed, error: signError } = await supabase.storage
-        .from("avatars")
-        .createSignedUrl(filePath, 60 * 60 * 24 * 365 * 10);
-      
-      if (signError || !signed?.signedUrl) throw signError ?? new Error("Falha ao carregar a foto.");
-
-      onUploadComplete(signed.signedUrl);
+      const { data: publicData } = supabase.storage.from("avatars").getPublicUrl(filePath);
+      onUploadComplete(publicData.publicUrl);
       toast.success("Foto carregada com sucesso!");
       setImageToCrop(null);
     } catch (error: unknown) {

@@ -79,7 +79,7 @@ export const listarPessoas = createServerFn({ method: "GET" })
 
     const { data: pessoas, error } = await supabase
       .from("profiles")
-      .select("id, nome, avatar_url, email, telefone, acesso_tipo, tipo_pessoa, tipos_pessoa, login_habilitado, ativo, bloqueado_em, nivel_acesso_id")
+      .select("id, nome, avatar_url, foto_url, email, telefone, acesso_tipo, tipo_pessoa, tipos_pessoa, login_habilitado, ativo, bloqueado_em, nivel_acesso_id")
       .eq("correspondente_id", correspondenteId)
       .order("created_at", { ascending: true });
 
@@ -117,6 +117,7 @@ export const listarPessoas = createServerFn({ method: "GET" })
       const primario = (p.tipo_pessoa ?? "usuario") as TipoPessoa;
       return {
         ...p,
+        avatar_url: p.foto_url ?? p.avatar_url ?? null,
         tipo_pessoa: primario,
         tipos_pessoa: (tps.length > 0 ? tps : [primario]) as TipoPessoa[],
         login_habilitado: p.login_habilitado ?? true,
@@ -374,6 +375,7 @@ export const atualizarPessoa = createServerFn({ method: "POST" })
         nivel_acesso_id: data.nivel_acesso_id,
         acesso_tipo: acessoTipo,
         avatar_url: data.avatar_url,
+        foto_url: data.avatar_url,
         ...(tiposList.length > 0
           ? { tipo_pessoa: tiposList[0], tipos_pessoa: tiposList }
           : {}),

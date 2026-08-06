@@ -1063,6 +1063,9 @@ export const getPanelDados = createServerFn({ method: "POST" })
 // ============================================================================
 
 export interface PanelDrilldownItem {
+  id?: string;
+  tipo?: "demanda" | "tarefa" | "simulacao";
+  raw?: unknown;
   label: string;
   sub?: string;
   valor?: string;
@@ -1185,7 +1188,8 @@ export const getPanelDrilldown = createServerFn({ method: "POST" })
     const chave = normLabel(data.metrica);
 
 
-    const LIMITE = 200;
+    // O detalhamento precisa refletir integralmente o contador do card.
+    const LIMITE = 5000;
 
     async function propostasNoPeriodo(): Promise<any[]> {
       const res = await escopoEq(
@@ -1568,7 +1572,25 @@ export const getPanelDrilldown = createServerFn({ method: "POST" })
       };
     }
 
-    if (chave === "demandas abertas" || chave === "sla vencido" || chave === "simulações com erro") {
+    if (chave === "simulacoes com erro") {
+      const rows = (await simulacoesNoPeriodo()).filter((s) => s.status === "erro_banco");
+      return {
+        titulo: "Simulações com erro",
+        subtitulo: "Retornos bancários que exigem revisão",
+        valor: int(rows.length),
+        itens: rows.map((s) => ({
+          ...itemSimulacao(s),
+          id: s.id,
+          tipo: "simulacao" as const,
+          raw: s,
+          tone: "danger" as const,
+        })),
+        linkAbrir: "/operacional/simulacoes",
+        linkAbrirLabel: "Abrir todas as simulações",
+      };
+    }
+
+    if (chave === "demandas abertas" || chave === "sla vencido") {
       const res = await escopoEq(
         supabase
           .from("demandas")
@@ -1581,14 +1603,12 @@ export const getPanelDrilldown = createServerFn({ method: "POST" })
       );
       if (res.error) throw new Error(res.error.message);
       const agora = new Date();
-      const isSimErro = chave === "simulações com erro";
       let rows = ((res.data ?? []) as any[]).filter(
-        (d) => isSimErro || !["concluida", "cancelada"].includes(d.status),
+        (d) => !["concluida", "cancelada"].includes(d.status),
       );
       const isVencido = chave === "sla vencido";
-      const titulo = isVencido ? "Demandas com SLA vencido" : isSimErro ? "Simulações com erro" : "Demandas abertas";
+      const titulo = isVencido ? "Demandas com SLA vencido" : "Demandas abertas";
       if (isVencido) rows = rows.filter((d) => d.prazo_sla && new Date(d.prazo_sla) < agora);
-      if (isSimErro) rows = rows.filter((d) => d.status === "erro");
       return {
         titulo,
         subtitulo: isVencido
@@ -1603,7 +1623,7 @@ export const getPanelDrilldown = createServerFn({ method: "POST" })
           sub: [d.numero && `Nº ${d.numero}`, d.status].filter(Boolean).join(" · "),
           data: fmtData(d.prazo_sla ?? d.created_at),
           to: `/operacional/demandas/${d.id}`,
-          tone: isVencido || isSimErro ? "danger" : "warning",
+          tone: isVencido ? "danger" : "warning",
         })),
         linkAbrir: "/operacional/demandas",
         linkAbrirLabel: "Abrir lista de demandas",

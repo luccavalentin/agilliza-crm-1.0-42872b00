@@ -398,7 +398,14 @@ export function PainelView({
             </div>
 
             <div className="lg:col-span-2">
-              <PanelCard titulo="Atividades e alertas">
+              <PanelCard
+                titulo="Atividades e alertas"
+                onOpen={
+                  data.alertas.length > 0
+                    ? () => abrirDetalhe(data.alertas[0].titulo, data.alertas[0].contador?.toString())
+                    : undefined
+                }
+              >
                 {data.alertas.length === 0 ? (
                   <div className="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-3">
                     <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-success" />

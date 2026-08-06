@@ -16,9 +16,6 @@ import { AdminHero } from "@/components/admin/admin-hero";
 import { ChatSoundSetting } from "@/components/shared/chat-sound-setting";
 import { otimizarImagem } from "@/lib/imagem";
 
-// URL assinada de longa duração (~10 anos) para exibir a foto de um bucket privado.
-const URL_EXPIRACAO_SEGUNDOS = 60 * 60 * 24 * 365 * 10;
-
 export const Route = createFileRoute("/_authenticated/conta/perfil")({
   head: () => ({ meta: [{ title: "Meu perfil — Agilliza" }] }),
   component: Pagina,
@@ -98,11 +95,8 @@ function Pagina() {
           cacheControl: "31536000",
         });
       if (upErr) throw upErr;
-      const { data: signed, error: signErr } = await supabase.storage
-        .from("avatars")
-        .createSignedUrl(path, URL_EXPIRACAO_SEGUNDOS);
-      if (signErr || !signed) throw signErr ?? new Error("Falha ao gerar URL.");
-      setFotoUrl(signed.signedUrl);
+      const { data: publicData } = supabase.storage.from("avatars").getPublicUrl(path);
+      setFotoUrl(publicData.publicUrl);
       toast.success("Foto enviada. Clique em Salvar alterações para confirmar.");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Falha ao enviar a foto.");
