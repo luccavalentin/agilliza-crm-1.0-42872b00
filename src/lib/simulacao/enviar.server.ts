@@ -303,7 +303,7 @@ export async function enviarSimulacaoImpl({
   bancoIds,
 }: EnviarArgs): Promise<EnviarResultado> {
   const retryLimit = 2; // Tentativas para erros 5xx
-  const bancoTimeout = 40_000; // 40 segundos por banco
+  const TIMEOUT_BANCO_MS = 240_000; // 240 segundos (4 minutos) para acomodar o polling do banco (até 200s no Itaú) e latência da rede.
 
   const envioPorBanco = Boolean(bancoIds && bancoIds.length > 0);
   const { data: sim, error } = await supabase
