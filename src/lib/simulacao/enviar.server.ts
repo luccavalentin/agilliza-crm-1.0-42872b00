@@ -263,7 +263,7 @@ async function garantirDadosParticipantesSimulacao({
       await chamarIntegracao<any>(
         `/oportunidade/${idOportunidade}/participante/${part.idParticipante}`,
         "PUT",
-        payload,
+        cleanedPayload,
         ctx,
       );
     } catch {
