@@ -8,7 +8,9 @@ import {
   Trash2,
   Mail,
   MessageCircle,
+  Unlock,
 } from "lucide-react";
+
 import { 
   SiGmail, 
   SiWhatsapp 
