@@ -185,8 +185,8 @@ export function ResultadoInlineAmbos({ simulacaoIdSac, simulacaoIdPrice, onFecha
           const simRef = ehSac ? dataSac?.simulacao : dataPrice?.simulacao;
           if (!simRef) continue;
           
-          const simAdaptada = { ...simRef };
-          if (String(b.nome_banco).toLowerCase().includes("bradesco") && simAdaptada.prazo < 180) {
+          const simAdaptada = { ...simRef } as any;
+          if (String(b.nome_banco).toLowerCase().includes("bradesco") && (Number(simAdaptada.prazo) || 0) < 180) {
             simAdaptada.prazo = 180;
           }
           

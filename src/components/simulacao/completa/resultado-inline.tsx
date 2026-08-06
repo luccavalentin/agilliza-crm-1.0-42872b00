@@ -113,8 +113,8 @@ export function ResultadoInlineCompleta({ simulacaoId, onFechar, isSecundaria }:
         // com intervalo para o navegador não bloquear downloads múltiplos.
         for (const b of simulados) {
           // Garante que o Bradesco tenha o prazo mínimo de 180 no PDF
-          const simAdaptada = { ...data.simulacao };
-          if (String(b.nome_banco).toLowerCase().includes("bradesco") && simAdaptada.prazo < 180) {
+          const simAdaptada = { ...data.simulacao } as any;
+          if (String(b.nome_banco).toLowerCase().includes("bradesco") && (Number(simAdaptada.prazo) || 0) < 180) {
             simAdaptada.prazo = 180;
           }
           await baixarSimulacaoDetalhadaPDF({ simulacao: simAdaptada, bancos: [b] });
