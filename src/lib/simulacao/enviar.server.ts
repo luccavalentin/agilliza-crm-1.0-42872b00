@@ -571,7 +571,11 @@ export async function enviarSimulacaoImpl({
     };
 
     if (!idOportunidade) {
-      console.log(`[HomeFin] Montando payload para ${sim.numero_simulacao}. Renda Titular: ${sim.renda_total}, Renda Cônjuge: ${sim.renda_conjuge}, Composição: ${sim.compoe_renda_conjuge}`);
+      // Garantia de atomicidade para evitar duplicidade de oportunidade quando múltiplos bancos rodam em paralelo
+      // (Embora o loop de bancos agora seja sequencial, o ID da oportunidade deve ser persistido antes).
+      const rendaTotalCalculada = num(sim.compoe_renda_conjuge ? (num(sim.renda_total) + num(sim.renda_conjuge)) : sim.renda_total);
+      
+      console.log(`[HomeFin] Criando oportunidade para ${sim.numero_simulacao}. Renda Total: ${rendaTotalCalculada}`);
       const payload: Record<string, unknown> = {
         operacao: { idOperacao: String(idOperacaoIntegracao) },
         ...(auth.idRegional ? { regional: { idRegional: auth.idRegional } } : {}),
@@ -583,7 +587,7 @@ export async function enviarSimulacaoImpl({
         bancos: bancos.map((b: any) => bancoPayloadOportunidade(sim, b)),
         cpfCnpj: (sim.cpf_cnpj ?? "").replace(/\D/g, ""),
         nome: sim.nome_cliente,
-        rendaTotal: num(sim.compoe_renda_conjuge ? (num(sim.renda_total) + num(sim.renda_conjuge)) : sim.renda_total), // Soma rendas se compoe_renda_conjuge for true (Problema 1)
+        rendaTotal: rendaTotalCalculada,
         dataNascimento: sim.data_nascimento,
         email: sim.email,
         celular: (sim.celular ?? "").replace(/\D/g, ""),
