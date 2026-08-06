@@ -14,7 +14,6 @@ import { prazoMaximoParaProponentes, PRAZO_MIN } from "./prazo";
 import {
   validarCamposSimulacao,
   validarCamposParticipante,
-  mensagemCamposFaltantes,
 } from "./campos-obrigatorios";
 
 interface EnviarArgs {
@@ -303,7 +302,7 @@ export async function enviarSimulacaoImpl({
   bancoIds,
 }: EnviarArgs): Promise<EnviarResultado> {
   const retryLimit = 2; // Tentativas para erros 5xx
-  const bancoTimeout = 40_000; // 40 segundos por banco
+  const TIMEOUT_BANCO_MS = 240_000; // 240 segundos (4 minutos) para acomodar o polling do banco (até 200s no Itaú) e latência da rede.
 
   const envioPorBanco = Boolean(bancoIds && bancoIds.length > 0);
   const { data: sim, error } = await supabase
@@ -572,7 +571,11 @@ export async function enviarSimulacaoImpl({
     };
 
     if (!idOportunidade) {
-      console.log(`[HomeFin] Montando payload para ${sim.numero_simulacao}. Renda Titular: ${sim.renda_total}, Renda Cônjuge: ${sim.renda_conjuge}, Composição: ${sim.compoe_renda_conjuge}`);
+      // Garantia de atomicidade para evitar duplicidade de oportunidade quando múltiplos bancos rodam em paralelo
+      // (Embora o loop de bancos agora seja sequencial, o ID da oportunidade deve ser persistido antes).
+      const rendaTotalCalculada = num(sim.compoe_renda_conjuge ? (num(sim.renda_total) + num(sim.renda_conjuge)) : sim.renda_total);
+      
+      console.log(`[HomeFin] Criando oportunidade para ${sim.numero_simulacao}. Renda Total: ${rendaTotalCalculada}`);
       const payload: Record<string, unknown> = {
         operacao: { idOperacao: String(idOperacaoIntegracao) },
         ...(auth.idRegional ? { regional: { idRegional: auth.idRegional } } : {}),
@@ -584,7 +587,7 @@ export async function enviarSimulacaoImpl({
         bancos: bancos.map((b: any) => bancoPayloadOportunidade(sim, b)),
         cpfCnpj: (sim.cpf_cnpj ?? "").replace(/\D/g, ""),
         nome: sim.nome_cliente,
-        rendaTotal: num(sim.compoe_renda_conjuge ? (num(sim.renda_total) + num(sim.renda_conjuge)) : sim.renda_total), // Soma rendas se compoe_renda_conjuge for true (Problema 1)
+        rendaTotal: rendaTotalCalculada,
         dataNascimento: sim.data_nascimento,
         email: sim.email,
         celular: (sim.celular ?? "").replace(/\D/g, ""),
@@ -721,7 +724,7 @@ export async function enviarSimulacaoImpl({
       const timeoutPromise = new Promise((_, reject) => {
         timeoutId = setTimeout(() => {
           reject(new Error("sem resposta do banco no tempo esperado — reenviar"));
-        }, bancoTimeout);
+        }, TIMEOUT_BANCO_MS);
       });
 
       const processarBanco = async () => {
@@ -1091,17 +1094,17 @@ export async function enviarSimulacaoImpl({
           ? e.message
           : "Falha ao enviar ao banco.";
     const msg = sanitizarMensagemErro(bruto);
-    // Nenhum banco deste lote pode ficar preso em "aguardando"/"enviando":
-    // marca os pendentes como erro para o usuário poder reenviar.
+
+    // Garante status terminal para TODOS os bancos desta chamada em caso de erro global antes do loop.
     const idsLote = (bancos as any[]).map((b) => b.id);
     if (idsLote.length > 0) {
       await supabase
         .from("simulacao_bancos")
         .update({ status_banco: "erro", mensagem_banco: msg })
         .in("id", idsLote)
-        .eq('status_banco', 'aguardando' as any);
-
+        .or('status_banco.eq.aguardando,status_banco.eq.enviando');
     }
+
     await supabase
       .from("simulacoes")
       .update({ status: "erro_banco", ultimo_erro: msg })
