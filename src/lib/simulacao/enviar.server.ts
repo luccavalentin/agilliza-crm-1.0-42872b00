@@ -310,10 +310,19 @@ export async function enviarSimulacaoImpl({
     .eq("id", simulacaoId)
     .is("deleted_at", null)
     .maybeSingle();
+
+  const { data: end } = await supabase
+    .from("cliente_enderecos")
+    .select("*")
+    .eq("cliente_id", sim?.cliente_id)
+    .order("principal", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
   if (error) throw new Error(error.message);
   if (!sim) throw new Error("Simulação não encontrada.");
 
-  const cliente = sim.cliente;
+  const cliente = { ...(sim.cliente ?? {}), ...(end ?? {}) };
   if (cliente) {
     // Sincronização automática dos dados do cliente do CRM para a simulação antes do envio.
     // Isso garante que se o usuário alterou o cadastro (nome, renda, etc.), a proposta use os dados novos.
@@ -503,14 +512,11 @@ export async function enviarSimulacaoImpl({
         .maybeSingle();
       cliente = data;
     }
-    // Campos do dossiê do proponente: se estiverem faltando, bloqueamos o envio
-    // explicitamente para evitar o Erro 500 silencioso do banco (que recusa dossiês incompletos).
+    // REGISTRO DE AVISO: A ausência de dados do dossiê não bloqueia mais o envio da simulação.
+    // Esses campos são obrigatórios apenas na proposta/formalização.
     const faltantesCadastro = validarCamposParticipante(sim, cliente);
     if (faltantesCadastro.length > 0) {
-      const msg = `Não foi possível concluir a solicitação devido a dados pendentes no cadastro do proponente: ${faltantesCadastro
-        .map((f) => f.campo)
-        .join(", ")}. Por favor, revise o cadastro do cliente e tente novamente.`;
-      throw new Error(msg);
+      console.info(`[enviar.server] Dados de dossiê ausentes para simulação: ${faltantesCadastro.map(f => f.campo).join(", ")}`);
     }
 
     const enderecoImovelGarantia =

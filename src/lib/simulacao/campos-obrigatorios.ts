@@ -51,19 +51,12 @@ export function validarCamposParticipante(sim: any, cliente: any): CampoFaltante
   const primeiro = (...vs: unknown[]) => vs.map(rot).find((v) => v.length > 0) ?? "";
 
   // RELAXAMENTO DE VALIDAÇÃO: A HomeFin API é mais flexível para simulações do que para propostas.
-  // Mantemos apenas o estritamente necessário que causaria Erro 500 se ausente.
+  // Campos de dossiê (mãe, sexo, RG, endereço) NÃO bloqueiam a simulação.
+  // Mantemos validarCamposParticipante apenas para fins de LOG ou AVISO se necessário.
   
-  // if (!primeiro(cliente?.mae, sim?.nome_mae)) add("Nome da mãe"); // Removido: opcional em simulação
-  // if (!primeiro(cliente?.sexo)) add("Sexo"); // Removido: opcional em simulação
-  // if (!primeiro(cliente?.numero_documento)) add("Número do RG/CNH"); // Removido: opcional em simulação
-  // if (!primeiro(cliente?.orgao_expedidor)) add("Órgão expedidor"); // Removido: opcional em simulação
-  // if (!primeiro(cliente?.uf_expedicao)) add("UF de expedição do documento"); // Removido: opcional em simulação
-  
-  if (!primeiro(cliente?.cep, cliente?.endereco_cep, sim?.cep_imovel)) add("CEP");
-  // if (!primeiro(cliente?.logradouro, cliente?.endereco)) add("Logradouro"); // O CEP costuma bastar ou o banco preenche via ViaCEP no backend
-  // if (!primeiro(cliente?.bairro)) add("Bairro");
-  // if (!primeiro(cliente?.cidade, cliente?.municipio)) add("Cidade");
-  // if (!primeiro(cliente?.uf, sim?.uf)) add("UF do endereço");
+  if (!primeiro(cliente?.cep, cliente?.endereco_cep, sim?.cep_imovel)) {
+    // CEP é opcional na simulação da Oportunidade, mas útil. Não bloqueia.
+  }
 
   return faltantes;
 }
