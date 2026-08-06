@@ -84,7 +84,13 @@ export function humanizarRespostaErro(json: unknown, status: number, endpoint = 
     return "O banco não devolveu o motivo da recusa. Em geral é relação valor financiado x renda x prazo. Revise esses campos e reenvie.";
   }
 
+  // Sessão com o banco expirada — não é erro de preenchimento.
+  if (status === 401 || /token\s*jwt\s*expirado|unauthorized/i.test(bruta)) {
+    return "A sessão com o banco expirou durante o envio. Nenhum dado foi perdido — clique em reenviar/atualizar status para concluir.";
+  }
+
   if (code === "INTERNAL_ERROR" || status >= 500) {
+
     const ondeParticipante = /participante/i.test(endpoint);
     const ondeSimulacao = /\/simulacao/i.test(endpoint);
     if (ondeParticipante) {
