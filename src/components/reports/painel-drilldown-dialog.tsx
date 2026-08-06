@@ -293,12 +293,14 @@ export function PainelDrilldownDialog({
     {/* Diálogo de Edição de Demanda */}
     {demandaParaEditar && (
       <EditarDemandaDialog
-        id={demandaParaEditar}
-        open={!!demandaParaEditar}
-        onOpenChange={(o) => {
-          if (!o) setDemandaParaEditar(null);
-          // Invalida a query do drilldown para refletir mudanças
+        demanda={demandaParaEditar}
+        onSalva={() => {
+          setDemandaParaEditar(null);
           queryClient.invalidateQueries({ queryKey: ["panel-drilldown"] });
+        }}
+        abertoOverride={!!demandaParaEditar}
+        onOpenChangeOverride={(o: boolean) => {
+          if (!o) setDemandaParaEditar(null);
         }}
       />
     )}
