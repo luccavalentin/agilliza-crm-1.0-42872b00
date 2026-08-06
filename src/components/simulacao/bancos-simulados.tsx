@@ -26,11 +26,11 @@ export function BancosSimulados({
   const grupos = agruparPorSistema(bancos);
 
   return (
-    <div className={cn("flex flex-col gap-1", className)}>
+    <div className={cn("flex flex-col gap-0.5", className)}>
       {grupos.map((grupo) => (
         <div
           key={grupo.sistema ?? "sem-sistema"}
-          className="flex flex-wrap items-center gap-1"
+          className="flex flex-wrap items-center gap-0.5"
         >
           {grupo.sistema && <SistemaTarget sistema={grupo.sistema} />}
           <div className="flex flex-wrap items-center gap-1">
@@ -72,7 +72,7 @@ function SistemaTarget({ sistema }: { sistema: "SAC" | "PRICE" }) {
   return (
     <span
       className={cn(
-        "inline-flex h-5 items-center rounded-[4px] border border-primary/25 bg-primary/[0.08] px-1.5 text-[9px] font-black uppercase leading-none tracking-tight text-primary shadow-sm",
+        "inline-flex h-4 items-center rounded-[3px] border border-primary/25 bg-primary/[0.08] px-1 text-[8.5px] font-black uppercase leading-none tracking-tight text-primary shadow-sm",
       )}
       title={`Tabela ${sistema}`}
       aria-label={`Tabela ${sistema}`}
