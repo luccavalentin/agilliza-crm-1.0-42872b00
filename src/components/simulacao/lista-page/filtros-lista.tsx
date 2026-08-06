@@ -42,20 +42,20 @@ export function FiltrosLista({
   toggleExcluidas: () => void;
 }) {
   return (
-    <div className="flex flex-col gap-3 rounded-xl border border-border/60 bg-card p-3 lg:flex-row lg:items-center lg:justify-between">
+    <div className="flex flex-col gap-3 rounded-xl border border-border/60 bg-card p-3 xl:flex-row xl:items-center xl:justify-between">
       <Tabs value={escopo} onValueChange={(v) => setEscopo(v as "todas" | "minhas")}>
-        <TabsList className="h-9 w-full lg:w-auto">
-          <TabsTrigger value="todas" className="flex-1 lg:flex-none">
+        <TabsList className="h-9 w-full xl:w-auto">
+          <TabsTrigger value="todas" className="flex-1 xl:flex-none">
             Gerais
           </TabsTrigger>
-          <TabsTrigger value="minhas" className="flex-1 lg:flex-none">
+          <TabsTrigger value="minhas" className="flex-1 xl:flex-none">
             Minhas
           </TabsTrigger>
         </TabsList>
       </Tabs>
-      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+      <div className="flex flex-wrap items-center gap-2">
         <form
-          className="flex items-center gap-2"
+          className="flex min-w-0 flex-1 items-center gap-2 sm:flex-none"
           onSubmit={(e) => {
             e.preventDefault();
             onBuscar();
@@ -79,16 +79,16 @@ export function FiltrosLista({
             value={responsavel}
             onValueChange={setResponsavel}
             usuarios={colegas ?? []}
-            className="h-9 w-full sm:w-56"
+            className="h-9 w-full sm:w-56 shrink-0"
           />
         )}
-        <div className="flex items-center gap-2">
+        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
           <Input
             type="date"
             aria-label="De"
             value={desde}
             onChange={(e) => setDesde(e.target.value)}
-            className="h-9 w-full sm:w-36"
+            className="h-9 w-[46%] shrink-0 sm:w-36"
           />
           <span className="text-xs text-muted-foreground">até</span>
           <Input
@@ -96,7 +96,7 @@ export function FiltrosLista({
             aria-label="Até"
             value={ate}
             onChange={(e) => setAte(e.target.value)}
-            className="h-9 w-full sm:w-36"
+            className="h-9 w-[46%] shrink-0 sm:w-36"
           />
           <Button
             variant="ghost"

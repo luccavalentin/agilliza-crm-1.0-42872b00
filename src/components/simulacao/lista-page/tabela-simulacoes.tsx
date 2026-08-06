@@ -49,8 +49,8 @@ export function TabelaSimulacoes({
   const sel = new Set(selecionados ?? []);
   const todosMarcados = itens.length > 0 && itens.every((s) => sel.has(s.id));
   return (
-    <div className="hidden overflow-x-auto rounded-lg border border-border/60 bg-card md:block">
-      <Table>
+    <div className="hidden w-full max-w-full overflow-x-auto rounded-lg border border-border/60 bg-card lg:block">
+      <Table className="min-w-[1000px]">
         <TableHeader>
           <TableRow className="border-border/60 bg-muted/50 hover:bg-muted/50">
             {selecionaveis && (
@@ -113,7 +113,7 @@ export function TabelaSimulacoes({
                     "--banco-ring": `${corBanco}40`,
                   } as React.CSSProperties
                 }
-                className="group/row relative cursor-pointer border-border/50 transition-all duration-300 ease-out odd:bg-muted/[0.18] hover:z-10 hover:scale-[1.005] hover:bg-[var(--banco-tint)] hover:shadow-[inset_3px_0_0_0_var(--banco),0_12px_28px_-8px_rgba(0,0,0,0.12)]"
+                className="group/row relative cursor-pointer border-border/50 transition-colors duration-200 ease-out odd:bg-muted/[0.18] hover:z-10 hover:bg-[var(--banco-tint)] hover:shadow-[inset_3px_0_0_0_var(--banco),0_12px_28px_-8px_rgba(0,0,0,0.12)]"
                 onClick={() => (verExcluidas ? undefined : handlers.onEditar(s.id))}
               >
                 {selecionaveis && (
