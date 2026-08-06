@@ -674,6 +674,16 @@ export async function enviarSimulacaoImpl({
     if (idOportunidade) {
       await garantirDadosParticipantesSimulacao({ sim, cliente: clienteCompleto, idOportunidade, ctx });
     }
+    
+    // Auditoria de renda enviada ao banco (Princípio #2d - Log de auditoria)
+    const rendaEnviada = num(sim.compoe_renda_conjuge ? (num(sim.renda_total) + num(sim.renda_conjuge)) : sim.renda_total);
+    await supabase.from("simulacao_historico").insert({
+      simulacao_id: simulacaoId,
+      tipo: "info",
+      descricao: `Renda total enviada para análise bancária: ${rendaEnviada.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}.`,
+      ator_id: userId,
+    });
+
 
 
     // A integração HomeFin devolve HTTP 500 ("Erro interno do servidor") de forma
