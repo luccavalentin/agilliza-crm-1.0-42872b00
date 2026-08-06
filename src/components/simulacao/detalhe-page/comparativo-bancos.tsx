@@ -17,6 +17,7 @@ import { BancoStatusBadge } from "@/components/simulacao/status-badge";
 import { DetalheBancoDialog } from "@/components/simulacao/detalhe-banco-dialog";
 import { formatBRL, formatPercent } from "@/lib/simulacao/format";
 import { rendaMinimaPelosBancos } from "@/lib/simulacao/renda";
+import { ErroBancoDetalhe } from "@/components/simulacao/erro-banco-detalhe";
 import {
   AmortizacaoTag,
   MobileStat,
@@ -161,7 +162,7 @@ export function ComparativoBancos({
                 </div>
 
                 {b.status_banco === "erro" && b.mensagem_banco && (
-                  <p className="mt-2 text-xs text-destructive">{b.mensagem_banco}</p>
+                  <div className="mt-2"><ErroBancoDetalhe mensagem={b.mensagem_banco} nomeBanco={b.nome_banco} /></div>
                 )}
 
                 <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
@@ -299,7 +300,7 @@ export function ComparativoBancos({
                         )}
                       </div>
                       {b.status_banco === "erro" && b.mensagem_banco && (
-                        <p className="mt-1 text-xs text-destructive">{b.mensagem_banco}</p>
+                        <div className="mt-1"><ErroBancoDetalhe mensagem={b.mensagem_banco} nomeBanco={b.nome_banco} linhas={1} /></div>
                       )}
                     </TableCell>
                     <TableCell className="py-3">

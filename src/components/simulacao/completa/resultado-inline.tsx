@@ -35,6 +35,7 @@ import { corDoBanco } from "@/lib/bancos/cores";
 import { extrairDetalheBanco } from "@/lib/simulacao/detalhe-banco";
 import { rendaMinimaPelosBancos, rendaMinimaDoBanco } from "@/lib/simulacao/renda";
 import { cn } from "@/lib/utils";
+import { ErroBancoDetalhe } from "@/components/simulacao/erro-banco-detalhe";
 
 interface Props {
   simulacaoId: string;
@@ -112,12 +113,7 @@ export function ResultadoInlineCompleta({ simulacaoId, onFechar, isSecundaria }:
         // Baixa TODOS os bancos simulados (um extrato por banco), em sequência
         // com intervalo para o navegador não bloquear downloads múltiplos.
         for (const b of simulados) {
-          // Garante que o Bradesco tenha o prazo mínimo de 180 no PDF
-          const simAdaptada = { ...data.simulacao } as any;
-          if (String(b.nome_banco).toLowerCase().includes("bradesco") && (Number(simAdaptada.prazo) || 0) < 180) {
-            simAdaptada.prazo = 180;
-          }
-          await baixarSimulacaoDetalhadaPDF({ simulacao: simAdaptada, bancos: [b] });
+          await baixarSimulacaoDetalhadaPDF({ simulacao: data.simulacao, bancos: [b] });
           await new Promise((r) => setTimeout(r, 800));
         }
         toast.success(
@@ -320,7 +316,7 @@ export function ResultadoInlineCompleta({ simulacaoId, onFechar, isSecundaria }:
                       </div>
 
                       {b.status_banco === "erro" && b.mensagem_banco && (
-                        <p className="mt-2 text-xs text-destructive">{b.mensagem_banco}</p>
+                        <div className="mt-2"><ErroBancoDetalhe mensagem={b.mensagem_banco} nomeBanco={b.nome_banco} /></div>
                       )}
 
                       <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
@@ -436,7 +432,7 @@ export function ResultadoInlineCompleta({ simulacaoId, onFechar, isSecundaria }:
                               )}
                             </div>
                             {b.status_banco === "erro" && b.mensagem_banco && (
-                              <p className="mt-1 text-[10px] text-destructive">{b.mensagem_banco}</p>
+                              <div className="mt-1"><ErroBancoDetalhe mensagem={b.mensagem_banco} nomeBanco={b.nome_banco} linhas={1} className="text-[10px]" /></div>
                             )}
                           </TableCell>
                           <TableCell className="px-2 py-2">

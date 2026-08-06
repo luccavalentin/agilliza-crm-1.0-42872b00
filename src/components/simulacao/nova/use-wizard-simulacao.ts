@@ -8,7 +8,7 @@ import {
   calcularPorParcela,
 } from "@/lib/simulacao/use-simulacao-completa/calculos";
 
-export const PRAZO_MIN = 180; // Bradesco e outros bancos exigem min 180 para simulação rápida
+export const PRAZO_MIN = 60;
 export const PRAZO_MAX = 420;
 
 export interface WizardState {
@@ -183,11 +183,7 @@ export function useWizardSimulacao(melhorTaxaAno = 0.1199) {
       set("prazo_meses", 0);
       return;
     }
-    
-    // Força o mínimo de 180 meses para evitar erros de API
-    const valorValidado = Math.max(PRAZO_MIN, valor);
-    const { prazo, ajustado, mensagem } = ajustarPrazoPorIdade(valorValidado, w.data_nascimento);
-    
+    const { prazo, ajustado, mensagem } = ajustarPrazoPorIdade(valor, w.data_nascimento);
     let final = prazo;
     if (w.produto === "home_equity" && final > 240) {
       final = 240;
@@ -195,7 +191,6 @@ export function useWizardSimulacao(melhorTaxaAno = 0.1199) {
     } else if (ajustado && mensagem) {
       toast.warning(mensagem);
     }
-    
     set("prazo_meses", final);
   }
 

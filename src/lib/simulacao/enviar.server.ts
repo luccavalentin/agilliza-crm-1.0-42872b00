@@ -411,8 +411,8 @@ export async function enviarSimulacaoImpl({
   const prazoOriginal = num(sim.prazo);
   const prazoSeguro =
     prazoMaxIdade != null && prazoOriginal > prazoMaxIdade
-      ? Math.max(180, prazoMaxIdade) // Bradesco exige min 180 para simulação rápida via API em certos fluxos
-      : Math.max(180, prazoOriginal);
+      ? Math.max(PRAZO_MIN, prazoMaxIdade)
+      : prazoOriginal;
   if (prazoSeguro !== prazoOriginal) {
     await supabase.from("simulacoes").update({ prazo: prazoSeguro }).eq("id", simulacaoId);
     await supabase.from("simulacao_historico").insert({
