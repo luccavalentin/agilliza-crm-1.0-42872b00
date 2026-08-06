@@ -49,25 +49,22 @@ export async function gerarChecklistBancoPDF(bancoId: string, clienteNome?: stri
   const tituloTexto = `CHECKLIST DE DOCUMENTAÇÃO - ${bancoNome}`;
   doc.text(tituloTexto, MARGIN, y);
 
-  // Logo do Banco (Logo após o nome)
+  // Logo do Banco (Logo após o nome, com alinhamento vertical corrigido)
   if (bancoBrand?.logo) {
     try {
-      const bLogoH = 10; 
+      const bLogoH = 8; // Ligeiramente menor para alinhar melhor com o texto
       const bLogoW = bLogoH * (bancoBrand.ratio || 1);
       const textWidth = doc.getTextWidth(tituloTexto);
-      // Posiciona a logo logo após o texto do título
-      doc.addImage(bancoBrand.logo, "PNG", MARGIN + textWidth + 5, y - (bLogoH / 1.5), bLogoW, bLogoH);
+      // Alinhamento vertical da logo com o texto (baseline do texto é y, altura da logo é bLogoH)
+      // O offset de -bLogoH + 1.5 geralmente coloca a logo centralizada visualmente com letras maiúsculas
+      doc.addImage(bancoBrand.logo, "PNG", MARGIN + textWidth + 8, y - bLogoH + 1.5, bLogoW, bLogoH);
     } catch (e) {}
   }
   
-  y += 10;
-
-  // Descrição
-  doc.setTextColor("#64748B");
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(10);
-  doc.text("Relação de documentos necessários para análise de crédito imobiliário.", MARGIN, y);
   y += 12;
+
+  // Removida a frase: "Relação de documentos necessários para análise de crédito imobiliário."
+
 
   // Dados do Cliente
   if (clienteNome) {
