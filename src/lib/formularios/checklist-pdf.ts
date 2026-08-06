@@ -5,7 +5,12 @@ import { resolveBancoBrand } from "@/lib/relatorios/banco-brand";
 import { CHECKLISTS_BANCOS } from "@/lib/formularios/checklists.functions";
 
 export async function gerarChecklistBancoPDF(bancoId: string, clienteNome?: string, docsCustom?: (string | { nome: string, obrigatorio: boolean })[]) {
-  const doc = new jsPDF("p", "mm", "a4");
+  const doc = new jsPDF({
+    orientation: "p",
+    unit: "mm",
+    format: "a4",
+    compress: true
+  });
   const pageW = doc.internal.pageSize.getWidth();
   const pageH = doc.internal.pageSize.getHeight();
   const MARGIN = 20;
