@@ -585,7 +585,10 @@ export function AlertRow({
 }) {
   const conteudo = (
     <div
-      className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-3 rounded-lg border border-border px-3 py-2.5 transition-colors"
+      className={cn(
+        "grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-3 rounded-lg border border-border px-3 py-2.5 transition-all duration-300",
+        onClick && "cursor-pointer hover:border-primary/40 hover:shadow-sm"
+      )}
       style={{ background: toneWash[tone] }}
     >
       <span className={cn("mt-1.5 h-2 w-2 shrink-0 rounded-full", toneDot[tone])} />
