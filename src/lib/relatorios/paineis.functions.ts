@@ -6,7 +6,6 @@ import {
   inicioDiaBR,
   fimDiaBR,
   dataBR,
-  TZ_BR,
   type ReportFiltros,
 } from "@/lib/relatorios/shared";
 import { grupoDoStatus } from "@/lib/propostas/status-grupos";
@@ -370,7 +369,7 @@ export const getPanelDados = createServerFn({ method: "POST" })
     // Um contrato entra no período pela data de emissão (contrato_emitido_em),
     // não pela data de criação da proposta (que pode ser de meses antes).
     const dentroPeriodo = (iso?: string | null) =>
-      !!iso && iso.slice(0, 10) >= de && iso.slice(0, 10) <= ate;
+      !!iso && dataBR(iso) >= de && dataBR(iso) <= ate;
 
     // Filtro por usuário: quando um responsável específico é escolhido, ele
     // prevalece sobre o escopo (mesmo em "geral"). Sem responsável, mantém a
@@ -1143,8 +1142,8 @@ async function carregarVariaveisDrilldown(supabase: any, de: string, ate: string
     supabase
       .from("simulacoes")
       .select("id, status, valor_financiamento, created_at")
-      .gte("created_at", `${de}T00:00:00`)
-      .lte("created_at", `${ate}T23:59:59`),
+      .gte("created_at", inicioDiaBR(de))
+      .lte("created_at", fimDiaBR(ate)),
   ]);
 
   const simRows = (sims.data ?? []) as any[];
@@ -1180,7 +1179,7 @@ export const getPanelDrilldown = createServerFn({ method: "POST" })
     });
 
     const dentroPeriodo = (iso?: string | null) =>
-      !!iso && iso.slice(0, 10) >= de && iso.slice(0, 10) <= ate;
+      !!iso && dataBR(iso) >= de && dataBR(iso) <= ate;
 
     const { simRows, volumeSimulado } = await carregarVariaveisDrilldown(supabase, de, ate);
     const chave = normLabel(data.metrica);
