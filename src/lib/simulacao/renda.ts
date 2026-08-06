@@ -28,7 +28,7 @@ import { calcularSimulacao, type SistemaAmortizacao } from "./simulacao-rapida";
  * Margem de segurança aplicada sobre o maior valor de renda encontrado 
  * para absorver diferenças de encargos entre instituições.
  */
-export const MARGEM_SEGURANCA_RENDA = 0.05; // +5%
+export const MARGEM_SEGURANCA_RENDA = 0.00; // Margem removida conforme Princípio #1
 
 /** Percentual máximo da renda que pode ser comprometido com a parcela. */
 export const COMPROMETIMENTO_MAX = 0.3;
