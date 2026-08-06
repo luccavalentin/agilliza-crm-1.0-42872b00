@@ -146,6 +146,13 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
       possui_conjuge: Boolean(s.possui_conjuge),
       compoe_renda: true,
       compoe_renda_conjuge: s.compoe_renda_conjuge !== undefined ? Boolean(s.compoe_renda_conjuge) : true,
+      
+      nome_conjuge: s.nome_conjuge ?? "",
+      cpf_conjuge: s.cpf_conjuge ?? "",
+      data_nascimento_conjuge: s.data_nascimento_conjuge ?? "",
+      email_conjuge: s.email_conjuge || EMAIL_PADRAO,
+      celular_conjuge: s.celular_conjuge ?? "",
+      estado_civil_conjuge: s.estado_civil_conjuge ?? s.estado_civil ?? "",
 
       consentimento_lgpd: Boolean(s.consentimento_lgpd),
       consentimento_scr: Boolean(s.consentimento_scr),
