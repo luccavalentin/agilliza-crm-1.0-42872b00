@@ -523,6 +523,17 @@ export const criarSimulacao = createServerFn({ method: "POST" })
       .single();
     if (error) throw new Error(error.message);
 
+    // Auditoria de alteração de renda (Problema 3)
+    if (dd.renda_total !== undefined && dd.renda_total_anterior !== undefined && dd.renda_total !== dd.renda_total_anterior) {
+      const { formatBRL } = await import("./format");
+      await supabaseAdmin.from("simulacao_historico").insert({
+        simulacao_id: sim.id,
+        tipo: "info",
+        descricao: `Ajuste manual de renda declarada: alterado de ${formatBRL(dd.renda_total_anterior ?? 0)} para ${formatBRL(dd.renda_total ?? 0)}.`,
+        ator_id: userId,
+      });
+    }
+
     let id_secundario: string | undefined;
 
     // Se testarAmbos estiver ativo, cria uma segunda simulação com os papéis invertidos
