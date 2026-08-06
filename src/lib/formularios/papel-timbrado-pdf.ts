@@ -380,7 +380,12 @@ function drawPagina(doc: jsPDF, pageW: number, pageH: number, m: PapelTimbradoMo
  * (fora `modelo`), emite apenas o cabeçalho + marca d'água + rodapé.
  */
 export function gerarPapelTimbradoPDF(dados: PapelTimbradoDados = {}, filename?: string) {
-  const doc = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
+  const doc = new jsPDF({ 
+    orientation: "portrait", 
+    unit: "pt", 
+    format: "a4",
+    compress: true
+  });
   const pageW = doc.internal.pageSize.getWidth();
   const pageH = doc.internal.pageSize.getHeight();
   const modelo = getPapelTimbradoModelo(dados.modelo);
