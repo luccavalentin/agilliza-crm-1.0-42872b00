@@ -65,6 +65,7 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
   const [confirmRenda, setConfirmRenda] = useState<null | {
     rendaMinima: number;
     rendaInformada: number;
+    detalhe_fonte?: string;
   }>(null);
   const [pctDespesas, setPctDespesas] = useState<number>(0);
   // Guarda o id da última simulação gerada para exibir o resultado inline
