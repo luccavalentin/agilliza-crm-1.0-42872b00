@@ -85,7 +85,7 @@ export function PainelDrilldownDialog({
   return (
     <>
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[88vh] w-[calc(100vw-1.5rem)] max-w-2xl flex-col gap-0 overflow-hidden border-border/60 p-0 shadow-2xl sm:max-h-[85vh]">
+      <DialogContent className="flex max-h-[90vh] w-[calc(100vw-1.5rem)] max-w-2xl flex-col gap-0 border-border/60 p-0 shadow-2xl sm:max-h-[80vh]">
         <img
           src={agillizaSymbol}
           alt=""
@@ -158,7 +158,7 @@ export function PainelDrilldownDialog({
         </DialogHeader>
 
 
-        <ScrollArea className="min-h-0 flex-1">
+        <ScrollArea className="flex-1">
           <div className="px-3 py-2">
             {isLoading ? (
               <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">
