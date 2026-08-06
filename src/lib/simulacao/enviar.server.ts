@@ -721,7 +721,7 @@ export async function enviarSimulacaoImpl({
       const timeoutPromise = new Promise((_, reject) => {
         timeoutId = setTimeout(() => {
           reject(new Error("sem resposta do banco no tempo esperado — reenviar"));
-        }, bancoTimeout);
+        }, TIMEOUT_BANCO_MS);
       });
 
       const processarBanco = async () => {
