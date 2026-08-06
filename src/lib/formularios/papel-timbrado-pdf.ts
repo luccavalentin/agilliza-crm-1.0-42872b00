@@ -245,13 +245,13 @@ function drawHeaderReal(doc: jsPDF, pageW: number, m: PapelTimbradoModelo): numb
 
   doc.setTextColor(pr, pg, pb);
   doc.setFont("times", "bold");
-  doc.setFontSize(24);
-  doc.text("AGILLIZA", cx, 118, { align: "center", charSpace: 6 });
+  doc.setFontSize(26);
+  doc.text("AGILLIZA", cx, 118, { align: "center", charSpace: 8 });
 
-  doc.setFont("times", "normal");
-  doc.setFontSize(9.5);
+  doc.setFont("times", "bold");
+  doc.setFontSize(10.5);
   doc.setTextColor(mr, mg, mb);
-  doc.text("CRÉDITO IMOBILIÁRIO", cx, 133, { align: "center", charSpace: 3.4 });
+  doc.text("SOLUÇÕES EM CRÉDITO IMOBILIÁRIO", cx, 134, { align: "center", charSpace: 4 });
 
   // Divisor ornamental: linha — losango — linha
   const yDiv = 148;
