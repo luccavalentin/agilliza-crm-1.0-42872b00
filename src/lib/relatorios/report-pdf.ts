@@ -117,7 +117,12 @@ export function exportPDF(
   modo: "download" | "print" = "download",
 ) {
   P = getPdfPalette();
-  const doc = new jsPDF({ orientation, unit: "pt", format: "a4" });
+  const doc = new jsPDF({ 
+    orientation, 
+    unit: "pt", 
+    format: "a4",
+    compress: true // Otimização de tamanho global
+  });
   const pageW = doc.internal.pageSize.getWidth();
   const pageH = doc.internal.pageSize.getHeight();
   drawPageBackground(doc, pageW, pageH);
