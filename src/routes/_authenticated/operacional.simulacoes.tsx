@@ -531,12 +531,12 @@ function Pagina() {
       </div>
 
       {/* KPIs */}
-      <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
         {isLoading
           ? Array.from({ length: 4 }).map((_, i) => (
               <div
                 key={i}
-                className="flex items-center gap-3 rounded-xl border border-border/60 bg-card px-3.5 py-3.5 shadow-sm"
+                className="flex items-center gap-2 rounded-xl border border-border/60 bg-card px-3 py-3 shadow-sm"
               >
                 <div className="size-10 shrink-0 animate-pulse rounded-xl bg-muted" />
                 <div className="min-w-0 flex-1 space-y-2">
