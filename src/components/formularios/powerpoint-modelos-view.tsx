@@ -123,16 +123,11 @@ export function PowerPointModelosView() {
               />
               
               <div className={cn(
-                "absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent transition-opacity",
+                "absolute inset-0 bg-black/40 flex items-center justify-center transition-opacity",
                 selecionado === modelo.id ? "opacity-100" : "opacity-0 group-hover:opacity-100"
               )}>
-                <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
-                  <span className="text-[10px] font-bold text-white uppercase tracking-wider truncate mr-2">
-                    {modelo.titulo.replace("Layout Agilliza ", "")}
-                  </span>
-                  <div className="p-1.5 rounded-full bg-primary text-white shadow-lg">
-                    <Check className="h-3 w-3" />
-                  </div>
+                <div className="p-2 rounded-full bg-primary text-white shadow-lg scale-110">
+                  <Check className="h-4 w-4" />
                 </div>
               </div>
             </button>
