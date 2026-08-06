@@ -716,6 +716,7 @@ export async function enviarSimulacaoImpl({
 
       const processarBanco = async () => {
 
+
       // O contrato oficial não define teto fixo de 360 meses para o Itaú.
       // Enviamos o prazo já validado pela idade, limitado a até 420 meses.
       const prazoBanco = num(sim.prazo);
