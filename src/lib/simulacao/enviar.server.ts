@@ -637,11 +637,10 @@ export async function enviarSimulacaoImpl({
           "Payload enviado para criar simulação bancária:",
           JSON.stringify(simPayload),
         );
-        const simResp = await chamarIntegracao<any>(
+        const simResp = await chamarComRetry<any>(
           `/oportunidade/${idOportunidade}/simulacao`,
           "POST",
           simPayload,
-          ctx,
         );
         const idSimulacao = String(simResp?.idSimulacao ?? "");
 
