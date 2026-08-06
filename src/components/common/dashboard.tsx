@@ -574,6 +574,7 @@ export function AlertRow({
   descricao,
   contador,
   to,
+  onClick,
 }: {
   tone?: Tone;
   titulo: string;
