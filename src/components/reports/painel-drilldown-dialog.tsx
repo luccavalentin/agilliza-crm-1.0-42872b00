@@ -62,7 +62,7 @@ export function PainelDrilldownDialog({
   const deleteTarefaFn = useServerFn(excluirTarefa);
 
   const [itemParaExcluir, setItemParaExcluir] = React.useState<{ id: string; tipo: "demanda" | "tarefa" } | null>(null);
-  const [demandaParaEditar, setDemandaParaEditar] = React.useState<string | null>(null);
+  const [demandaParaEditar, setDemandaParaEditar] = React.useState<any | null>(null);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["panel-drilldown", contexto?.metrica, contexto?.filtros],
