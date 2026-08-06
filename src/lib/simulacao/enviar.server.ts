@@ -11,6 +11,29 @@ import {
 } from "./homefin.server";
 import { humanizarErroBanco } from "./bank-error-humanizer";
 import { prazoMaximoParaProponentes, PRAZO_MIN } from "./prazo";
+import {
+  validarCamposSimulacao,
+  validarCamposParticipante,
+  mensagemCamposFaltantes,
+} from "./campos-obrigatorios";
+
+/**
+ * Prazo máximo (meses) aceito por banco. O Itaú recusa prazos acima de 360
+ * meses devolvendo apenas "Erro interno do servidor"; limitamos antes de enviar
+ * para o usuário receber retorno em vez de erro genérico.
+ */
+const PRAZO_MAX_POR_BANCO: { teste: RegExp; max: number }[] = [
+  { teste: /ita[uú]/i, max: 360 },
+];
+
+function prazoMaximoBanco(banco: any): number | null {
+  const nome = String(banco?.nome_banco ?? banco?.nomeBanco ?? "");
+  const codigo = String(banco?.codigo_banco ?? "");
+  const regra = PRAZO_MAX_POR_BANCO.find(
+    (r) => r.teste.test(nome) || (r.teste.source.includes("ita") && codigo.replace(/^0+/, "") === "341"),
+  );
+  return regra ? regra.max : null;
+}
 
 interface EnviarArgs {
   simulacaoId: string;
@@ -310,6 +333,13 @@ export async function enviarSimulacaoImpl({
     throw new Error("Selecione a operação antes de enviar ao banco.");
   }
 
+  // Validação prévia dos campos obrigatórios do contrato da integração:
+  // é melhor dizer exatamente o que falta do que receber "erro interno" do banco.
+  const faltantesSimulacao = validarCamposSimulacao(sim);
+  if (faltantesSimulacao.length > 0) {
+    throw new Error(mensagemCamposFaltantes(faltantesSimulacao));
+  }
+
 
   // Todos os bancos selecionados (usados para registrar a oportunidade completa).
   const { data: bancosSelecionados } = await supabase
@@ -421,6 +451,16 @@ export async function enviarSimulacaoImpl({
         .maybeSingle();
       cliente = data;
     }
+    // Campos do dossiê do proponente: não bloqueiam o envio (alguns bancos
+    // aceitam sem), mas explicam o "erro interno" quando o banco recusa.
+    const faltantesCadastro = validarCamposParticipante(sim, cliente);
+    const avisoCadastro =
+      faltantesCadastro.length > 0
+        ? ` Dados do proponente pendentes no cadastro do cliente: ${faltantesCadastro
+            .map((f) => f.campo)
+            .join(", ")}.`
+        : "";
+
     const enderecoImovelGarantia =
       sim.produto === "home_equity" ? await montarEnderecoImovelGarantia(sim, cliente) : null;
     if (sim.produto === "home_equity") {
@@ -621,11 +661,14 @@ export async function enviarSimulacaoImpl({
     // bancos falharem ("erro no envio") enquanto outros passam. Cada banco
     // mantém seu próprio try/catch — a falha de um não impede os demais.
     const enviarBanco = async (b: any): Promise<EnviarResultado["bancos"][number]> => {
+      const limiteBanco = prazoMaximoBanco(b);
+      const prazoBanco =
+        limiteBanco != null ? Math.min(num(sim.prazo), limiteBanco) : num(sim.prazo);
       try {
         const simPayload = {
           valorImovel: num(sim.valor_imovel),
           valorFinanciamento: num(sim.valor_financiamento),
-          prazo: num(sim.prazo),
+          prazo: prazoBanco,
           codigoSistemaAmortizacaoBanco: { id: sim.sistema_amortizacao ?? "S" },
           banco: { idBanco: idBancoParaSimulacao(sim, b) },
           fgFinanciarDespesas,
@@ -650,7 +693,7 @@ export async function enviarSimulacaoImpl({
         const putPayload = {
           valorImovel: num(sim.valor_imovel),
           valorFinanciamento: num(sim.valor_financiamento),
-          prazo: num(sim.prazo),
+          prazo: prazoBanco,
           codigoSistemaAmortizacaoBanco: { id: sim.sistema_amortizacao ?? "S" },
           valorDespesasFinanciadas,
           valorTotalFinanciamento,
@@ -832,8 +875,11 @@ export async function enviarSimulacaoImpl({
           .eq("id", b.id);
         return { banco_id: b.banco_id, status: "simulada" as const };
       } catch (e) {
-        const msg =
+        const base =
           e instanceof IntegracaoBancariaError ? e.message : humanizarErroBanco(null, String(e));
+        const statusHttp = e instanceof IntegracaoBancariaError ? e.statusHttp ?? 0 : 0;
+        const msg =
+          statusHttp >= 500 && avisoCadastro ? `${base}${avisoCadastro}` : base;
         await supabase
           .from("simulacao_bancos")
           .update({ status_banco: "erro", mensagem_banco: msg })
