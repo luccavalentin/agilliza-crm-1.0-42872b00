@@ -60,9 +60,15 @@ export function EnviarPropostaDialog({
           {carregando ? (
             <p className="py-6 text-center text-sm text-muted-foreground">Carregando bancos…</p>
           ) : (envio?.bancos.length ?? 0) === 0 ? (
-            <p className="py-6 text-center text-sm text-muted-foreground">
-              Nenhum banco simulado disponível para envio.
-            </p>
+            <div className="py-8 text-center">
+              <p className="text-sm text-muted-foreground mb-4">
+                Não há bancos disponíveis para envio nesta simulação. 
+                Gere os resultados primeiro clicando em "Gerar Simulação".
+              </p>
+              <Button variant="outline" size="sm" onClick={onClose}>
+                Voltar e Gerar Resultados
+              </Button>
+            </div>
           ) : (
             envio?.bancos.map((b: any) => {
               const criada = propostasCriadas.find((p) => p.simulacao_banco_id === b.id);

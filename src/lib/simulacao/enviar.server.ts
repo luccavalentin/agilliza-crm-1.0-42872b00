@@ -278,7 +278,6 @@ async function garantirDadosParticipantesSimulacao({
       Object.entries(payload).filter(([_, v]) => v !== undefined)
     );
 
-
     try {
       await chamarIntegracao<any>(
         `/oportunidade/${idOportunidade}/participante/${part.idParticipante}`,
@@ -286,14 +285,18 @@ async function garantirDadosParticipantesSimulacao({
         cleanedPayload,
         ctx,
       );
-    } catch {
-      // A falha na complementação não deve impedir os demais bancos; o retorno
-      // vazio será tratado por banco e permitirá reenvio após corrigir cadastro.
+    } catch (e) {
+      // Falha na complementação (PUT /participante) não deve travar o banco.
+      // Logamos o erro mas deixamos o fluxo seguir, pois alguns bancos processam
+      // a simulação mesmo com dados parciais se o proponente já existe na HomeFin.
+      console.warn(`[enviar.server] Falha ao atualizar proponente ${part.idParticipante}:`, e);
     }
   }
 }
 
+
 export async function enviarSimulacaoImpl({
+
   simulacaoId,
   userId,
   ip,
