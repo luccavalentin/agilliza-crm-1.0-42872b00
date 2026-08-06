@@ -161,18 +161,18 @@ function drawWatermarkReal(doc: jsPDF, pageW: number, pageH: number, m: PapelTim
     doc.line(cx + w, cy + 6, cx, bot);
   }
 
-  // Monograma A
-  doc.setFont("times", "bold");
-  doc.setFontSize(m.ornamento === "monograma" ? 190 : 130);
-  doc.text("A", cx, cy + (m.ornamento === "monograma" ? 66 : 46), { align: "center" });
+  // Monograma A elegante
+  doc.setFont("times", "bolditalic");
+  doc.setFontSize(m.ornamento === "monograma" ? 210 : 140);
+  doc.text("A", cx, cy + (m.ornamento === "monograma" ? 70 : 50), { align: "center" });
 
   // Texto circular inferior (aproximação em arco reto)
-  setOpacity(doc, 0.09);
-  doc.setFont("times", "normal");
-  doc.setFontSize(13);
-  doc.text("AGILLIZA · CRÉDITO IMOBILIÁRIO", cx, cy + 128, {
+  setOpacity(doc, 0.12);
+  doc.setFont("times", "bold");
+  doc.setFontSize(14);
+  doc.text("AGILLIZA · EXCELÊNCIA EM CRÉDITO", cx, cy + 130, {
     align: "center",
-    charSpace: 2.4,
+    charSpace: 3,
   });
 
   anyDoc.restoreGraphicsState?.();
