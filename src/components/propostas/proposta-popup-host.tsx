@@ -96,19 +96,27 @@ export function PropostaPopupHost() {
               )}
             </div>
             <div className="text-center">
-              <DialogTitle className="text-2xl font-bold tracking-tight">
-                {isComparativo ? "Comparativo de Taxas" : "Retorno do Banco"}
+              <DialogTitle className="text-2xl font-bold tracking-tight text-primary">
+                {isComparativo ? "Simulação Concluída" : "Retorno de Proposta"}
               </DialogTitle>
-              <DialogDescription className="mt-2 text-base">
+              <DialogDescription className="mt-2 text-base text-muted-foreground">
                 {isComparativo ? (
-                  <>
-                    O teste de proponentes para <span className="font-semibold text-foreground">{atual.nome_cliente}</span> foi concluído com sucesso.
-                  </>
+                  <div className="space-y-2">
+                    <p>O teste de proponentes para <span className="font-bold text-foreground">{atual.nome_cliente}</span> foi concluído com sucesso.</p>
+                    <p className="text-sm bg-emerald-50 text-emerald-700 p-2 rounded-md border border-emerald-100">
+                      As melhores taxas e condições para esta simulação já estão disponíveis para análise.
+                    </p>
+                  </div>
                 ) : (
-                  <>
-                    A proposta <span className="font-semibold text-foreground">{atual.numero}</span> do banco{" "}
-                    <span className="font-semibold text-foreground">{atual.banco}</span> acaba de retornar um novo status.
-                  </>
+                  <div className="space-y-2">
+                    <p>
+                      A proposta <span className="font-bold text-foreground">{atual.numero}</span> do banco{" "}
+                      <span className="font-bold text-foreground">{atual.banco}</span> acaba de retornar um novo status da integração.
+                    </p>
+                    <p className="text-sm font-medium text-primary/80">
+                      Verifique o retorno e as próximas etapas na esteira operacional.
+                    </p>
+                  </div>
                 )}
               </DialogDescription>
             </div>

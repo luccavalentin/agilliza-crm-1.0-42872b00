@@ -121,15 +121,19 @@ export function PropostaRetornoWatcher({ userId }: Props) {
           if (seenIds.current.has(uniqueKey)) return;
           seenIds.current.add(uniqueKey);
 
-          // Dispara Alerta Sonoro e Notificação (reutilizando sistema de chat)
+          // Dispara Alerta Sonoro de Notificação Real
+          import("@/lib/chat-sound").then(m => {
+            m.playNotificationSound();
+            // Toca duas vezes para ser mais perceptível no retorno do banco
+            setTimeout(() => m.playNotificationSound(), 400);
+          });
+          
+          // Notificação de chat interna (opcional, mantendo silêncio se preferir apenas som real)
           signalIncomingChat(`prop-${row.id}`, {
             titulo: `Retorno de Proposta: ${row.nome_banco || "Banco"}`,
             corpo: `Proposta ${prop.numero_proposta} - Cliente: ${prop.nome_cliente || "—"}`,
-            skipSound: false,
+            skipSound: true, // Já tocamos acima manualmente
           });
-          
-          // Garante som
-          import("@/lib/chat-sound").then(m => m.playChatSound());
 
           // Adiciona ao Store para exibir o Popup Personalizado
           adicionarPopup({
