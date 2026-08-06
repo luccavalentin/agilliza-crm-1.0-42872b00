@@ -11,33 +11,47 @@ import slide2Asset from "@/assets/modelos/slide-2.png.asset.json";
 import slide3Asset from "@/assets/modelos/slide-3.png.asset.json";
 import slide4Asset from "@/assets/modelos/slide-4.png.asset.json";
 
+import pptCinematico from "@/assets/modelos/Modelo_Vazio_Agilliza_Cinematico_2026.pptx.asset.json";
+import pptMinimal from "@/assets/modelos/Modelo_Vazio_Agilliza_Minimal_Premium_2026.pptx.asset.json";
+import pptVariacoes from "@/assets/modelos/Modelo_Vazio_Agilliza_Mais_Variacoes_2026.pptx.asset.json";
+import pptAlternativo from "@/assets/modelos/Modelo_Vazio_Agilliza_Alternativo_2026.pptx.asset.json";
+
 const MODELOS_PPT = [
   {
-    id: "layout-moderno",
-    titulo: "Layout Moderno Agilliza",
-    descricao: "Design minimalista e sofisticado, focado na paleta de cores institucional. Sem conteúdo textual, apenas grids e marcas.",
-    url: "/modelos/APRESENTAÇÃO_AGILLIZA.pptx",
-    cor: "#0F172A",
+    id: "layout-cinematico",
+    titulo: "Layout Agilliza Cinemático",
+    descricao: "Design de alto impacto visual com transições suaves e estética cinematográfica. Focado na paleta de cores oficial Agilliza.",
+    url: pptCinematico.url,
+    cor: "#000F9F",
     slides: [slide1Asset.url, slide2Asset.url, slide3Asset.url, slide4Asset.url],
-    tamanho: "1.8 MB",
+    tamanho: "2.4 MB",
   },
   {
-    id: "layout-dinamico",
-    titulo: "Layout Dinâmico Agilliza",
-    descricao: "Variação com elementos geométricos e tons contrastantes da marca. Ideal para apresentações que exigem maior impacto visual.",
-    url: "/modelos/APRESENTAÇÃO_AGILLIZA.pptx",
-    cor: "#2563EB",
-    slides: [slide1Asset.url, slide2Asset.url, slide3Asset.url, slide4Asset.url],
+    id: "layout-minimal",
+    titulo: "Layout Minimal Premium",
+    descricao: "Sofisticação e clareza. Design limpo que valoriza o conteúdo e a autoridade da marca Agilliza.",
+    url: pptMinimal.url,
+    cor: "#00074A",
+    slides: [slide2Asset.url, slide1Asset.url, slide3Asset.url, slide4Asset.url],
     tamanho: "1.9 MB",
   },
   {
-    id: "layout-executivo",
-    titulo: "Layout Executivo Agilliza",
-    descricao: "Estrutura focada em clareza e autoridade. Design limpo com aplicações discretas da identidade visual.",
-    url: "/modelos/APRESENTAÇÃO_AGILLIZA.pptx",
-    cor: "#1E293B",
-    slides: [slide1Asset.url, slide2Asset.url, slide3Asset.url, slide4Asset.url],
-    tamanho: "1.7 MB",
+    id: "layout-variacoes",
+    titulo: "Layout Multi-Variações",
+    descricao: "Versatilidade total com múltiplos grids e opções de composição. Ideal para apresentações extensas.",
+    url: pptVariacoes.url,
+    cor: "#F5333F",
+    slides: [slide3Asset.url, slide4Asset.url, slide1Asset.url, slide2Asset.url],
+    tamanho: "3.1 MB",
+  },
+  {
+    id: "layout-alternativo",
+    titulo: "Layout Agilliza Alternativo",
+    descricao: "Abordagem dinâmica e moderna com elementos geométricos assimétricos e tons institucionais.",
+    url: pptAlternativo.url,
+    cor: "#D4AF37",
+    slides: [slide4Asset.url, slide3Asset.url, slide2Asset.url, slide1Asset.url],
+    tamanho: "2.1 MB",
   },
 ];
 
