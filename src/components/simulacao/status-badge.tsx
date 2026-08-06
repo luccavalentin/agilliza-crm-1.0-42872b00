@@ -16,7 +16,7 @@ export function SimulacaoStatusBadge({ status }: { status: string }) {
   return (
     <ToneBadge 
       tone={cfg.tone} 
-      className="whitespace-nowrap px-1 py-0 h-4 text-[9.5px] font-bold"
+      className="relative whitespace-nowrap px-1.5 py-0 h-4 text-[9.5px] font-bold pr-5"
     >
       {cfg.label}
     </ToneBadge>
