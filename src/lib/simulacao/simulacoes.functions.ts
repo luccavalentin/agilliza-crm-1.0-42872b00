@@ -536,7 +536,6 @@ export const criarSimulacao = createServerFn({ method: "POST" })
         celular: dd.celular_conjuge || null,
         data_nascimento: dd.data_nascimento_conjuge || null,
         renda_total: dd.renda_conjuge || null,
-        renda_conjuge: dd.renda_total || null,
         estado_civil: dd.estado_civil_conjuge || dd.estado_civil,
 
         nome_conjuge: dd.nome_cliente || null,
