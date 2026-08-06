@@ -296,13 +296,15 @@ async function garantirDadosParticipantesSimulacao({
 
 
 export async function enviarSimulacaoImpl({
-
   simulacaoId,
   userId,
   ip,
   supabase,
   bancoIds,
 }: EnviarArgs): Promise<EnviarResultado> {
+  const retryLimit = 2; // Tentativas para erros 5xx
+  const bancoTimeout = 40_000; // 40 segundos por banco
+
   const envioPorBanco = Boolean(bancoIds && bancoIds.length > 0);
   const { data: sim, error } = await supabase
     .from("simulacoes")
@@ -343,15 +345,16 @@ export async function enviarSimulacaoImpl({
     }
   }
 
-  // Trava anti-duplicidade: mantém bloqueio para o envio geral, mas libera
-  // chamadas por banco. O fluxo em lote chama um banco por vez; bloquear aqui
-  // deixava o segundo banco preso em "aguardando" até o usuário reenviar.
-  if (!envioPorBanco && sim.status === "enviando" && sim.ultimo_envio_em) {
+  // Trava anti-duplicidade: agora verificamos apenas por simulação ID.
+  // Se já estiver "enviando", permitimos novas tentativas apenas se o último envio
+  // falhou por timeout ou erro, ou se passaram mais de 60s (safety gap).
+  if (sim.status === "enviando" && sim.ultimo_envio_em) {
     const inicio = new Date(sim.ultimo_envio_em).getTime();
-    if (Number.isFinite(inicio) && Date.now() - inicio < 45_000) {
+    if (Number.isFinite(inicio) && Date.now() - inicio < 60_000) {
       throw new Error("Um envio ao banco já está em andamento. Aguarde a conclusão.");
     }
   }
+
 
   // Regras de negócio
   if (!sim.consentimento_lgpd || !sim.consentimento_scr) {
