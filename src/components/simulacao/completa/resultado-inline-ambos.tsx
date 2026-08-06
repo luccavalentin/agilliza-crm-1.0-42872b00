@@ -184,7 +184,13 @@ export function ResultadoInlineAmbos({ simulacaoIdSac, simulacaoIdPrice, onFecha
           const ehSac = bancosSac.some((x) => x.id === b.id);
           const simRef = ehSac ? dataSac?.simulacao : dataPrice?.simulacao;
           if (!simRef) continue;
-          await baixarSimulacaoDetalhadaPDF({ simulacao: simRef, bancos: [b] });
+          
+          const simAdaptada = { ...simRef };
+          if (String(b.nome_banco).toLowerCase().includes("bradesco") && simAdaptada.prazo < 180) {
+            simAdaptada.prazo = 180;
+          }
+          
+          await baixarSimulacaoDetalhadaPDF({ simulacao: simAdaptada, bancos: [b] });
           await new Promise((r) => setTimeout(r, 800));
         }
 
