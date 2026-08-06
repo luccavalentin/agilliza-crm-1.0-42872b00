@@ -187,7 +187,7 @@ async function montarEnderecoImovelGarantia(sim: any, cliente: any) {
 
 async function garantirDadosParticipantesSimulacao({
   sim,
-        cliente: clienteCompleto,
+  cliente,
   idOportunidade,
   ctx,
 }: {
