@@ -259,7 +259,8 @@ export const criarSimulacao = createServerFn({ method: "POST" })
 
     // Se estivermos em modo completa e for casado, verificamos se o usuário pediu
     // explicitamente para testar ambos os CPFs.
-    const testarAmbos = data.modo === "completa" && Boolean(dd.possui_conjuge) && Boolean(dd.compoe_renda_conjuge);
+    const possuiConjugeDados = Boolean(dd.possui_conjuge) && Boolean(dd.nome_conjuge) && Boolean(dd.cpf_conjuge) && Boolean(dd.data_nascimento_conjuge);
+    const testarAmbos = data.modo === "completa" && possuiConjugeDados;
 
 
     const { data: prof } = await supabase
@@ -535,6 +536,7 @@ export const criarSimulacao = createServerFn({ method: "POST" })
         celular: dd.celular_conjuge || null,
         data_nascimento: dd.data_nascimento_conjuge || null,
         renda_total: dd.renda_conjuge || null,
+        renda_conjuge: dd.renda_total || null,
         estado_civil: dd.estado_civil_conjuge || dd.estado_civil,
 
         nome_conjuge: dd.nome_cliente || null,
