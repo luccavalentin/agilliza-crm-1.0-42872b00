@@ -6,10 +6,6 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { OpHero } from "@/components/operacional/ui";
 
-import slide1Asset from "@/assets/modelos/slide-1.png.asset.json";
-import slide2Asset from "@/assets/modelos/slide-2.png.asset.json";
-import slide3Asset from "@/assets/modelos/slide-3.png.asset.json";
-import slide4Asset from "@/assets/modelos/slide-4.png.asset.json";
 
 import pptCinematico from "@/assets/modelos/Modelo_Vazio_Agilliza_Cinematico_2026-2.pptx.asset.json";
 import pptMinimal from "@/assets/modelos/Modelo_Vazio_Agilliza_Minimal_Premium_2026-2.pptx.asset.json";
