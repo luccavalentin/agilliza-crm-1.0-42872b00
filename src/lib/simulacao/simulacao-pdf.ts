@@ -817,6 +817,11 @@ export function baixarSimulacaoSimplificadaPDF({
     drawFooter(doc, pageW, pageH, p, total);
   }
 
+  // Otimização final antes de salvar
+  if ((doc as any).internal?.events) {
+    doc.deletePage(0); // Garante remoção de páginas fantasmagóricas se existirem
+  }
+
   return salvar(doc, s, "simplificada", lista, filePrefix);
 }
 
