@@ -492,9 +492,9 @@ function Pagina() {
   return (
 
 
-    <div className="mx-auto w-full max-w-[1600px] space-y-4 p-3 md:p-5">
+    <div className="mx-auto w-full max-w-[1600px] space-y-3 p-2 md:p-4">
       {/* Cabeçalho */}
-      <div className="relative overflow-hidden rounded-xl border border-border bg-card p-3 md:p-5">
+      <div className="relative overflow-hidden rounded-xl border border-border bg-card p-2 md:p-4">
         <span
           aria-hidden
           className="pointer-events-none absolute -right-24 -top-24 h-56 w-56 rounded-full opacity-70 blur-2xl"
@@ -506,10 +506,10 @@ function Pagina() {
               <span className="inline-block h-1 w-5 shrink-0 rounded-full bg-primary sm:w-6" />
               Consultar simulações
             </p>
-            <h1 className="mt-2 text-2xl font-semibold leading-tight tracking-tight text-foreground sm:text-[28px]">
+            <h1 className="mt-1 text-xl font-semibold leading-tight tracking-tight text-foreground sm:text-[24px]">
               Simulações
             </h1>
-            <p className="mt-1.5 max-w-xl text-sm text-muted-foreground">
+            <p className="mt-1 max-w-xl text-xs text-muted-foreground">
               Financiamento imobiliário e home equity, em um só lugar.
             </p>
           </div>
