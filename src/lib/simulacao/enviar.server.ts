@@ -323,7 +323,9 @@ export async function enviarSimulacaoImpl({
   }
 
   const estadoCivil = String(sim.estado_civil ?? "").toUpperCase();
-  const possuiConjuge = Boolean(sim.possui_conjuge) || estadoCivil === "CA" || estadoCivil === "UE";
+  const possuiConjuge = estadoCivil
+    ? estadoCivil === "CA" || estadoCivil === "UE"
+    : Boolean(sim.possui_conjuge);
   const compoeRenda = Boolean(sim.compoe_renda) && possuiConjuge;
   if (compoeRenda) {
     const faltantesConjuge = [
@@ -579,7 +581,7 @@ export async function enviarSimulacaoImpl({
       // em "aguardando" para sempre.
       try {
         const conjugeBloco =
-          sim.possui_conjuge || ["CA", "UE"].includes(String(sim.estado_civil ?? ""))
+          possuiConjuge
             ? {
                 nomeConjuge: sim.nome_conjuge ?? undefined,
                 cpfConjuge: (sim.cpf_conjuge ?? "").replace(/\D/g, "") || undefined,
