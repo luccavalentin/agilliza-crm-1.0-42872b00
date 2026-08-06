@@ -8,6 +8,7 @@
  * usuário cita o fornecedor.
  */
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { humanizarRespostaErro } from "./bank-error-humanizer";
 
 const SENSIVEIS = new Set([
   "secretId",
@@ -283,7 +284,7 @@ export async function chamarIntegracao<T = unknown>(
   });
 
   if (!resp.ok) {
-    throw new IntegracaoBancariaError(extrairMensagemErroBanco(json, resp.status), resp.status);
+    throw new IntegracaoBancariaError(extrairMensagemErroBanco(json, resp.status, endpoint), resp.status);
   }
   return json;
 }
@@ -337,7 +338,7 @@ export async function enviarArquivoIntegracao<T = unknown>(
   });
 
   if (!resp.ok) {
-    throw new IntegracaoBancariaError(extrairMensagemErroBanco(json, resp.status), resp.status);
+    throw new IntegracaoBancariaError(extrairMensagemErroBanco(json, resp.status, endpoint), resp.status);
   }
   return json;
 }
@@ -348,7 +349,11 @@ export async function enviarArquivoIntegracao<T = unknown>(
  * no corpo da resposta; sem isso o usuário só via um "erro (404)" genérico e
  * não sabia o que corrigir. Erros 5xx costumam ser falha interna do banco.
  */
-function extrairMensagemErroBanco(json: unknown, status: number): string {
+function extrairMensagemErroBanco(json: unknown, status: number, endpoint = ""): string {
+  return humanizarRespostaErro(json, status, endpoint);
+}
+
+function _extrairMensagemErroBancoLegado(json: unknown, status: number): string {
   const generico =
     status >= 500
       ? `O banco está temporariamente indisponível (erro ${status}). Tente reenviar em instantes.`
