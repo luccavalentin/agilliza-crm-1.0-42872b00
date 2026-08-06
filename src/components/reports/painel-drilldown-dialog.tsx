@@ -31,6 +31,11 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { BancoLogo } from "@/components/bancos/banco-logo";
 import { getPanelDrilldown } from "@/lib/relatorios/paineis.functions";
+import { excluirDemanda } from "@/lib/operacional/demandas.functions";
+import { excluirTarefa } from "@/lib/operacional/tarefas.functions";
+import { EditarDemandaDialog } from "@/components/operacional/editar-demanda-dialog";
+// Nota: Se houver um EditarTarefaDialog, ele deve ser importado aqui.
+// Por enquanto, usaremos a navegação para edição se for complexo.
 import type { ReportFiltros } from "@/lib/relatorios/shared";
 import agillizaSymbol from "@/assets/brand/agilliza-symbol-oficial.png";
 
