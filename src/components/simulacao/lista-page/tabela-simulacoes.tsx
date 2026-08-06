@@ -50,7 +50,7 @@ export function TabelaSimulacoes({
   const todosMarcados = itens.length > 0 && itens.every((s) => sel.has(s.id));
   return (
     <div className="hidden w-full max-w-full overflow-x-auto rounded-lg border border-border/60 bg-card lg:block [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-border/60 [&::-webkit-scrollbar-track]:bg-transparent">
-      <Table className="min-w-[650px] xl:min-w-full table-fixed">
+      <Table className="min-w-[650px] xl:min-w-[900px] table-fixed">
         <TableHeader>
           <TableRow className="border-border/60 bg-muted/50 hover:bg-muted/50">
             {selecionaveis && (
@@ -62,14 +62,14 @@ export function TabelaSimulacoes({
                 />
               </TableHead>
             )}
-            <TableHead className="h-10 w-20 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground px-2">Número</TableHead>
-            <TableHead className="h-10 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground px-2">Cliente</TableHead>
-            <TableHead className="h-10 w-24 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground px-2">Produto</TableHead>
-            <TableHead className="h-10 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground px-2">Bancos simulados</TableHead>
-            <TableHead className="h-10 w-28 text-right text-[10px] font-semibold uppercase tracking-wider text-muted-foreground px-2">Valor imóvel</TableHead>
-            <TableHead className="h-10 w-20 text-right text-[10px] font-semibold uppercase tracking-wider text-muted-foreground px-2">Prazo</TableHead>
-            <TableHead className="h-10 w-20 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground px-2">Status</TableHead>
-            <TableHead className="h-10 w-20 text-right text-[10px] font-semibold uppercase tracking-wider text-muted-foreground px-2">Ações</TableHead>
+            <TableHead className="h-9 w-20 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground px-1">Número</TableHead>
+            <TableHead className="h-9 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground px-1">Cliente</TableHead>
+            <TableHead className="h-9 w-12 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground px-1">Prod.</TableHead>
+            <TableHead className="h-9 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground px-1">Bancos simulados</TableHead>
+            <TableHead className="h-9 w-24 text-right text-[9px] font-semibold uppercase tracking-wider text-muted-foreground px-1">Valor imóvel</TableHead>
+            <TableHead className="h-9 w-20 text-right text-[9px] font-semibold uppercase tracking-wider text-muted-foreground px-1">Prazo</TableHead>
+            <TableHead className="h-9 w-16 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground px-1">Status</TableHead>
+            <TableHead className="h-9 w-20 text-right text-[9px] font-semibold uppercase tracking-wider text-muted-foreground px-1">Ações</TableHead>
           </TableRow>
         </TableHeader>
 
@@ -117,7 +117,7 @@ export function TabelaSimulacoes({
                 onClick={() => (verExcluidas ? undefined : handlers.onEditar(s.id))}
               >
                 {selecionaveis && (
-                  <TableCell className="py-2 px-2 w-8" onClick={(e) => e.stopPropagation()}>
+                  <TableCell className="py-1.5 px-1 w-8" onClick={(e) => e.stopPropagation()}>
                     <Checkbox
                       checked={sel.has(s.id)}
                       onCheckedChange={() => onToggleSelecionado?.(s.id)}
@@ -125,19 +125,19 @@ export function TabelaSimulacoes({
                     />
                   </TableCell>
                 )}
-                <TableCell className="relative py-2 px-2 w-20">
+                <TableCell className="relative py-1.5 px-1 w-20">
 
                   <span className="absolute inset-y-0 left-0 w-[3px] origin-top scale-y-0 rounded-r-full bg-[var(--banco)] transition-transform duration-200 group-hover/row:scale-y-100" />
-                  <span className="inline-flex items-center rounded-md bg-primary/5 px-1.5 py-0.5 font-mono text-[11px] font-semibold text-primary ring-1 ring-inset ring-primary/10 transition-colors group-hover:bg-primary/10">
+                  <span className="inline-flex items-center rounded-md bg-primary/5 px-1 py-0 font-mono text-[10px] font-semibold text-primary ring-1 ring-inset ring-primary/10 transition-colors group-hover:bg-primary/10">
                     {s.numero_simulacao}
                   </span>
                 </TableCell>
 
-                <TableCell className="py-2 px-2 font-medium text-foreground transition-colors group-hover/row:text-primary min-w-0">
-                  <p className="truncate text-[11px]">{s.nome_cliente ?? "—"}</p>
+                <TableCell className="py-1.5 px-1 font-medium text-foreground transition-colors group-hover/row:text-primary min-w-0">
+                  <p className="truncate text-[10px] leading-tight">{s.nome_cliente ?? "—"}</p>
                   {escopo === "todas" && s.nome_responsavel && (
-                    <span className="mt-0.5 flex items-center gap-1 text-[11px] font-normal text-muted-foreground">
-                      <UserIcon className="h-3 w-3 shrink-0" />
+                    <span className="mt-0.5 flex items-center gap-1 text-[9px] font-normal text-muted-foreground leading-none">
+                      <UserIcon className="h-2.5 w-2.5 shrink-0" />
                       <span className="truncate">{s.nome_responsavel}</span>
                     </span>
                   )}
@@ -148,22 +148,22 @@ export function TabelaSimulacoes({
                     </span>
                   )}
                 </TableCell>
-                <TableCell className="py-2 px-2 w-24">
+                <TableCell className="py-1.5 px-1 w-12">
                   <ProdutoBadge produto={s.produto} />
                 </TableCell>
-                <TableCell className="py-2 px-2 min-w-0">
+                <TableCell className="py-1.5 px-1 min-w-0">
                   <BancosSimulados bancos={s.bancos} />
                 </TableCell>
-                <TableCell className="py-2 px-2 text-right font-semibold tabular-nums text-foreground w-28 text-[11px]">
+                <TableCell className="py-1.5 px-1 text-right font-semibold tabular-nums text-foreground w-24 text-[10px]">
                   {formatBRL(s.valor_imovel)}
                 </TableCell>
-                <TableCell className="py-2 px-2 text-right tabular-nums text-muted-foreground w-20 text-[11px]">
+                <TableCell className="py-1.5 px-1 text-right tabular-nums text-muted-foreground w-20 text-[10px]">
                   {s.prazo ? `${s.prazo} meses` : "—"}
                 </TableCell>
-                <TableCell className="py-2 px-2 w-20">
+                <TableCell className="py-1.5 px-1 w-16">
                   <SimulacaoStatusBadge status={s.status} />
                 </TableCell>
-                <TableCell className="text-right py-2 px-2 w-20" onClick={(e) => e.stopPropagation()}>
+                <TableCell className="text-right py-1.5 px-1 w-20" onClick={(e) => e.stopPropagation()}>
                   {verExcluidas ? (
                     <Button
                       size="sm"

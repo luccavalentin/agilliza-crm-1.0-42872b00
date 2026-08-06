@@ -490,11 +490,9 @@ function Pagina() {
   };
 
   return (
-
-
-    <div className="mx-auto w-full max-w-[1600px] space-y-3 p-2 md:p-4">
+    <div className="mx-auto w-full max-w-[1600px] space-y-2 p-1.5 md:p-3">
       {/* Cabeçalho */}
-      <div className="relative overflow-hidden rounded-xl border border-border bg-card p-2 md:p-4">
+      <div className="relative overflow-hidden rounded-xl border border-border bg-card p-1.5 md:p-3">
         <span
           aria-hidden
           className="pointer-events-none absolute -right-24 -top-24 h-56 w-56 rounded-full opacity-70 blur-2xl"
