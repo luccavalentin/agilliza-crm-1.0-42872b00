@@ -288,5 +288,55 @@ export function PainelDrilldownDialog({
         )}
       </DialogContent>
     </Dialog>
+
+    {/* Diálogo de Edição de Demanda */}
+    {demandaParaEditar && (
+      <EditarDemandaDialog
+        id={demandaParaEditar}
+        open={!!demandaParaEditar}
+        onOpenChange={(o) => {
+          if (!o) setDemandaParaEditar(null);
+          // Invalida a query do drilldown para refletir mudanças
+          queryClient.invalidateQueries({ queryKey: ["panel-drilldown"] });
+        }}
+      />
+    )}
+
+    {/* Diálogo de Confirmação de Exclusão */}
+    <AlertDialog open={!!itemParaExcluir} onOpenChange={(o) => !o && setItemParaExcluir(null)}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+          <AlertDialogDescription>
+            Tem certeza que deseja excluir esta {itemParaExcluir?.tipo}? Esta ação não pode ser desfeita.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+          <AlertDialogAction
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            onClick={async () => {
+              if (!itemParaExcluir) return;
+              try {
+                if (itemParaExcluir.tipo === "demanda") {
+                  await deleteDemandaFn({ data: { id: itemParaExcluir.id } });
+                } else {
+                  await deleteTarefaFn({ data: { id: itemParaExcluir.id } });
+                }
+                toast.success(`${itemParaExcluir.tipo === "demanda" ? "Demanda" : "Tarefa"} excluída com sucesso!`);
+                queryClient.invalidateQueries({ queryKey: ["panel-drilldown"] });
+              } catch (err) {
+                toast.error("Erro ao excluir registro.");
+              } finally {
+                setItemParaExcluir(null);
+              }
+            }}
+          >
+            Excluir
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }
