@@ -1578,8 +1578,9 @@ export const getPanelDrilldown = createServerFn({ method: "POST" })
           : "Ainda não concluídas ou canceladas",
         valor: int(rows.length),
         itens: rows.map((d) => ({
-          id: d.id, // Adicionado para ações
-          tipo: "demanda", // Adicionado para ações
+          id: d.id,
+          tipo: "demanda",
+          raw: d, // Passamos o objeto completo para edição
           label: d.titulo ?? "Demanda",
           sub: [d.numero && `Nº ${d.numero}`, d.status].filter(Boolean).join(" · "),
           data: fmtData(d.prazo_sla ?? d.created_at),
