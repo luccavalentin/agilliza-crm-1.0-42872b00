@@ -1283,7 +1283,7 @@ export const destravarSimulacao = createServerFn({ method: "POST" })
         mensagem_banco: "Simulação destravada manualmente pelo consultor — tente reenviar.",
       })
       .eq("simulacao_id", data.id)
-      .or('status_banco.eq.enviando,status_banco.eq.aguardando');
+      .or('status_banco.eq.aguardando,status_banco.eq.simulada'); // Filtro seguro para o enum
 
 
     if (error) throw new Error(error.message);
