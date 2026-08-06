@@ -529,7 +529,7 @@ function Pagina() {
           </div>
         </div>
       </div>
-    </div>
+
 
       {/* KPIs */}
       <div className="grid grid-cols-2 gap-2 lg:grid-cols-4 lg:gap-4">
