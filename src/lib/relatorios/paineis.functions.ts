@@ -1065,7 +1065,7 @@ export const getPanelDados = createServerFn({ method: "POST" })
 export interface PanelDrilldownItem {
   id?: string;
   tipo?: "demanda" | "tarefa" | "simulacao";
-  raw?: unknown;
+  raw?: Record<string, any>;
   label: string;
   sub?: string;
   valor?: string;

@@ -69,8 +69,13 @@ export function UploadAvatar({ currentUrl, onUploadComplete, userId }: UploadAva
 
       if (uploadError) throw uploadError;
 
-      const { data: publicData } = supabase.storage.from("avatars").getPublicUrl(filePath);
-      onUploadComplete(publicData.publicUrl);
+      const { data: signed, error: signError } = await supabase.storage
+        .from("avatars")
+        .createSignedUrl(filePath, 60 * 60 * 24 * 365 * 10);
+      if (signError || !signed?.signedUrl) {
+        throw signError ?? new Error("Falha ao carregar a foto.");
+      }
+      onUploadComplete(signed.signedUrl);
       toast.success("Foto carregada com sucesso!");
       setImageToCrop(null);
     } catch (error: unknown) {

@@ -1,3 +1,6 @@
+// URL assinada de longa duração para exibir a foto do bucket privado.
+const URL_EXPIRACAO_SEGUNDOS = 60 * 60 * 24 * 365 * 10;
+
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -95,8 +98,11 @@ function Pagina() {
           cacheControl: "31536000",
         });
       if (upErr) throw upErr;
-      const { data: publicData } = supabase.storage.from("avatars").getPublicUrl(path);
-      setFotoUrl(publicData.publicUrl);
+      const { data: signed, error: signErr } = await supabase.storage
+        .from("avatars")
+        .createSignedUrl(path, URL_EXPIRACAO_SEGUNDOS);
+      if (signErr || !signed) throw signErr ?? new Error("Falha ao gerar URL.");
+      setFotoUrl(signed.signedUrl);
       toast.success("Foto enviada. Clique em Salvar alterações para confirmar.");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Falha ao enviar a foto.");
