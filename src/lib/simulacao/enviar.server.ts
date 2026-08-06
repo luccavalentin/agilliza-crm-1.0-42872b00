@@ -707,6 +707,15 @@ export async function enviarSimulacaoImpl({
     // bancos falharem ("erro no envio") enquanto outros passam. Cada banco
     // mantém seu próprio try/catch — a falha de um não impede os demais.
     const enviarBanco = async (b: any): Promise<EnviarResultado["bancos"][number]> => {
+      let timeoutId: any;
+      const timeoutPromise = new Promise((_, reject) => {
+        timeoutId = setTimeout(() => {
+          reject(new Error("sem resposta do banco no tempo esperado — reenviar"));
+        }, bancoTimeout);
+      });
+
+      const processarBanco = async () => {
+
       // O contrato oficial não define teto fixo de 360 meses para o Itaú.
       // Enviamos o prazo já validado pela idade, limitado a até 420 meses.
       const prazoBanco = num(sim.prazo);
