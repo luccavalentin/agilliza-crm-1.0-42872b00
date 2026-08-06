@@ -187,7 +187,7 @@ async function montarEnderecoImovelGarantia(sim: any, cliente: any) {
 
 async function garantirDadosParticipantesSimulacao({
   sim,
-  cliente,
+        cliente: clienteCompleto,
   idOportunidade,
   ctx,
 }: {
@@ -503,24 +503,18 @@ export async function enviarSimulacaoImpl({
     // Identificadores do parceiro/regional/usuário vêm da autenticação da integração
     const auth = await obterToken();
 
-    let cliente: any = null;
-    if (sim.cliente_id) {
-      const { data } = await supabase
-        .from("clientes")
-        .select("*")
-        .eq("id", sim.cliente_id)
-        .maybeSingle();
-      cliente = data;
-    }
+    // Usamos o 'cliente' já carregado no início da função (com endereço), em vez de recarregar parcial.
+    const clienteCompleto = cliente;
+    
     // REGISTRO DE AVISO: A ausência de dados do dossiê não bloqueia mais o envio da simulação.
     // Esses campos são obrigatórios apenas na proposta/formalização.
-    const faltantesCadastro = validarCamposParticipante(sim, cliente);
+    const faltantesCadastro = validarCamposParticipante(sim, clienteCompleto);
     if (faltantesCadastro.length > 0) {
       console.info(`[enviar.server] Dados de dossiê ausentes para simulação: ${faltantesCadastro.map(f => f.campo).join(", ")}`);
     }
 
     const enderecoImovelGarantia =
-      sim.produto === "home_equity" ? await montarEnderecoImovelGarantia(sim, cliente) : null;
+      sim.produto === "home_equity" ? await montarEnderecoImovelGarantia(sim, clienteCompleto) : null;
     if (sim.produto === "home_equity") {
       if (!enderecoImovelGarantia?.cep) {
         throw new Error(
