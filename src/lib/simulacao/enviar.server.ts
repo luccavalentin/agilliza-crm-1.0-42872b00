@@ -678,7 +678,7 @@ export async function enviarSimulacaoImpl({
     }
 
     if (idOportunidade) {
-      await garantirDadosParticipantesSimulacao({ sim, cliente, idOportunidade, ctx });
+      await garantirDadosParticipantesSimulacao({ sim, cliente: clienteCompleto, idOportunidade, ctx });
     }
 
 
