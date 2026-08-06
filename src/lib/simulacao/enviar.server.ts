@@ -789,7 +789,10 @@ export async function enviarSimulacaoImpl({
             simulacaoAjustada,
             ctx,
           );
-          await supabase.from("simulacoes").update({ prazo: prazoSolicitado }).eq("id", simulacaoId);
+          await supabase
+            .from("simulacoes")
+            .update({ prazo: prazoSolicitado })
+            .eq("id", simulacaoId);
           await supabase.from("simulacao_historico").insert({
             simulacao_id: simulacaoId,
             tipo: "ajuste",
