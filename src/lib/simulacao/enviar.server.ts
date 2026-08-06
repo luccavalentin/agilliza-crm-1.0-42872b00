@@ -590,6 +590,31 @@ export async function enviarSimulacaoImpl({
     }
 
 
+    // A integração HomeFin devolve HTTP 500 ("Erro interno do servidor") de forma
+    // intermitente ao criar/integrar a simulação (visto no Itaú). Nesses casos o
+    // reenvio manual funciona segundos depois, então repetimos automaticamente.
+    const chamarComRetry = async <T,>(
+      rota: string,
+      metodo: "POST" | "PUT",
+      corpo: unknown,
+      tentativas = 3,
+    ): Promise<T> => {
+      let ultimoErro: unknown;
+      for (let i = 0; i < tentativas; i++) {
+        try {
+          return await chamarIntegracao<T>(rota, metodo, corpo as any, ctx);
+        } catch (e: any) {
+          ultimoErro = e;
+          const msg = String(e?.message ?? e);
+          const transitorio = /HTTP 50\d|INTERNAL_ERROR|timeout|ECONNRESET|fetch failed/i.test(msg);
+          if (!transitorio || i === tentativas - 1) throw e;
+          await new Promise((r) => setTimeout(r, 2500 * (i + 1)));
+        }
+      }
+      throw ultimoErro;
+    };
+
+
     // 2 + 3) Simulação + integração por banco.
     // Enviamos um banco de cada vez (SEQUENCIAL): disparar as chamadas em
     // paralelo na mesma oportunidade gera condição de corrida e faz alguns
