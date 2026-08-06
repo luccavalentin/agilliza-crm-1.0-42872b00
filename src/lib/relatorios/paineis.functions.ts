@@ -1570,9 +1570,9 @@ export const getPanelDrilldown = createServerFn({ method: "POST" })
         (d) => isSimErro || !["concluida", "cancelada"].includes(d.status),
       );
       const isVencido = chave === "sla vencido";
-      const simErro = chave === "simulações com erro";
-      const titulo = isVencido ? "Demandas com SLA vencido" : simErro ? "Simulações com erro" : "Demandas abertas";
+      const titulo = isVencido ? "Demandas com SLA vencido" : isSimErro ? "Simulações com erro" : "Demandas abertas";
       if (isVencido) rows = rows.filter((d) => d.prazo_sla && new Date(d.prazo_sla) < agora);
+      if (isSimErro) rows = rows.filter((d) => d.status === "erro");
       return {
         titulo,
         subtitulo: isVencido
