@@ -64,7 +64,12 @@ export function gerarFichaFuncionarioPdf(input: {
   dependentes?: Array<{ nome: string; parentesco: string; cpf: string | null; data_nascimento: string | null }>;
 }): { blob: Blob; filename: string } {
   const P = getPdfPalette();
-  const doc = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
+  const doc = new jsPDF({ 
+    orientation: "portrait", 
+    unit: "pt", 
+    format: "a4",
+    compress: true
+  });
   const pageW = doc.internal.pageSize.getWidth();
   const pageH = doc.internal.pageSize.getHeight();
 

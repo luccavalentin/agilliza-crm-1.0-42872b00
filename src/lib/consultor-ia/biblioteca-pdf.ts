@@ -408,7 +408,11 @@ function rodapes(ctx: Ctx, legenda: string) {
 }
 
 function criarCtx(titulo: string): Ctx {
-  const doc = new jsPDF({ unit: "pt", format: "a4" });
+  const doc = new jsPDF({ 
+    unit: "pt", 
+    format: "a4",
+    compress: true
+  });
   return {
     doc,
     P: getPdfPalette(),

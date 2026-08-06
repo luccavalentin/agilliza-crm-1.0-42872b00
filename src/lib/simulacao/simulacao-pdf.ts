@@ -757,7 +757,12 @@ export function baixarSimulacaoSimplificadaPDF({
   const lista = bancosParaExtrato(bancos);
 
   P = getPdfPalette();
-  const doc = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
+  const doc = new jsPDF({ 
+    orientation: "portrait", 
+    unit: "pt", 
+    format: "a4",
+    compress: true
+  });
   const pageW = doc.internal.pageSize.getWidth();
   const pageH = doc.internal.pageSize.getHeight();
 
@@ -817,6 +822,11 @@ export function baixarSimulacaoSimplificadaPDF({
     drawFooter(doc, pageW, pageH, p, total);
   }
 
+  // Otimização final antes de salvar
+  if ((doc as any).internal?.events) {
+    doc.deletePage(0); // Garante remoção de páginas fantasmagóricas se existirem
+  }
+
   return salvar(doc, s, "simplificada", lista, filePrefix);
 }
 
@@ -830,7 +840,12 @@ function criarDocSimulacaoDetalhada({
 }: SimulacaoPdfInput) {
   const lista = bancosParaExtrato(bancos);
   P = getPdfPalette();
-  const doc = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
+  const doc = new jsPDF({ 
+    orientation: "portrait", 
+    unit: "pt", 
+    format: "a4",
+    compress: true 
+  });
   const pageW = doc.internal.pageSize.getWidth();
   const pageH = doc.internal.pageSize.getHeight();
 
