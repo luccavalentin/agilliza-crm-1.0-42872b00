@@ -108,7 +108,7 @@ export async function executarEnvioAmbos(ctx: CtxBase): Promise<void> {
         const novos: Record<string, string> = {};
         for (const issue of parsedS.error.issues) novos[String(issue.path[0])] = issue.message;
         setErros(novos);
-        toast.error("Revise os campos destacados.");
+        toast.error("Revise os campos obrigatórios destacados.");
         setEnviando(false);
         setConcluidos(0);
         return;
@@ -164,7 +164,7 @@ export async function executarEnvioAmbos(ctx: CtxBase): Promise<void> {
         const novos: Record<string, string> = {};
         for (const issue of parsedP.error.issues) novos[String(issue.path[0])] = issue.message;
         setErros(novos);
-        toast.error("Revise os campos destacados.");
+        toast.error("Revise os campos obrigatórios destacados.");
         setEnviando(false);
         setConcluidos(0);
         return;
@@ -250,7 +250,7 @@ export async function executarEnvioSimples(ctx: CtxBase): Promise<void> {
   if (bloquearSemCepHomeEquity(f, setErros)) return;
   const parsed = completaSchema.safeParse({ ...f, id_operacao_homefin: idOperacao });
   if (!parsed.success) {
-    toast.error("Revise os campos destacados.");
+    toast.error("Revise os campos obrigatórios destacados.");
     return;
   }
   setErros({});

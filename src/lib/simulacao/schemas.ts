@@ -28,7 +28,7 @@ export const completaSchema = z.object({
   cliente_id: z.string().uuid().optional().nullable(),
   // Operação / imóvel
   produto: z.enum(["financiamento_imobiliario", "home_equity"]),
-  id_operacao_homefin: z.number().int().optional().nullable(),
+  id_operacao_homefin: z.number().int({ message: "Selecione a operação" }),
   agrupador_id: z.string().uuid().optional().nullable(),
   tipo_imovel: z.string().min(1, "Selecione o tipo de imóvel"),
   uso_imovel: z.string().min(1, "Selecione o uso do imóvel"),

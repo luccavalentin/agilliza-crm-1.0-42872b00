@@ -46,7 +46,7 @@ export const Route = createFileRoute("/_authenticated/operacional/simulacoes_/co
 function Pagina() {
   const { duplicar, origem: origemFluxo } = Route.useSearch();
   const ctx = useSimulacaoCompleta({ duplicar, modoProposta: origemFluxo === "proposta" });
-  const { router, modoProposta, f, enviando, concluidos, mostraConjuge, confirmRenda, setConfirmRenda, enviar, executarEnvio, simulacaoResultadoId, simulacaoResultadoIdPrice, simulacaoResultadoIdSecundario, fecharResultadoInline, fecharResultadoInlinePrice, fecharResultadoInlineSecundario } = ctx;
+  const { router, modoProposta, f, erros, enviando, concluidos, mostraConjuge, confirmRenda, setConfirmRenda, enviar, executarEnvio, simulacaoResultadoId, simulacaoResultadoIdPrice, simulacaoResultadoIdSecundario, fecharResultadoInline, fecharResultadoInlinePrice, fecharResultadoInlineSecundario } = ctx;
   const resultadoRef = useRef<HTMLDivElement>(null);
 
   const [popupAberto, setPopupAberto] = useState(false);
@@ -217,7 +217,11 @@ function Pagina() {
 
           {/* Ação sempre disponível no final do formulário */}
           <div className="flex justify-end pt-1">
-            <Button className="h-11 w-full gap-2 sm:w-auto sm:px-8" onClick={enviar} disabled={enviando}>
+            <Button 
+              className="h-11 w-full gap-2 sm:w-auto sm:px-8" 
+              onClick={enviar} 
+              disabled={enviando || (Object.keys(erros).length > 0 && !enviando)}
+            >
               <Send className="h-4 w-4" /> {modoProposta ? "Gerar Proposta e Enviar ao Banco" : "Gerar Simulação"}
             </Button>
           </div>
@@ -271,7 +275,11 @@ function Pagina() {
                 </div>
               </div>
 
-              <Button className="h-11 w-full gap-2" onClick={enviar} disabled={enviando}>
+              <Button 
+                className="h-11 w-full gap-2" 
+                onClick={enviar} 
+                disabled={enviando || (Object.keys(erros).length > 0 && !enviando)}
+              >
                 <Send className="h-4 w-4" /> {modoProposta ? "Gerar Proposta" : "Gerar Simulação"}
               </Button>
 
