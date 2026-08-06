@@ -14,6 +14,8 @@ export interface HandlersLinha {
   onExcluir: (id: string) => Promise<void>;
   onRestaurar: (id: string) => void | Promise<void>;
   onEncaminhar: (id: string, canal: "email" | "whatsapp" | "pdf") => void | Promise<void>;
+  onDestravar: (id: string) => void | Promise<void>;
+
 }
 
 

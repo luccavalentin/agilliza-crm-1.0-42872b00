@@ -8,7 +8,9 @@ import {
   Trash2,
   Mail,
   MessageCircle,
+  Unlock,
 } from "lucide-react";
+
 import { 
   SiGmail, 
   SiWhatsapp 
@@ -173,6 +175,7 @@ export function AcoesSimulacao({
   onExcluir,
   numero,
   onEncaminhar,
+  onDestravar,
 }: {
   onVisualizar: () => void;
   onEditar: () => void;
@@ -182,9 +185,11 @@ export function AcoesSimulacao({
   onEnviarProposta: () => void;
   onExcluir: () => Promise<void>;
   onEncaminhar?: (id: string, canal: "email" | "whatsapp" | "pdf") => void;
+  onDestravar?: () => void;
   numero: string;
 }) {
   return (
+
     <div className="flex items-center justify-end gap-1">
       <ConfirmDelete
         titulo="Excluir simulação"
@@ -226,6 +231,12 @@ export function AcoesSimulacao({
           <DropdownMenuItem onSelect={onDuplicar}>
             <Copy className="mr-2 h-4 w-4" /> Duplicar
           </DropdownMenuItem>
+          {onDestravar && (
+            <DropdownMenuItem onSelect={onDestravar}>
+              <Unlock className="mr-2 h-4 w-4" /> Destravar simulação
+            </DropdownMenuItem>
+          )}
+
 
           <DropdownMenuSeparator />
           

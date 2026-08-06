@@ -171,8 +171,9 @@ function drawTituloExtrato(
 /** Caixa formal com os dados do cliente em destaque. */
 function drawDadosCliente(doc: jsPDF, pageW: number, s: any, y: number): number {
   const w = pageW - MARGIN * 2;
-  const hasConjuge = Boolean(s.possui_conjuge) && s.nome_conjuge;
+  const hasConjuge = Boolean(s.possui_conjuge) || Boolean(s.nome_conjuge);
   const boxH = hasConjuge ? 94 : 64;
+
 
   // Faixa de rótulo "DADOS DO PROPONENTE"
   doc.setFillColor(P.destaque);
@@ -202,6 +203,7 @@ function drawDadosCliente(doc: jsPDF, pageW: number, s: any, y: number): number 
     dataTxt(s.data_nascimento),
     s.cpf_cnpj ?? "—",
   ];
+
   rotulos.forEach((r, i) => {
     doc.setTextColor(P.cinza);
     doc.setFont("helvetica", "bold");

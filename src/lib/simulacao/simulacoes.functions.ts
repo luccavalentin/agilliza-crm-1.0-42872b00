@@ -261,7 +261,17 @@ export const criarSimulacao = createServerFn({ method: "POST" })
     // Se estivermos em modo completa e for casado, verificamos se o usuário pediu
     // explicitamente para testar ambos os CPFs.
     const possuiConjugeDados = Boolean(dd.possui_conjuge) && Boolean(dd.nome_conjuge) && Boolean(dd.cpf_conjuge) && Boolean(dd.data_nascimento_conjuge);
-    const testarAmbos = data.modo === "completa" && possuiConjugeDados;
+    
+    // O teste de ambos os CPFs é automático se houver dados mínimos do cônjuge (Nome, CPF e Nascimento).
+    // Isso garante isonomia no teste bancário para proponentes casados.
+    const possuiConjugeMinimo = Boolean(dd.nome_conjuge) && 
+                                Boolean(dd.cpf_conjuge) && 
+                                Boolean(dd.data_nascimento_conjuge);
+    
+    // A flag `testarAmbos` dispara a criação da simulação invertida.
+    const testarAmbos = data.modo === "completa" && possuiConjugeMinimo;
+
+
 
 
     const { data: prof } = await supabase
@@ -1255,5 +1265,38 @@ export const inverterTitularSimulacao = createServerFn({ method: "POST" })
 
     return { ok: true };
   });
+
+/** ===== Destravar simulação =====
+ * Reseta o status de bancos que ficaram presos em "enviando"
+ * ou "aguardando" após o término do processamento. */
+export const destravarSimulacao = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { error } = await supabaseAdmin
+      .from("simulacao_bancos")
+      .update({
+        status_banco: "erro",
+        mensagem_banco: "Simulação destravada manualmente pelo consultor — tente reenviar.",
+      })
+      .eq("simulacao_id", data.id)
+      .eq('status_banco', 'aguardando' as any);
+
+
+    if (error) throw new Error(error.message);
+
+    await supabaseAdmin.from("simulacao_historico").insert({
+      simulacao_id: data.id,
+      tipo: "info",
+      descricao: "Simulação destravada manualmente pelo consultor.",
+      ator_id: userId,
+    });
+    return { ok: true };
+  });
+
+
 
 

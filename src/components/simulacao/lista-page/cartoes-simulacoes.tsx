@@ -55,7 +55,10 @@ export function CartoesSimulacoes({
           </Button>
         </div>
       )}
-      {itens.map((s) => {
+      {itens
+        .filter(s => !s.agrupador_id || s.agrupador_id === s.id) // Problema 4a: esconde secundárias
+        .map((s) => {
+
         const bancoPrincipal = s.bancos?.[0]?.nome_banco ?? null;
         const corBanco = corDoBanco(bancoPrincipal);
         return (
@@ -128,7 +131,9 @@ export function CartoesSimulacoes({
                         }
                         onExcluir={() => handlers.onExcluir(s.id)}
                         onEncaminhar={(id, canal) => handlers.onEncaminhar(s.id, canal)}
+                        onDestravar={() => handlers.onDestravar(s.id)}
                         numero={s.numero_simulacao}
+
                       />
                   </>
                 )}

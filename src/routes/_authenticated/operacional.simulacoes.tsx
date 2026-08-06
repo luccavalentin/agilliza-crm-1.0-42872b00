@@ -15,7 +15,9 @@ import {
   excluirSimulacao,
   restaurarSimulacao,
   obterSimulacao,
+  destravarSimulacao,
 } from "@/lib/simulacao/simulacoes.functions";
+
 import { criarProposta, enviarPropostaHomeFin } from "@/lib/propostas/propostas.functions";
 import { Button } from "@/components/ui/button";
 
@@ -71,6 +73,8 @@ function Pagina() {
   const restaurar = useServerFn(restaurarSimulacao);
   const criar = useServerFn(criarProposta);
   const enviarAoBancoFn = useServerFn(enviarPropostaHomeFin);
+  const destravar = useServerFn(destravarSimulacao);
+
 
   const obter = useServerFn(obterSimulacao);
   const listarColegasFn = useServerFn(listarColegas);
@@ -432,6 +436,16 @@ function Pagina() {
     onEnviarProposta: handleEnviarProposta,
     onExcluir: handleExcluir,
     onRestaurar: handleRestaurar,
+    onDestravar: async (id) => {
+      try {
+        await destravar({ data: { id } });
+        toast.success("Simulação destravada com sucesso.");
+        queryClient.invalidateQueries({ queryKey: ["simulacoes"] });
+      } catch (e) {
+        toast.error("Não foi possível destravar a simulação.");
+      }
+    },
+
     onEncaminhar: async (id, canal) => {
       try {
         const dados = await obter({ data: { id } });

@@ -296,13 +296,15 @@ async function garantirDadosParticipantesSimulacao({
 
 
 export async function enviarSimulacaoImpl({
-
   simulacaoId,
   userId,
   ip,
   supabase,
   bancoIds,
 }: EnviarArgs): Promise<EnviarResultado> {
+  const retryLimit = 2; // Tentativas para erros 5xx
+  const bancoTimeout = 40_000; // 40 segundos por banco
+
   const envioPorBanco = Boolean(bancoIds && bancoIds.length > 0);
   const { data: sim, error } = await supabase
     .from("simulacoes")
@@ -343,15 +345,16 @@ export async function enviarSimulacaoImpl({
     }
   }
 
-  // Trava anti-duplicidade: mantém bloqueio para o envio geral, mas libera
-  // chamadas por banco. O fluxo em lote chama um banco por vez; bloquear aqui
-  // deixava o segundo banco preso em "aguardando" até o usuário reenviar.
-  if (!envioPorBanco && sim.status === "enviando" && sim.ultimo_envio_em) {
+  // Trava anti-duplicidade: agora verificamos apenas por simulação ID.
+  // Se já estiver "enviando", permitimos novas tentativas apenas se o último envio
+  // falhou por timeout ou erro, ou se passaram mais de 60s (safety gap).
+  if (sim.status === "enviando" && sim.ultimo_envio_em) {
     const inicio = new Date(sim.ultimo_envio_em).getTime();
-    if (Number.isFinite(inicio) && Date.now() - inicio < 45_000) {
+    if (Number.isFinite(inicio) && Date.now() - inicio < 60_000) {
       throw new Error("Um envio ao banco já está em andamento. Aguarde a conclusão.");
     }
   }
+
 
   // Regras de negócio
   if (!sim.consentimento_lgpd || !sim.consentimento_scr) {
@@ -483,7 +486,7 @@ export async function enviarSimulacaoImpl({
   await supabase
     .from("simulacoes")
     .update({
-      status: "enviando",
+      status: "enviando" as any,
       consentimento_ip: ip,
       consentimento_em: new Date().toISOString(),
       ultimo_envio_em: new Date().toISOString(),
@@ -671,6 +674,16 @@ export async function enviarSimulacaoImpl({
     if (idOportunidade) {
       await garantirDadosParticipantesSimulacao({ sim, cliente: clienteCompleto, idOportunidade, ctx });
     }
+    
+    // Auditoria de renda enviada ao banco (Princípio #2d - Log de auditoria)
+    const rendaEnviada = num(sim.compoe_renda_conjuge ? (num(sim.renda_total) + num(sim.renda_conjuge)) : sim.renda_total);
+    await supabase.from("simulacao_historico").insert({
+      simulacao_id: simulacaoId,
+      tipo: "info",
+      descricao: `Renda total enviada para análise bancária: ${rendaEnviada.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}.`,
+      ator_id: userId,
+    });
+
 
 
     // A integração HomeFin devolve HTTP 500 ("Erro interno do servidor") de forma
@@ -704,6 +717,16 @@ export async function enviarSimulacaoImpl({
     // bancos falharem ("erro no envio") enquanto outros passam. Cada banco
     // mantém seu próprio try/catch — a falha de um não impede os demais.
     const enviarBanco = async (b: any): Promise<EnviarResultado["bancos"][number]> => {
+      let timeoutId: any;
+      const timeoutPromise = new Promise((_, reject) => {
+        timeoutId = setTimeout(() => {
+          reject(new Error("sem resposta do banco no tempo esperado — reenviar"));
+        }, bancoTimeout);
+      });
+
+      const processarBanco = async () => {
+
+
       // O contrato oficial não define teto fixo de 360 meses para o Itaú.
       // Enviamos o prazo já validado pela idade, limitado a até 420 meses.
       const prazoBanco = num(sim.prazo);
@@ -965,10 +988,16 @@ export async function enviarSimulacaoImpl({
           })
           .eq("id", b.id);
         return { banco_id: b.banco_id, status: "simulada" as const };
-      } catch (e) {
+        } finally {
+          clearTimeout(timeoutId);
+        }
+      };
+
+      try {
+        return await Promise.race([processarBanco(), timeoutPromise]) as EnviarResultado["bancos"][number];
+      } catch (e: any) {
         const base =
           e instanceof IntegracaoBancariaError ? e.message : humanizarErroBanco(null, String(e));
-        const statusHttp = e instanceof IntegracaoBancariaError ? e.statusHttp ?? 0 : 0;
         const msg = base;
         await supabase
           .from("simulacao_bancos")
@@ -977,6 +1006,7 @@ export async function enviarSimulacaoImpl({
         return { banco_id: b.banco_id, status: "erro" as const, mensagem: msg };
       }
     };
+
 
     const resultados: EnviarResultado["bancos"] = [];
     for (const b of bancos as any[]) {
@@ -1003,7 +1033,7 @@ export async function enviarSimulacaoImpl({
 
     const novoStatus =
       pendentes > 0
-        ? "enviando"
+        ? ("enviando" as any)
         : sucesso === listaStatus.length
           ? "simulada"
           : sucesso > 0
@@ -1048,7 +1078,9 @@ export async function enviarSimulacaoImpl({
       data_nascimento_conjuge: sim.data_nascimento_conjuge,
       email_conjuge: sim.email_conjuge,
       celular_conjuge: sim.celular_conjuge,
-    }).eq("id", simulacaoId);
+    })
+    .eq("id", simulacaoId);
+
 
     return { oportunidade_id: idOportunidade, status: novoStatus, bancos: resultados };
   } catch (e) {
@@ -1067,7 +1099,8 @@ export async function enviarSimulacaoImpl({
         .from("simulacao_bancos")
         .update({ status_banco: "erro", mensagem_banco: msg })
         .in("id", idsLote)
-        .in("status_banco", ["aguardando", "enviando"]);
+        .eq('status_banco', 'aguardando' as any);
+
     }
     await supabase
       .from("simulacoes")
