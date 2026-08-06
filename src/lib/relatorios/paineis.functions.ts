@@ -1565,8 +1565,9 @@ export const getPanelDrilldown = createServerFn({ method: "POST" })
       );
       if (res.error) throw new Error(res.error.message);
       const agora = new Date();
+      const isSimErro = chave === "simulações com erro";
       let rows = ((res.data ?? []) as any[]).filter(
-        (d) => !["concluida", "cancelada"].includes(d.status),
+        (d) => isSimErro || !["concluida", "cancelada"].includes(d.status),
       );
       const isVencido = chave === "sla vencido";
       const simErro = chave === "simulações com erro";
