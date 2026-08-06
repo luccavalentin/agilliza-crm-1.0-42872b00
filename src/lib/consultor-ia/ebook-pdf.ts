@@ -22,7 +22,11 @@ function fmtNum(v: number): string {
 
 export function gerarEbookFaqPDF(ebook: EbookFaq, filename?: string) {
   const P = getPdfPalette();
-  const doc = new jsPDF({ unit: "pt", format: "a4" });
+  const doc = new jsPDF({ 
+    unit: "pt", 
+    format: "a4",
+    compress: true
+  });
   const pageW = doc.internal.pageSize.getWidth();
   const pageH = doc.internal.pageSize.getHeight();
   const larguraUtil = pageW - MARGEM * 2;
