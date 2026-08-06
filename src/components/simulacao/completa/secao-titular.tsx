@@ -37,8 +37,9 @@ export function SecaoTitular({ ctx }: { ctx: SimulacaoCompletaCtx }) {
 
   return (
     <section className="space-y-4">
-      <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center">
-        <div className="w-full sm:w-72">
+      <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-end">
+        <div className="flex-1">
+          <label className="mb-1.5 block text-xs font-semibold text-muted-foreground">Vincular Cliente do CRM</label>
           <ClienteCRMPicker
             selecionado={f.cliente_id ? f.nome_cliente : null}
             onSelect={selecionarClienteCRM}

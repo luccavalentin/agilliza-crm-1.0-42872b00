@@ -70,12 +70,18 @@ export function SecaoOperacaoImovel({ ctx }: { ctx: SimulacaoCompletaCtx }) {
   return (
     <section className="space-y-4">
       {restricaoEspecial.ativo && (
-        <div className="rounded-lg border-l-4 border-amber-600 border-y border-r border-y-amber-600/50 border-r-amber-600/50 bg-amber-100 px-3 py-2 text-sm leading-relaxed text-amber-950 dark:bg-amber-950/60 dark:text-amber-50 dark:border-amber-400 dark:border-y-amber-400/60 dark:border-r-amber-400/60">
-          <strong className="font-semibold">{restricaoEspecial.motivo}:</strong> financiamento máx.{" "}
-          {Math.round(restricaoEspecial.ltvMax * 100)}% (entrada mín. de{" "}
-          {Math.round((1 - restricaoEspecial.ltvMax) * 100)}%), prazo máx. de{" "}
-          {restricaoEspecial.prazoMax} meses
-          {restricaoEspecial.apenasBradesco ? ", operado apenas pelo Bradesco." : "."}
+        <div className="flex items-center gap-3 rounded-lg border border-primary/20 bg-primary/5 px-4 py-3 shadow-sm transition-colors hover:border-primary/30">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
+              <circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" />
+            </svg>
+          </div>
+          <div className="flex-1 space-y-0.5">
+            <p className="text-sm font-semibold leading-none text-foreground">Restrições para {restricaoEspecial.motivo}</p>
+            <p className="text-[13px] text-muted-foreground leading-snug">
+              Financiamento máx. <span className="font-semibold text-foreground">{Math.round(restricaoEspecial.ltvMax * 100)}%</span> (entrada mín. de {Math.round((1 - restricaoEspecial.ltvMax) * 100)}%), prazo máx. de <span className="font-semibold text-foreground">{restricaoEspecial.prazoMax} meses</span>{restricaoEspecial.apenasBradesco ? ", operado apenas pelo Bradesco" : ""}.
+            </p>
+          </div>
         </div>
       )}
       {f.produto === "home_equity" && (
