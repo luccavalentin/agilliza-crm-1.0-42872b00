@@ -231,6 +231,12 @@ export function AcoesSimulacao({
           <DropdownMenuItem onSelect={onDuplicar}>
             <Copy className="mr-2 h-4 w-4" /> Duplicar
           </DropdownMenuItem>
+          {onDestravar && (
+            <DropdownMenuItem onSelect={onDestravar}>
+              <Unlock className="mr-2 h-4 w-4" /> Destravar simulação
+            </DropdownMenuItem>
+          )}
+
 
           <DropdownMenuSeparator />
           
