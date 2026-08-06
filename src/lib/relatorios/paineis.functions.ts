@@ -169,7 +169,13 @@ function construirBuckets(deISO: string, ateISO: string) {
     const [, m, d] = chave.split("-");
     return `${d}/${m}`;
   };
-  const chaveDaData = (iso?: string | null) => (iso ? chaveDe(new Date(iso)) : "");
+  // O bucket usa a data no fuso de Brasília: um registro criado às 22h daqui
+  // é 01h UTC do dia seguinte e cairia no dia errado do gráfico.
+  const chaveDaData = (iso?: string | null) => {
+    if (!iso) return "";
+    const dia = dataBR(iso);
+    return porMes ? dia.slice(0, 7) : dia;
+  };
   return { chaves, rotulo, chaveDaData, porMes };
 }
 
