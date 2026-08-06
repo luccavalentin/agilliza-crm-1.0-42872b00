@@ -158,8 +158,10 @@ export function TabelaSimulacoes({
                 <TableCell className="py-2.5 px-1.5 text-right tabular-nums font-medium text-muted-foreground w-16 text-[10px]">
                   {s.prazo ? `${s.prazo}m` : "—"}
                 </TableCell>
-                <TableCell className="py-2.5 px-1.5 w-16">
-                  <SimulacaoStatusBadge status={s.status} />
+                <TableCell className="py-2.5 px-1.5 w-16 relative">
+                  <div className="flex items-center">
+                    <SimulacaoStatusBadge status={s.status} />
+                  </div>
                 </TableCell>
                 <TableCell className="text-right py-2.5 px-1.5 w-20" onClick={(e) => e.stopPropagation()}>
                   {verExcluidas ? (
@@ -172,11 +174,11 @@ export function TabelaSimulacoes({
                       <Undo2 className="mr-1 h-3.5 w-3.5" /> Restaurar
                     </Button>
                   ) : (
-                    <div className="flex items-center justify-end gap-1">
+                    <div className="flex items-center justify-end">
                       <Button
                         size="icon"
                         variant="ghost"
-                        className="h-8 w-8 text-muted-foreground hover:text-primary"
+                        className="h-8 w-7 text-muted-foreground hover:text-primary -mr-1"
                         title="Ver detalhes"
                         aria-label="Ver detalhes da simulação"
                         onClick={() => handlers.onVer(s.id)}
