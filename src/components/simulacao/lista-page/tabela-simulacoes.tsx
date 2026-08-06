@@ -50,7 +50,7 @@ export function TabelaSimulacoes({
   const todosMarcados = itens.length > 0 && itens.every((s) => sel.has(s.id));
   return (
     <div className="hidden w-full max-w-full overflow-x-auto rounded-lg border border-border/60 bg-card lg:block [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-border/60 [&::-webkit-scrollbar-track]:bg-transparent">
-      <Table className="min-w-[650px] lg:min-w-[700px] xl:min-w-full table-fixed">
+      <Table className="min-w-[700px] lg:min-w-[750px] xl:min-w-full table-fixed">
         <TableHeader>
           <TableRow className="border-border/60 bg-muted/50 hover:bg-muted/50">
             {selecionaveis && (
