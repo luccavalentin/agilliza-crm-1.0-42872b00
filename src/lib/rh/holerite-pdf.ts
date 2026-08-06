@@ -93,7 +93,12 @@ function campo(
 
 export function gerarHoleritePdf(input: HoleriteInput): { blob: Blob; filename: string } {
   const P: PdfPalette = getPdfPalette();
-  const doc = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
+  const doc = new jsPDF({ 
+    orientation: "portrait", 
+    unit: "pt", 
+    format: "a4",
+    compress: true
+  });
   const pageW = doc.internal.pageSize.getWidth();
   const pageH = doc.internal.pageSize.getHeight();
 
