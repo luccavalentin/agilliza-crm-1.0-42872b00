@@ -316,8 +316,15 @@ export function ResultadoInlineCompleta({ simulacaoId, onFechar, isSecundaria }:
                       </div>
 
                       {b.status_banco === "erro" && b.mensagem_banco && (
-                        <div className="mt-2"><ErroBancoDetalhe mensagem={b.mensagem_banco} nomeBanco={b.nome_banco} /></div>
+                        <div className="mt-2">
+                          <ErroBancoDetalhe 
+                            mensagem={b.mensagem_banco} 
+                            rendaEstimada={rendaMinimaDoBanco(b)}
+                            nomeBanco={b.nome_banco} 
+                          />
+                        </div>
                       )}
+
 
                       <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
                         <MobileStat rotulo="Parcela" valor={formatBRL(b.valor_parcela)} />
@@ -432,8 +439,17 @@ export function ResultadoInlineCompleta({ simulacaoId, onFechar, isSecundaria }:
                               )}
                             </div>
                             {b.status_banco === "erro" && b.mensagem_banco && (
-                              <div className="mt-1"><ErroBancoDetalhe mensagem={b.mensagem_banco} nomeBanco={b.nome_banco} linhas={1} className="text-[10px]" /></div>
+                              <div className="mt-1">
+                                <ErroBancoDetalhe 
+                                  mensagem={b.mensagem_banco} 
+                                  rendaEstimada={rendaMinimaDoBanco(b)}
+                                  nomeBanco={b.nome_banco} 
+                                  linhas={1} 
+                                  className="text-[10px]" 
+                                />
+                              </div>
                             )}
+
                           </TableCell>
                           <TableCell className="px-2 py-2">
                             <BancoStatusBadge status={b.status_banco} />
