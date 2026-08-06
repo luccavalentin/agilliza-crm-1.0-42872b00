@@ -246,6 +246,7 @@ const criarSchema = z.object({
   modo: z.enum(["simplificada", "completa"]),
   dados: completaSchema.partial().extend({
     email_verificado_em: z.string().optional().nullable(),
+    renda_total_anterior: z.number().optional().nullable(),
   }),
 });
 
