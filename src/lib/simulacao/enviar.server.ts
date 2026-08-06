@@ -215,7 +215,8 @@ async function garantirDadosParticipantesSimulacao({
       tipoEstadoCivil:
         part?.tipoEstadoCivil ??
         (ehConjuge ? sim.estado_civil_conjuge : sim.estado_civil) ??
-        cliente?.estado_civil,
+        cliente?.estado_civil ?? 
+        undefined,
       tipoRegimeCasamento: part?.tipoRegimeCasamento ?? sim.regime_casamento ?? undefined,
       tipoSexo: part?.tipoSexo ?? normalizarSexo(cliente?.sexo),
       tipoDocumentoIdentidade:
