@@ -15,7 +15,9 @@ import {
   excluirSimulacao,
   restaurarSimulacao,
   obterSimulacao,
+  destravarSimulacao,
 } from "@/lib/simulacao/simulacoes.functions";
+
 import { criarProposta, enviarPropostaHomeFin } from "@/lib/propostas/propostas.functions";
 import { Button } from "@/components/ui/button";
 
