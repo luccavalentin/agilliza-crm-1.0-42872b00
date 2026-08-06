@@ -37,6 +37,21 @@ function num(v: unknown): number {
   return Number.isFinite(n) ? n : 0;
 }
 
+/**
+ * O Bradesco pode devolver, por operação, o prazo mínimo que aceita. Esse
+ * limite não consta como constante no contrato da API e pode variar; por isso
+ * extraímos o número do retorno real em vez de impor 180 meses globalmente.
+ */
+function prazoMinimoSolicitadoPeloBanco(mensagem: unknown): number | null {
+  const texto = String(mensagem ?? "");
+  const match =
+    texto.match(/prazo\s+de\s+pagamento\s+igual\s+ou\s+superior\s+a[:\s]+(\d+)/i) ??
+    texto.match(/prazo\s+abaixo\s+do\s+m[ií]nimo[^:]*:\s*(\d+)\s+meses/i);
+  if (!match) return null;
+  const prazo = Number(match[1]);
+  return Number.isInteger(prazo) && prazo > 0 ? prazo : null;
+}
+
 function soDigitos(v: unknown): string | undefined {
   const s = String(v ?? "").replace(/\D/g, "");
   return s.length ? s : undefined;
@@ -733,12 +748,60 @@ export async function enviarSimulacaoImpl({
           }
         }
 
-        // A resposta da integração traz os valores retornados pelo banco
-        const integ = await chamarComRetry<any>(
-          `/oportunidade/${idOportunidade}/simulacao/${idSimulacao}/integracao`,
-          "POST",
-          {},
-        );
+        // A resposta da integração traz os valores retornados pelo banco.
+        // Em terreno, o Bradesco pode calcular e devolver um prazo mínimo para
+        // aquela operação (por exemplo, 180), embora esse piso não seja
+        // documentado como constante. Quando isso ocorrer, adotamos exatamente
+        // o número informado pela API, sincronizamos oportunidade + simulação e
+        // repetimos a integração uma única vez. Não alteramos o mínimo global.
+        const endpointIntegracao =
+          `/oportunidade/${idOportunidade}/simulacao/${idSimulacao}/integracao`;
+        let integ: any;
+        try {
+          integ = await chamarComRetry<any>(endpointIntegracao, "POST", {});
+        } catch (erroIntegracao) {
+          const mensagem =
+            erroIntegracao instanceof Error ? erroIntegracao.message : String(erroIntegracao);
+          const prazoSolicitado = prazoMinimoSolicitadoPeloBanco(mensagem);
+          const nomeBanco = String(b.nome_banco ?? "").toLowerCase();
+          const terreno = sim.tipo_imovel === "TE" || sim.tipo_imovel === "TC";
+          const bradesco =
+            codigoBancoNormalizado(b) === "237" || nomeBanco.includes("bradesco");
+          const prazoTerrenoValido =
+            prazoSolicitado != null && prazoSolicitado >= PRAZO_MIN && prazoSolicitado <= 240;
+
+          if (!terreno || !bradesco || !prazoTerrenoValido || prazoSolicitado === prazoBanco) {
+            throw erroIntegracao;
+          }
+
+          const oportunidadeAjustada = { ...dadosOportunidade, prazo: prazoSolicitado };
+          const simulacaoAjustada = { ...putPayload, prazo: prazoSolicitado };
+
+          await chamarIntegracao<any>(
+            `/oportunidade/${idOportunidade}`,
+            "PUT",
+            oportunidadeAjustada,
+            ctx,
+          );
+          await chamarIntegracao<any>(
+            `/oportunidade/${idOportunidade}/simulacao/${idSimulacao}`,
+            "PUT",
+            simulacaoAjustada,
+            ctx,
+          );
+          await supabase
+            .from("simulacoes")
+            .update({ prazo: prazoSolicitado })
+            .eq("id", simulacaoId);
+          await supabase.from("simulacao_historico").insert({
+            simulacao_id: simulacaoId,
+            tipo: "ajuste",
+            descricao: `Prazo ajustado automaticamente de ${prazoBanco} para ${prazoSolicitado} meses conforme o limite devolvido pelo Bradesco para terreno.`,
+            ator_id: userId,
+          });
+          sim.prazo = prazoSolicitado;
+          integ = await chamarComRetry<any>(endpointIntegracao, "POST", {});
+        }
 
         let dados = integ ?? simResp;
         let dadosApi = dados?.simulacao ?? dados?.data ?? dados;
