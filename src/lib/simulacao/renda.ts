@@ -24,6 +24,12 @@
 import { extrairDetalheBanco } from "./detalhe-banco";
 import { calcularSimulacao, type SistemaAmortizacao } from "./simulacao-rapida";
 
+/** 
+ * Margem de segurança aplicada sobre o maior valor de renda encontrado 
+ * para absorver diferenças de encargos entre instituições.
+ */
+export const MARGEM_SEGURANCA_RENDA = 0.05; // +5%
+
 /** Percentual máximo da renda que pode ser comprometido com a parcela. */
 export const COMPROMETIMENTO_MAX = 0.3;
 /** Comprometimento máx no PRICE (Bradesco projeta pico da parcela → ~15% da inicial). */
@@ -62,7 +68,8 @@ export interface BancoRendaApi {
   nome_banco?: string | null;
   status_banco?: string | null;
   valor_parcela?: number | null;
-  raw_response?: unknown;
+  raw_response?: any;
+  mensagem_banco?: string | null;
   /** Sistema exibido no card do banco (definido pela simulação). */
   _sistema?: "SAC" | "PRICE" | string | null;
   /** Sistema salvo no banco após retorno da API. */
@@ -128,17 +135,39 @@ export function parcelaExigidaPeloBanco(banco: BancoRendaApi): number | null {
  */
 export function rendaMinimaDoBanco(banco: BancoRendaApi): number | null {
   const parcela = parcelaExigidaPeloBanco(banco);
-  if (!parcela) return null;
   const price = isBancoPrice(banco);
   const teto = price ? COMPROMETIMENTO_MAX_PRICE : COMPROMETIMENTO_MAX;
-  if (!price) {
-    const raw = unwrapApiResponse(banco.raw_response);
-    const detalhe = extrairDetalheBanco(raw ?? banco.raw_response);
-    const apiRenda = numeroPositivo(detalhe?.rendaMinimaExigida);
-    if (apiRenda) return apiRenda;
+
+  const raw = unwrapApiResponse(banco.raw_response);
+  const detalhe = extrairDetalheBanco(raw ?? banco.raw_response);
+  
+  // Extração da renda mínima da mensagem de recusa (Problema 1c)
+  let rendaMensagemRecusa: number | null = null;
+  const msg = String(banco.raw_response?.mensagem_banco ?? raw?.mensagem_banco ?? "").toLowerCase();
+  if (msg.includes("renda")) {
+    // Tenta encontrar um valor numérico na mensagem (ex: "exigência de 15.000")
+    const match = msg.match(/(\d{1,3}(\.\d{3})*(,\d{2})?)/);
+    if (match) {
+        const valStr = match[0].replace(/\./g, "").replace(",", ".");
+        const val = parseFloat(valStr);
+        if (val > 1000) rendaMensagemRecusa = val;
+    }
   }
-  const rendaCrua = rendaMinimaParaParcela(parcela, teto);
-  return Math.ceil(rendaCrua / 1000) * 1000;
+
+  // Problema 1b: prefere Math.max(apiRenda, estimativa local baseada na parcela do banco)
+  let apiRenda = numeroPositivo(detalhe?.rendaMinimaExigida) ?? rendaMensagemRecusa;
+  
+  if (!parcela && !apiRenda) return null;
+
+  let rendaMinima = 0;
+  if (parcela) {
+    const rendaPelaParcela = rendaMinimaParaParcela(parcela, teto);
+    rendaMinima = apiRenda ? Math.max(apiRenda, rendaPelaParcela) : rendaPelaParcela;
+  } else {
+    rendaMinima = apiRenda!;
+  }
+
+  return Math.ceil(rendaMinima / 100) * 100;
 }
 
 /**
@@ -150,7 +179,7 @@ export function rendaMinimaPelosBancos(
   rendaInformada?: number | null,
 ): AvaliacaoRenda | null {
   const candidatos = (bancos ?? [])
-    .filter((b) => !b.status_banco || b.status_banco === "simulada")
+    .filter((b) => !b.status_banco || b.status_banco === "simulada" || b.status_banco === "erro")
     .map((b) => {
       const parcela = parcelaExigidaPeloBanco(b);
       const rendaMinima = rendaMinimaDoBanco(b);
@@ -252,11 +281,118 @@ export function avaliarRendaMinima(params: {
   const renda = renda_informada && renda_informada > 0 ? renda_informada : null;
 
   return {
-    primeiraParcela: parcelaSistema + seguroMIP + seguroDFI + TAXA_ADMIN_MES,
+    primeiraParcela: prestacaoTotal,
     rendaMinima,
     comprometimento: renda ? prestacaoTotal / renda : null,
     suficiente: renda == null ? null : renda >= rendaMinima,
     fonte: "estimativa_local",
   };
+}
+
+/**
+ * PARTE 1 — RENDA MÍNIMA SUGERIDA ÚNICA
+ * Devolve o maior valor entre todas as fontes disponíveis (SAC, PRICE, API, Recusas).
+ */
+export function rendaMinimaSugerida(params: {
+  valor_imovel: number;
+  valor_financiamento: number;
+  prazo_meses: number;
+  taxa_ano: number;
+  bancos_ids?: string[];
+  bancos_simulados?: BancoRendaApi[];
+  renda_informada?: number | null;
+}): AvaliacaoRenda & { detalhe_fonte: string } {
+  const { valor_imovel, valor_financiamento, prazo_meses, taxa_ano, bancos_simulados, renda_informada } = params;
+
+  const fontes: (AvaliacaoRenda & { detalhe_fonte: string })[] = [];
+
+  // 1. Estimativa local SAC
+  const sac = avaliarRendaMinima({ ...params, sistema: "S" });
+  if (sac) fontes.push({ ...sac, detalhe_fonte: "Estimativa local (SAC 30%)" });
+
+  // 2. Estimativa local PRICE (se houver bancos que aceitem ou for o selecionado)
+  const price = avaliarRendaMinima({ ...params, sistema: "P" });
+  if (price) fontes.push({ ...price, detalhe_fonte: "Estimativa local (PRICE 15%)" });
+
+  // 3 e 4. Retornos da API e Mensagens de recusa
+  if (bancos_simulados && bancos_simulados.length > 0) {
+    bancos_simulados.forEach(b => {
+      const rendaBco = rendaMinimaDoBanco(b);
+      if (rendaBco) {
+        fontes.push({
+          primeiraParcela: parcelaExigidaPeloBanco(b) ?? 0,
+          rendaMinima: rendaBco,
+          comprometimento: renda_informada ? (parcelaExigidaPeloBanco(b) ?? 0) / renda_informada : null,
+          suficiente: renda_informada ? renda_informada >= rendaBco : null,
+          bancoNome: b.nome_banco,
+          fonte: "api_banco",
+          detalhe_fonte: `Exigência do banco: ${b.nome_banco}`
+        });
+      }
+    });
+  }
+
+  // Encontra a maior renda entre todas as fontes
+  const vencedora = fontes.length > 0 
+    ? fontes.sort((a, b) => b.rendaMinima - a.rendaMinima)[0]
+    : { primeiraParcela: 0, rendaMinima: 0, detalhe_fonte: "Indefinida", suficiente: null };
+
+  // Aplica margem de segurança de +5% e arredonda na centena (Problema 1 - MARGEM)
+  const rendaComMargem = vencedora.rendaMinima * (1 + (MARGEM_SEGURANCA_RENDA ?? 0.05));
+  const rendaFinal = Math.ceil(rendaComMargem / 100) * 100;
+
+  const renda = renda_informada && renda_informada > 0 ? renda_informada : null;
+
+  return {
+    ...vencedora,
+    rendaMinima: rendaFinal,
+    comprometimento: renda ? vencedora.primeiraParcela / renda : null,
+    suficiente: renda == null ? null : renda >= rendaFinal,
+  };
+}
+
+/**
+ * PARTE 2 — CÁLCULO INVERSO: QUANTO ESSA RENDA FINANCIA
+ */
+export function calcularMaximoFinanciável(params: {
+  renda_declarada: number;
+  prazo_meses: number;
+  taxa_ano: number;
+  sistema: SistemaAmortizacao;
+  valor_imovel: number;
+}): number {
+  const { renda_declarada, prazo_meses, taxa_ano, sistema, valor_imovel } = params;
+  const tetoComprometimento = sistema === "P" ? COMPROMETIMENTO_MAX_PRICE : COMPROMETIMENTO_MAX;
+  
+  // Parcela máxima permitida para a renda informada
+  const parcelaMax = renda_declarada * tetoComprometimento;
+
+  // Remove os encargos fixos estimados para descobrir a parcela "seca" (amortização + juros)
+  // parcela_seca = parcela_max - MIP - DFI - taxa_admin
+  // seguroMIP = saldo_devedor * TAXA_MIP_MES (aproximadamente valor_financiamento * TAXA_MIP_MES)
+  // seguroDFI = valor_imovel * TAXA_DFI_MES
+  
+  const seguroDFI = valor_imovel * TAXA_DFI_MES;
+  const parcelaDisponivelParaFinanc = parcelaMax - seguroDFI - TAXA_ADMIN_MES;
+  
+  if (parcelaDisponivelParaFinanc <= 0) return 0;
+
+  // Agora precisamos resolver: 
+  // SAC: parcela_seca = (finan / prazo) + (finan * taxa_mes)
+  // finan = parcela_seca / ( (1/prazo) + taxa_mes + TAXA_MIP_MES )
+  
+  const taxaMes = Math.pow(1 + taxa_ano, 1/12) - 1;
+  
+  let finanMax = 0;
+  if (sistema === "S") {
+    finanMax = parcelaDisponivelParaFinanc / ((1 / prazo_meses) + taxaMes + TAXA_MIP_MES);
+  } else {
+    // PRICE: parcela_seca = finan * [ (i * (1+i)^n) / ((1+i)^n - 1) ] + finan * TAXA_MIP_MES
+    // finan = parcela_seca / ( fator_price + TAXA_MIP_MES )
+    const fator = (taxaMes * Math.pow(1 + taxaMes, prazo_meses)) / (Math.pow(1 + taxaMes, prazo_meses) - 1);
+    finanMax = parcelaDisponivelParaFinanc / (fator + TAXA_MIP_MES);
+  }
+
+  return Math.floor(finanMax / 100) * 100;
 }
 

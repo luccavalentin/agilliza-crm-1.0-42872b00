@@ -65,6 +65,7 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
   const [confirmRenda, setConfirmRenda] = useState<null | {
     rendaMinima: number;
     rendaInformada: number;
+    detalhe_fonte?: string;
   }>(null);
   const [pctDespesas, setPctDespesas] = useState<number>(0);
   // Guarda o id da última simulação gerada para exibir o resultado inline
@@ -775,18 +776,24 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
     }
   }
 
-  /** Verifica a renda contra o sugestivo; abre o popup de confirmação se insuficiente. */
+  /** Verifica a renda contra o sugestivo; abre o popup de confirmação se insuficiente. (Problema 3) */
   function rendaSuficiente(): boolean {
-    const av = avaliarRendaMinima({
-      valor_imovel: f.valor_imovel,
-      valor_financiamento: f.valor_financiamento,
+    const { rendaMinimaSugerida } = require("@/lib/simulacao/renda");
+    const av = rendaMinimaSugerida({
+      valor_imovel: Number(f.valor_imovel) || 0,
+      valor_financiamento: Number(f.valor_financiamento) || 0,
       prazo_meses: f.prazo,
       taxa_ano: melhorTaxaAno,
-      sistema: f.sistema_amortizacao === "P" ? "P" : "S",
+      bancos_ids: f.bancos_ids,
       renda_informada: rendaConsiderada,
     });
+    
     if (av && av.suficiente === false) {
-      setConfirmRenda({ rendaMinima: av.rendaMinima, rendaInformada: rendaConsiderada });
+      setConfirmRenda({ 
+        rendaMinima: av.rendaMinima, 
+        rendaInformada: rendaConsiderada,
+        detalhe_fonte: av.detalhe_fonte
+      });
       return false;
     }
     return true;

@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, FileText, Send, Home, User, Users, Landmark, ShieldCheck, X } from "lucide-react";
+import { ArrowLeft, FileText, Send, Home, User, Users, Landmark, ShieldCheck, X, AlertTriangle } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { SecaoCabecalho } from "@/components/simulacao/secao-cabecalho";
@@ -346,25 +346,32 @@ function Pagina() {
 
 
       <AlertDialog open={!!confirmRenda} onOpenChange={(o) => !o && setConfirmRenda(null)}>
-        <AlertDialogContent>
+        <AlertDialogContent className="max-w-md">
           <AlertDialogHeader>
-            <AlertDialogTitle>Renda abaixo do sugerido</AlertDialogTitle>
-            <AlertDialogDescription>
-              A renda informada de{" "}
-              <span className="font-semibold text-foreground">
-                {formatBRL(confirmRenda?.rendaInformada ?? 0)}
-              </span>{" "}
-              é inferior à renda familiar mínima estimada de{" "}
-              <span className="font-semibold text-foreground">
-                {formatBRL(confirmRenda?.rendaMinima ?? 0)}
-              </span>{" "}
-              para este financiamento. O banco poderá reprovar a operação. Deseja enviar mesmo
-              assim?
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-500/10 text-amber-600 mb-2">
+              <AlertTriangle className="h-6 w-6" />
+            </div>
+            <AlertDialogTitle className="text-xl">Renda abaixo do piso sugerido</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-4 pt-2">
+              <p className="text-sm leading-relaxed">
+                A renda informada de <span className="font-bold text-foreground">{formatBRL(confirmRenda?.rendaInformada ?? 0)}</span> é 
+                inferior ao piso sugerido de <span className="font-bold text-foreground">{formatBRL(confirmRenda?.rendaMinima ?? 0)}</span> para esta operação.
+              </p>
+              
+              <div className="rounded-lg bg-muted/50 p-3 space-y-2 border border-border/50">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Origem do piso</p>
+                <p className="text-xs font-medium text-foreground">{confirmRenda?.detalhe_fonte || "Estimativa técnica Agilliza"}</p>
+              </div>
+
+              <p className="text-xs text-amber-600 font-medium">
+                ⚠️ O banco poderá reprovar a operação por insuficiência de renda.
+              </p>
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Revisar dados</AlertDialogCancel>
+          <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+            <AlertDialogCancel className="sm:flex-1">Revisar dados</AlertDialogCancel>
             <AlertDialogAction
+              className="sm:flex-1 bg-amber-600 hover:bg-amber-700"
               onClick={() => {
                 setConfirmRenda(null);
                 void executarEnvio();
