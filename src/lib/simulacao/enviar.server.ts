@@ -579,6 +579,7 @@ export async function enviarSimulacaoImpl({
     };
 
     if (!idOportunidade) {
+      console.log(`[HomeFin] Montando payload para ${sim.numero_simulacao}. Renda Titular: ${sim.renda_total}, Renda Cônjuge: ${sim.renda_conjuge}, Composição: ${sim.compoe_renda_conjuge}`);
       const payload: Record<string, unknown> = {
         operacao: { idOperacao: String(idOperacaoIntegracao) },
         ...(auth.idRegional ? { regional: { idRegional: auth.idRegional } } : {}),
