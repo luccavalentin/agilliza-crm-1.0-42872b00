@@ -145,7 +145,7 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
       celular: s.celular ?? "",
       possui_conjuge: Boolean(s.possui_conjuge),
       compoe_renda: true,
-      compoe_renda_conjuge: s.compoe_renda_conjuge !== undefined ? Boolean(s.compoe_renda_conjuge) : true,
+      compoe_renda_conjuge: s.compoe_renda_conjuge !== undefined ? Boolean(s.compoe_renda_conjuge) : Boolean(s.possui_conjuge),
       
       nome_conjuge: s.nome_conjuge ?? "",
       cpf_conjuge: s.cpf_conjuge ?? "",
@@ -201,6 +201,8 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
         if (next.possui_conjuge) {
           next.compoe_renda_conjuge = true;
           next.compoe_renda = true;
+        } else {
+          next.compoe_renda_conjuge = false;
         }
       }
       return next;

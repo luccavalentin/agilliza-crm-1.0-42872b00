@@ -590,7 +590,7 @@ export async function enviarSimulacaoImpl({
         bancos: bancos.map((b: any) => bancoPayloadOportunidade(sim, b)),
         cpfCnpj: (sim.cpf_cnpj ?? "").replace(/\D/g, ""),
         nome: sim.nome_cliente,
-        rendaTotal: num(sim.compoe_renda_conjuge ? (num(sim.renda_total) + num(sim.renda_conjuge)) : sim.renda_total),
+        rendaTotal: num(sim.compoe_renda_conjuge ? (num(sim.renda_total) + num(sim.renda_conjuge)) : sim.renda_total), // Soma rendas se compoe_renda_conjuge for true (Problema 1)
         dataNascimento: sim.data_nascimento,
         email: sim.email,
         celular: (sim.celular ?? "").replace(/\D/g, ""),
