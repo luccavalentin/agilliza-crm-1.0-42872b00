@@ -1,7 +1,13 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { resolverIntervalo, type ReportFiltros } from "@/lib/relatorios/shared";
+import {
+  resolverIntervalo,
+  inicioDiaBR,
+  fimDiaBR,
+  dataBR,
+  type ReportFiltros,
+} from "@/lib/relatorios/shared";
 import { grupoDoStatus } from "@/lib/propostas/status-grupos";
 import { criarEscopoEq, listarClienteIdsParceiroDoUsuario } from "@/lib/escopo";
 
@@ -162,7 +168,13 @@ function construirBuckets(deISO: string, ateISO: string) {
     const [, m, d] = chave.split("-");
     return `${d}/${m}`;
   };
-  const chaveDaData = (iso?: string | null) => (iso ? chaveDe(new Date(iso)) : "");
+  // O bucket usa a data no fuso de Brasília: um registro criado às 22h daqui
+  // é 01h UTC do dia seguinte e cairia no dia errado do gráfico.
+  const chaveDaData = (iso?: string | null) => {
+    if (!iso) return "";
+    const dia = dataBR(iso);
+    return porMes ? dia.slice(0, 7) : dia;
+  };
   return { chaves, rotulo, chaveDaData, porMes };
 }
 
@@ -281,14 +293,15 @@ async function carregarAnterior(
   ateAtual: string,
 ): Promise<AnteriorTotais> {
   const { de, ate } = intervaloAnterior(deAtual, ateAtual);
-  const ateFim = `${ate}T23:59:59`;
+  const deIni = inicioDiaBR(de);
+  const ateFim = fimDiaBR(ate);
   const [sims, props, contratosInfo] = await Promise.all([
     escopoEq(
       supabase
         .from("simulacoes")
         .select("status,valor_financiamento,created_at")
         .is("deleted_at", null)
-        .gte("created_at", de)
+        .gte("created_at", deIni)
         .lte("created_at", ateFim)
         .limit(5000),
       "usuario_responsavel_id",
@@ -300,7 +313,7 @@ async function carregarAnterior(
         .from("propostas")
         .select("status,created_at")
         .is("deleted_at", null)
-        .gte("created_at", de)
+        .gte("created_at", deIni)
         .lte("created_at", ateFim)
         .limit(5000),
       "usuario_responsavel_id",
@@ -349,13 +362,14 @@ export const getPanelDados = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     const f = data as unknown as ReportFiltros;
     const { de, ate } = resolverIntervalo(f);
-    const ateFim = `${ate}T23:59:59`;
+    const deIni = inicioDiaBR(de);
+  const ateFim = fimDiaBR(ate);
     const buckets = construirBuckets(de, ate);
 
     // Um contrato entra no período pela data de emissão (contrato_emitido_em),
     // não pela data de criação da proposta (que pode ser de meses antes).
     const dentroPeriodo = (iso?: string | null) =>
-      !!iso && iso.slice(0, 10) >= de && iso.slice(0, 10) <= ate;
+      !!iso && dataBR(iso) >= de && dataBR(iso) <= ate;
 
     // Filtro por usuário: quando um responsável específico é escolhido, ele
     // prevalece sobre o escopo (mesmo em "geral"). Sem responsável, mantém a
@@ -379,7 +393,7 @@ export const getPanelDados = createServerFn({ method: "POST" })
             .from("simulacoes")
             .select("id,status,tipo_simulacao,valor_financiamento,created_at,usuario_responsavel_id")
             .is("deleted_at", null)
-            .gte("created_at", de)
+            .gte("created_at", deIni)
             .lte("created_at", ateFim)
             .limit(5000),
           "usuario_responsavel_id",
@@ -394,7 +408,7 @@ export const getPanelDados = createServerFn({ method: "POST" })
             )
             .is("deleted_at", null)
             .or(
-              `and(created_at.gte.${de},created_at.lte.${ateFim}),and(contrato_emitido_em.gte.${de},contrato_emitido_em.lte.${ateFim})`,
+              `and(created_at.gte."${deIni}",created_at.lte."${ateFim}"),and(contrato_emitido_em.gte."${deIni}",contrato_emitido_em.lte."${ateFim}")`,
             )
             .limit(5000),
           "usuario_responsavel_id",
@@ -408,7 +422,7 @@ export const getPanelDados = createServerFn({ method: "POST" })
             .from("clientes")
             .select("id,created_at,contrato_emitido_em,responsavel_id")
             .is("deleted_at", null)
-            .gte("created_at", de)
+            .gte("created_at", deIni)
             .lte("created_at", ateFim)
             .limit(5000),
           "responsavel_id",
@@ -787,7 +801,7 @@ export const getPanelDados = createServerFn({ method: "POST" })
           .from("simulacoes")
           .select("id,status,valor_financiamento,created_at")
           .is("deleted_at", null)
-          .gte("created_at", de)
+          .gte("created_at", deIni)
           .lte("created_at", ateFim)
           .limit(5000),
         "usuario_responsavel_id",
@@ -802,7 +816,7 @@ export const getPanelDados = createServerFn({ method: "POST" })
           )
           .is("deleted_at", null)
           .or(
-            `and(created_at.gte.${de},created_at.lte.${ateFim}),and(contrato_emitido_em.gte.${de},contrato_emitido_em.lte.${ateFim})`,
+            `and(created_at.gte."${deIni}",created_at.lte."${ateFim}"),and(contrato_emitido_em.gte."${deIni}",contrato_emitido_em.lte."${ateFim}")`,
           )
           .limit(5000),
         "usuario_responsavel_id",
@@ -813,7 +827,7 @@ export const getPanelDados = createServerFn({ method: "POST" })
         supabase
           .from("demandas")
           .select("status,prazo_sla,titulo,id")
-          .gte("created_at", de)
+          .gte("created_at", deIni)
           .lte("created_at", ateFim)
           .limit(5000),
         "responsavel_id",
@@ -824,7 +838,7 @@ export const getPanelDados = createServerFn({ method: "POST" })
         supabase
           .from("tasks")
           .select("status,prazo,id")
-          .gte("created_at", de)
+          .gte("created_at", deIni)
           .lte("created_at", ateFim)
           .limit(5000),
         "responsavel_id",
@@ -1128,8 +1142,8 @@ async function carregarVariaveisDrilldown(supabase: any, de: string, ate: string
     supabase
       .from("simulacoes")
       .select("id, status, valor_financiamento, created_at")
-      .gte("created_at", `${de}T00:00:00`)
-      .lte("created_at", `${ate}T23:59:59`),
+      .gte("created_at", inicioDiaBR(de))
+      .lte("created_at", fimDiaBR(ate)),
   ]);
 
   const simRows = (sims.data ?? []) as any[];
@@ -1151,7 +1165,8 @@ export const getPanelDrilldown = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     const f = data as unknown as ReportFiltros;
     const { de, ate } = resolverIntervalo(f);
-    const ateFim = `${ate}T23:59:59`;
+    const deIni = inicioDiaBR(de);
+  const ateFim = fimDiaBR(ate);
     const partnerClienteIds =
       data.escopo === "minha" && !data.responsavel
         ? await listarClienteIdsParceiroDoUsuario(supabase, userId)
@@ -1164,7 +1179,7 @@ export const getPanelDrilldown = createServerFn({ method: "POST" })
     });
 
     const dentroPeriodo = (iso?: string | null) =>
-      !!iso && iso.slice(0, 10) >= de && iso.slice(0, 10) <= ate;
+      !!iso && dataBR(iso) >= de && dataBR(iso) <= ate;
 
     const { simRows, volumeSimulado } = await carregarVariaveisDrilldown(supabase, de, ate);
     const chave = normLabel(data.metrica);
@@ -1181,7 +1196,7 @@ export const getPanelDrilldown = createServerFn({ method: "POST" })
           )
           .is("deleted_at", null)
           .or(
-            `and(created_at.gte.${de},created_at.lte.${ateFim}),and(contrato_emitido_em.gte.${de},contrato_emitido_em.lte.${ateFim})`,
+            `and(created_at.gte."${deIni}",created_at.lte."${ateFim}"),and(contrato_emitido_em.gte."${deIni}",contrato_emitido_em.lte."${ateFim}")`,
           )
           .order("created_at", { ascending: false })
           .limit(LIMITE * 2),
@@ -1200,7 +1215,7 @@ export const getPanelDrilldown = createServerFn({ method: "POST" })
             "id,numero_simulacao,status,valor_financiamento,created_at,clientes(nome),simulacao_bancos(nome_banco,selecionado,status_banco)",
           )
           .is("deleted_at", null)
-          .gte("created_at", de)
+          .gte("created_at", deIni)
           .lte("created_at", ateFim)
           .order("created_at", { ascending: false })
           .limit(LIMITE),
@@ -1528,7 +1543,7 @@ export const getPanelDrilldown = createServerFn({ method: "POST" })
           .from("clientes")
           .select("id,nome,documento,created_at,telefone_celular")
           .is("deleted_at", null)
-          .gte("created_at", de)
+          .gte("created_at", deIni)
           .lte("created_at", ateFim)
           .order("created_at", { ascending: false })
           .limit(LIMITE),
@@ -1678,7 +1693,7 @@ export const getPanelDrilldown = createServerFn({ method: "POST" })
         supabase
           .from("tasks")
           .select("id,numero,titulo,status,prazo,created_at")
-          .gte("created_at", de)
+          .gte("created_at", deIni)
           .lte("created_at", ateFim)
           .limit(LIMITE * 2),
         "responsavel_id",

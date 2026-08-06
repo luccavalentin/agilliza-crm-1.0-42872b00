@@ -45,10 +45,23 @@ export const ESCOPO_LABEL: Record<Escopo, string> = {
 
 export const filtrosPadrao = (): ReportFiltros => ({ periodo: "mes", escopo: "minha" });
 
+/** Fuso oficial da operação (sem horário de verão desde 2019: UTC-03:00). */
+export const TZ_BR = "America/Sao_Paulo";
+/** Data (yyyy-mm-dd) de um timestamp no fuso de Brasília. */
+export const dataBR = (iso: string | Date) =>
+  new Date(iso).toLocaleDateString("en-CA", { timeZone: TZ_BR });
+/**
+ * Limites de dia com offset explícito (-03:00). Sem o offset, o Postgres
+ * interpreta a string como UTC e os registros criados após as 21h (horário de
+ * Brasília) ficam de fora do período — KPIs "sem dados" mesmo havendo dados.
+ */
+export const inicioDiaBR = (dia: string) => `${dia}T00:00:00-03:00`;
+export const fimDiaBR = (dia: string) => `${dia}T23:59:59.999-03:00`;
+
 /** Resolve um intervalo [de, ate] em ISO (yyyy-mm-dd) a partir do filtro de período. */
 export function resolverIntervalo(f: ReportFiltros): { de: string; ate: string } {
   // "Hoje" ancorado no fuso America/Sao_Paulo (o servidor roda em UTC).
-  const hojeStr = new Date().toLocaleDateString("en-CA");
+  const hojeStr = new Date().toLocaleDateString("en-CA", { timeZone: TZ_BR });
   const [hy, hm, hd] = hojeStr.split("-").map(Number);
   const hoje = new Date(hy, hm - 1, hd);
   const iso = (d: Date) =>
