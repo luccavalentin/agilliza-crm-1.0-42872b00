@@ -1283,7 +1283,8 @@ export const destravarSimulacao = createServerFn({ method: "POST" })
         mensagem_banco: "Simulação destravada manualmente pelo consultor — tente reenviar.",
       })
       .eq("simulacao_id", data.id)
-      .in("status_banco", ["enviando", "aguardando"]);
+      .or('status_banco.eq.enviando,status_banco.eq.aguardando');
+
 
     if (error) throw new Error(error.message);
 
