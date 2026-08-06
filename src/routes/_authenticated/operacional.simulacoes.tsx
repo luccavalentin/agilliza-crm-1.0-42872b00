@@ -73,6 +73,8 @@ function Pagina() {
   const restaurar = useServerFn(restaurarSimulacao);
   const criar = useServerFn(criarProposta);
   const enviarAoBancoFn = useServerFn(enviarPropostaHomeFin);
+  const destravar = useServerFn(destravarSimulacao);
+
 
   const obter = useServerFn(obterSimulacao);
   const listarColegasFn = useServerFn(listarColegas);
