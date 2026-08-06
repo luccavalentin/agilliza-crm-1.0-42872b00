@@ -253,6 +253,11 @@ async function garantirDadosParticipantesSimulacao({
       ...endereco,
     };
 
+    // Remove campos undefined para evitar que a API receba "undefined" como string
+    const cleanedPayload = Object.fromEntries(
+      Object.entries(payload).filter(([_, v]) => v !== undefined)
+    );
+
 
     try {
       await chamarIntegracao<any>(
