@@ -204,11 +204,52 @@ export function PainelDrilldownDialog({
                             </span>
                           )}
                         </div>
-                        {it.to ? (
-                          <ChevronRight className="hidden h-4 w-4 text-muted-foreground/30 transition-all duration-300 group-hover:translate-x-1 group-hover:text-primary sm:block" />
-                        ) : (
-                          <span className="hidden w-4 sm:block" />
-                        )}
+                        <div className="flex items-center gap-1">
+                          {(it as any).id && (it as any).tipo && (
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 text-muted-foreground/40 hover:text-foreground"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if ((it as any).tipo === "demanda") {
+                                      setDemandaParaEditar((it as any).id);
+                                    } else {
+                                      // Navegar para tarefas se não houver dialog
+                                      window.location.href = (it as any).to;
+                                    }
+                                  }}
+                                >
+                                  <Pencil className="mr-2 h-4 w-4" /> Editar
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  className="text-destructive"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setItemParaExcluir({ id: (it as any).id, tipo: (it as any).tipo });
+                                  }}
+                                >
+                                  <Trash2 className="mr-2 h-4 w-4" /> Excluir
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          )}
+
+                          {it.to ? (
+                            <ChevronRight className="hidden h-4 w-4 text-muted-foreground/30 transition-all duration-300 group-hover:translate-x-1 group-hover:text-primary sm:block" />
+                          ) : (
+                            <span className="hidden w-4 sm:block" />
+                          )}
+                        </div>
 
                       </div>
                     </div>
