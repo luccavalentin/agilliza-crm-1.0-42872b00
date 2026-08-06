@@ -17,7 +17,7 @@
  * contrato é 420 meses (35 anos) e o mínimo é 60 meses (5 anos).
  */
 
-export const PRAZO_MIN = 120; // Bradesco exige 180 (15 anos) ou 120 (10 anos) em alguns casos; elevamos para 120 para segurança geral.
+export const PRAZO_MIN = 60;
 export const PRAZO_MAX = 420;
 
 /**
