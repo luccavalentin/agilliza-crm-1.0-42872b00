@@ -161,18 +161,17 @@ interface TokenInfo {
 }
 
 /**
- * Cache do token em memória do worker (válido por 55 min).
- * Evita depender de chave de serviço do banco de dados só para guardar o token;
- * o token é reobtido no primeiro uso após um cold start.
+ * Cache do token em memória do worker.
+ * TTL conservador (25 min) porque o banco pode expirar o JWT antes de 1h.
+ * A obtenção é "single-flight": chamadas concorrentes compartilham a MESMA
+ * requisição de token. Sem isso, o polling paralelo de propostas disparava
+ * vários `/auth/token` ao mesmo tempo e o banco invalidava os tokens
+ * anteriores, gerando 401 "Token JWT expirado" em cascata.
  */
 let _tokenCache: { info: TokenInfo; expiresAt: number } | null = null;
+let _tokenEmVoo: Promise<TokenInfo> | null = null;
 
-/** Retorna token válido, reutilizando o cache (55 min) quando possível. */
-export async function obterToken(): Promise<TokenInfo> {
-  if (_tokenCache && _tokenCache.expiresAt > Date.now()) {
-    return _tokenCache.info;
-  }
-
+async function solicitarToken(): Promise<TokenInfo> {
   const { base, secretId, secretKey } = config();
   const url = `${base}/auth/token`;
   let resp: Response;
@@ -211,9 +210,25 @@ export async function obterToken(): Promise<TokenInfo> {
     idUsuarioParceiro: String(usuario.idUsuarioParceiro ?? json.idUsuarioParceiro ?? "") || null,
   };
 
-  _tokenCache = { info, expiresAt: Date.now() + 55 * 60 * 1000 };
+  _tokenCache = { info, expiresAt: Date.now() + 25 * 60 * 1000 };
   return info;
 }
+
+/** Retorna token válido, reutilizando cache e deduplicando chamadas simultâneas. */
+export async function obterToken(forcarRenovacao = false): Promise<TokenInfo> {
+  if (!forcarRenovacao && _tokenCache && _tokenCache.expiresAt > Date.now()) {
+    return _tokenCache.info;
+  }
+  // Se outra chamada já está renovando, aguarda o mesmo resultado.
+  if (_tokenEmVoo) return _tokenEmVoo;
+  if (forcarRenovacao) _tokenCache = null;
+
+  _tokenEmVoo = solicitarToken().finally(() => {
+    _tokenEmVoo = null;
+  });
+  return _tokenEmVoo;
+}
+
 
 export interface HomefinRequestCtx {
   simulacao_id?: string | null;
@@ -229,16 +244,11 @@ export async function chamarIntegracao<T = unknown>(
   ctx: HomefinRequestCtx = {},
 ): Promise<T> {
   const { base } = config();
-  const { token } = await obterToken();
   const url = `${base}${endpoint}`;
   const bodyNormalizado = body ? normalizarPayloadBanco(body) : undefined;
 
-  // Força uma nova tentativa em caso de token expirado (HTTP 401)
-  let retryCount = 0;
-  let resp: Response;
-
-  const performRequest = async (): Promise<Response> => {
-    return fetch(url, {
+  const executar = (token: string) =>
+    fetch(url, {
       method,
       headers: {
         "Content-Type": "application/json",
@@ -247,30 +257,28 @@ export async function chamarIntegracao<T = unknown>(
       body: bodyNormalizado ? JSON.stringify(bodyNormalizado) : undefined,
       signal: AbortSignal.timeout(90_000),
     });
-  };
 
+  let resp: Response;
   try {
-    resp = await performRequest();
-    
-    // Se o token expirou (HTTP 401), limpa o cache e tenta novamente uma única vez
-    if (resp.status === 401 && retryCount === 0) {
-      _tokenCache = null;
-      const { token: newToken } = await obterToken();
-      resp = await fetch(url, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${newToken}`,
-        },
-        body: bodyNormalizado ? JSON.stringify(bodyNormalizado) : undefined,
-        signal: AbortSignal.timeout(90_000),
-      });
-      retryCount++;
+    let tokenAtual = (await obterToken()).token;
+    resp = await executar(tokenAtual);
+
+    // Token expirado/invalidado (401): renova e repete até 2 vezes.
+    // A renovação é single-flight, então chamadas concorrentes reaproveitam
+    // o mesmo token novo em vez de invalidarem umas às outras.
+    for (let tentativa = 0; tentativa < 2 && resp.status === 401; tentativa++) {
+      const cacheado = _tokenCache?.info.token;
+      const novo =
+        cacheado && cacheado !== tokenAtual ? cacheado : (await obterToken(true)).token;
+      if (novo === tokenAtual) break;
+      tokenAtual = novo;
+      resp = await executar(tokenAtual);
     }
   } catch (e) {
     await registrarLog({ ...ctx, endpoint, metodo: method, request: bodyNormalizado, erro: String(e) });
     throw new IntegracaoBancariaError("O banco não respondeu no tempo esperado. Tente reenviar.");
   }
+
 
   const json = (await resp.json().catch(() => null)) as T;
   await registrarLog({

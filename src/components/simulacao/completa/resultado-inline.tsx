@@ -109,11 +109,18 @@ export function ResultadoInlineCompleta({ simulacaoId, onFechar, isSecundaria }:
         }
 
         const { baixarSimulacaoDetalhadaPDF } = await import("@/lib/simulacao/simulacao-pdf");
-        const b = simulados[0]; 
-        if (b) {
-          baixarSimulacaoDetalhadaPDF({ simulacao: data.simulacao, bancos: [b] });
-          toast.success("Simulação realizada. Extrato do titular disponível para download.");
+        // Baixa TODOS os bancos simulados (um extrato por banco), em sequência
+        // com intervalo para o navegador não bloquear downloads múltiplos.
+        for (const b of simulados) {
+          await baixarSimulacaoDetalhadaPDF({ simulacao: data.simulacao, bancos: [b] });
+          await new Promise((r) => setTimeout(r, 800));
         }
+        toast.success(
+          simulados.length > 1
+            ? `Simulação realizada. ${simulados.length} extratos disponíveis para download.`
+            : "Simulação realizada. Extrato do titular disponível para download.",
+        );
+
       } catch (e) {
         console.error("[PDF Automático]", e);
       }

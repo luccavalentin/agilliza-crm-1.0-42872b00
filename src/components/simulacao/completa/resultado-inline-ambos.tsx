@@ -179,12 +179,15 @@ export function ResultadoInlineAmbos({ simulacaoIdSac, simulacaoIdPrice, onFecha
     (async () => {
       try {
         const { baixarSimulacaoDetalhadaPDF } = await import("@/lib/simulacao/simulacao-pdf");
-        // Baixa apenas o primeiro de cada sistema (ou apenas o principal)
-        const principal = simulados[0];
-        if (principal) {
-          const simRef = bancosSac.find(x => x.id === principal.id) ? dataSac.simulacao : dataPrice.simulacao;
-          baixarSimulacaoDetalhadaPDF({ simulacao: simRef, bancos: [principal] });
+        // Baixa TODOS os bancos simulados, tanto do SAC quanto do PRICE.
+        for (const b of simulados) {
+          const ehSac = bancosSac.some((x) => x.id === b.id);
+          const simRef = ehSac ? dataSac?.simulacao : dataPrice?.simulacao;
+          if (!simRef) continue;
+          await baixarSimulacaoDetalhadaPDF({ simulacao: simRef, bancos: [b] });
+          await new Promise((r) => setTimeout(r, 800));
         }
+
       } catch (e) {
         console.error("[PDF Automático Ambos Inline]", e);
       }
