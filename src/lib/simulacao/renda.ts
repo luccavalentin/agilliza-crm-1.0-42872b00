@@ -281,11 +281,116 @@ export function avaliarRendaMinima(params: {
   const renda = renda_informada && renda_informada > 0 ? renda_informada : null;
 
   return {
-    primeiraParcela: parcelaSistema + seguroMIP + seguroDFI + TAXA_ADMIN_MES,
+    primeiraParcela: prestacaoTotal,
     rendaMinima,
     comprometimento: renda ? prestacaoTotal / renda : null,
     suficiente: renda == null ? null : renda >= rendaMinima,
     fonte: "estimativa_local",
   };
+}
+
+/**
+ * PARTE 1 — RENDA MÍNIMA SUGERIDA ÚNICA
+ * Devolve o maior valor entre todas as fontes disponíveis (SAC, PRICE, API, Recusas).
+ */
+export function rendaMinimaSugerida(params: {
+  valor_imovel: number;
+  valor_financiamento: number;
+  prazo_meses: number;
+  taxa_ano: number;
+  bancos_ids?: string[];
+  bancos_simulados?: BancoRendaApi[];
+  renda_informada?: number | null;
+}): AvaliacaoRenda & { detalhe_fonte: string } {
+  const { valor_imovel, valor_financiamento, prazo_meses, taxa_ano, bancos_simulados, renda_informada } = params;
+
+  const fontes: (AvaliacaoRenda & { detalhe_fonte: string })[] = [];
+
+  // 1. Estimativa local SAC
+  const sac = avaliarRendaMinima({ ...params, sistema: "S" });
+  if (sac) fontes.push({ ...sac, detalhe_fonte: "Estimativa local (SAC 30%)" });
+
+  // 2. Estimativa local PRICE (se houver bancos que aceitem ou for o selecionado)
+  const price = avaliarRendaMinima({ ...params, sistema: "P" });
+  if (price) fontes.push({ ...price, detalhe_fonte: "Estimativa local (PRICE 15%)" });
+
+  // 3 e 4. Retornos da API e Mensagens de recusa
+  if (bancos_simulados && bancos_simulados.length > 0) {
+    bancos_simulados.forEach(b => {
+      const rendaBco = rendaMinimaDoBanco(b);
+      if (rendaBco) {
+        fontes.push({
+          primeiraParcela: parcelaExigidaPeloBanco(b) ?? 0,
+          rendaMinima: rendaBco,
+          comprometimento: renda_informada ? (parcelaExigidaPeloBanco(b) ?? 0) / renda_informada : null,
+          suficiente: renda_informada ? renda_informada >= rendaBco : null,
+          bancoNome: b.nome_banco,
+          fonte: "api_banco",
+          detalhe_fonte: `Exigência do banco: ${b.nome_banco}`
+        });
+      }
+    });
+  }
+
+  // Encontra a maior renda entre todas as fontes
+  const vencedora = fontes.sort((a, b) => b.rendaMinima - a.rendaMinima)[0];
+
+  // Aplica margem de segurança de +5% e arredonda na centena (Problema 1 - MARGEM)
+  const rendaComMargem = vencedora.rendaMinima * (1 + MARGEM_SEGURANCA_RENDA);
+  const rendaFinal = Math.ceil(rendaComMargem / 100) * 100;
+
+  const renda = renda_informada && renda_informada > 0 ? renda_informada : null;
+
+  return {
+    ...vencedora,
+    rendaMinima: rendaFinal,
+    comprometimento: renda ? vencedora.primeiraParcela / renda : null,
+    suficiente: renda == null ? null : renda >= rendaFinal,
+  };
+}
+
+/**
+ * PARTE 2 — CÁLCULO INVERSO: QUANTO ESSA RENDA FINANCIA
+ */
+export function calcularMaximoFinanciável(params: {
+  renda_declarada: number;
+  prazo_meses: number;
+  taxa_ano: number;
+  sistema: SistemaAmortizacao;
+  valor_imovel: number;
+}): number {
+  const { renda_declarada, prazo_meses, taxa_ano, sistema, valor_imovel } = params;
+  const tetoComprometimento = sistema === "P" ? COMPROMETIMENTO_MAX_PRICE : COMPROMETIMENTO_MAX;
+  
+  // Parcela máxima permitida para a renda informada
+  const parcelaMax = renda_declarada * tetoComprometimento;
+
+  // Remove os encargos fixos estimados para descobrir a parcela "seca" (amortização + juros)
+  // parcela_seca = parcela_max - MIP - DFI - taxa_admin
+  // seguroMIP = saldo_devedor * TAXA_MIP_MES (aproximadamente valor_financiamento * TAXA_MIP_MES)
+  // seguroDFI = valor_imovel * TAXA_DFI_MES
+  
+  const seguroDFI = valor_imovel * TAXA_DFI_MES;
+  const parcelaDisponivelParaFinanc = parcelaMax - seguroDFI - TAXA_ADMIN_MES;
+  
+  if (parcelaDisponivelParaFinanc <= 0) return 0;
+
+  // Agora precisamos resolver: 
+  // SAC: parcela_seca = (finan / prazo) + (finan * taxa_mes)
+  // finan = parcela_seca / ( (1/prazo) + taxa_mes + TAXA_MIP_MES )
+  
+  const taxaMes = Math.pow(1 + taxa_ano, 1/12) - 1;
+  
+  let finanMax = 0;
+  if (sistema === "S") {
+    finanMax = parcelaDisponivelParaFinanc / ((1 / prazo_meses) + taxaMes + TAXA_MIP_MES);
+  } else {
+    // PRICE: parcela_seca = finan * [ (i * (1+i)^n) / ((1+i)^n - 1) ] + finan * TAXA_MIP_MES
+    // finan = parcela_seca / ( fator_price + TAXA_MIP_MES )
+    const fator = (taxaMes * Math.pow(1 + taxaMes, prazo_meses)) / (Math.pow(1 + taxaMes, prazo_meses) - 1);
+    finanMax = parcelaDisponivelParaFinanc / (fator + TAXA_MIP_MES);
+  }
+
+  return Math.floor(finanMax / 100) * 100;
 }
 
