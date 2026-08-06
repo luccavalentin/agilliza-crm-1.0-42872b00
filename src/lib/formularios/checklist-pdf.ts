@@ -39,15 +39,6 @@ export async function gerarChecklistBancoPDF(bancoId: string, clienteNome?: stri
     doc.addImage(AGILLIZA_LOGO_LIGHT, "PNG", MARGIN, 11, logoW, logoH);
   } catch (e) {}
 
-  // Logo do Banco (Superior Direita no Header)
-  if (bancoBrand?.logo) {
-    try {
-      const bLogoH = 16; 
-      const bLogoW = bLogoH * (bancoBrand.ratio || 1);
-      doc.addImage(bancoBrand.logo, "PNG", pageW - MARGIN - bLogoW, 12, bLogoW, bLogoH);
-    } catch (e) {}
-  }
-
   let y = 58;
 
   // Título do Checklist (Abaixo do Header, alinhado à esquerda)
@@ -57,6 +48,18 @@ export async function gerarChecklistBancoPDF(bancoId: string, clienteNome?: stri
   const bancoNome = (bancoId === "itau" ? "Itaú" : bancoId).toUpperCase();
   const tituloTexto = `CHECKLIST DE DOCUMENTAÇÃO - ${bancoNome}`;
   doc.text(tituloTexto, MARGIN, y);
+
+  // Logo do Banco (Logo após o nome)
+  if (bancoBrand?.logo) {
+    try {
+      const bLogoH = 10; 
+      const bLogoW = bLogoH * (bancoBrand.ratio || 1);
+      const textWidth = doc.getTextWidth(tituloTexto);
+      // Posiciona a logo logo após o texto do título
+      doc.addImage(bancoBrand.logo, "PNG", MARGIN + textWidth + 5, y - (bLogoH / 1.5), bLogoW, bLogoH);
+    } catch (e) {}
+  }
+  
   y += 10;
 
   // Descrição
