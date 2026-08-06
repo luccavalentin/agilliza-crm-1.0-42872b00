@@ -467,13 +467,15 @@ export async function enviarSimulacaoImpl({
         .maybeSingle();
       cliente = data;
     }
-    // Campos do dossiê do proponente: não bloqueiam o envio (alguns bancos
-    // aceitam sem), mas explicam o "erro interno" quando o banco recusa.
+    // Campos do dossiê do proponente: se estiverem faltando, bloqueamos o envio
+    // explicitamente para evitar o Erro 500 silencioso do banco (que recusa dossiês incompletos).
     const faltantesCadastro = validarCamposParticipante(sim, cliente);
-    const avisoCadastro =
-      faltantesCadastro.length > 0
-        ? ` Dados do proponente pendentes no cadastro do cliente: ${faltantesCadastro
-            .map((f) => f.campo)
+    if (faltantesCadastro.length > 0) {
+      const msg = `Não foi possível concluir a solicitação devido a dados pendentes no cadastro do proponente: ${faltantesCadastro
+        .map((f) => f.campo)
+        .join(", ")}. Por favor, revise o cadastro do cliente e tente novamente.`;
+      throw new Error(msg);
+    }
             .join(", ")}.`
         : "";
 
