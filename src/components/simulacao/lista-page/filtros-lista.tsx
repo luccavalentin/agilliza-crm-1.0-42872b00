@@ -42,7 +42,7 @@ export function FiltrosLista({
   toggleExcluidas: () => void;
 }) {
   return (
-    <div className="flex flex-col gap-3 rounded-xl border border-border/60 bg-card p-3 xl:flex-row xl:items-center xl:justify-between">
+    <div className="flex flex-col gap-3 rounded-xl border border-border/60 bg-card p-2.5 xl:flex-row xl:items-center xl:justify-between">
       <Tabs value={escopo} onValueChange={(v) => setEscopo(v as "todas" | "minhas")}>
         <TabsList className="h-9 w-full xl:w-auto">
           <TabsTrigger value="todas" className="flex-1 xl:flex-none">

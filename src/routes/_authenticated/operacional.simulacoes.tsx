@@ -492,9 +492,9 @@ function Pagina() {
   return (
 
 
-    <div className="mx-auto w-full max-w-[1600px] space-y-5 p-4 md:p-6">
+    <div className="mx-auto w-full max-w-[1600px] space-y-4 p-3 md:p-5">
       {/* Cabeçalho */}
-      <div className="relative overflow-hidden rounded-xl border border-border bg-card p-4 md:p-6">
+      <div className="relative overflow-hidden rounded-xl border border-border bg-card p-3 md:p-5">
         <span
           aria-hidden
           className="pointer-events-none absolute -right-24 -top-24 h-56 w-56 rounded-full opacity-70 blur-2xl"
@@ -531,12 +531,12 @@ function Pagina() {
       </div>
 
       {/* KPIs */}
-      <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
         {isLoading
           ? Array.from({ length: 4 }).map((_, i) => (
               <div
                 key={i}
-                className="flex items-center gap-3 rounded-xl border border-border/60 bg-card px-3.5 py-3.5 shadow-sm"
+                className="flex items-center gap-2 rounded-xl border border-border/60 bg-card px-3 py-3 shadow-sm"
               >
                 <div className="size-10 shrink-0 animate-pulse rounded-xl bg-muted" />
                 <div className="min-w-0 flex-1 space-y-2">
@@ -550,7 +550,7 @@ function Pagina() {
                 key={k.label}
                 type="button"
                 onClick={() => setKpiAberto(k.id)}
-                className="group relative flex flex-col items-start gap-2.5 overflow-hidden rounded-xl border border-border/60 bg-card px-3.5 py-3.5 text-left shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 sm:flex-row sm:items-center sm:gap-3"
+                className="group relative flex flex-col items-start gap-2 overflow-hidden rounded-xl border border-border/60 bg-card px-2.5 py-2.5 text-left shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 sm:flex-row sm:items-center sm:gap-3"
               >
                 <span className="absolute inset-x-0 top-0 h-0.5 origin-left scale-x-0 bg-gradient-to-r from-primary to-primary/40 transition-transform duration-300 group-hover:scale-x-100" />
                 <span className="absolute left-0 top-0 h-full w-[3px] rounded-r bg-primary/60" />
