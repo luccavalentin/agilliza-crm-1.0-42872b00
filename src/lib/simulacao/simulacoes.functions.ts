@@ -261,7 +261,12 @@ export const criarSimulacao = createServerFn({ method: "POST" })
     // Se estivermos em modo completa e for casado, verificamos se o usuário pediu
     // explicitamente para testar ambos os CPFs.
     const possuiConjugeDados = Boolean(dd.possui_conjuge) && Boolean(dd.nome_conjuge) && Boolean(dd.cpf_conjuge) && Boolean(dd.data_nascimento_conjuge);
-    const testarAmbos = data.modo === "completa" && possuiConjugeDados;
+    // O teste de ambos os CPFs agora é automático se houver dados mínimos do cônjuge.
+    const possuiConjugeMinimo = Boolean(dd.nome_conjuge) && 
+                                Boolean(dd.cpf_conjuge) && 
+                                Boolean(dd.data_nascimento_conjuge);
+    const testarAmbos = data.modo === "completa" && possuiConjugeMinimo;
+
 
 
     const { data: prof } = await supabase
