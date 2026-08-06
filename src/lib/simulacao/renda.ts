@@ -68,7 +68,8 @@ export interface BancoRendaApi {
   nome_banco?: string | null;
   status_banco?: string | null;
   valor_parcela?: number | null;
-  raw_response?: unknown;
+  raw_response?: any;
+  mensagem_banco?: string | null;
   /** Sistema exibido no card do banco (definido pela simulação). */
   _sistema?: "SAC" | "PRICE" | string | null;
   /** Sistema salvo no banco após retorno da API. */
