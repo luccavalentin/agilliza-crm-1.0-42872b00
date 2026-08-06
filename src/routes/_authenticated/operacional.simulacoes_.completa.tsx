@@ -25,6 +25,7 @@ import { SecaoBancos } from "@/components/simulacao/completa/secao-bancos";
 import { SecaoConsentimentos } from "@/components/simulacao/completa/secao-consentimentos";
 import { ResultadoInlineCompleta } from "@/components/simulacao/completa/resultado-inline";
 import { ResultadoInlineAmbos } from "@/components/simulacao/completa/resultado-inline-ambos";
+import { TabelaComparativaCPFs } from "@/components/simulacao/completa/tabela-comparativa-cpfs";
 
 import { formatBRL, formatPercent } from "@/lib/simulacao/format";
 import { useSimulacaoCompleta } from "@/lib/simulacao/use-simulacao-completa";
@@ -313,12 +314,20 @@ function Pagina() {
               />
             ) : null}
 
-            {/* Bloco da Simulação Secundária (Cônjuge Invertido) */}
-            {simulacaoResultadoIdSecundario && (
+            {/* Tabela Comparativa (Problema 4) */}
+            {simulacaoResultadoId && simulacaoResultadoIdSecundario && (
+              <TabelaComparativaCPFs 
+                simulacaoIdA={simulacaoResultadoId}
+                simulacaoIdB={simulacaoResultadoIdSecundario}
+              />
+            )}
+
+            {/* Bloco da Simulação Secundária (Exibe apenas se não houver o titular principal, caso contrário a tabela acima cobre) */}
+            {simulacaoResultadoIdSecundario && !simulacaoResultadoId && (
               <div className="space-y-4">
                 <div className="flex items-center gap-2 border-b border-border/60 pb-2">
                   <Landmark className="h-4 w-4 text-primary" />
-                  <h3 className="font-semibold text-foreground">Teste de Melhor Taxa (CPF Invertido)</h3>
+                  <h3 className="font-semibold text-foreground">Simulação Secundária (Cônjuge como titular)</h3>
                 </div>
                 <ResultadoInlineCompleta
                   simulacaoId={simulacaoResultadoIdSecundario}
