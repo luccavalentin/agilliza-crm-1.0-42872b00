@@ -640,6 +640,7 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
     queryKey: ["cliente-crm-vinculado", f.cliente_id],
     queryFn: () => obterClienteCrmFn({ data: { id: f.cliente_id as string } }),
     enabled: Boolean(f.cliente_id),
+    refetchInterval: 5000, // Atualiza a cada 5s para refletir mudanças no cadastro (CRM) de forma "instantânea"
   });
 
   const crmTemConjuge = Boolean(
