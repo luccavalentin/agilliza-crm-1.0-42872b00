@@ -353,37 +353,6 @@ function extrairMensagemErroBanco(json: unknown, status: number, endpoint = ""):
   return humanizarRespostaErro(json, status, endpoint);
 }
 
-function _extrairMensagemErroBancoLegado(json: unknown, status: number): string {
-  const generico =
-    status >= 500
-      ? `O banco está temporariamente indisponível (erro ${status}). Tente reenviar em instantes.`
-      : `A integração bancária retornou um erro (${status}).`;
-
-  const err = (json as any)?.error ?? json;
-  let bruta: string | undefined =
-    (typeof err === "object" && err
-      ? err.message ?? err.mensagem ?? err.msg ?? err.detail
-      : undefined) ?? (typeof json === "string" ? json : undefined);
-
-  if (!bruta) return generico;
-
-  // Alguns bancos aninham um JSON dentro da mensagem: {"codigo":"014","mensagem":"..."}
-  const jsonAninhado = bruta.match(/\{[\s\S]*\}/);
-  if (jsonAninhado) {
-    try {
-      const interno = JSON.parse(jsonAninhado[0]) as Record<string, unknown>;
-      const msgInterna = (interno.mensagem ?? interno.message ?? interno.msg) as string | undefined;
-      if (msgInterna && msgInterna.trim()) bruta = msgInterna.trim();
-    } catch {
-      /* mantém a mensagem original */
-    }
-  }
-
-  // Remove prefixos técnicos do tipo "Simulação Bradesco falhou:"
-  bruta = bruta.replace(/^Simula[cç][aã]o\s+\S+\s+falhou:\s*/i, "").trim();
-  const limpa = bruta.replace(/^["']|["']$/g, "").trim();
-  return limpa.length > 0 ? limpa : generico;
-}
 
 export function integracaoConfigurada(): boolean {
   return Boolean(
