@@ -31,7 +31,10 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { BancoLogo } from "@/components/bancos/banco-logo";
-import { getPanelDrilldown } from "@/lib/relatorios/paineis.functions";
+import {
+  getPanelDrilldown,
+  type PanelDrilldown,
+} from "@/lib/relatorios/paineis.functions";
 import { excluirDemanda } from "@/lib/operacional/demandas.functions";
 import { excluirTarefa } from "@/lib/operacional/tarefas.functions";
 import { excluirSimulacao } from "@/lib/simulacao/simulacoes.functions";
@@ -69,7 +72,7 @@ export function PainelDrilldownDialog({
   } | null>(null);
   const [demandaParaEditar, setDemandaParaEditar] = React.useState<any | null>(null);
 
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error } = useQuery<PanelDrilldown>({
     queryKey: ["panel-drilldown", contexto?.metrica, contexto?.filtros],
     queryFn: () =>
       drillFn({
@@ -229,9 +232,8 @@ export function PainelDrilldownDialog({
                                     e.stopPropagation();
                                     if ((it as any).tipo === "demanda") {
                                       setDemandaParaEditar((it as any).raw);
-                                    } else {
-                                      // Navegar para tarefas se não houver dialog
-                                      window.location.href = (it as any).to;
+                                    } else if (it.to) {
+                                      window.location.href = it.to;
                                     }
                                   }}
                                 >

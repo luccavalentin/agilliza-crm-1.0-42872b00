@@ -1,6 +1,3 @@
-// URL assinada de longa duração para exibir a foto do bucket privado.
-const URL_EXPIRACAO_SEGUNDOS = 60 * 60 * 24 * 365 * 10;
-
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -18,6 +15,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { AdminHero } from "@/components/admin/admin-hero";
 import { ChatSoundSetting } from "@/components/shared/chat-sound-setting";
 import { otimizarImagem } from "@/lib/imagem";
+
+// URL assinada de longa duração para exibir a foto do bucket privado.
+const URL_EXPIRACAO_SEGUNDOS = 60 * 60 * 24 * 365 * 10;
 
 export const Route = createFileRoute("/_authenticated/conta/perfil")({
   head: () => ({ meta: [{ title: "Meu perfil — Agilliza" }] }),
