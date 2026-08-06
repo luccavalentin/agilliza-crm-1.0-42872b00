@@ -1263,6 +1263,30 @@ export const inverterTitularSimulacao = createServerFn({ method: "POST" })
         : new Error("Titular invertido, mas não foi possível cadastrar o cônjuge no CRM.");
     }
 
+    return { ok: true };
+  });
+
+/** ===== Destravar simulação =====
+ * Reseta o status de bancos que ficaram presos em "enviando"
+ * ou "aguardando" após o término do processamento. */
+export const destravarSimulacao = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { error } = await supabaseAdmin
+      .from("simulacao_bancos")
+      .update({
+        status_banco: "erro",
+        mensagem_banco: "Simulação destravada manualmente pelo consultor — tente reenviar.",
+      })
+      .eq("simulacao_id", data.id)
+      .in("status_banco", ["enviando", "aguardando"]);
+
+    if (error) throw new Error(error.message);
+
     await supabaseAdmin.from("simulacao_historico").insert({
       simulacao_id: data.id,
       tipo: "info",
@@ -1271,6 +1295,7 @@ export const inverterTitularSimulacao = createServerFn({ method: "POST" })
     });
     return { ok: true };
   });
+
 
 
 
