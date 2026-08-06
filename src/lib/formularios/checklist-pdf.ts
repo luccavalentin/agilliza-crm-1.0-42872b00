@@ -39,48 +39,32 @@ export async function gerarChecklistBancoPDF(bancoId: string, clienteNome?: stri
     doc.addImage(AGILLIZA_LOGO_LIGHT, "PNG", MARGIN, 11, logoW, logoH);
   } catch (e) {}
 
-  // Título e Logo do Banco (Superior Direita)
-  doc.setTextColor("#FFFFFF");
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(14);
-  const bancoNome = (bancoId === "itau" ? "Itaú" : bancoId).toUpperCase();
-  const tituloTexto = `CHECKLIST DE DOCUMENTAÇÃO - ${bancoNome}`;
-  
-  // Logo do Banco no Header (Superior Direita)
+  // Logo do Banco (Superior Direita no Header)
   if (bancoBrand?.logo) {
     try {
-      const bLogoH = 14; 
+      const bLogoH = 16; 
       const bLogoW = bLogoH * (bancoBrand.ratio || 1);
-      
-      // Ajuste de posicionamento para evitar encavalamento
-      // Título à direita, Logo à esquerda do título com gap
-      const textWidth = doc.getTextWidth(tituloTexto);
-      const totalWidth = textWidth + bLogoW + 5;
-      
-      const contentStartX = pageW - MARGIN - totalWidth;
-      
-      // Desenha o texto
-      doc.text(tituloTexto, contentStartX, 24);
-      
-      // Desenha a logo após o texto
-      doc.addImage(bancoBrand.logo, "PNG", contentStartX + textWidth + 5, 13, bLogoW, bLogoH);
-    } catch (e) {
-      doc.text(tituloTexto, pageW - MARGIN, 24, { align: "right" });
-    }
-  } else {
-    doc.text(tituloTexto, pageW - MARGIN, 24, { align: "right" });
+      doc.addImage(bancoBrand.logo, "PNG", pageW - MARGIN - bLogoW, 12, bLogoW, bLogoH);
+    } catch (e) {}
   }
 
+  let y = 58;
 
-
-  let y = 55;
+  // Título do Checklist (Abaixo do Header, alinhado à esquerda)
+  doc.setTextColor(AGILLIZA_NAVY);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(16);
+  const bancoNome = (bancoId === "itau" ? "Itaú" : bancoId).toUpperCase();
+  const tituloTexto = `CHECKLIST DE DOCUMENTAÇÃO - ${bancoNome}`;
+  doc.text(tituloTexto, MARGIN, y);
+  y += 10;
 
   // Descrição
   doc.setTextColor("#64748B");
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
+  doc.setFontSize(10);
   doc.text("Relação de documentos necessários para análise de crédito imobiliário.", MARGIN, y);
-  y += 10;
+  y += 12;
 
   // Dados do Cliente
   if (clienteNome) {
@@ -122,14 +106,7 @@ export async function gerarChecklistBancoPDF(bancoId: string, clienteNome?: stri
     }
   });
 
-  // Rodapé
-  doc.setFontSize(8);
-  doc.setTextColor("#94A3B8");
-  // Rodapé removido conforme solicitação
-  // doc.text(msg, MARGIN, pageH - 15);
-
   // Download
   const filename = `Checklist - ${bancoId.toUpperCase()} - ${clienteNome || "Documentos"}.pdf`;
   doc.save(filename);
 }
-
