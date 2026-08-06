@@ -23,7 +23,12 @@ const MODELOS_PPT = [
     descricao: "Design de alto impacto visual com transições suaves e estética cinematográfica. Focado na paleta de cores oficial Agilliza.",
     url: pptCinematico.url,
     cor: "#000F9F",
-    slides: [slide1Asset.url, slide2Asset.url, slide3Asset.url, slide4Asset.url],
+    slides: [
+      "https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=2426&auto=format&fit=crop", 
+      "https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1542744094-24638eff58bb?q=80&w=2071&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1454165205744-3b78555e5572?q=80&w=2070&auto=format&fit=crop"
+    ],
     tamanho: "2.4 MB",
   },
   {
@@ -32,7 +37,12 @@ const MODELOS_PPT = [
     descricao: "Sofisticação e clareza. Design limpo que valoriza o conteúdo e a autoridade da marca Agilliza.",
     url: pptMinimal.url,
     cor: "#00074A",
-    slides: [slide2Asset.url, slide1Asset.url, slide3Asset.url, slide4Asset.url],
+    slides: [
+      "https://images.unsplash.com/photo-1497215728101-856f4ea42174?q=80&w=2070&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=2069&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1497366811353-6870744d04b2?q=80&w=2069&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070&auto=format&fit=crop"
+    ],
     tamanho: "1.9 MB",
   },
   {
@@ -41,7 +51,12 @@ const MODELOS_PPT = [
     descricao: "Versatilidade total com múltiplos grids e opções de composição. Ideal para apresentações extensas.",
     url: pptVariacoes.url,
     cor: "#F5333F",
-    slides: [slide3Asset.url, slide4Asset.url, slide1Asset.url, slide2Asset.url],
+    slides: [
+      "https://images.unsplash.com/photo-1557804506-669a67965ba0?q=80&w=2074&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=2070&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1552664730-d307ca884978?q=80&w=2070&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?q=80&w=2070&auto=format&fit=crop"
+    ],
     tamanho: "3.1 MB",
   },
   {
@@ -50,7 +65,12 @@ const MODELOS_PPT = [
     descricao: "Abordagem dinâmica e moderna com elementos geométricos assimétricos e tons institucionais.",
     url: pptAlternativo.url,
     cor: "#D4AF37",
-    slides: [slide4Asset.url, slide3Asset.url, slide2Asset.url, slide1Asset.url],
+    slides: [
+      "https://images.unsplash.com/photo-1507679799987-c73779587ccf?q=80&w=2071&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1434626881859-194d67b2b86f?q=80&w=2074&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1537996194471-e657df975ab4?q=80&w=2038&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=2070&auto=format&fit=crop"
+    ],
     tamanho: "2.1 MB",
   },
 ];
