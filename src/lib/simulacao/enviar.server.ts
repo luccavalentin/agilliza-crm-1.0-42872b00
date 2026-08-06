@@ -978,10 +978,16 @@ export async function enviarSimulacaoImpl({
           })
           .eq("id", b.id);
         return { banco_id: b.banco_id, status: "simulada" as const };
-      } catch (e) {
+        } finally {
+          clearTimeout(timeoutId);
+        }
+      };
+
+      try {
+        return await Promise.race([processarBanco(), timeoutPromise]) as EnviarResultado["bancos"][number];
+      } catch (e: any) {
         const base =
           e instanceof IntegracaoBancariaError ? e.message : humanizarErroBanco(null, String(e));
-        const statusHttp = e instanceof IntegracaoBancariaError ? e.statusHttp ?? 0 : 0;
         const msg = base;
         await supabase
           .from("simulacao_bancos")
@@ -990,6 +996,7 @@ export async function enviarSimulacaoImpl({
         return { banco_id: b.banco_id, status: "erro" as const, mensagem: msg };
       }
     };
+
 
     const resultados: EnviarResultado["bancos"] = [];
     for (const b of bancos as any[]) {
