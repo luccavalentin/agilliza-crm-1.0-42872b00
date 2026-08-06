@@ -174,11 +174,11 @@ export function TabelaSimulacoes({
                       <Undo2 className="mr-1 h-3.5 w-3.5" /> Restaurar
                     </Button>
                   ) : (
-                    <div className="flex items-center justify-end gap-1">
+                    <div className="flex items-center justify-end">
                       <Button
                         size="icon"
                         variant="ghost"
-                        className="h-8 w-8 text-muted-foreground hover:text-primary"
+                        className="h-8 w-7 text-muted-foreground hover:text-primary -mr-1"
                         title="Ver detalhes"
                         aria-label="Ver detalhes da simulação"
                         onClick={() => handlers.onVer(s.id)}
