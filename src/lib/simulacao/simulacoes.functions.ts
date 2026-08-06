@@ -1263,7 +1263,14 @@ export const inverterTitularSimulacao = createServerFn({ method: "POST" })
         : new Error("Titular invertido, mas não foi possível cadastrar o cônjuge no CRM.");
     }
 
+    await supabaseAdmin.from("simulacao_historico").insert({
+      simulacao_id: data.id,
+      tipo: "info",
+      descricao: "Simulação destravada manualmente pelo consultor.",
+      ator_id: userId,
+    });
     return { ok: true };
   });
+
 
 
