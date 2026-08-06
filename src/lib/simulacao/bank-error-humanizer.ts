@@ -7,7 +7,7 @@
 const MAPA: Record<string, string> = {
   RENDA_INSUFICIENTE: "Renda declarada insuficiente para o valor solicitado.",
   DOC_INVALIDO: "Documento do cliente inválido ou não reconhecido pelo banco.",
-  LIMITE_EXCEDIDO: "Valor de financiamento acima do limite do banco.",
+  LIMITE_EXCEDIDO: "O valor informado não foi aceito pela regra de crédito do banco. Consulte os detalhes do retorno e revise os dados da operação.",
   IDADE_MAX_EXCEDIDA: "Idade do cliente excede o limite permitido pelo banco no fim do contrato.",
   PRAZO_INVALIDO: "Prazo solicitado fora da faixa aceita pelo banco.",
   IMOVEL_NAO_ELEGIVEL: "Tipo ou situação do imóvel não é elegível para este banco.",
@@ -91,9 +91,12 @@ export function humanizarRespostaErro(json: unknown, status: number, endpoint = 
       return "O banco rejeitou os dados do proponente (erro interno na integração). Verifique no cadastro do cliente: sexo, nome da mãe, RG/órgão expedidor, profissão e endereço completo (CEP, logradouro, número, bairro, cidade e UF).";
     }
     if (ondeSimulacao) {
-      return "O banco rejeitou os dados da simulação (erro interno na integração). Confira prazo (o Itaú aceita no máximo 360 meses), valor do imóvel, valor financiado e sistema de amortização, e reenvie.";
+      return "A integração rejeitou os dados da simulação sem informar qual campo causou o erro. Confira valor do imóvel, valor financiado, prazo permitido pela idade, sistema de amortização e autorizações, e reenvie.";
     }
-    return `O banco está temporariamente indisponível (erro ${status}). Tente reenviar em instantes.`;
+    if (/\/oportunidade\/?$/i.test(endpoint)) {
+      return "A oportunidade não foi criada porque a integração rejeitou o conjunto de dados, mas não identificou o campo. Confira estado civil, composição de renda, dados do cônjuge quando aplicável e os campos obrigatórios da operação antes de reenviar.";
+    }
+    return `A integração bancária não concluiu a solicitação (erro ${status}) e não informou um campo específico. Tente novamente; se persistir, revise os dados obrigatórios exibidos no cadastro.`;
   }
 
   if (MAPA[code]) return MAPA[code];

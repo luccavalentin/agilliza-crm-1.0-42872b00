@@ -164,17 +164,6 @@ export function ResultadoInlineAmbos({ simulacaoIdSac, simulacaoIdPrice, onFecha
     }
   }
 
-  const carregando = (simulacaoIdSac && !dataSac) || (simulacaoIdPrice && !dataPrice);
-  if (carregando) {
-    return (
-      <Card className="border-primary/20 bg-primary/[0.02] p-6">
-        <div className="flex items-center gap-3 text-sm text-muted-foreground">
-          <RefreshCw className="h-4 w-4 animate-spin" /> Consultando bancos…
-        </div>
-      </Card>
-    );
-  }
-
   // Download automático para modo Ambos quando os resultados chegam
   useEffect(() => {
     if (jaBaixou.current || (!dataSac && !dataPrice)) return;
@@ -201,6 +190,17 @@ export function ResultadoInlineAmbos({ simulacaoIdSac, simulacaoIdPrice, onFecha
       }
     })();
   }, [dataSac, dataPrice]);
+
+  const carregando = (simulacaoIdSac && !dataSac) || (simulacaoIdPrice && !dataPrice);
+  if (carregando) {
+    return (
+      <Card className="border-primary/20 bg-primary/[0.02] p-6">
+        <div className="flex items-center gap-3 text-sm text-muted-foreground">
+          <RefreshCw className="h-4 w-4 animate-spin" /> Consultando bancos…
+        </div>
+      </Card>
+    );
+  }
 
   type Linha = {
     sistema: "SAC" | "PRICE";
