@@ -791,6 +791,38 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
   }
 
   async function enviar() {
+    // 1. Validar esquema completo (Zod)
+    const parsed = completaSchema.safeParse({ ...f, id_operacao_homefin: idOperacao });
+    if (!parsed.success) {
+      const novos: Record<string, string> = {};
+      let firstErrorKey: string | null = null;
+      for (const issue of parsed.error.issues) {
+        const key = String(issue.path[0]);
+        novos[key] = issue.message;
+        if (!firstErrorKey) firstErrorKey = key;
+      }
+      setErros(novos);
+      toast.error("Por favor, preencha todos os campos obrigatórios marcados com asterisco (*).");
+      
+      // Scroll para o primeiro campo com erro
+      if (firstErrorKey && typeof document !== "undefined") {
+        const fieldName = firstErrorKey;
+        const el = document.getElementsByName(fieldName)[0] || 
+                   document.getElementById(fieldName) ||
+                   document.querySelector(`[aria-invalid][name="${fieldName}"]`) ||
+                   document.querySelector(`[name="${fieldName}"]`);
+        
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "center" });
+          if (el instanceof HTMLInputElement || el instanceof HTMLSelectElement) {
+            setTimeout(() => el.focus(), 500);
+          }
+        }
+      }
+      return;
+    }
+    setErros({});
+
     const imovel = Number(f.valor_imovel) || 0;
     const entrada = Number(f.valor_entrada) || 0;
     const fin = Number(f.valor_financiamento) || 0;
