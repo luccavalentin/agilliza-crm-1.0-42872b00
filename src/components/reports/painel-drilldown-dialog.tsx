@@ -331,6 +331,9 @@ export function PainelDrilldownDialog({
                 }
                 toast.success(`${itemParaExcluir.tipo === "demanda" ? "Demanda" : "Tarefa"} excluída com sucesso!`);
                 queryClient.invalidateQueries({ queryKey: ["panel-drilldown"] });
+                queryClient.invalidateQueries({ queryKey: ["panel"] });
+                queryClient.invalidateQueries({ queryKey: ["demandas"] });
+                queryClient.invalidateQueries({ queryKey: ["tarefas"] });
               } catch (err) {
                 toast.error("Erro ao excluir registro.");
               } finally {
