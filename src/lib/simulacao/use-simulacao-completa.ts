@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { avaliarRendaMinima, TAXA_MIP_MES, TAXA_DFI_MES, TAXA_ADMIN_MES } from "@/lib/simulacao/renda";
 import { taxaAnoDeBanco } from "@/lib/simulacao/simulacao-rapida";
 import { completaSchema } from "@/lib/simulacao/schemas";
-import { formatBRL } from "@/lib/simulacao/format";
+import { formatBRL, maskCpfCnpj, maskCelular } from "@/lib/simulacao/format";
 import { ajustarPrazoPorIdade, prazoMaximoParaProponentes } from "@/lib/simulacao/prazo";
 import {
   listarBancosAtivos,
