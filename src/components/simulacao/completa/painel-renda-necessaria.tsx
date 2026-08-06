@@ -144,8 +144,9 @@ export function PainelRendaNecessaria({ ctx }: { ctx: any }) {
             <div>
               <h3 className="text-sm font-bold text-foreground">Renda mínima sugerida</h3>
               <p className="text-[11px] text-muted-foreground">
-                Requisito informativo baseado nas políticas conhecidas das instituições.
+                Renda estimada necessária: SAC / PRICE. Cada instituição aplica regra própria — a simulação será enviada a todos os bancos selecionados.
               </p>
+
             </div>
           </div>
           <div className="text-right">
