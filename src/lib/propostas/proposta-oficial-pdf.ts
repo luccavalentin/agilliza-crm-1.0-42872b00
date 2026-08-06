@@ -728,7 +728,12 @@ export function baixarPropostaOficialPDF(input: Input) {
   void input?.followups;
 
   P = getPdfPalette();
-  const doc = new jsPDF({ unit: "pt", format: "a4", orientation: "portrait" });
+  const doc = new jsPDF({ 
+    unit: "pt", 
+    format: "a4", 
+    orientation: "portrait",
+    compress: true
+  });
   const pageW = doc.internal.pageSize.getWidth();
   const pageH = doc.internal.pageSize.getHeight();
 
