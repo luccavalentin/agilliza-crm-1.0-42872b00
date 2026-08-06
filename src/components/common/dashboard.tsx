@@ -574,16 +574,21 @@ export function AlertRow({
   descricao,
   contador,
   to,
+  onClick,
 }: {
   tone?: Tone;
   titulo: string;
   descricao?: string;
   contador?: number;
   to?: string;
+  onClick?: () => void;
 }) {
   const conteudo = (
     <div
-      className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-3 rounded-lg border border-border px-3 py-2.5 transition-colors"
+      className={cn(
+        "grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-3 rounded-lg border border-border px-3 py-2.5 transition-all duration-300",
+        onClick && "cursor-pointer hover:border-primary/40 hover:shadow-sm"
+      )}
       style={{ background: toneWash[tone] }}
     >
       <span className={cn("mt-1.5 h-2 w-2 shrink-0 rounded-full", toneDot[tone])} />
@@ -604,11 +609,25 @@ export function AlertRow({
       )}
     </div>
   );
-  return to ? (
-    <Link to={to} className="block transition-opacity hover:opacity-80">
-      {conteudo}
-    </Link>
-  ) : (
-    conteudo
-  );
+  if (to) {
+    return (
+      <Link to={to} className="block transition-opacity hover:opacity-80">
+        {conteudo}
+      </Link>
+    );
+  }
+
+  if (onClick) {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        className="block w-full text-left"
+      >
+        {conteudo}
+      </button>
+    );
+  }
+
+  return conteudo;
 }

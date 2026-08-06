@@ -1553,11 +1553,11 @@ export const getPanelDrilldown = createServerFn({ method: "POST" })
       };
     }
 
-    if (chave === "demandas abertas" || chave === "sla vencido") {
+    if (chave === "demandas abertas" || chave === "sla vencido" || chave === "simulações com erro") {
       const res = await escopoEq(
         supabase
           .from("demandas")
-          .select("id,numero,titulo,status,prazo_sla,created_at")
+          .select("id,numero,titulo,status,prazo_sla,created_at,descricao,prioridade,sla_horas")
           .limit(LIMITE * 2),
         "responsavel_id",
         "criador_id",
@@ -1565,12 +1565,14 @@ export const getPanelDrilldown = createServerFn({ method: "POST" })
       );
       if (res.error) throw new Error(res.error.message);
       const agora = new Date();
+      const isSimErro = chave === "simulações com erro";
       let rows = ((res.data ?? []) as any[]).filter(
-        (d) => !["concluida", "cancelada"].includes(d.status),
+        (d) => isSimErro || !["concluida", "cancelada"].includes(d.status),
       );
       const isVencido = chave === "sla vencido";
-      const titulo = isVencido ? "Demandas com SLA vencido" : "Demandas abertas";
+      const titulo = isVencido ? "Demandas com SLA vencido" : isSimErro ? "Simulações com erro" : "Demandas abertas";
       if (isVencido) rows = rows.filter((d) => d.prazo_sla && new Date(d.prazo_sla) < agora);
+      if (isSimErro) rows = rows.filter((d) => d.status === "erro");
       return {
         titulo,
         subtitulo: isVencido
@@ -1578,11 +1580,14 @@ export const getPanelDrilldown = createServerFn({ method: "POST" })
           : "Ainda não concluídas ou canceladas",
         valor: int(rows.length),
         itens: rows.map((d) => ({
+          id: d.id,
+          tipo: "demanda",
+          raw: d, // Passamos o objeto completo para edição
           label: d.titulo ?? "Demanda",
           sub: [d.numero && `Nº ${d.numero}`, d.status].filter(Boolean).join(" · "),
           data: fmtData(d.prazo_sla ?? d.created_at),
           to: `/operacional/demandas/${d.id}`,
-          tone: isVencido ? "danger" : "warning",
+          tone: isVencido || isSimErro ? "danger" : "warning",
         })),
         linkAbrir: "/operacional/demandas",
         linkAbrirLabel: "Abrir lista de demandas",
@@ -1593,7 +1598,7 @@ export const getPanelDrilldown = createServerFn({ method: "POST" })
       const res = await escopoEq(
         supabase
           .from("tasks")
-          .select("id,numero,titulo,status,prazo,created_at")
+          .select("id,numero,titulo,status,prazo,created_at,descricao")
           .limit(LIMITE * 2),
         "responsavel_id",
         "criador_id",
@@ -1611,6 +1616,9 @@ export const getPanelDrilldown = createServerFn({ method: "POST" })
         subtitulo: atrasadas ? "Prazo ultrapassado" : "Ainda não concluídas",
         valor: int(rows.length),
         itens: rows.map((t) => ({
+          id: t.id,
+          tipo: "tarefa",
+          raw: t,
           label: t.titulo ?? "Tarefa",
           sub: [t.numero && `Nº ${t.numero}`, t.status].filter(Boolean).join(" · "),
           data: fmtData(t.prazo ?? t.created_at),

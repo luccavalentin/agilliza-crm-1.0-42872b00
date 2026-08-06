@@ -415,7 +415,7 @@ export function PainelView({
                         titulo={a.titulo}
                         descricao={a.descricao}
                         contador={a.contador}
-                        to={linkParaMetrica(a.titulo)}
+                        onClick={() => abrirDetalhe(a.titulo, a.contador?.toString())}
                       />
                     ))}
                   </div>

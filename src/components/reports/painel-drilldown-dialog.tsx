@@ -1,7 +1,9 @@
-import { useQuery } from "@tanstack/react-query";
+import * as React from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Link } from "@tanstack/react-router";
-import { ArrowUpRight, Loader2, ExternalLink, ChevronRight } from "lucide-react";
+import { ArrowUpRight, Loader2, ExternalLink, ChevronRight, Pencil, Trash2, MoreHorizontal } from "lucide-react";
+import { toast } from "sonner";
 
 import {
   Dialog,
@@ -10,10 +12,31 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { BancoLogo } from "@/components/bancos/banco-logo";
 import { getPanelDrilldown } from "@/lib/relatorios/paineis.functions";
+import { excluirDemanda } from "@/lib/operacional/demandas.functions";
+import { excluirTarefa } from "@/lib/operacional/tarefas.functions";
+import { EditarDemandaDialog } from "@/components/operacional/editar-demanda-dialog";
+// Nota: Se houver um EditarTarefaDialog, ele deve ser importado aqui.
+// Por enquanto, usaremos a navegação para edição se for complexo.
 import type { ReportFiltros } from "@/lib/relatorios/shared";
 import agillizaSymbol from "@/assets/brand/agilliza-symbol-oficial.png";
 
@@ -33,7 +56,14 @@ export function PainelDrilldownDialog({
   onOpenChange: (o: boolean) => void;
   contexto: DrilldownContext | null;
 }) {
+  const queryClient = useQueryClient();
   const drillFn = useServerFn(getPanelDrilldown);
+  const deleteDemandaFn = useServerFn(excluirDemanda);
+  const deleteTarefaFn = useServerFn(excluirTarefa);
+
+  const [itemParaExcluir, setItemParaExcluir] = React.useState<{ id: string; tipo: "demanda" | "tarefa" } | null>(null);
+  const [demandaParaEditar, setDemandaParaEditar] = React.useState<any | null>(null);
+
   const { data, isLoading, error } = useQuery({
     queryKey: ["panel-drilldown", contexto?.metrica, contexto?.filtros],
     queryFn: () =>
@@ -45,6 +75,7 @@ export function PainelDrilldownDialog({
   });
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex max-h-[88vh] w-[calc(100vw-1.5rem)] max-w-2xl flex-col gap-0 overflow-hidden border-border/60 p-0 shadow-2xl sm:max-h-[85vh]">
         <img
@@ -174,11 +205,52 @@ export function PainelDrilldownDialog({
                             </span>
                           )}
                         </div>
-                        {it.to ? (
-                          <ChevronRight className="hidden h-4 w-4 text-muted-foreground/30 transition-all duration-300 group-hover:translate-x-1 group-hover:text-primary sm:block" />
-                        ) : (
-                          <span className="hidden w-4 sm:block" />
-                        )}
+                        <div className="flex items-center gap-1">
+                          {(it as any).id && (it as any).tipo && (
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 text-muted-foreground/40 hover:text-foreground"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if ((it as any).tipo === "demanda") {
+                                      setDemandaParaEditar((it as any).raw);
+                                    } else {
+                                      // Navegar para tarefas se não houver dialog
+                                      window.location.href = (it as any).to;
+                                    }
+                                  }}
+                                >
+                                  <Pencil className="mr-2 h-4 w-4" /> Editar
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  className="text-destructive"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setItemParaExcluir({ id: (it as any).id, tipo: (it as any).tipo });
+                                  }}
+                                >
+                                  <Trash2 className="mr-2 h-4 w-4" /> Excluir
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          )}
+
+                          {it.to ? (
+                            <ChevronRight className="hidden h-4 w-4 text-muted-foreground/30 transition-all duration-300 group-hover:translate-x-1 group-hover:text-primary sm:block" />
+                          ) : (
+                            <span className="hidden w-4 sm:block" />
+                          )}
+                        </div>
 
                       </div>
                     </div>
@@ -217,5 +289,57 @@ export function PainelDrilldownDialog({
         )}
       </DialogContent>
     </Dialog>
+
+    {/* Diálogo de Edição de Demanda */}
+    {demandaParaEditar && (
+      <EditarDemandaDialog
+        demanda={demandaParaEditar}
+        onSalva={() => {
+          setDemandaParaEditar(null);
+          queryClient.invalidateQueries({ queryKey: ["panel-drilldown"] });
+        }}
+        abertoOverride={!!demandaParaEditar}
+        onOpenChangeOverride={(o: boolean) => {
+          if (!o) setDemandaParaEditar(null);
+        }}
+      />
+    )}
+
+    {/* Diálogo de Confirmação de Exclusão */}
+    <AlertDialog open={!!itemParaExcluir} onOpenChange={(o) => !o && setItemParaExcluir(null)}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+          <AlertDialogDescription>
+            Tem certeza que deseja excluir esta {itemParaExcluir?.tipo}? Esta ação não pode ser desfeita.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+          <AlertDialogAction
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            onClick={async () => {
+              if (!itemParaExcluir) return;
+              try {
+                if (itemParaExcluir.tipo === "demanda") {
+                  await deleteDemandaFn({ data: { id: itemParaExcluir.id } });
+                } else {
+                  await deleteTarefaFn({ data: { id: itemParaExcluir.id } });
+                }
+                toast.success(`${itemParaExcluir.tipo === "demanda" ? "Demanda" : "Tarefa"} excluída com sucesso!`);
+                queryClient.invalidateQueries({ queryKey: ["panel-drilldown"] });
+              } catch (err) {
+                toast.error("Erro ao excluir registro.");
+              } finally {
+                setItemParaExcluir(null);
+              }
+            }}
+          >
+            Excluir
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }
