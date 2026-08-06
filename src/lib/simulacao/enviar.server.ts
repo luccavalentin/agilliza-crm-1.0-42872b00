@@ -303,12 +303,33 @@ export async function enviarSimulacaoImpl({
   const envioPorBanco = Boolean(bancoIds && bancoIds.length > 0);
   const { data: sim, error } = await supabase
     .from("simulacoes")
-    .select("*")
+    .select("*, cliente:clientes(*)")
     .eq("id", simulacaoId)
     .is("deleted_at", null)
     .maybeSingle();
   if (error) throw new Error(error.message);
   if (!sim) throw new Error("Simulação não encontrada.");
+
+  const cliente = sim.cliente;
+  if (cliente) {
+    // Sincronização automática dos dados do cliente do CRM para a simulação antes do envio.
+    // Isso garante que se o usuário alterou o cadastro (nome, renda, etc.), a proposta use os dados novos.
+    sim.nome_cliente = cliente.nome ?? sim.nome_cliente;
+    sim.renda_total = cliente.renda_total_declarada ?? sim.renda_total;
+    sim.email = cliente.email ?? sim.email;
+    sim.celular = cliente.telefone_celular ?? sim.celular;
+    sim.data_nascimento = cliente.data_nascimento ?? sim.data_nascimento;
+    sim.estado_civil = (cliente as any).estado_civil ?? sim.estado_civil;
+    
+    if (sim.possui_conjuge) {
+      sim.nome_conjuge = (cliente as any).conjuge_nome ?? sim.nome_conjuge;
+      sim.cpf_conjuge = (cliente as any).conjuge_cpf ?? sim.cpf_conjuge;
+      sim.renda_conjuge = (cliente as any).conjuge_renda ?? sim.renda_conjuge;
+      sim.data_nascimento_conjuge = (cliente as any).conjuge_data_nascimento ?? sim.data_nascimento_conjuge;
+      sim.email_conjuge = (cliente as any).conjuge_email ?? sim.email_conjuge;
+      sim.celular_conjuge = (cliente as any).conjuge_celular ?? sim.celular_conjuge;
+    }
+  }
 
   // Trava anti-duplicidade: mantém bloqueio para o envio geral, mas libera
   // chamadas por banco. O fluxo em lote chama um banco por vez; bloquear aqui
