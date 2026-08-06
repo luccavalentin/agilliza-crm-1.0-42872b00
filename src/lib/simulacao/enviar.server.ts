@@ -690,11 +690,10 @@ export async function enviarSimulacaoImpl({
         }
 
         // A resposta da integração traz os valores retornados pelo banco
-        const integ = await chamarIntegracao<any>(
+        const integ = await chamarComRetry<any>(
           `/oportunidade/${idOportunidade}/simulacao/${idSimulacao}/integracao`,
           "POST",
           {},
-          ctx,
         );
 
         let dados = integ ?? simResp;
