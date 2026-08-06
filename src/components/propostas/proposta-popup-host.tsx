@@ -96,8 +96,8 @@ export function PropostaPopupHost() {
               )}
             </div>
             <div className="text-center">
-              <DialogTitle className="text-2xl font-bold tracking-tight">
-                {isComparativo ? "Comparativo de Taxas" : "Retorno do Banco"}
+              <DialogTitle className="text-2xl font-bold tracking-tight text-primary">
+                {isComparativo ? "Simulação Concluída" : "Retorno de Proposta"}
               </DialogTitle>
               <DialogDescription className="mt-2 text-base">
                 {isComparativo ? (
