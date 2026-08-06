@@ -1033,7 +1033,7 @@ export async function enviarSimulacaoImpl({
 
     const novoStatus =
       pendentes > 0
-        ? "enviando"
+        ? ("enviando" as any)
         : sucesso === listaStatus.length
           ? "simulada"
           : sucesso > 0
