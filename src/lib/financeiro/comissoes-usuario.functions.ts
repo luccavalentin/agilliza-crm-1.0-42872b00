@@ -309,7 +309,7 @@ export const listarComissoesUsuario = createServerFn({ method: "GET" })
     if (data.banco_nome) query = query.eq("banco_nome", data.banco_nome);
     if (data.tipo_vinculo) query = query.eq("tipo_vinculo", data.tipo_vinculo as TipoVinculoComissao);
     if (data.de) query = query.gte("created_at", data.de);
-    if (data.ate) query = query.lte("created_at", `${data.ate}T23:59:59.999`);
+    if (data.ate) query = query.lte("created_at", `${data.ate}T23:59:59.999-03:00`);
     const { data: rows, error } = await query;
     if (error) throw new Error(error.message);
 
