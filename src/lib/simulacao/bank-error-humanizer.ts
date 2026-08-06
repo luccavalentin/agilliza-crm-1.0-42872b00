@@ -84,10 +84,19 @@ export function humanizarRespostaErro(json: unknown, status: number, endpoint = 
     return "O banco não devolveu o motivo da recusa. Em geral é relação valor financiado x renda x prazo. Revise esses campos e reenvie.";
   }
 
-  // Tratamento específico para o erro de prazo do Bradesco relatado pelo usuário
-  if (/prazo de pagamento igual ou superior a: 180/i.test(bruta)) {
-    return "O Bradesco exige prazo mínimo de 180 meses para esta simulação. O sistema já ajustou o prazo automaticamente; clique em reenviar para concluir.";
+  // Prazo fora da faixa aceita pelo banco: a API devolve o limite exato.
+  // Não presumimos um mínimo fixo — usamos o número informado pelo banco.
+  const prazoMin = bruta.match(/prazo\s+de\s+pagamento\s+igual\s+ou\s+superior\s+a[:\s]+(\d+)/i);
+  if (prazoMin) {
+    const meses = Number(prazoMin[1]);
+    return `Prazo abaixo do mínimo aceito por este banco nesta operação: ${meses} meses (${(meses / 12).toFixed(0)} anos). Aumente o prazo para ${meses} meses ou mais e reenvie. O prazo máximo continua limitado pela idade do proponente mais velho.`;
   }
+  const prazoMax = bruta.match(/prazo\s+de\s+pagamento\s+igual\s+ou\s+inferior\s+a[:\s]+(\d+)/i);
+  if (prazoMax) {
+    const meses = Number(prazoMax[1]);
+    return `Prazo acima do máximo aceito por este banco nesta operação: ${meses} meses (${(meses / 12).toFixed(0)} anos). Reduza o prazo para ${meses} meses ou menos e reenvie.`;
+  }
+
 
   // Sessão com o banco expirada — não é erro de preenchimento.
   if (status === 401 || /token\s*jwt\s*expirado|unauthorized/i.test(bruta)) {
