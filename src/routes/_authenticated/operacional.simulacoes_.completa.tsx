@@ -221,7 +221,7 @@ function Pagina() {
             <Button 
               className="h-11 w-full gap-2 sm:w-auto sm:px-8" 
               onClick={enviar} 
-              disabled={enviando || (Object.keys(erros).length > 0 && !enviando)}
+               disabled={enviando}
             >
               <Send className="h-4 w-4" /> {modoProposta ? "Gerar Proposta e Enviar ao Banco" : "Gerar Simulação"}
             </Button>
@@ -279,7 +279,7 @@ function Pagina() {
               <Button 
                 className="h-11 w-full gap-2" 
                 onClick={enviar} 
-                disabled={enviando || (Object.keys(erros).length > 0 && !enviando)}
+                disabled={enviando}
               >
                 <Send className="h-4 w-4" /> {modoProposta ? "Gerar Proposta" : "Gerar Simulação"}
               </Button>

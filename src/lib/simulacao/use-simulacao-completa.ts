@@ -207,8 +207,16 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
         }
       }
       return next;
-
     });
+
+    // Limpa o erro do campo alterado imediatamente para habilitar o botão de envio
+    if (erros[k]) {
+      setErros((prev) => {
+        const novos = { ...prev };
+        delete novos[k];
+        return novos;
+      });
+    }
   }
 
   // Datas adicionais consideradas no cálculo do prazo máximo: o banco usa a
