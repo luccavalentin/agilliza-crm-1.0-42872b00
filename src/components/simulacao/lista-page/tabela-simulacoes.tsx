@@ -174,17 +174,7 @@ export function TabelaSimulacoes({
                       <Undo2 className="mr-1 h-3.5 w-3.5" /> Restaurar
                     </Button>
                   ) : (
-                    <div className="flex items-center justify-end gap-1.5">
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-8 w-8 text-muted-foreground hover:text-primary"
-                        title="Ver detalhes"
-                        aria-label="Ver detalhes da simulação"
-                        onClick={() => handlers.onVer(s.id)}
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
+                    <div className="flex items-center justify-end">
                       <AcoesSimulacao
                         onVisualizar={() => handlers.onVer(s.id)}
                         onEditar={() => handlers.onEditar(s.id)}
