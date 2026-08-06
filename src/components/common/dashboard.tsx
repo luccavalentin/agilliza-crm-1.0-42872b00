@@ -580,6 +580,7 @@ export function AlertRow({
   descricao?: string;
   contador?: number;
   to?: string;
+  onClick?: () => void;
 }) {
   const conteudo = (
     <div
