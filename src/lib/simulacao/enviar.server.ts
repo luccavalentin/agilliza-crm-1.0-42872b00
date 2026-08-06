@@ -17,24 +17,6 @@ import {
   mensagemCamposFaltantes,
 } from "./campos-obrigatorios";
 
-/**
- * Prazo máximo (meses) aceito por banco. O Itaú recusa prazos acima de 360
- * meses devolvendo apenas "Erro interno do servidor"; limitamos antes de enviar
- * para o usuário receber retorno em vez de erro genérico.
- */
-const PRAZO_MAX_POR_BANCO: { teste: RegExp; max: number }[] = [
-  { teste: /ita[uú]/i, max: 360 },
-];
-
-function prazoMaximoBanco(banco: any): number | null {
-  const nome = String(banco?.nome_banco ?? banco?.nomeBanco ?? "");
-  const codigo = String(banco?.codigo_banco ?? "");
-  const regra = PRAZO_MAX_POR_BANCO.find(
-    (r) => r.teste.test(nome) || (r.teste.source.includes("ita") && codigo.replace(/^0+/, "") === "341"),
-  );
-  return regra ? regra.max : null;
-}
-
 interface EnviarArgs {
   simulacaoId: string;
   userId: string;
@@ -340,6 +322,23 @@ export async function enviarSimulacaoImpl({
     throw new Error(mensagemCamposFaltantes(faltantesSimulacao));
   }
 
+  const estadoCivil = String(sim.estado_civil ?? "").toUpperCase();
+  const possuiConjuge = Boolean(sim.possui_conjuge) || estadoCivil === "CA" || estadoCivil === "UE";
+  const compoeRenda = Boolean(sim.compoe_renda) && possuiConjuge;
+  if (compoeRenda) {
+    const faltantesConjuge = [
+      !String(sim.nome_conjuge ?? "").trim() && "Nome do cônjuge",
+      String(sim.cpf_conjuge ?? "").replace(/\D/g, "").length !== 11 && "CPF do cônjuge",
+      !String(sim.data_nascimento_conjuge ?? "").trim() && "Data de nascimento do cônjuge",
+      !(Number(sim.renda_conjuge) > 0) && "Renda do cônjuge",
+    ].filter(Boolean);
+    if (faltantesConjuge.length > 0) {
+      throw new Error(
+        `Não foi possível enviar: a composição de renda está ativa, mas faltam ${faltantesConjuge.join(", ")}. Complete os dados ou desative a composição de renda.`,
+      );
+    }
+  }
+
 
   // Todos os bancos selecionados (usados para registrar a oportunidade completa).
   const { data: bancosSelecionados } = await supabase
@@ -545,8 +544,8 @@ export async function enviarSimulacaoImpl({
         tipoEstadoCivil: sim.estado_civil ? { id: sim.estado_civil } : undefined,
         regimeCasamento: sim.regime_casamento ? { id: sim.regime_casamento } : undefined,
 
-        fgCompoeRenda: Boolean(sim.compoe_renda),
-        ...(sim.possui_conjuge
+        fgCompoeRenda: compoeRenda,
+        ...(possuiConjuge
           ? {
               nomeConjuge: sim.nome_conjuge,
               cpfConjuge: (sim.cpf_conjuge ?? "").replace(/\D/g, ""),
@@ -600,7 +599,7 @@ export async function enviarSimulacaoImpl({
           ...dadosOportunidade,
           tipoEstadoCivil: sim.estado_civil ? { id: sim.estado_civil } : undefined,
           regimeCasamento: sim.regime_casamento ? { id: sim.regime_casamento } : undefined,
-          fgCompoeRenda: Boolean(sim.compoe_renda),
+          fgCompoeRenda: compoeRenda,
           ...conjugeBloco,
         };
 
@@ -661,9 +660,9 @@ export async function enviarSimulacaoImpl({
     // bancos falharem ("erro no envio") enquanto outros passam. Cada banco
     // mantém seu próprio try/catch — a falha de um não impede os demais.
     const enviarBanco = async (b: any): Promise<EnviarResultado["bancos"][number]> => {
-      const limiteBanco = prazoMaximoBanco(b);
-      const prazoBanco =
-        limiteBanco != null ? Math.min(num(sim.prazo), limiteBanco) : num(sim.prazo);
+      // O contrato oficial não define teto fixo de 360 meses para o Itaú.
+      // Enviamos o prazo já validado pela idade, limitado a até 420 meses.
+      const prazoBanco = num(sim.prazo);
       try {
         const simPayload = {
           valorImovel: num(sim.valor_imovel),
