@@ -171,18 +171,17 @@ function drawTituloExtrato(
 /** Caixa formal com os dados do cliente em destaque. */
 function drawDadosCliente(doc: jsPDF, pageW: number, s: any, y: number): number {
   const w = pageW - MARGIN * 2;
-  const boxH = 64;
+  const hasConjuge = Boolean(s.possui_conjuge) && s.nome_conjuge;
+  const boxH = hasConjuge ? 94 : 64;
 
-  // Faixa de rótulo "DADOS DO CLIENTE"
+  // Faixa de rótulo "DADOS DO PROPONENTE"
   doc.setFillColor(P.destaque);
   doc.roundedRect(MARGIN, y, w, 14, 4, 4, "F");
-  // Máscara para cantos inferiores retos
-  doc.setFillColor(P.destaque);
   doc.rect(MARGIN, y + 7, w, 7, "F");
   doc.setTextColor(P.headText ?? "#FFFFFF");
   doc.setFont("helvetica", "bold");
   doc.setFontSize(8);
-  doc.text("DADOS DO CLIENTE", MARGIN + 10, y + 10);
+  doc.text("DADOS DO PROPONENTE", MARGIN + 10, y + 10);
 
   // Corpo da caixa
   const bodyY = y + 14;
@@ -191,14 +190,13 @@ function drawDadosCliente(doc: jsPDF, pageW: number, s: any, y: number): number 
   doc.setDrawColor(P.borda);
   doc.setLineWidth(0.6);
   doc.roundedRect(MARGIN, bodyY, w, bodyH, 4, 4, "FD");
-  // Reforço superior reto para casar com a faixa
   doc.rect(MARGIN, bodyY, w, 2, "F");
-  // Barra lateral coral em destaque
   doc.setFillColor(P.coral);
   doc.rect(MARGIN, bodyY + 6, 4, bodyH - 12, "F");
 
+  // Titular
   const colX = [MARGIN + 16, MARGIN + w * 0.5, MARGIN + w * 0.75];
-  const rotulos = ["NOME", "DATA DE NASCIMENTO", "CPF / CNPJ"];
+  const rotulos = ["TITULAR", "DATA DE NASCIMENTO", "CPF / CNPJ"];
   const valores = [
     (s.nome_cliente ?? "—").toString().toUpperCase(),
     dataTxt(s.data_nascimento),
@@ -211,11 +209,39 @@ function drawDadosCliente(doc: jsPDF, pageW: number, s: any, y: number): number 
     doc.text(r, colX[i], bodyY + 16);
     doc.setTextColor(P.destaque);
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(i === 0 ? 13 : 11);
-    doc.text(String(valores[i]), colX[i], bodyY + 34, {
+    doc.setFontSize(i === 0 ? 11 : 10);
+    doc.text(String(valores[i]), colX[i], bodyY + 30, {
       maxWidth: (i === 0 ? w * 0.5 : w * 0.25) - 20,
     });
   });
+
+  // Cônjuge
+  if (hasConjuge) {
+    const cy = bodyY + 44;
+    doc.setDrawColor(P.borda);
+    doc.setLineWidth(0.3);
+    doc.line(MARGIN + 10, cy - 8, MARGIN + w - 10, cy - 8);
+    
+    const rotulosC = ["CÔNJUGE / COOBRIGADO", "DATA DE NASCIMENTO", "CPF"];
+    const valoresC = [
+      (s.nome_conjuge ?? "—").toString().toUpperCase(),
+      dataTxt(s.data_nascimento_conjuge),
+      s.cpf_conjuge ?? "—",
+    ];
+    rotulosC.forEach((r, i) => {
+      doc.setTextColor(P.cinza);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(6.5);
+      doc.text(r, colX[i], cy + 8);
+      doc.setTextColor(P.destaque);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(i === 0 ? 11 : 10);
+      doc.text(String(valoresC[i]), colX[i], cy + 22, {
+        maxWidth: (i === 0 ? w * 0.5 : w * 0.25) - 20,
+      });
+    });
+  }
+
   return y + boxH + 14;
 }
 
