@@ -278,7 +278,13 @@ async function garantirDadosParticipantesSimulacao({
       Object.entries(payload).filter(([_, v]) => v !== undefined)
     );
 
-
+    try {
+      await chamarIntegracao<any>(
+        `/oportunidade/${idOportunidade}/participante/${part.idParticipante}`,
+        "PUT",
+        cleanedPayload,
+        ctx,
+      );
     } catch (e) {
       // Falha na complementação (PUT /participante) não deve travar o banco.
       // Logamos o erro mas deixamos o fluxo seguir, pois alguns bancos processam
@@ -287,6 +293,7 @@ async function garantirDadosParticipantesSimulacao({
     }
   }
 }
+
 
 export async function enviarSimulacaoImpl({
 
