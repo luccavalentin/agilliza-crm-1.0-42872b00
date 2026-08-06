@@ -101,7 +101,7 @@ export function FiltrosLista({
           <Button
             variant="ghost"
             size="sm"
-            className="h-9 shrink-0"
+            className="h-8 shrink-0 text-xs"
             onClick={onLimpar}
           >
             Limpar
@@ -109,7 +109,7 @@ export function FiltrosLista({
           <Button
             variant={verExcluidas ? "default" : "outline"}
             size="sm"
-            className="h-9 shrink-0"
+            className="h-8 shrink-0 text-xs"
             onClick={toggleExcluidas}
             title="Ver simulações excluídas"
           >
