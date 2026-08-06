@@ -363,11 +363,10 @@ export async function enviarSimulacaoImpl({
     throw new Error("Selecione a operação antes de enviar ao banco.");
   }
 
-  // Validação prévia dos campos obrigatórios do contrato da integração:
-  // é melhor dizer exatamente o que falta do que receber "erro interno" do banco.
+  // Validação informativa (não bloqueante para simulação) (Princípio #1 - Simulação nunca trava)
   const faltantesSimulacao = validarCamposSimulacao(sim);
   if (faltantesSimulacao.length > 0) {
-    throw new Error(mensagemCamposFaltantes(faltantesSimulacao));
+    console.info(`[enviar.server] Campos básicos ausentes para simulação: ${faltantesSimulacao.join(", ")}`);
   }
 
   const estadoCivil = String(sim.estado_civil ?? "").toUpperCase();
@@ -383,9 +382,7 @@ export async function enviarSimulacaoImpl({
       !(Number(sim.renda_conjuge) > 0) && "Renda do cônjuge",
     ].filter(Boolean);
     if (faltantesConjuge.length > 0) {
-      throw new Error(
-        `Não foi possível enviar: a composição de renda está ativa, mas faltam ${faltantesConjuge.join(", ")}. Complete os dados ou desative a composição de renda.`,
-      );
+      console.info(`[enviar.server] Composição ativa mas faltam dados do cônjuge: ${faltantesConjuge.join(", ")}`);
     }
   }
 
