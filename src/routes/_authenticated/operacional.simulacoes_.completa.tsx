@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, FileText, Send, Home, User, Users, Landmark, ShieldCheck, X } from "lucide-react";
+import { ArrowLeft, FileText, Send, Home, User, Users, Landmark, ShieldCheck, X, AlertTriangle } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { SecaoCabecalho } from "@/components/simulacao/secao-cabecalho";
