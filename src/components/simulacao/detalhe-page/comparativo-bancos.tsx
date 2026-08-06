@@ -17,8 +17,8 @@ import { BancoStatusBadge } from "@/components/simulacao/status-badge";
 import { DetalheBancoDialog } from "@/components/simulacao/detalhe-banco-dialog";
 import { formatBRL, formatPercent } from "@/lib/simulacao/format";
 import { rendaMinimaPelosBancos } from "@/lib/simulacao/renda";
-import {
 import { ErroBancoDetalhe } from "@/components/simulacao/erro-banco-detalhe";
+import {
   AmortizacaoTag,
   MobileStat,
   ResumoCelula,
