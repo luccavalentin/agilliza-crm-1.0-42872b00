@@ -1587,7 +1587,7 @@ export const getPanelDrilldown = createServerFn({ method: "POST" })
           sub: [d.numero && `Nº ${d.numero}`, d.status].filter(Boolean).join(" · "),
           data: fmtData(d.prazo_sla ?? d.created_at),
           to: `/operacional/demandas/${d.id}`,
-          tone: isVencido ? "danger" : "warning",
+          tone: isVencido || isSimErro ? "danger" : "warning",
         })),
         linkAbrir: "/operacional/demandas",
         linkAbrirLabel: "Abrir lista de demandas",
