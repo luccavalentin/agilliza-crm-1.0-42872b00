@@ -498,6 +498,8 @@ export async function enviarSimulacaoImpl({
         celular: (sim.celular ?? "").replace(/\D/g, ""),
         tipoEstadoCivil: sim.estado_civil ? { id: sim.estado_civil } : undefined,
         regimeCasamento: sim.regime_casamento ? { id: sim.regime_casamento } : undefined,
+        // Garante que o estado civil (maritalStatus) seja enviado para evitar erros no Itaú
+        tipoEstadoCivilParticipante: sim.estado_civil ? { id: sim.estado_civil } : undefined,
 
         fgCompoeRenda: Boolean(sim.compoe_renda),
         ...(sim.possui_conjuge
