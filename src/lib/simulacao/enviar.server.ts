@@ -1099,7 +1099,7 @@ export async function enviarSimulacaoImpl({
         .from("simulacao_bancos")
         .update({ status_banco: "erro", mensagem_banco: msg })
         .in("id", idsLote)
-        .or('status_banco.eq.aguardando,status_banco.eq.simulada'); // Filtro seguro para o enum (evita 'enviando' se for incompatível)
+        .eq('status_banco', 'aguardando' as any);
 
     }
     await supabase
