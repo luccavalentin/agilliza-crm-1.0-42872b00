@@ -363,11 +363,10 @@ export async function enviarSimulacaoImpl({
     throw new Error("Selecione a operação antes de enviar ao banco.");
   }
 
-  // Validação prévia dos campos obrigatórios do contrato da integração:
-  // é melhor dizer exatamente o que falta do que receber "erro interno" do banco.
+  // Validação informativa (não bloqueante para simulação) (Princípio #1 - Simulação nunca trava)
   const faltantesSimulacao = validarCamposSimulacao(sim);
   if (faltantesSimulacao.length > 0) {
-    throw new Error(mensagemCamposFaltantes(faltantesSimulacao));
+    console.info(`[enviar.server] Campos básicos ausentes para simulação: ${faltantesSimulacao.join(", ")}`);
   }
 
   const estadoCivil = String(sim.estado_civil ?? "").toUpperCase();
@@ -383,9 +382,7 @@ export async function enviarSimulacaoImpl({
       !(Number(sim.renda_conjuge) > 0) && "Renda do cônjuge",
     ].filter(Boolean);
     if (faltantesConjuge.length > 0) {
-      throw new Error(
-        `Não foi possível enviar: a composição de renda está ativa, mas faltam ${faltantesConjuge.join(", ")}. Complete os dados ou desative a composição de renda.`,
-      );
+      console.info(`[enviar.server] Composição ativa mas faltam dados do cônjuge: ${faltantesConjuge.join(", ")}`);
     }
   }
 
@@ -441,16 +438,13 @@ export async function enviarSimulacaoImpl({
 
   // Regra de bloqueio: não enviar ao banco se "financiar despesas" está marcado
   // mas os valores não foram informados/calculados corretamente.
+  // Verificação informativa (Princípio #1 - Simulação nunca trava)
   if (financiarDespesas) {
     if (!(valorDespesasFinanciadas > 0)) {
-      throw new Error(
-        'Financiar despesas está marcado, mas o valor das despesas a financiar está vazio ou zerado.',
-      );
+      console.warn('[enviar.server] Financiar despesas marcado mas valor zerado.');
     }
     if (!(valorTotalFinanciamento > valorFinanciamentoBase)) {
-      throw new Error(
-        'Valor total do financiamento inválido para simulação com despesas financiadas.',
-      );
+      console.warn('[enviar.server] Valor total financiamento igual ao base mesmo com despesas marcadas.');
     }
   }
 
@@ -517,19 +511,15 @@ export async function enviarSimulacaoImpl({
       sim.produto === "home_equity" ? await montarEnderecoImovelGarantia(sim, clienteCompleto) : null;
     if (sim.produto === "home_equity") {
       if (!enderecoImovelGarantia?.cep) {
-        throw new Error(
-          "Informe o CEP do imóvel antes de reenviar Home Equity ao banco. Sem esse dado o banco não calcula a garantia e retorna a simulação vazia.",
-        );
+        console.warn("[enviar.server] CEP do imóvel ausente para Home Equity.");
       }
       if (
-        !enderecoImovelGarantia.logradouro ||
-        !enderecoImovelGarantia.bairro ||
-        !enderecoImovelGarantia.municipio ||
-        !enderecoImovelGarantia.uf
+        !enderecoImovelGarantia?.logradouro ||
+        !enderecoImovelGarantia?.bairro ||
+        !enderecoImovelGarantia?.municipio ||
+        !enderecoImovelGarantia?.uf
       ) {
-        throw new Error(
-          "Complete ou corrija o CEP do imóvel para Home Equity. O banco exige endereço completo da garantia para retornar a simulação.",
-        );
+        console.warn("[enviar.server] Endereço do imóvel incompleto para Home Equity.");
       }
     }
 

@@ -144,7 +144,7 @@ export function PainelRendaNecessaria({ ctx }: { ctx: any }) {
             <div>
               <h3 className="text-sm font-bold text-foreground">Renda mínima sugerida</h3>
               <p className="text-[11px] text-muted-foreground">
-                Piso de qualificação que atende todas as instituições selecionadas.
+                Requisito informativo baseado nas políticas conhecidas das instituições.
               </p>
             </div>
           </div>

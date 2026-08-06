@@ -276,8 +276,8 @@ export function avaliarRendaMinima(params: {
 
   const tetoComprometimento = sistema === "P" ? COMPROMETIMENTO_MAX_PRICE : COMPROMETIMENTO_MAX;
   const rendaMinimaCrua = rendaMinimaParaParcela(prestacaoTotal, tetoComprometimento);
-  // Arredonda para cima no milhar mais próximo (ex: 21.382 -> 22.000)
-  const rendaMinima = Math.ceil(rendaMinimaCrua / 1000) * 1000;
+  // Arredonda para cima no centenar (Princípio #1 - Simulação nunca trava)
+  const rendaMinima = Math.ceil(rendaMinimaCrua / 100) * 100;
   const renda = renda_informada && renda_informada > 0 ? renda_informada : null;
 
   return {
@@ -337,9 +337,7 @@ export function rendaMinimaSugerida(params: {
     ? fontes.sort((a, b) => b.rendaMinima - a.rendaMinima)[0]
     : { primeiraParcela: 0, rendaMinima: 0, detalhe_fonte: "Indefinida", suficiente: null };
 
-  // Aplica margem de segurança de +5% e arredonda na centena (Problema 1 - MARGEM)
-  const rendaComMargem = vencedora.rendaMinima * (1 + (MARGEM_SEGURANCA_RENDA ?? 0.05));
-  const rendaFinal = Math.ceil(rendaComMargem / 100) * 100;
+  const rendaFinal = Math.ceil(vencedora.rendaMinima / 100) * 100;
 
   const renda = renda_informada && renda_informada > 0 ? renda_informada : null;
 

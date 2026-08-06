@@ -854,7 +854,8 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
       );
       return;
     }
-    if (!rendaSuficiente()) return;
+    // Renda mínima não bloqueia mais o envio (Princípio #1 - Simulação nunca trava)
+    // if (!rendaSuficiente()) return;
     await executarEnvio();
   }
 

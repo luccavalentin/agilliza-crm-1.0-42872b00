@@ -345,43 +345,7 @@ function Pagina() {
 
 
 
-      <AlertDialog open={!!confirmRenda} onOpenChange={(o) => !o && setConfirmRenda(null)}>
-        <AlertDialogContent className="max-w-md">
-          <AlertDialogHeader>
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-500/10 text-amber-600 mb-2">
-              <AlertTriangle className="h-6 w-6" />
-            </div>
-            <AlertDialogTitle className="text-xl">Renda abaixo do piso sugerido</AlertDialogTitle>
-            <AlertDialogDescription className="space-y-4 pt-2">
-              <p className="text-sm leading-relaxed">
-                A renda informada de <span className="font-bold text-foreground">{formatBRL(confirmRenda?.rendaInformada ?? 0)}</span> é 
-                inferior ao piso sugerido de <span className="font-bold text-foreground">{formatBRL(confirmRenda?.rendaMinima ?? 0)}</span> para esta operação.
-              </p>
-              
-              <div className="rounded-lg bg-muted/50 p-3 space-y-2 border border-border/50">
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Origem do piso</p>
-                <p className="text-xs font-medium text-foreground">{confirmRenda?.detalhe_fonte || "Estimativa técnica Agilliza"}</p>
-              </div>
-
-              <p className="text-xs text-amber-600 font-medium">
-                ⚠️ O banco poderá reprovar a operação por insuficiência de renda.
-              </p>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="flex-col sm:flex-row gap-2">
-            <AlertDialogCancel className="sm:flex-1">Revisar dados</AlertDialogCancel>
-            <AlertDialogAction
-              className="sm:flex-1 bg-amber-600 hover:bg-amber-700"
-              onClick={() => {
-                setConfirmRenda(null);
-                void executarEnvio();
-              }}
-            >
-              Enviar mesmo assim
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* O bloqueio preventivo foi removido. A renda mínima agora é apenas informativa no painel de resultados. */}
 
       {/* Popup de Comparação de Taxas (Dual CPF) */}
       <ComparativoTaxasDialog 
