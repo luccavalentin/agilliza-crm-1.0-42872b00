@@ -228,7 +228,8 @@ export const runReport = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     const { codigo, filtros } = data;
     const { de, ate } = resolverIntervalo(filtros);
-    const ateFim = `${ate}T23:59:59`;
+    const deIni = inicioDiaBR(de);
+    const ateFim = fimDiaBR(ate);
     const pii = await temPii(supabase, userId);
 
     // registra auditoria de acesso ao relatório
@@ -413,7 +414,7 @@ export const runReport = createServerFn({ method: "POST" })
       let q = (supabase as any)
         .from(table)
         .select(cols)
-        .gte(dateCol, de)
+        .gte(dateCol, deIni)
         .lte(dateCol, ateFim)
         .order(dateCol, { ascending: false })
         .limit(5000);
@@ -912,7 +913,7 @@ export const runReport = createServerFn({ method: "POST" })
           .from("propostas")
           .select(cols)
           .or(
-            `and(created_at.gte.${de},created_at.lte.${ateFim}),and(contrato_emitido_em.gte.${de},contrato_emitido_em.lte.${ateFim})`,
+            `and(created_at.gte."${deIni}",created_at.lte."${ateFim}"),and(contrato_emitido_em.gte."${deIni}",contrato_emitido_em.lte."${ateFim}")`,
           )
           .order("created_at", { ascending: false })
           .limit(10000);
@@ -1253,7 +1254,7 @@ export const runReport = createServerFn({ method: "POST" })
       const aprovado = ["credito_aprovado"];
       const contrato = statusContrato;
 
-      const dentro = (iso?: string) => !!iso && iso.slice(0, 10) >= de && iso.slice(0, 10) <= ate;
+      const dentro = (iso?: string) => !!iso && dataBR(iso) >= de && dataBR(iso) <= ate;
       const andamento = propostasFiltradas.filter((p) => emAndamento.includes(p.status) && dentro(p.created_at));
       const aprovadas = propostasFiltradas.filter((p) => aprovado.includes(p.status) && dentro(p.created_at));
       const recusadas = propostasFiltradas.filter((p) => p.status === "credito_recusado" && dentro(p.created_at));
@@ -2196,7 +2197,7 @@ export const runReport = createServerFn({ method: "POST" })
           supabase
             .from("financial_payables")
             .select("valor,valor_pago,status,vencimento,descricao,created_at,data_pagamento")
-            .gte("created_at", de)
+            .gte("created_at", deIni)
             .lte("created_at", ateFim)
             .limit(5000),
         ).then((r: any) => r.data ?? []),
@@ -2204,21 +2205,21 @@ export const runReport = createServerFn({ method: "POST" })
           supabase
             .from("financial_receivables")
             .select("valor,valor_recebido,status,vencimento,descricao,created_at,data_pagamento")
-            .gte("created_at", de)
+            .gte("created_at", deIni)
             .lte("created_at", ateFim)
             .limit(5000),
         ).then((r: any) => r.data ?? []),
         (supabase as any)
           .from("comissoes")
           .select("valor_bruto,split_parceiro,split_interno,status,usuario_responsavel_id,nome_banco,created_at")
-          .gte("created_at", de)
+          .gte("created_at", deIni)
           .lte("created_at", ateFim)
           .limit(5000)
           .then((r: any) => r.data ?? []),
         (supabase as any)
           .from("comissoes_usuario")
           .select("valor_comissao,valor_base,percentual,status,usuario_id,tipo_vinculo,banco_nome,numero_proposta,created_at")
-          .gte("created_at", de)
+          .gte("created_at", deIni)
           .lte("created_at", ateFim)
           .limit(5000)
           .then((r: any) => r.data ?? []),
@@ -2590,7 +2591,7 @@ export const runReport = createServerFn({ method: "POST" })
       let cq = (supabase as any)
         .from("comissoes")
         .select("valor_bruto,split_parceiro,split_interno,status,usuario_responsavel_id,created_at")
-        .gte("created_at", de)
+        .gte("created_at", deIni)
         .lte("created_at", ateFim)
         .limit(5000);
       cq = aplicarEscopo(cq, filtros, userId, "usuario_responsavel_id");
