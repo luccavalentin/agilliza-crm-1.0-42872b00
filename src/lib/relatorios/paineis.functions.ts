@@ -1613,6 +1613,8 @@ export const getPanelDrilldown = createServerFn({ method: "POST" })
         subtitulo: atrasadas ? "Prazo ultrapassado" : "Ainda não concluídas",
         valor: int(rows.length),
         itens: rows.map((t) => ({
+          id: t.id, // Adicionado para ações
+          tipo: "tarefa", // Adicionado para ações
           label: t.titulo ?? "Tarefa",
           sub: [t.numero && `Nº ${t.numero}`, t.status].filter(Boolean).join(" · "),
           data: fmtData(t.prazo ?? t.created_at),
