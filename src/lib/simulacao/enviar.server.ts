@@ -486,7 +486,7 @@ export async function enviarSimulacaoImpl({
   await supabase
     .from("simulacoes")
     .update({
-      status: "enviando",
+      status: "enviando" as any,
       consentimento_ip: ip,
       consentimento_em: new Date().toISOString(),
       ultimo_envio_em: new Date().toISOString(),
