@@ -215,7 +215,8 @@ async function garantirDadosParticipantesSimulacao({
       tipoEstadoCivil:
         part?.tipoEstadoCivil ??
         (ehConjuge ? sim.estado_civil_conjuge : sim.estado_civil) ??
-        cliente?.estado_civil,
+        cliente?.estado_civil ?? 
+        undefined,
       tipoRegimeCasamento: part?.tipoRegimeCasamento ?? sim.regime_casamento ?? undefined,
       tipoSexo: part?.tipoSexo ?? normalizarSexo(cliente?.sexo),
       tipoDocumentoIdentidade:
@@ -252,12 +253,17 @@ async function garantirDadosParticipantesSimulacao({
       ...endereco,
     };
 
+    // Remove campos undefined para evitar que a API receba "undefined" como string
+    const cleanedPayload = Object.fromEntries(
+      Object.entries(payload).filter(([_, v]) => v !== undefined)
+    );
+
 
     try {
       await chamarIntegracao<any>(
         `/oportunidade/${idOportunidade}/participante/${part.idParticipante}`,
         "PUT",
-        payload,
+        cleanedPayload,
         ctx,
       );
     } catch {
@@ -498,6 +504,8 @@ export async function enviarSimulacaoImpl({
         celular: (sim.celular ?? "").replace(/\D/g, ""),
         tipoEstadoCivil: sim.estado_civil ? { id: sim.estado_civil } : undefined,
         regimeCasamento: sim.regime_casamento ? { id: sim.regime_casamento } : undefined,
+        // Garante que o estado civil (maritalStatus) seja enviado para evitar erros no Itaú
+        tipoEstadoCivilParticipante: sim.estado_civil ? { id: sim.estado_civil } : undefined,
 
         fgCompoeRenda: Boolean(sim.compoe_renda),
         ...(sim.possui_conjuge
