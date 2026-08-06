@@ -161,18 +161,17 @@ interface TokenInfo {
 }
 
 /**
- * Cache do token em memória do worker (válido por 55 min).
- * Evita depender de chave de serviço do banco de dados só para guardar o token;
- * o token é reobtido no primeiro uso após um cold start.
+ * Cache do token em memória do worker.
+ * TTL conservador (25 min) porque o banco pode expirar o JWT antes de 1h.
+ * A obtenção é "single-flight": chamadas concorrentes compartilham a MESMA
+ * requisição de token. Sem isso, o polling paralelo de propostas disparava
+ * vários `/auth/token` ao mesmo tempo e o banco invalidava os tokens
+ * anteriores, gerando 401 "Token JWT expirado" em cascata.
  */
 let _tokenCache: { info: TokenInfo; expiresAt: number } | null = null;
+let _tokenEmVoo: Promise<TokenInfo> | null = null;
 
-/** Retorna token válido, reutilizando o cache (55 min) quando possível. */
-export async function obterToken(): Promise<TokenInfo> {
-  if (_tokenCache && _tokenCache.expiresAt > Date.now()) {
-    return _tokenCache.info;
-  }
-
+async function solicitarToken(): Promise<TokenInfo> {
   const { base, secretId, secretKey } = config();
   const url = `${base}/auth/token`;
   let resp: Response;
@@ -211,9 +210,25 @@ export async function obterToken(): Promise<TokenInfo> {
     idUsuarioParceiro: String(usuario.idUsuarioParceiro ?? json.idUsuarioParceiro ?? "") || null,
   };
 
-  _tokenCache = { info, expiresAt: Date.now() + 55 * 60 * 1000 };
+  _tokenCache = { info, expiresAt: Date.now() + 25 * 60 * 1000 };
   return info;
 }
+
+/** Retorna token válido, reutilizando cache e deduplicando chamadas simultâneas. */
+export async function obterToken(forcarRenovacao = false): Promise<TokenInfo> {
+  if (!forcarRenovacao && _tokenCache && _tokenCache.expiresAt > Date.now()) {
+    return _tokenCache.info;
+  }
+  // Se outra chamada já está renovando, aguarda o mesmo resultado.
+  if (_tokenEmVoo) return _tokenEmVoo;
+  if (forcarRenovacao) _tokenCache = null;
+
+  _tokenEmVoo = solicitarToken().finally(() => {
+    _tokenEmVoo = null;
+  });
+  return _tokenEmVoo;
+}
+
 
 export interface HomefinRequestCtx {
   simulacao_id?: string | null;
