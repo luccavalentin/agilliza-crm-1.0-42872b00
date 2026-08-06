@@ -175,6 +175,7 @@ export function AcoesSimulacao({
   onExcluir,
   numero,
   onEncaminhar,
+  onDestravar,
 }: {
   onVisualizar: () => void;
   onEditar: () => void;
@@ -186,9 +187,9 @@ export function AcoesSimulacao({
   onEncaminhar?: (id: string, canal: "email" | "whatsapp" | "pdf") => void;
   onDestravar?: () => void;
   numero: string;
-} {
-
+}) {
   return (
+
     <div className="flex items-center justify-end gap-1">
       <ConfirmDelete
         titulo="Excluir simulação"
