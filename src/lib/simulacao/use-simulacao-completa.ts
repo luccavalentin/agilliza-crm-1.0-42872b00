@@ -659,13 +659,42 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
 
   // Casado/união estável: completa automaticamente os dados do cônjuge com o
   // que existe no CRM (merge — nunca sobrescreve o que o usuário digitou).
+  // Também atualiza os dados do titular e do cônjuge quando o cadastro no CRM muda.
   useEffect(() => {
+    if (!crmVinculado) return;
+    
+    // 1. Atualiza dados do titular se houver mudanças no CRM
+    setF((prev) => {
+      // Evita loops infinitos: só atualiza se os dados forem diferentes
+      const nomeDiferente = crmVinculado.nome && prev.nome_cliente !== crmVinculado.nome;
+      const rendaDiferente = crmVinculado.renda_total_declarada && prev.renda_total !== crmVinculado.renda_total_declarada;
+      
+      if (nomeDiferente || rendaDiferente) {
+        return {
+          ...prev,
+          nome_cliente: crmVinculado.nome ?? prev.nome_cliente,
+          renda_total: Number(crmVinculado.renda_total_declarada) || prev.renda_total,
+          cpf_cnpj: crmVinculado.documento ? maskCpfCnpj(crmVinculado.documento) : prev.cpf_cnpj,
+          email: crmVinculado.email || prev.email,
+          celular: crmVinculado.telefone_celular ? maskCelular(crmVinculado.telefone_celular) : prev.celular,
+          data_nascimento: crmVinculado.data_nascimento ?? prev.data_nascimento,
+        };
+      }
+      return prev;
+    });
+
+    // 2. Merge de cônjuge
     const casado = f.estado_civil === "CA" || f.estado_civil === "UE";
-    if (!casado || !crmVinculado || !crmTemConjuge) return;
+    if (!casado || !crmTemConjuge) return;
 
     // Se o cônjuge já está preenchido (ou se acabamos de inverter), não aplica o merge automático
-    // para não desfazer a vontade do usuário.
-    if (String(f.nome_conjuge ?? "").trim()) return;
+    // para não desfazer a vontade do usuário, EXCETO se o usuário pedir explicitamente via botão.
+    // Mas para satisfazer a regra de "atualizar instantaneamente", fazemos um merge suave.
+    if (String(f.nome_conjuge ?? "").trim()) {
+      // Se já tem nome, apenas sincroniza campos vazios
+      setF((prev) => patchPuxarConjugeCRM(prev, crmVinculado));
+      return;
+    }
 
     puxarConjugeDoCRM();
   }, [f.estado_civil, crmVinculado, crmTemConjuge, f.nome_conjuge, puxarConjugeDoCRM]);
