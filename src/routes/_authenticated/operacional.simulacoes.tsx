@@ -530,8 +530,9 @@ function Pagina() {
         </div>
       </div>
 
+
       {/* KPIs */}
-      <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-2 lg:grid-cols-4 lg:gap-4">
         {isLoading
           ? Array.from({ length: 4 }).map((_, i) => (
               <div
