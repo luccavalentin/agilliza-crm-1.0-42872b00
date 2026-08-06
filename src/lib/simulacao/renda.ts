@@ -134,17 +134,39 @@ export function parcelaExigidaPeloBanco(banco: BancoRendaApi): number | null {
  */
 export function rendaMinimaDoBanco(banco: BancoRendaApi): number | null {
   const parcela = parcelaExigidaPeloBanco(banco);
-  if (!parcela) return null;
   const price = isBancoPrice(banco);
   const teto = price ? COMPROMETIMENTO_MAX_PRICE : COMPROMETIMENTO_MAX;
-  if (!price) {
-    const raw = unwrapApiResponse(banco.raw_response);
-    const detalhe = extrairDetalheBanco(raw ?? banco.raw_response);
-    const apiRenda = numeroPositivo(detalhe?.rendaMinimaExigida);
-    if (apiRenda) return apiRenda;
+
+  const raw = unwrapApiResponse(banco.raw_response);
+  const detalhe = extrairDetalheBanco(raw ?? banco.raw_response);
+  
+  // Extração da renda mínima da mensagem de recusa (Problema 1c)
+  let rendaMensagemRecusa: number | null = null;
+  const msg = String(banco.raw_response?.mensagem_banco ?? raw?.mensagem_banco ?? "").toLowerCase();
+  if (msg.includes("renda")) {
+    // Tenta encontrar um valor numérico na mensagem (ex: "exigência de 15.000")
+    const match = msg.match(/(\d{1,3}(\.\d{3})*(,\d{2})?)/);
+    if (match) {
+        const valStr = match[0].replace(/\./g, "").replace(",", ".");
+        const val = parseFloat(valStr);
+        if (val > 1000) rendaMensagemRecusa = val;
+    }
   }
-  const rendaCrua = rendaMinimaParaParcela(parcela, teto);
-  return Math.ceil(rendaCrua / 1000) * 1000;
+
+  // Problema 1b: prefere Math.max(apiRenda, estimativa local baseada na parcela do banco)
+  let apiRenda = numeroPositivo(detalhe?.rendaMinimaExigida) ?? rendaMensagemRecusa;
+  
+  if (!parcela && !apiRenda) return null;
+
+  let rendaMinima = 0;
+  if (parcela) {
+    const rendaPelaParcela = rendaMinimaParaParcela(parcela, teto);
+    rendaMinima = apiRenda ? Math.max(apiRenda, rendaPelaParcela) : rendaPelaParcela;
+  } else {
+    rendaMinima = apiRenda!;
+  }
+
+  return Math.ceil(rendaMinima / 100) * 100;
 }
 
 /**
