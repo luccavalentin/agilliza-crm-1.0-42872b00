@@ -100,41 +100,41 @@ export function PowerPointModelosView() {
             {MODELOS_PPT.length} variações profissionais
           </span>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
           {MODELOS_PPT.map((modelo) => (
             <button
               key={modelo.id}
               onClick={() => setSelecionado(modelo.id)}
               className={cn(
-                "group relative overflow-hidden rounded-xl border bg-card text-left transition-all p-4",
+                "group relative aspect-video overflow-hidden rounded-xl border bg-card transition-all",
                 "shadow-[0_1px_3px_rgba(0,0,0,0.1)] hover:-translate-y-0.5 hover:shadow-md",
                 selecionado === modelo.id
-                  ? "border-primary ring-2 ring-primary/20 bg-primary/5"
+                  ? "border-primary ring-2 ring-primary/20"
                   : "border-border/60 hover:border-primary/40"
               )}
             >
-              <div className="flex items-start justify-between">
-                <div className="space-y-1">
-                  <h3 className="font-semibold text-foreground">{modelo.titulo}</h3>
-                  <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
-                    {modelo.descricao}
-                  </p>
-                </div>
-                <div 
-                  className={cn(
-                    "p-2 rounded-lg transition-colors",
-                    selecionado === modelo.id ? "bg-primary text-white" : "bg-secondary text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary"
-                  )}
-                >
-                  <Presentation className="h-4 w-4" />
+              <img 
+                src={modelo.slides[0]} 
+                alt={modelo.titulo}
+                className={cn(
+                  "w-full h-full object-cover transition-transform duration-500 group-hover:scale-105",
+                  selecionado !== modelo.id && "grayscale-[0.4] group-hover:grayscale-0"
+                )}
+              />
+              
+              <div className={cn(
+                "absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent transition-opacity",
+                selecionado === modelo.id ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+              )}>
+                <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
+                  <span className="text-[10px] font-bold text-white uppercase tracking-wider truncate mr-2">
+                    {modelo.titulo.replace("Layout Agilliza ", "")}
+                  </span>
+                  <div className="p-1.5 rounded-full bg-primary text-white shadow-lg">
+                    <Check className="h-3 w-3" />
+                  </div>
                 </div>
               </div>
-
-              {selecionado === modelo.id && (
-                <div className="absolute top-0 right-0 p-1">
-                  <Check className="h-3 w-3 text-primary" />
-                </div>
-              )}
             </button>
           ))}
         </div>
