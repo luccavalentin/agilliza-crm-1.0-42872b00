@@ -68,7 +68,7 @@ export function TabelaSimulacoes({
             <TableHead className="h-10 text-[10px] font-bold uppercase tracking-wider text-muted-foreground px-1.5">Bancos simulados</TableHead>
             <TableHead className="h-10 w-24 text-right text-[10px] font-bold uppercase tracking-wider text-muted-foreground px-1.5">Valor imóvel</TableHead>
             <TableHead className="h-10 w-16 text-right text-[10px] font-bold uppercase tracking-wider text-muted-foreground px-1.5">Prazo</TableHead>
-            <TableHead className="h-10 w-16 text-[10px] font-bold uppercase tracking-wider text-muted-foreground px-1.5">Status</TableHead>
+            <TableHead className="h-10 w-18 text-[10px] font-bold uppercase tracking-wider text-muted-foreground px-1.5">Status</TableHead>
             <TableHead className="h-10 w-20 text-right text-[10px] font-bold uppercase tracking-wider text-muted-foreground px-1.5">Ações</TableHead>
           </TableRow>
         </TableHeader>
@@ -158,8 +158,8 @@ export function TabelaSimulacoes({
                 <TableCell className="py-2.5 px-1.5 text-right tabular-nums font-medium text-muted-foreground w-16 text-[10px]">
                   {s.prazo ? `${s.prazo}m` : "—"}
                 </TableCell>
-                <TableCell className="py-2.5 px-1.5 w-16 relative">
-                  <div className="flex items-center">
+                <TableCell className="py-2.5 px-1.5 w-18 relative">
+                  <div className="flex items-center justify-start pr-2">
                     <SimulacaoStatusBadge status={s.status} />
                   </div>
                 </TableCell>
