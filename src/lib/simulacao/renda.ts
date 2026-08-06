@@ -179,7 +179,7 @@ export function rendaMinimaPelosBancos(
   rendaInformada?: number | null,
 ): AvaliacaoRenda | null {
   const candidatos = (bancos ?? [])
-    .filter((b) => !b.status_banco || b.status_banco === "simulada")
+    .filter((b) => !b.status_banco || b.status_banco === "simulada" || b.status_banco === "erro")
     .map((b) => {
       const parcela = parcelaExigidaPeloBanco(b);
       const rendaMinima = rendaMinimaDoBanco(b);
