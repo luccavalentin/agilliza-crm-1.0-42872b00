@@ -37,8 +37,9 @@ export function SecaoTitular({ ctx }: { ctx: SimulacaoCompletaCtx }) {
 
   return (
     <section className="space-y-4">
-      <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center">
-        <div className="w-full sm:w-72">
+      <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-end">
+        <div className="flex-1">
+          <label className="mb-1.5 block text-xs font-semibold text-muted-foreground">Vincular Cliente do CRM</label>
           <ClienteCRMPicker
             selecionado={f.cliente_id ? f.nome_cliente : null}
             onSelect={selecionarClienteCRM}
@@ -57,17 +58,17 @@ export function SecaoTitular({ ctx }: { ctx: SimulacaoCompletaCtx }) {
         )}
       </div>
       {(cadastroNome || invertido) && (
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 pb-1">
           {cadastroNome && (
-            <Badge variant="secondary" className="gap-1 font-normal">
-              <Link2 className="h-3 w-3" />
-              Vinculado ao cadastro: {cadastroNome}
+            <Badge variant="secondary" className="h-7 gap-1 px-3 font-medium shadow-sm transition-all hover:bg-secondary/80">
+              <Link2 className="h-3.5 w-3.5" />
+              Vinculado: {cadastroNome}
             </Badge>
           )}
           {invertido && (
-            <Badge variant="outline" className="gap-1 border-primary/40 text-primary">
-              <Repeat className="h-3 w-3" />
-              Titular e cônjuge invertidos
+            <Badge variant="outline" className="h-7 gap-1 border-primary/40 bg-primary/5 px-3 font-semibold text-primary shadow-sm">
+              <Repeat className="h-3.5 w-3.5" />
+              CPFs Invertidos
             </Badge>
           )}
         </div>
