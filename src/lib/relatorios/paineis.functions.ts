@@ -1553,7 +1553,7 @@ export const getPanelDrilldown = createServerFn({ method: "POST" })
       };
     }
 
-    if (chave === "demandas abertas" || chave === "sla vencido") {
+    if (chave === "demandas abertas" || chave === "sla vencido" || chave === "simulações com erro") {
       const res = await escopoEq(
         supabase
           .from("demandas")
