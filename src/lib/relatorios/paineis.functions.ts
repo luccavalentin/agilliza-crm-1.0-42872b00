@@ -1557,7 +1557,7 @@ export const getPanelDrilldown = createServerFn({ method: "POST" })
       const res = await escopoEq(
         supabase
           .from("demandas")
-          .select("id,numero,titulo,status,prazo_sla,created_at")
+          .select("id,numero,titulo,status,prazo_sla,created_at,descricao,prioridade,sla_horas")
           .limit(LIMITE * 2),
         "responsavel_id",
         "criador_id",
