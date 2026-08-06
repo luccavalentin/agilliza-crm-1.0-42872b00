@@ -622,7 +622,7 @@ export function AlertRow({
       <button
         type="button"
         onClick={onClick}
-        className="block w-full text-left transition-opacity hover:opacity-80"
+        className="block w-full text-left"
       >
         {conteudo}
       </button>
