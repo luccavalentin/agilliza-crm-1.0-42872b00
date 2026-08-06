@@ -1558,6 +1558,7 @@ export const getPanelDrilldown = createServerFn({ method: "POST" })
         supabase
           .from("demandas")
           .select("id,numero,titulo,status,prazo_sla,created_at,descricao,prioridade,sla_horas")
+          .is("deleted_at", null)
           .limit(LIMITE * 2),
         "responsavel_id",
         "criador_id",
