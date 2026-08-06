@@ -5,7 +5,7 @@
  */
 import { Wallet, CheckCircle2, AlertTriangle } from "lucide-react";
 import { formatBRL } from "@/lib/simulacao/format";
-import { avaliarRendaMinima } from "@/lib/simulacao/renda";
+import { avaliarRendaMinima, rendaMinimaSugerida, calcularMaximoFinanciável } from "@/lib/simulacao/renda";
 import { cn } from "@/lib/utils";
 import type { SimulacaoCompletaCtx } from "@/lib/simulacao/use-simulacao-completa";
 
