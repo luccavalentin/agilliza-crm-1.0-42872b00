@@ -17,13 +17,13 @@ export function BancoChip({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-medium whitespace-nowrap",
+        "inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-[10px] font-bold whitespace-nowrap shadow-sm",
         className,
       )}
       style={{
         color: cor,
-        borderColor: `${cor}33`,
-        backgroundColor: `${cor}14`,
+        borderColor: `${cor}40`,
+        backgroundColor: `${cor}18`,
       }}
     >
       <BancoLogo nome={nome} size="xs" />
