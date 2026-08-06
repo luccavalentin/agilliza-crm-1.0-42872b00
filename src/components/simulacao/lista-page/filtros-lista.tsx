@@ -42,9 +42,9 @@ export function FiltrosLista({
   toggleExcluidas: () => void;
 }) {
   return (
-    <div className="flex flex-col gap-2.5 rounded-xl border border-border/60 bg-card p-2.5 xl:flex-row xl:items-center xl:justify-between">
+    <div className="flex flex-col gap-1.5 rounded-xl border border-border/60 bg-card p-2 xl:flex-row xl:items-center xl:justify-between">
       <Tabs value={escopo} onValueChange={(v) => setEscopo(v as "todas" | "minhas")}>
-        <TabsList className="h-9 w-full sm:w-auto">
+        <TabsList className="h-8 w-full sm:w-auto">
           <TabsTrigger value="todas" className="flex-1 sm:flex-none">
             Gerais
           </TabsTrigger>
@@ -64,13 +64,13 @@ export function FiltrosLista({
           <div className="relative flex-1 sm:flex-none">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              className="h-9 w-full pl-9 xl:w-60 2xl:w-72"
+              className="h-8 w-full pl-9 xl:w-56 2xl:w-64 text-xs"
               placeholder="Número, cliente ou documento"
               value={q}
               onChange={(e) => setQ(e.target.value)}
             />
           </div>
-          <Button type="submit" variant="secondary" size="sm" className="h-9 shrink-0">
+          <Button type="submit" variant="secondary" size="sm" className="h-8 shrink-0 text-xs">
             Buscar
           </Button>
         </form>
@@ -79,7 +79,7 @@ export function FiltrosLista({
             value={responsavel}
             onValueChange={setResponsavel}
             usuarios={colegas ?? []}
-            className="h-9 w-full sm:w-48 xl:w-52 shrink-0"
+            className="h-8 w-full sm:w-44 xl:w-48 shrink-0 text-xs"
           />
         )}
         <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
@@ -88,7 +88,7 @@ export function FiltrosLista({
             aria-label="De"
             value={desde}
             onChange={(e) => setDesde(e.target.value)}
-            className="h-9 w-[46%] shrink-0 sm:w-32 xl:w-34"
+            className="h-8 w-[44%] shrink-0 sm:w-28 xl:w-30 text-xs"
           />
           <span className="text-xs text-muted-foreground">até</span>
           <Input
@@ -96,7 +96,7 @@ export function FiltrosLista({
             aria-label="Até"
             value={ate}
             onChange={(e) => setAte(e.target.value)}
-            className="h-9 w-[46%] shrink-0 sm:w-32 xl:w-34"
+            className="h-8 w-[44%] shrink-0 sm:w-28 xl:w-30 text-xs"
           />
           <Button
             variant="ghost"
