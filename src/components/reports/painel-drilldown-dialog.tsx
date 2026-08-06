@@ -223,7 +223,7 @@ export function PainelDrilldownDialog({
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     if ((it as any).tipo === "demanda") {
-                                      setDemandaParaEditar((it as any).id);
+                                      setDemandaParaEditar((it as any).raw);
                                     } else {
                                       // Navegar para tarefas se não houver dialog
                                       window.location.href = (it as any).to;
