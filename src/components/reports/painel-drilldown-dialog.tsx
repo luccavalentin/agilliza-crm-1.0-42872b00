@@ -297,6 +297,9 @@ export function PainelDrilldownDialog({
         onSalva={() => {
           setDemandaParaEditar(null);
           queryClient.invalidateQueries({ queryKey: ["panel-drilldown"] });
+          queryClient.invalidateQueries({ queryKey: ["panel"] });
+          queryClient.invalidateQueries({ queryKey: ["demandas"] });
+          queryClient.invalidateQueries({ queryKey: ["tarefas"] });
         }}
         abertoOverride={!!demandaParaEditar}
         onOpenChangeOverride={(o: boolean) => {
