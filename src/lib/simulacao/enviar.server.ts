@@ -1068,7 +1068,9 @@ export async function enviarSimulacaoImpl({
       data_nascimento_conjuge: sim.data_nascimento_conjuge,
       email_conjuge: sim.email_conjuge,
       celular_conjuge: sim.celular_conjuge,
-    }).eq("id", simulacaoId);
+    })
+    .eq("id", simulacaoId);
+
 
     return { oportunidade_id: idOportunidade, status: novoStatus, bancos: resultados };
   } catch (e) {
