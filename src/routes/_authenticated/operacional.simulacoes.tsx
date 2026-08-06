@@ -42,7 +42,7 @@ import { BarraSelecao } from "@/components/shared/barra-selecao";
 
 /** Primeiro e último dia do mês atual como intervalo ISO (filtro padrão). */
 function intervaloMesAtual(): { inicio: string; fim: string } {
-  const agora = new Date();
+  const agora = new Date(); // padding-reductions
   const primeiro = new Date(agora.getFullYear(), agora.getMonth(), 1);
   const ultimo = new Date(agora.getFullYear(), agora.getMonth() + 1, 0);
   const iso = (d: Date) =>

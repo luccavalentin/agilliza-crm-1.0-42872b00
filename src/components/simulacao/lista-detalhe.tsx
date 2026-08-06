@@ -46,15 +46,15 @@ export function statusLabel(status: string): string {
 export function ProdutoBadge({ produto }: { produto: string | null | undefined }) {
   if (produto === "home_equity") {
     return (
-      <span className="inline-flex items-center rounded-full border border-warning/30 bg-warning/10 px-2 py-0.5 text-xs font-medium text-warning">
-        Home Equity
+      <span className="inline-flex items-center rounded-full border border-warning/30 bg-warning/10 px-1.5 py-0 text-[9px] font-medium text-warning whitespace-nowrap">
+        HE
       </span>
     );
   }
   if (produto === "financiamento_imobiliario") {
     return (
-      <span className="inline-flex items-center rounded-full border border-primary/25 bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
-        Financiamento
+      <span className="inline-flex items-center rounded-full border border-primary/25 bg-primary/10 px-1.5 py-0 text-[9px] font-medium text-primary whitespace-nowrap">
+        Finc.
       </span>
     );
   }
