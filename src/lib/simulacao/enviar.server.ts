@@ -403,6 +403,18 @@ export async function enviarSimulacaoImpl({
   sim.cpf_cnpj = (sim.cpf_cnpj ?? "").replace(/\D/g, "");
   if (sim.cpf_conjuge) sim.cpf_conjuge = (sim.cpf_conjuge ?? "").replace(/\D/g, "");
 
+  // Se o cliente (titular) tiver um cônjuge cadastrado e a simulação não tiver os dados dele,
+  // mas o estado civil for casado/UE, forçamos o preenchimento para garantir que a proposta
+  // vá completa para o banco.
+  if (cliente && possuiConjuge && !sim.nome_conjuge && (cliente as any).conjuge_nome) {
+    sim.nome_conjuge = (cliente as any).conjuge_nome;
+    sim.cpf_conjuge = ((cliente as any).conjuge_cpf ?? "").replace(/\D/g, "");
+    sim.renda_conjuge = (cliente as any).conjuge_renda ?? 0;
+    sim.data_nascimento_conjuge = (cliente as any).conjuge_data_nascimento;
+    sim.email_conjuge = (cliente as any).conjuge_email;
+    sim.celular_conjuge = (cliente as any).conjuge_celular;
+  }
+
 
   // ===== Financiar despesas =====
   // A API da integração espera a flag como string "S"/"N" (nunca booleano) e, quando
