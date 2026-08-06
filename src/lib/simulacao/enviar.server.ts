@@ -504,8 +504,6 @@ export async function enviarSimulacaoImpl({
         celular: (sim.celular ?? "").replace(/\D/g, ""),
         tipoEstadoCivil: sim.estado_civil ? { id: sim.estado_civil } : undefined,
         regimeCasamento: sim.regime_casamento ? { id: sim.regime_casamento } : undefined,
-        // Garante que o estado civil (maritalStatus) seja enviado para evitar erros no Itaú
-        tipoEstadoCivilParticipante: sim.estado_civil ? { id: sim.estado_civil } : undefined,
 
         fgCompoeRenda: Boolean(sim.compoe_renda),
         ...(sim.possui_conjuge
@@ -592,6 +590,31 @@ export async function enviarSimulacaoImpl({
     }
 
 
+    // A integração HomeFin devolve HTTP 500 ("Erro interno do servidor") de forma
+    // intermitente ao criar/integrar a simulação (visto no Itaú). Nesses casos o
+    // reenvio manual funciona segundos depois, então repetimos automaticamente.
+    const chamarComRetry = async <T,>(
+      rota: string,
+      metodo: "POST" | "PUT",
+      corpo: unknown,
+      tentativas = 3,
+    ): Promise<T> => {
+      let ultimoErro: unknown;
+      for (let i = 0; i < tentativas; i++) {
+        try {
+          return await chamarIntegracao<T>(rota, metodo, corpo as any, ctx);
+        } catch (e: any) {
+          ultimoErro = e;
+          const msg = String(e?.message ?? e);
+          const transitorio = /HTTP 50\d|INTERNAL_ERROR|timeout|ECONNRESET|fetch failed/i.test(msg);
+          if (!transitorio || i === tentativas - 1) throw e;
+          await new Promise((r) => setTimeout(r, 2500 * (i + 1)));
+        }
+      }
+      throw ultimoErro;
+    };
+
+
     // 2 + 3) Simulação + integração por banco.
     // Enviamos um banco de cada vez (SEQUENCIAL): disparar as chamadas em
     // paralelo na mesma oportunidade gera condição de corrida e faz alguns
@@ -614,11 +637,10 @@ export async function enviarSimulacaoImpl({
           "Payload enviado para criar simulação bancária:",
           JSON.stringify(simPayload),
         );
-        const simResp = await chamarIntegracao<any>(
+        const simResp = await chamarComRetry<any>(
           `/oportunidade/${idOportunidade}/simulacao`,
           "POST",
           simPayload,
-          ctx,
         );
         const idSimulacao = String(simResp?.idSimulacao ?? "");
 
@@ -668,11 +690,10 @@ export async function enviarSimulacaoImpl({
         }
 
         // A resposta da integração traz os valores retornados pelo banco
-        const integ = await chamarIntegracao<any>(
+        const integ = await chamarComRetry<any>(
           `/oportunidade/${idOportunidade}/simulacao/${idSimulacao}/integracao`,
           "POST",
           {},
-          ctx,
         );
 
         let dados = integ ?? simResp;
