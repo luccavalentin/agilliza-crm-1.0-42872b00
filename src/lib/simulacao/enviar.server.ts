@@ -942,8 +942,7 @@ export async function enviarSimulacaoImpl({
         const base =
           e instanceof IntegracaoBancariaError ? e.message : humanizarErroBanco(null, String(e));
         const statusHttp = e instanceof IntegracaoBancariaError ? e.statusHttp ?? 0 : 0;
-        const msg =
-          statusHttp >= 500 && avisoCadastro ? `${base}${avisoCadastro}` : base;
+        const msg = base;
         await supabase
           .from("simulacao_bancos")
           .update({ status_banco: "erro", mensagem_banco: msg })
