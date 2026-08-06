@@ -467,15 +467,15 @@ export async function enviarSimulacaoImpl({
         .maybeSingle();
       cliente = data;
     }
-    // Campos do dossiê do proponente: não bloqueiam o envio (alguns bancos
-    // aceitam sem), mas explicam o "erro interno" quando o banco recusa.
+    // Campos do dossiê do proponente: se estiverem faltando, bloqueamos o envio
+    // explicitamente para evitar o Erro 500 silencioso do banco (que recusa dossiês incompletos).
     const faltantesCadastro = validarCamposParticipante(sim, cliente);
-    const avisoCadastro =
-      faltantesCadastro.length > 0
-        ? ` Dados do proponente pendentes no cadastro do cliente: ${faltantesCadastro
-            .map((f) => f.campo)
-            .join(", ")}.`
-        : "";
+    if (faltantesCadastro.length > 0) {
+      const msg = `Não foi possível concluir a solicitação devido a dados pendentes no cadastro do proponente: ${faltantesCadastro
+        .map((f) => f.campo)
+        .join(", ")}. Por favor, revise o cadastro do cliente e tente novamente.`;
+      throw new Error(msg);
+    }
 
     const enderecoImovelGarantia =
       sim.produto === "home_equity" ? await montarEnderecoImovelGarantia(sim, cliente) : null;
@@ -942,8 +942,7 @@ export async function enviarSimulacaoImpl({
         const base =
           e instanceof IntegracaoBancariaError ? e.message : humanizarErroBanco(null, String(e));
         const statusHttp = e instanceof IntegracaoBancariaError ? e.statusHttp ?? 0 : 0;
-        const msg =
-          statusHttp >= 500 && avisoCadastro ? `${base}${avisoCadastro}` : base;
+        const msg = base;
         await supabase
           .from("simulacao_bancos")
           .update({ status_banco: "erro", mensagem_banco: msg })
