@@ -16,7 +16,7 @@ import { AdminHero } from "@/components/admin/admin-hero";
 import { ChatSoundSetting } from "@/components/shared/chat-sound-setting";
 import { otimizarImagem } from "@/lib/imagem";
 
-// URL assinada de longa duração (~10 anos) para exibir a foto de um bucket privado.
+// URL assinada de longa duração para exibir a foto do bucket privado.
 const URL_EXPIRACAO_SEGUNDOS = 60 * 60 * 24 * 365 * 10;
 
 export const Route = createFileRoute("/_authenticated/conta/perfil")({

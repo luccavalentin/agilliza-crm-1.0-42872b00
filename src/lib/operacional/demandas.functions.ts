@@ -863,15 +863,15 @@ export const escalarDemanda = createServerFn({ method: "POST" })
     return { escalonadas: (data as number) ?? 0 };
   });
 
-/** Exclui uma demanda. Apenas quem enviou (criador) pode excluir. */
+/** Exclui uma demanda. Criador e responsável podem remover o registro. */
 export const excluirDemanda = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }): Promise<{ ok: true }> => {
     const { supabase, userId } = context;
     const atual = await papelNaDemanda(supabase, data.id, userId);
-    if (!atual.souCriador) {
-      throw new Error("Apenas quem enviou a demanda pode excluí-la.");
+    if (!atual.souCriador && !atual.souResponsavel) {
+      throw new Error("Apenas quem enviou ou recebeu a demanda pode excluí-la.");
     }
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin.from("demandas").delete().eq("id", data.id);

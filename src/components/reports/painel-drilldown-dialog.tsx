@@ -31,9 +31,13 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { BancoLogo } from "@/components/bancos/banco-logo";
-import { getPanelDrilldown } from "@/lib/relatorios/paineis.functions";
+import {
+  getPanelDrilldown,
+  type PanelDrilldown,
+} from "@/lib/relatorios/paineis.functions";
 import { excluirDemanda } from "@/lib/operacional/demandas.functions";
 import { excluirTarefa } from "@/lib/operacional/tarefas.functions";
+import { excluirSimulacao } from "@/lib/simulacao/simulacoes.functions";
 import { EditarDemandaDialog } from "@/components/operacional/editar-demanda-dialog";
 // Nota: Se houver um EditarTarefaDialog, ele deve ser importado aqui.
 // Por enquanto, usaremos a navegação para edição se for complexo.
@@ -60,11 +64,15 @@ export function PainelDrilldownDialog({
   const drillFn = useServerFn(getPanelDrilldown);
   const deleteDemandaFn = useServerFn(excluirDemanda);
   const deleteTarefaFn = useServerFn(excluirTarefa);
+  const deleteSimulacaoFn = useServerFn(excluirSimulacao);
 
-  const [itemParaExcluir, setItemParaExcluir] = React.useState<{ id: string; tipo: "demanda" | "tarefa" } | null>(null);
+  const [itemParaExcluir, setItemParaExcluir] = React.useState<{
+    id: string;
+    tipo: "demanda" | "tarefa" | "simulacao";
+  } | null>(null);
   const [demandaParaEditar, setDemandaParaEditar] = React.useState<any | null>(null);
 
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error } = useQuery<PanelDrilldown>({
     queryKey: ["panel-drilldown", contexto?.metrica, contexto?.filtros],
     queryFn: () =>
       drillFn({
@@ -224,9 +232,8 @@ export function PainelDrilldownDialog({
                                     e.stopPropagation();
                                     if ((it as any).tipo === "demanda") {
                                       setDemandaParaEditar((it as any).raw);
-                                    } else {
-                                      // Navegar para tarefas se não houver dialog
-                                      window.location.href = (it as any).to;
+                                    } else if (it.to) {
+                                      window.location.href = it.to;
                                     }
                                   }}
                                 >
@@ -314,7 +321,7 @@ export function PainelDrilldownDialog({
         <AlertDialogHeader>
           <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
           <AlertDialogDescription>
-            Tem certeza que deseja excluir esta {itemParaExcluir?.tipo}? Esta ação não pode ser desfeita.
+            Tem certeza que deseja excluir este registro? Os alertas vinculados também serão removidos.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -326,14 +333,17 @@ export function PainelDrilldownDialog({
               try {
                 if (itemParaExcluir.tipo === "demanda") {
                   await deleteDemandaFn({ data: { id: itemParaExcluir.id } });
-                } else {
+                } else if (itemParaExcluir.tipo === "tarefa") {
                   await deleteTarefaFn({ data: { id: itemParaExcluir.id } });
+                } else {
+                  await deleteSimulacaoFn({ data: { id: itemParaExcluir.id } });
                 }
-                toast.success(`${itemParaExcluir.tipo === "demanda" ? "Demanda" : "Tarefa"} excluída com sucesso!`);
+                toast.success("Registro e alertas vinculados excluídos com sucesso!");
                 queryClient.invalidateQueries({ queryKey: ["panel-drilldown"] });
                 queryClient.invalidateQueries({ queryKey: ["panel"] });
                 queryClient.invalidateQueries({ queryKey: ["demandas"] });
                 queryClient.invalidateQueries({ queryKey: ["tarefas"] });
+                queryClient.invalidateQueries({ queryKey: ["simulacoes"] });
               } catch (err) {
                 toast.error("Erro ao excluir registro.");
               } finally {
