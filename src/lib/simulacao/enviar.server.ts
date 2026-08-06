@@ -438,16 +438,13 @@ export async function enviarSimulacaoImpl({
 
   // Regra de bloqueio: não enviar ao banco se "financiar despesas" está marcado
   // mas os valores não foram informados/calculados corretamente.
+  // Verificação informativa (Princípio #1 - Simulação nunca trava)
   if (financiarDespesas) {
     if (!(valorDespesasFinanciadas > 0)) {
-      throw new Error(
-        'Financiar despesas está marcado, mas o valor das despesas a financiar está vazio ou zerado.',
-      );
+      console.warn('[enviar.server] Financiar despesas marcado mas valor zerado.');
     }
     if (!(valorTotalFinanciamento > valorFinanciamentoBase)) {
-      throw new Error(
-        'Valor total do financiamento inválido para simulação com despesas financiadas.',
-      );
+      console.warn('[enviar.server] Valor total financiamento igual ao base mesmo com despesas marcadas.');
     }
   }
 
