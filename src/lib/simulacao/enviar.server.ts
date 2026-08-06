@@ -187,7 +187,7 @@ async function montarEnderecoImovelGarantia(sim: any, cliente: any) {
 
 async function garantirDadosParticipantesSimulacao({
   sim,
-        cliente: clienteCompleto,
+  cliente,
   idOportunidade,
   ctx,
 }: {
@@ -678,7 +678,7 @@ export async function enviarSimulacaoImpl({
     }
 
     if (idOportunidade) {
-      await garantirDadosParticipantesSimulacao({ sim, cliente, idOportunidade, ctx });
+      await garantirDadosParticipantesSimulacao({ sim, cliente: clienteCompleto, idOportunidade, ctx });
     }
 
 
