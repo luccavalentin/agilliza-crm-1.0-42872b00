@@ -46,7 +46,7 @@ export const Route = createFileRoute("/_authenticated/operacional/simulacoes_/co
 function Pagina() {
   const { duplicar, origem: origemFluxo } = Route.useSearch();
   const ctx = useSimulacaoCompleta({ duplicar, modoProposta: origemFluxo === "proposta" });
-  const { router, modoProposta, f, enviando, concluidos, mostraConjuge, confirmRenda, setConfirmRenda, enviar, executarEnvio, simulacaoResultadoId, simulacaoResultadoIdPrice, simulacaoResultadoIdSecundario, fecharResultadoInline, fecharResultadoInlinePrice, fecharResultadoInlineSecundario } = ctx;
+  const { router, modoProposta, f, erros, enviando, concluidos, mostraConjuge, confirmRenda, setConfirmRenda, enviar, executarEnvio, simulacaoResultadoId, simulacaoResultadoIdPrice, simulacaoResultadoIdSecundario, fecharResultadoInline, fecharResultadoInlinePrice, fecharResultadoInlineSecundario } = ctx;
   const resultadoRef = useRef<HTMLDivElement>(null);
 
   const [popupAberto, setPopupAberto] = useState(false);

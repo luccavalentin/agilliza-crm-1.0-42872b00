@@ -836,15 +836,7 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
       await enviarAmbos();
       return;
     }
-    const parsed = completaSchema.safeParse({ ...f, id_operacao_homefin: idOperacao });
-    if (!parsed.success) {
-      const novos: Record<string, string> = {};
-      for (const issue of parsed.error.issues) novos[String(issue.path[0])] = issue.message;
-      setErros(novos);
-      toast.error("Revise os campos destacados.");
-      return;
-    }
-    setErros({});
+    
     if (financiamentoExcedido) {
       toast.error(
         f.fg_financiar_despesas
