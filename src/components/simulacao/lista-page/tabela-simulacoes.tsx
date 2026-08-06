@@ -158,8 +158,10 @@ export function TabelaSimulacoes({
                 <TableCell className="py-2.5 px-1.5 text-right tabular-nums font-medium text-muted-foreground w-16 text-[10px]">
                   {s.prazo ? `${s.prazo}m` : "—"}
                 </TableCell>
-                <TableCell className="py-2.5 px-1.5 w-16">
-                  <SimulacaoStatusBadge status={s.status} />
+                <TableCell className="py-2.5 px-1.5 w-16 relative">
+                  <div className="flex items-center">
+                    <SimulacaoStatusBadge status={s.status} />
+                  </div>
                 </TableCell>
                 <TableCell className="text-right py-2.5 px-1.5 w-20" onClick={(e) => e.stopPropagation()}>
                   {verExcluidas ? (
