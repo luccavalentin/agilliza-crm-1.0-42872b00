@@ -1669,6 +1669,19 @@ export const excluirProposta = createServerFn({ method: "POST" })
       if (errAdmin) throw errAdmin;
     }
 
+    // Cascata: demandas/alertas e notificações vinculadas somente a esta proposta
+    try {
+      const agora = new Date().toISOString();
+      await supabase
+        .from("demandas")
+        .update({ deleted_at: agora, deleted_by: userId, deleted_motivo: "Proposta excluída" })
+        .eq("proposta_id", data.id)
+        .is("deleted_at", null);
+      await supabase.from("notificacoes").delete().like("link", `%${data.id}%`);
+    } catch {
+      /* não bloqueia a exclusão */
+    }
+
     // Se o cliente ficou sem simulações/propostas ativas, recua a esteira.
     try {
       const { recuarEsteiraSeOrfao } = await import("@/lib/crm/clientes.functions");
