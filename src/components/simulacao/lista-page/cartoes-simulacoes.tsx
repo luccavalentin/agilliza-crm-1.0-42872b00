@@ -131,7 +131,9 @@ export function CartoesSimulacoes({
                         }
                         onExcluir={() => handlers.onExcluir(s.id)}
                         onEncaminhar={(id, canal) => handlers.onEncaminhar(s.id, canal)}
+                        onDestravar={() => handlers.onDestravar(s.id)}
                         numero={s.numero_simulacao}
+
                       />
                   </>
                 )}
