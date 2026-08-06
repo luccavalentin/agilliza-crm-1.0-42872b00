@@ -202,6 +202,7 @@ function drawDadosCliente(doc: jsPDF, pageW: number, s: any, y: number): number 
     dataTxt(s.data_nascimento),
     s.cpf_cnpj ?? "—",
   ];
+
   rotulos.forEach((r, i) => {
     doc.setTextColor(P.cinza);
     doc.setFont("helvetica", "bold");
