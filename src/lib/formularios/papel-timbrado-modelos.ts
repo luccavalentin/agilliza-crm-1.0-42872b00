@@ -1,11 +1,10 @@
 /**
  * Modelos de Papel Timbrado — 10 variações institucionais Agilliza.
  *
- * 5 modelos corporativos (faixa/hairline/borda-lateral) e 5 modelos da linha
- * "Real" — inspirados em cartas régias antigas: moldura ornamental dupla,
- * cantos trabalhados, brasão/selo em marca d'água e tipografia serifada.
- * Todos incluem marca d'água central e foram calibrados para impressão em
- * papel cartão (fundo levemente marfim nos modelos Real).
+ * 5 modelos corporativos (Minimalista, Executivo, Premium, Moderno, Clássico) e 5 modelos da linha
+ * "Real" — inspirados em alta nobreza: moldura ornamental refinada,
+ * cantos trabalhados em ouro, brasão/selo em marca d'água e tipografia serifada de luxo.
+ * Todos incluem marca d'água central e foram calibrados para máxima elegância corporativa.
  */
 export type PapelTimbradoModeloId =
   | "institucional"
