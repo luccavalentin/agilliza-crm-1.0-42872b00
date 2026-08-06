@@ -511,19 +511,15 @@ export async function enviarSimulacaoImpl({
       sim.produto === "home_equity" ? await montarEnderecoImovelGarantia(sim, clienteCompleto) : null;
     if (sim.produto === "home_equity") {
       if (!enderecoImovelGarantia?.cep) {
-        throw new Error(
-          "Informe o CEP do imóvel antes de reenviar Home Equity ao banco. Sem esse dado o banco não calcula a garantia e retorna a simulação vazia.",
-        );
+        console.warn("[enviar.server] CEP do imóvel ausente para Home Equity.");
       }
       if (
-        !enderecoImovelGarantia.logradouro ||
-        !enderecoImovelGarantia.bairro ||
-        !enderecoImovelGarantia.municipio ||
-        !enderecoImovelGarantia.uf
+        !enderecoImovelGarantia?.logradouro ||
+        !enderecoImovelGarantia?.bairro ||
+        !enderecoImovelGarantia?.municipio ||
+        !enderecoImovelGarantia?.uf
       ) {
-        throw new Error(
-          "Complete ou corrija o CEP do imóvel para Home Equity. O banco exige endereço completo da garantia para retornar a simulação.",
-        );
+        console.warn("[enviar.server] Endereço do imóvel incompleto para Home Equity.");
       }
     }
 
