@@ -11,6 +11,8 @@ import {
   restaurarProposta,
   sincronizarPropostasAtivas,
 } from "@/lib/propostas/propostas.functions";
+import { propostaQueryOptions } from "@/lib/propostas/queries";
+
 import { Button } from "@/components/ui/button";
 import { listarColegas } from "@/lib/operacional/shared.functions";
 import {
