@@ -491,6 +491,15 @@ async function garantirEnderecoParticipantes({
       ctx,
     );
     const op = resp?.oportunidade ?? resp ?? {};
+    const situacao = String(op?.tipoSituacao ?? "").toUpperCase().charAt(0);
+
+    // Requisito 3: Interromper se a oportunidade estiver cancelada na HomeFin
+    if (situacao === "C") {
+      throw new Error(
+        "A oportunidade desta proposta foi cancelada na integração (provavelmente por um cancelamento anterior). Será criada uma nova oportunidade para reenviar."
+      );
+    }
+
     participantes = Array.isArray(op?.participantes) ? op.participantes : [];
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
