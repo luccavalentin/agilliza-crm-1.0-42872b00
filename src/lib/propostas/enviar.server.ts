@@ -1030,19 +1030,40 @@ async function enviarPropostaImplInner({
 
 
 
-  // No primeiro envio o status avança; em envios adicionais o status já reflete
-  // a análise em andamento e não deve retroceder.
-  let novoStatus = statusAtual;
-  if (primeiroEnvio) {
-    novoStatus = sucesso > 0 ? "enviada_banco" : "erro_envio";
-    await supabase.from("propostas").update({ status: novoStatus }).eq("id", propostaId);
+  // ---- 3) Recálculo do status global (propostas.status) a partir dos bancos ----
+  // Garante uma fonte única de verdade: propostas.status deve ser derivado de
+  // proposta_bancos, e nunca divergir dele.
+  let algumAprovado = false;
+  let algumEmAnalise = false;
+  let algumRecusado = false;
+
+  const { data: todosBancos } = await supabase
+    .from("proposta_bancos")
+    .select("situacao_banco")
+    .eq("proposta_id", propostaId);
+
+  for (const tb of (todosBancos ?? []) as any[]) {
+    const s = String(tb.situacao_banco);
+    if (s === "aprovado" || s === "condicionado") algumAprovado = true;
+    else if (s === "em_analise") algumEmAnalise = true;
+    else if (s === "recusado") algumRecusado = true;
+  }
+
+  let novoStatusGlobal: PropostaStatus = statusAtual;
+  if (algumAprovado) novoStatusGlobal = "credito_aprovado";
+  else if (algumEmAnalise) novoStatusGlobal = "em_analise_credito";
+  else if (algumRecusado) novoStatusGlobal = "credito_recusado";
+  else if (sucesso === 0 && primeiroEnvio) novoStatusGlobal = "erro_envio";
+
+  if (novoStatusGlobal !== statusAtual) {
+    await supabase.from("propostas").update({ status: novoStatusGlobal }).eq("id", propostaId);
   }
 
   await supabase.from("proposta_historico").insert({
     proposta_id: propostaId,
     tipo_evento: sucesso > 0 ? "enviada_ao_banco" : "erro_envio",
     descricao: sucesso > 0 ? "Proposta enviada ao banco" : "Falha ao enviar proposta ao banco",
-    status_novo: novoStatus,
+    status_novo: novoStatusGlobal,
     ator_id: userId,
   });
 
