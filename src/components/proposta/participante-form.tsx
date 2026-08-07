@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { ESTADO_CIVIL_COM_REGIME } from "@/lib/propostas/dominios";
-import { TIPO_BANCO_SANTANDER } from "@/lib/simulacao/homefin.server";
+import { LABEL_POR_CHAVE } from "@/lib/propostas/campos-obrigatorios";
 
 import { CamposParticipante } from "./participante-form/campos-participante";
 import {
