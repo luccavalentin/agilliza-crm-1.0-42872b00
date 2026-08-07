@@ -342,50 +342,47 @@ function normalizarChaveRetorno(v: string): string {
     .replace(/[\u0300-\u036f]/g, "");
 }
 
-function buscarCampoRetorno(obj: unknown, chaves: string[], visitados = new WeakSet<object>()): string | null {
-  if (obj == null) return null;
-  if (typeof obj === "string") {
-    const texto = obj.trim();
-    if (!texto) return null;
-    if (texto.startsWith("{") || texto.startsWith("[")) {
+/**
+ * Busca RASA: só as chaves próprias do objeto da simulação e dos seus
+ * envelopes diretos de resposta (`descricaoRespostaBanco`, `retornoIntegracao`).
+ *
+ * Nunca desce recursivamente por arrays/objetos aninhados — era exatamente
+ * assim que o protocolo de uma proposta/banco vazava para outra: o payload da
+ * oportunidade carrega TODAS as simulações e a busca profunda acabava pegando
+ * o número da simulação vizinha (outro banco).
+ */
+function buscarCampoRaso(obj: unknown, chaves: string[]): string | null {
+  if (obj == null || typeof obj !== "object") return null;
+  const alvo = new Set(chaves.map(normalizarChaveRetorno));
+  const escopos: Array<Record<string, unknown>> = [obj as Record<string, unknown>];
+  for (const envelope of ["descricaoRespostaBanco", "retornoIntegracao"]) {
+    const v = (obj as Record<string, unknown>)[envelope];
+    if (v && typeof v === "object") escopos.push(v as Record<string, unknown>);
+    else if (typeof v === "string" && v.trim().startsWith("{")) {
       try {
-        const parsed = JSON.parse(texto);
-        const achado = buscarCampoRetorno(parsed, chaves, visitados);
-        if (achado) return achado;
+        const parsed = JSON.parse(v);
+        if (parsed && typeof parsed === "object") escopos.push(parsed);
       } catch {
-        // Continua para extração por regex em strings não-JSON ou JSON malformado.
+        // envelope não-JSON: ignorado de propósito
       }
     }
-    for (const chave of chaves) {
-      const re = new RegExp(`"?${chave}"?\\s*[:=]\\s*"?([A-Za-z0-9._/-]+)`, "i");
-      const match = texto.match(re);
-      if (match?.[1]) return match[1];
-    }
-    return null;
   }
-  if (typeof obj !== "object") return null;
-  if (visitados.has(obj)) return null;
-  visitados.add(obj);
-
-  if (Array.isArray(obj)) {
-    for (const item of obj) {
-      const achado = buscarCampoRetorno(item, chaves, visitados);
-      if (achado) return achado;
+  for (const escopo of escopos) {
+    for (const [k, v] of Object.entries(escopo)) {
+      if (v == null || typeof v === "object") continue;
+      if (alvo.has(normalizarChaveRetorno(k)) && String(v).trim()) return String(v).trim();
     }
-    return null;
-  }
-
-  const mapaChaves = new Set(chaves.map(normalizarChaveRetorno));
-  for (const [k, v] of Object.entries(obj as Record<string, unknown>)) {
-    if (mapaChaves.has(normalizarChaveRetorno(k)) && v != null && String(v).trim()) {
-      return String(v).trim();
-    }
-  }
-  for (const v of Object.values(obj as Record<string, unknown>)) {
-    const achado = buscarCampoRetorno(v, chaves, visitados);
-    if (achado) return achado;
   }
   return null;
+}
+
+/** Um protocolo de banco é um código curto alfanumérico — nunca um UUID. */
+function protocoloValido(valor: string | null): string | null {
+  const v = valor == null ? "" : String(valor).trim();
+  if (!v) return null;
+  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v)) return null;
+  if (v.length > 30) return null;
+  return v;
 }
 
 /**
@@ -393,47 +390,42 @@ function buscarCampoRetorno(obj: unknown, chaves: string[], visitados = new Weak
  *  - `numeroPropostaBanco` / `numeroProposta` / `proposalNumber` / `codigoPropostaBanco`
  *  - `codigoOportunidadeBanco` quando o retorno está em análise/aprovado
  *
- * Filtramos IDs internos (UUIDs) que não são protocolos reais do banco.
+ * Só aceita valores presentes no retorno DAQUELA simulação/banco (busca rasa) e
+ * filtra IDs internos (UUIDs) que não são protocolos reais do banco.
  */
 export function numeroPropostaBancoReal(sim: any): string | null {
-  const numero = buscarCampoRetorno(sim, [
-    "numeroPropostaBanco",
-    "numeroProposta",
-    "proposalNumber",
-    "codigoPropostaBanco",
-    "codigoOportunidadeBanco",
-  ]);
-
-  const valor = numero == null || numero === "" ? null : String(numero).trim();
-
-  // Caso 1b: Valide o formato — rejeite qualquer valor no formato UUID
-  // (8-4-4-4-12 hexadecimal) como protocolo de banco.
-  const isUuid =
-    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(valor ?? "");
-  if (isUuid) return null;
-
-  return valor;
+  return protocoloValido(
+    buscarCampoRaso(sim, [
+      "numeroPropostaBanco",
+      "numeroProposta",
+      "proposalNumber",
+      "codigoPropostaBanco",
+      "codigoOportunidadeBanco",
+    ]),
+  );
 }
 
 export function referenciaIntegracaoBanco(sim: any): string | null {
-  const referencia = buscarCampoRetorno(sim, [
-    "codigoOportunidadeBanco",
-    "codigoOportunidadeBancoInterno",
-  ]);
-  return referencia == null || referencia === "" ? null : String(referencia);
+  return protocoloValido(
+    buscarCampoRaso(sim, ["codigoOportunidadeBanco", "codigoOportunidadeBancoInterno"]),
+  );
 }
 
+
 export function numeroBancoDaOportunidade(op: any): string | null {
-  const numero = buscarCampoRetorno(op, [
-    "numeroPropostaBanco",
-    "numeroProposta",
-    "proposalNumber",
-    "codigoPropostaBanco",
-    "codigoOportunidadeBanco",
-    "codigoSimulacaoBanco",
-  ]);
-  return numero == null || numero === "" ? null : String(numero);
+  // Busca RASA: o payload da oportunidade contém as simulações de TODOS os
+  // bancos; descer nele copiaria o protocolo de um banco para outro.
+  return protocoloValido(
+    buscarCampoRaso(op, [
+      "numeroPropostaBanco",
+      "numeroProposta",
+      "proposalNumber",
+      "codigoPropostaBanco",
+      "codigoOportunidadeBanco",
+    ]),
+  );
 }
+
 
 export function numeroAtualEhReferenciaTecnica(pb: any, sim: any): boolean {
   const atual = String(pb?.numero_proposta_banco ?? "").trim();

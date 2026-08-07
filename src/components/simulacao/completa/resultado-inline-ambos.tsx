@@ -29,6 +29,20 @@ import { extrairDetalheBanco } from "@/lib/simulacao/detalhe-banco";
 import { rendaMinimaDoBanco } from "@/lib/simulacao/renda";
 import { cn } from "@/lib/utils";
 import { ErroBancoDetalhe } from "@/components/simulacao/erro-banco-detalhe";
+import { bancoInformou } from "@/lib/simulacao/origem-dados";
+/**
+ * Campos com fallback interno para o valor SOLICITADO: só exibimos quando o
+ * banco realmente informou (ver src/lib/simulacao/origem-dados.ts).
+ */
+const prazoMaxTexto = (b: any) =>
+  bancoInformou(b, "prazo_pagamento_max") && b.prazo_pagamento_max
+    ? `${b.prazo_pagamento_max}m`
+    : "—";
+const financMaxTexto = (b: any) =>
+  bancoInformou(b, "valor_financiamento_max") && b.valor_financiamento_max != null
+    ? formatBRL(b.valor_financiamento_max)
+    : "—";
+
 
 interface Props {
   simulacaoIdSac: string | null;
@@ -361,9 +375,9 @@ export function ResultadoInlineAmbos({ simulacaoIdSac, simulacaoIdPrice, onFecha
                         />
                         <MobileStat
                           rotulo="Prazo máx"
-                          valor={b.prazo_pagamento_max ? `${b.prazo_pagamento_max}m` : "—"}
+                          valor={prazoMaxTexto(b)}
                         />
-                        <MobileStat rotulo="Financ. máx" valor={formatBRL(b.valor_financiamento_max)} />
+                        <MobileStat rotulo="Financ. máx" valor={financMaxTexto(b)} />
                         <MobileStat rotulo="Total financiado" valor={formatBRL(totalFinanciado(b))} />
                         <MobileStat rotulo="IOF" valor={formatBRL(b.valor_iof)} />
                         <MobileStat rotulo="Renda estimada" valor={formatBRL(rendaMinimaDoBanco(b))} />
@@ -483,7 +497,7 @@ export function ResultadoInlineAmbos({ simulacaoIdSac, simulacaoIdPrice, onFecha
                           {b.taxa_juros_ano != null ? formatPercent(b.taxa_juros_ano / 100) : "—"}
                         </TableCell>
                         <TableCell className="py-3 text-right text-sm tabular-nums whitespace-nowrap">
-                          {b.prazo_pagamento_max ? `${b.prazo_pagamento_max}m` : "—"}
+                          {prazoMaxTexto(b)}
                         </TableCell>
                         <TableCell className="py-3 text-right text-sm font-semibold tabular-nums whitespace-nowrap">
                           {formatBRL(totalFinanciado(b))}

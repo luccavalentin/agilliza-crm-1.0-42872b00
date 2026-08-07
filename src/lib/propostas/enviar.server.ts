@@ -838,8 +838,23 @@ async function enviarPropostaImplInner({
     );
   }
 
-  // Reenvio (ou primeiro envio) limpa o status e o erro da tentativa anterior
-  // dos campos da proposta para garantir fonte única de verdade no início do processo.
+  // Reenvio (ou primeiro envio) limpa o resíduo da tentativa anterior — tanto
+  // na proposta quanto nas LINHAS DE BANCO que estão sendo reenviadas. Sem
+  // isso, `propostas.status` fica preso em `credito_recusado`/`erro_envio` de
+  // uma tentativa antiga e o protocolo velho continua gravado.
+  await supabase
+    .from("proposta_bancos")
+    .update({
+      status_banco: "aguardando",
+      situacao_banco: "nao_enviado",
+      mensagem_banco: null,
+      numero_proposta_banco: null,
+    } as any)
+    .in(
+      "id",
+      (bancos as any[]).map((b) => b.id),
+    );
+
   const patchProposta: Record<string, any> = {
     enviada_em: new Date().toISOString(),
     ip_consentimento: ip,
@@ -847,9 +862,17 @@ async function enviarPropostaImplInner({
     detalhe_status_atual: null,
   };
 
-  if (primeiroEnvio) {
+  // O status também é resíduo: uma proposta em reenvio não pode continuar
+  // marcada como recusada/erro da tentativa anterior.
+  if (
+    primeiroEnvio ||
+    prop.status === "erro_envio" ||
+    prop.status === "credito_recusado" ||
+    prop.status === "rascunho"
+  ) {
     patchProposta.status = "enviada_banco";
   }
+
 
   await supabase.from("propostas").update(patchProposta).eq("id", propostaId);
 
@@ -965,12 +988,32 @@ async function enviarPropostaImplInner({
         mapa.banco === "erro"
           ? "em_analise"
           : situacaoBancoDeTipo(situacaoTipo, resp?.codigoSituacaoBanco, false, resp);
-      const numeroBanco = numeroPropostaBancoReal(resp);
+      const numeroExtraido = numeroPropostaBancoReal(resp);
       const referenciaBanco = referenciaIntegracaoBanco(resp);
-      if (numeroBanco) patchOk.numero_proposta_banco = numeroBanco;
-      else if (referenciaBanco && numeroAtualEhReferenciaTecnica(b, resp)) {
+      // Um mesmo protocolo não pode existir em duas propostas / bancos
+      // diferentes. Se acontecer, é vazamento de dado — loga e descarta.
+      let numeroBanco: string | null = numeroExtraido;
+      if (numeroExtraido) {
+        const { data: colisao } = await supabase
+          .from("proposta_bancos")
+          .select("id, proposta_id, banco_id")
+          .eq("numero_proposta_banco", numeroExtraido)
+          .neq("id", b.id)
+          .limit(1);
+        if (colisao && colisao.length > 0) {
+          console.error(
+            "[proposta] protocolo duplicado entre bancos/propostas — descartado",
+            { numero: numeroExtraido, atual: b.id, existente: colisao[0] },
+          );
+          numeroBanco = null;
+        }
+      }
+      // Sem protocolo devolvido pela API DESTA proposta/banco → campo NULO.
+      patchOk.numero_proposta_banco = numeroBanco;
+      if (!numeroBanco && referenciaBanco && numeroAtualEhReferenciaTecnica(b, resp)) {
         patchOk.numero_proposta_banco = null;
       }
+
       if (resp?.valorParcelaBanco != null) patchOk.valor_parcela = resp.valorParcelaBanco;
       if (resp?.taxaJurosAnoBanco != null) patchOk.taxa_juros_ano = resp.taxaJurosAnoBanco;
       if (resp?.prazoPagamentoBancoMax != null)
@@ -1247,13 +1290,35 @@ export async function sincronizarPropostaImpl({
     if (falhaIntegracao) {
       patchBanco.numero_proposta_banco = null;
     } else if (numeroReal) {
-      patchBanco.numero_proposta_banco = numeroReal;
-      if (!numeroPropostaBanco || sim.bancoEscolhido === "S" || mapa.proposta === "credito_aprovado") {
-        numeroPropostaBanco = numeroReal;
+      // Um mesmo protocolo em duas linhas de banco/propostas diferentes é bug
+      // de vazamento — loga e não propaga.
+      const { data: colisao } = await supabase
+        .from("proposta_bancos")
+        .select("id, proposta_id, banco_id")
+        .eq("numero_proposta_banco", numeroReal)
+        .neq("id", pb.id)
+        .limit(1);
+      if (colisao && colisao.length > 0) {
+        console.error("[proposta] protocolo duplicado entre bancos/propostas — descartado", {
+          numero: numeroReal,
+          atual: pb.id,
+          existente: colisao[0],
+        });
+        patchBanco.numero_proposta_banco = null;
+      } else {
+        patchBanco.numero_proposta_banco = numeroReal;
+        if (
+          !numeroPropostaBanco ||
+          sim.bancoEscolhido === "S" ||
+          mapa.proposta === "credito_aprovado"
+        ) {
+          numeroPropostaBanco = numeroReal;
+        }
       }
     } else if (numeroAtualEhReferenciaTecnica(pb, sim)) {
       patchBanco.numero_proposta_banco = null;
     }
+
     if (sim.valorParcelaBanco != null) patchBanco.valor_parcela = sim.valorParcelaBanco;
     if (sim.taxaJurosAnoBanco != null) patchBanco.taxa_juros_ano = sim.taxaJurosAnoBanco;
     if (sim.prazoPagamentoBanco != null || sim.prazoPagamentoBancoMax != null)
@@ -1296,69 +1361,51 @@ export async function sincronizarPropostaImpl({
   } else if (situacao === "C") {
     novoStatus = "cancelada";
   } else {
-    // Avança apenas para frente no funil (nunca regride).
-    const atual = ORDEM_STATUS.indexOf(prop.status as PropostaStatus);
-    const candidatos = [statusBancos, statusAtividade.status, statusEtapa].filter(
-      Boolean,
-    ) as PropostaStatus[];
-    let melhorIdx = atual;
-    for (const c of candidatos) {
+    // FONTE ÚNICA DE VERDADE: `propostas.status` é DERIVADO do estado atual de
+    // `proposta_bancos` (statusBancos). Nunca fica resíduo de uma tentativa
+    // anterior — se os bancos estão "em análise", a proposta é "em análise",
+    // mesmo que antes estivesse recusada, e vice-versa.
+    let derivado: PropostaStatus | null = statusBancos;
+
+    // Funil/atividades só podem AVANÇAR além do desfecho de crédito
+    // (documentos → engenharia → jurídica → contrato). Nunca contradizem os
+    // bancos em relação ao desfecho de crédito.
+    const base = derivado ?? (prop.status as PropostaStatus);
+    let melhorIdx = ORDEM_STATUS.indexOf(base);
+    for (const c of [statusAtividade.status, statusEtapa]) {
+      if (!c) continue;
       const idx = ORDEM_STATUS.indexOf(c);
       if (idx > melhorIdx) {
         melhorIdx = idx;
-        novoStatus = c;
+        derivado = c;
       }
     }
-    // Desfecho terminal de crédito recusado quando não houve avanço no funil.
-    // credito_recusado não faz parte da ORDEM_STATUS (não é progressão), então o
-    // laço acima nunca o seleciona — precisa ser tratado explicitamente aqui a
-    // partir de QUALQUER sinal (bancos, etapa do funil ou atividade), senão a
-    // proposta fica presa em "em_analise_credito" e o polling roda para sempre.
-    // EXCEÇÃO: quando o único sinal de "recusa" vem de uma FALHA DE INTEGRAÇÃO
-    // (Bradesco: recusa fantasma sem token do banco), NÃO marca recusado —
-    // vira erro_envio para o operador reenviar.
-    const houveRecusa =
-      statusBancos === "credito_recusado" ||
-      statusEtapa === "credito_recusado" ||
-      statusAtividade.status === "credito_recusado";
 
-    // CASO 2a: Ao processar o retorno, sempre recalcule propostas.status a partir do estado atual
-    // dos bancos, nunca deixando resíduo de tentativa anterior.
-    // Se o banco retornou protocolo real e está em análise, garantimos que o status seja coerente.
-    if (houveRecusa && prop.status !== "credito_recusado") {
-      novoStatus = "credito_recusado";
+    // Recusa sinalizada pelo funil/atividade quando os bancos ainda não têm
+    // desfecho próprio (credito_recusado não pertence à ORDEM_STATUS).
+    if (
+      !statusBancos &&
+      (statusEtapa === "credito_recusado" || statusAtividade.status === "credito_recusado")
+    ) {
+      derivado = "credito_recusado";
     }
 
-    // Se houve desfecho positivo de algum banco (análise ou aprovado),
-    // isso deve prevalecer sobre recusas de outros bancos ou de tentativas anteriores.
-    if (statusBancos === "em_analise_credito" || statusBancos === "credito_aprovado") {
-      novoStatus = statusBancos;
-    }
-
-    // Falha de integração sem outro desfecho positivo: força erro_envio para
-    // habilitar reenvio (não é recusa de crédito real). NUNCA regride uma
-    // proposta que já foi confirmada como enviada ao banco — nesse caso o
-    // "falha" no polling é leitura transitória e o próximo tick reconcilia.
-    const jaEnviadaAoBanco =
-      prop.status === "enviada_banco" ||
-      prop.status === "em_analise_credito" ||
-      prop.status === "credito_aprovado" ||
-      prop.status === "aguardando_documentos" ||
-      prop.status === "engenharia_vistoria" ||
-      prop.status === "analise_juridica";
+    // Falha de integração sem nenhum desfecho real de crédito: erro_envio para
+    // habilitar o reenvio (não é recusa de crédito).
     if (
       algumFalhaIntegracao &&
-      !jaEnviadaAoBanco &&
       !algumAprovado &&
       !algumEmAnalise &&
       !algumRecusado &&
-      novoStatus !== "credito_aprovado" &&
-      novoStatus !== "em_analise_credito" &&
-      novoStatus !== "contrato_emitido"
+      (derivado == null ||
+        ORDEM_STATUS.indexOf(derivado) <= ORDEM_STATUS.indexOf("enviada_banco"))
     ) {
-      novoStatus = "erro_envio";
+      derivado = "erro_envio";
     }
+
+    novoStatus = derivado;
   }
+
 
   // Detalhe coerente com o desfecho: a atividade real do banco tem prioridade;
   // quando há um desfecho de crédito (recusado/aprovado/análise) ou situação

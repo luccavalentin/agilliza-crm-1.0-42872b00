@@ -10,6 +10,8 @@ import {
   sanitizarMensagemErro,
 } from "./homefin.server";
 import { humanizarErroBanco } from "./bank-error-humanizer";
+import { marcarOrigemDados } from "./origem-dados";
+
 import { prazoMaximoParaProponentes, PRAZO_MIN } from "./prazo";
 import {
   validarCamposSimulacao,
@@ -1046,7 +1048,14 @@ export async function enviarSimulacaoImpl({
           .update({
             homefin_id_simulacao_banco: idSimulacao,
             status_banco: "simulada",
-            raw_response: dados,
+            // Marca a ORIGEM dos campos que têm fallback para o valor
+            // solicitado: a tela só exibe como resposta do banco o que o banco
+            // realmente informou (ver src/lib/simulacao/origem-dados.ts).
+            raw_response:
+              dados && typeof dados === "object"
+                ? { ...(dados as any), _origem_dados: marcarOrigemDados(dadosApi) }
+                : dados,
+
             simulado_em: new Date().toISOString(),
             valor_parcela: dadosApi?.valorParcelaBanco ?? dadosApi?.valorParcelaSimulacao ?? null,
             taxa_juros_ano: dadosApi?.taxaJurosAnoBanco ?? null,
