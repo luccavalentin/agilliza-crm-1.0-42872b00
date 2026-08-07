@@ -1339,69 +1339,51 @@ export async function sincronizarPropostaImpl({
   } else if (situacao === "C") {
     novoStatus = "cancelada";
   } else {
-    // Avança apenas para frente no funil (nunca regride).
-    const atual = ORDEM_STATUS.indexOf(prop.status as PropostaStatus);
-    const candidatos = [statusBancos, statusAtividade.status, statusEtapa].filter(
-      Boolean,
-    ) as PropostaStatus[];
-    let melhorIdx = atual;
-    for (const c of candidatos) {
+    // FONTE ÚNICA DE VERDADE: `propostas.status` é DERIVADO do estado atual de
+    // `proposta_bancos` (statusBancos). Nunca fica resíduo de uma tentativa
+    // anterior — se os bancos estão "em análise", a proposta é "em análise",
+    // mesmo que antes estivesse recusada, e vice-versa.
+    let derivado: PropostaStatus | null = statusBancos;
+
+    // Funil/atividades só podem AVANÇAR além do desfecho de crédito
+    // (documentos → engenharia → jurídica → contrato). Nunca contradizem os
+    // bancos em relação ao desfecho de crédito.
+    const base = derivado ?? (prop.status as PropostaStatus);
+    let melhorIdx = ORDEM_STATUS.indexOf(base);
+    for (const c of [statusAtividade.status, statusEtapa]) {
+      if (!c) continue;
       const idx = ORDEM_STATUS.indexOf(c);
       if (idx > melhorIdx) {
         melhorIdx = idx;
-        novoStatus = c;
+        derivado = c;
       }
     }
-    // Desfecho terminal de crédito recusado quando não houve avanço no funil.
-    // credito_recusado não faz parte da ORDEM_STATUS (não é progressão), então o
-    // laço acima nunca o seleciona — precisa ser tratado explicitamente aqui a
-    // partir de QUALQUER sinal (bancos, etapa do funil ou atividade), senão a
-    // proposta fica presa em "em_analise_credito" e o polling roda para sempre.
-    // EXCEÇÃO: quando o único sinal de "recusa" vem de uma FALHA DE INTEGRAÇÃO
-    // (Bradesco: recusa fantasma sem token do banco), NÃO marca recusado —
-    // vira erro_envio para o operador reenviar.
-    const houveRecusa =
-      statusBancos === "credito_recusado" ||
-      statusEtapa === "credito_recusado" ||
-      statusAtividade.status === "credito_recusado";
 
-    // CASO 2a: Ao processar o retorno, sempre recalcule propostas.status a partir do estado atual
-    // dos bancos, nunca deixando resíduo de tentativa anterior.
-    // Se o banco retornou protocolo real e está em análise, garantimos que o status seja coerente.
-    if (houveRecusa && prop.status !== "credito_recusado") {
-      novoStatus = "credito_recusado";
+    // Recusa sinalizada pelo funil/atividade quando os bancos ainda não têm
+    // desfecho próprio (credito_recusado não pertence à ORDEM_STATUS).
+    if (
+      !statusBancos &&
+      (statusEtapa === "credito_recusado" || statusAtividade.status === "credito_recusado")
+    ) {
+      derivado = "credito_recusado";
     }
 
-    // Se houve desfecho positivo de algum banco (análise ou aprovado),
-    // isso deve prevalecer sobre recusas de outros bancos ou de tentativas anteriores.
-    if (statusBancos === "em_analise_credito" || statusBancos === "credito_aprovado") {
-      novoStatus = statusBancos;
-    }
-
-    // Falha de integração sem outro desfecho positivo: força erro_envio para
-    // habilitar reenvio (não é recusa de crédito real). NUNCA regride uma
-    // proposta que já foi confirmada como enviada ao banco — nesse caso o
-    // "falha" no polling é leitura transitória e o próximo tick reconcilia.
-    const jaEnviadaAoBanco =
-      prop.status === "enviada_banco" ||
-      prop.status === "em_analise_credito" ||
-      prop.status === "credito_aprovado" ||
-      prop.status === "aguardando_documentos" ||
-      prop.status === "engenharia_vistoria" ||
-      prop.status === "analise_juridica";
+    // Falha de integração sem nenhum desfecho real de crédito: erro_envio para
+    // habilitar o reenvio (não é recusa de crédito).
     if (
       algumFalhaIntegracao &&
-      !jaEnviadaAoBanco &&
       !algumAprovado &&
       !algumEmAnalise &&
       !algumRecusado &&
-      novoStatus !== "credito_aprovado" &&
-      novoStatus !== "em_analise_credito" &&
-      novoStatus !== "contrato_emitido"
+      (derivado == null ||
+        ORDEM_STATUS.indexOf(derivado) <= ORDEM_STATUS.indexOf("enviada_banco"))
     ) {
-      novoStatus = "erro_envio";
+      derivado = "erro_envio";
     }
+
+    novoStatus = derivado;
   }
+
 
   // Detalhe coerente com o desfecho: a atividade real do banco tem prioridade;
   // quando há um desfecho de crédito (recusado/aprovado/análise) ou situação
