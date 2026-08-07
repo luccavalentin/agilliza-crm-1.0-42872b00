@@ -747,7 +747,7 @@ export const listarSimulacoes = createServerFn({ method: "GET" })
       .from("simulacoes")
       .select(
         "id, numero_simulacao, nome_cliente, produto, valor_imovel, valor_financiamento, prazo, status, created_at, usuario_criador_id, deleted_at, deleted_by, deleted_motivo, sistema_amortizacao, agrupador_id",
-        { count: "exact" },
+        { count: "exact" }
       );
 
     if (me?.correspondente_id) {
