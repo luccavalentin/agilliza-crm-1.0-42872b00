@@ -195,9 +195,6 @@ export function ParticipanteDialog({
       try {
         await ressincronizarFn({ data: { proposta_id: propostaId } });
         await qc.invalidateQueries({ queryKey: ["proposta", propostaId] });
-        
-        // Se temos o participante no cache agora, atualizamos o formulário local
-        // Isso é opcional pois o parent deve recarregar, mas ajuda na reatividade
         toast.success("Dados sincronizados.", { id: tid });
       } catch (err) {
         console.error("Erro na ressincronização automática:", err);
@@ -232,9 +229,7 @@ export function ParticipanteDialog({
     const conjugePayload = c ? formParaEnvolvido(c) : null;
     await onSalvar(formParaEnvolvido(f), conjugePayload);
     
-    // Se ainda houver pendências (em outro participante, por exemplo), 
-    // o parent vai fechar este modal e abrir o próximo ou manter se for o mesmo.
-    // Mas se o objetivo é revalidar e mostrar o botão de envio no modal:
+    // Após salvar, revalida para atualizar o estado visual se permanecer no modal
     setTentouEnviar(true);
     onSalvoPermanecer?.();
   }
