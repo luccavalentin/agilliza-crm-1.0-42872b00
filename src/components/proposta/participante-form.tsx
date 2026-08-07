@@ -52,7 +52,6 @@ export function ParticipanteDialog({
   idBanco?: number;
 }) {
 
-}) {
   const [f, setF] = useState<ParticipanteForm>(inicial ?? VAZIO);
   const [conjuge, setConjuge] = useState<ParticipanteForm>(
     conjugeInicial ?? { ...VAZIO, tipo_qualificacao: "TI" },
