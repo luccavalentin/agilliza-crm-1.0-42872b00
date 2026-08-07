@@ -425,7 +425,7 @@ export function ResultadoInlineCompleta({ simulacaoId, onFechar, isSecundaria }:
                         <TableHead className="px-2 py-2 text-right text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Parcela</TableHead>
                         <TableHead className="px-2 py-2 text-right text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Taxa a.a.</TableHead>
                         <TableHead className="px-2 py-2 text-right text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Prazo</TableHead>
-                        <TableHead className="px-2 py-2 text-right text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Financ. máx</TableHead>
+                        <TableHead className="px-2 py-2 text-right text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Prazo máx (banco)</TableHead>
                         <TableHead className="px-2 py-2 text-right text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Total fin.</TableHead>
                         <TableHead className="px-2 py-2 text-right text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">IOF</TableHead>
                         <TableHead className="px-2 py-2 text-right text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Renda est.</TableHead>
