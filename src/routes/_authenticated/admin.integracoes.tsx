@@ -2,7 +2,7 @@ import { AdminHero } from "@/components/admin/admin-hero";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Plug, Landmark, Activity, RefreshCw } from "lucide-react";
+import { Plug, Landmark, Activity, RefreshCw, AlertTriangle, CheckCircle2, XCircle, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -23,12 +23,16 @@ import {
   testarConectividade,
   sincronizarDominios,
 } from "@/lib/admin/integracoes.functions";
+import { listarOportunidadesOrfas, cancelarOrfaEmLote } from "@/lib/admin/orfas.functions";
+import { useState } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const Route = createFileRoute("/_authenticated/admin/integracoes")({
   head: () => ({ meta: [{ title: "Integrações — Agilliza" }] }),
   beforeLoad: () => assertModuloPermitido("admin.integracoes"),
   component: Pagina,
 });
+
 
 function StatusBadge({ ativo }: { ativo: boolean }) {
   return <Badge variant={ativo ? "default" : "secondary"}>{ativo ? "Ativo" : "Inativo"}</Badge>;
@@ -100,7 +104,11 @@ function Pagina() {
           <TabsTrigger value="health">
             <Activity className="mr-2 size-4" /> Conectividade
           </TabsTrigger>
+          <TabsTrigger value="orfas">
+            <AlertTriangle className="mr-2 size-4" /> Oportunidades Órfãs
+          </TabsTrigger>
         </TabsList>
+
 
         <TabsContent value="bancos" className="mt-4">
           <div className="overflow-x-auto rounded-lg border border-border">
@@ -285,7 +293,172 @@ function Pagina() {
             </Table>
           </div>
         </TabsContent>
+        <TabsContent value="orfas" className="mt-4">
+          <OrfasTabContent />
+        </TabsContent>
       </Tabs>
+
     </div>
   );
 }
+
+function OrfasTabContent() {
+  const qc = useQueryClient();
+  const orfas = useQuery({
+    queryKey: ["admin-orfas"],
+    queryFn: () => listarOportunidadesOrfas(),
+  });
+
+  const cancelar = useMutation({
+    mutationFn: (v: { ids: string[]; tipo: "proposta" | "simulacao" }) => cancelarOrfaEmLote({ data: v }),
+    onSuccess: (r) => {
+      toast.success(`${r.sucessos} confirmados, ${r.falhas} falhas.`);
+      qc.invalidateQueries({ queryKey: ["admin-orfas"] });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Falha no cancelamento."),
+  });
+
+  if (orfas.isLoading) return <Skeleton className="h-40 w-full" />;
+
+  const data = orfas.data ?? [];
+  const propostas = data.filter((x) => x.tipo === "proposta");
+  const simulacoes = data.filter((x) => x.tipo === "simulacao");
+
+  return (
+    <div className="space-y-6">
+      <Card className="bg-destructive/5 border-destructive/20">
+        <CardHeader className="pb-3">
+          <div className="flex items-center gap-2 text-destructive">
+            <AlertTriangle className="size-5" />
+            <CardTitle>Atenção à Regularização do Passivo</CardTitle>
+          </div>
+          <CardDescription>
+            Existem {data.length} oportunidades ativas na HomeFin que foram canceladas ou excluídas no Agilliza.
+            Isso causa divergência no funil do parceiro.
+          </CardDescription>
+        </CardHeader>
+      </Card>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base font-semibold flex items-center justify-between">
+              Propostas Órfãs ({propostas.length})
+              {propostas.length > 0 && (
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  disabled={cancelar.isPending}
+                  onClick={() => cancelar.mutate({ ids: propostas.map(x => x.id), tipo: "proposta" })}
+                >
+                  Cancelar Todas
+                </Button>
+              )}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Código</TableHead>
+                  <TableHead>Cliente</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {propostas.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={4} className="py-6 text-center text-muted-foreground">
+                      Nenhuma proposta órfã.
+                    </TableCell>
+                  </TableRow>
+                ) : propostas.slice(0, 50).map(p => (
+                  <TableRow key={p.id}>
+                    <TableCell className="font-mono text-xs tabular-nums">{p.codigo}</TableCell>
+                    <TableCell className="max-w-[120px] truncate text-xs">{p.cliente}</TableCell>
+                    <TableCell>
+                      <Badge variant={p.cancelamento_pendente ? "destructive" : "secondary"} className="text-[10px]">
+                        {p.status_crm} {p.cancelamento_pendente && "(Erro Banco)"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button 
+                        size="icon" 
+                        variant="ghost" 
+                        className="size-8"
+                        disabled={cancelar.isPending}
+                        onClick={() => cancelar.mutate({ ids: [p.id], tipo: "proposta" })}
+                      >
+                        <Trash2 className="size-4 text-destructive" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base font-semibold flex items-center justify-between">
+              Simulações Órfãs ({simulacoes.length})
+              {simulacoes.length > 0 && (
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  disabled={cancelar.isPending}
+                  onClick={() => cancelar.mutate({ ids: simulacoes.map(x => x.id), tipo: "simulacao" })}
+                >
+                  Cancelar Todas
+                </Button>
+              )}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Simulação</TableHead>
+                  <TableHead>Cliente</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {simulacoes.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={4} className="py-6 text-center text-muted-foreground">
+                      Nenhuma simulação órfã.
+                    </TableCell>
+                  </TableRow>
+                ) : simulacoes.slice(0, 50).map(s => (
+                  <TableRow key={s.id}>
+                    <TableCell className="font-mono text-xs tabular-nums">{s.codigo}</TableCell>
+                    <TableCell className="max-w-[120px] truncate text-xs">{s.cliente}</TableCell>
+                    <TableCell>
+                      <Badge variant="secondary" className="text-[10px]">Excluída</Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button 
+                        size="icon" 
+                        variant="ghost" 
+                        className="size-8"
+                        disabled={cancelar.isPending}
+                        onClick={() => cancelar.mutate({ ids: [s.id], tipo: "simulacao" })}
+                      >
+                        <Trash2 className="size-4 text-destructive" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}
+
