@@ -10,6 +10,9 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { humanizarRespostaErro } from "./bank-error-humanizer";
 
+export const TIPO_BANCO_SANTANDER = 33; // Código HomeFin para Santander
+
+
 const SENSIVEIS = new Set([
   "secretId",
   "secretKey",
