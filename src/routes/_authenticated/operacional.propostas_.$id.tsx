@@ -212,6 +212,10 @@ function Pagina() {
     refetchOnWindowFocus: true,
   });
 
+  const bancos = data?.bancos ?? [];
+  const envolvidos = data?.envolvidos ?? [];
+  const p = data?.proposta as any;
+
   const [tab, setTab] = useState<Tab>("RESUMO");
   const [enviandoAuto, setEnviandoAuto] = useState(false);
   const [destacarObrigatorios, setDestacarObrigatorios] = useState(false);
@@ -223,7 +227,7 @@ function Pagina() {
       env,
       faltantes: faltantesEnvolvido(env),
       index: index + 1
-    })).filter(p => p.faltantes.length > 0);
+    })).filter((item: any) => item.faltantes.length > 0);
   }, [envolvidos]);
 
   const totalPendentes = (envolvidos ?? []).length;
@@ -238,11 +242,6 @@ function Pagina() {
   const onCadastroIncompleto = () => {
     abrirCadastroPendente();
   };
-
-
-  const bancos = data?.bancos ?? [];
-  const envolvidos = data?.envolvidos ?? [];
-  const p = data?.proposta as any;
 
   // Polling automático silencioso da API do banco (Itaú, Santander, Bradesco…).
   // Enquanto a proposta estiver em análise ativa, dispara sincronização a cada 60s
@@ -641,7 +640,7 @@ function Pagina() {
             toast.error(e?.message ?? "Falha ao salvar participante.");
           }
         }}
-        focarPendencias
+        focarPendencias={true}
         onSalvoPermanecer={() => {
            // O modal fecha no onSalvar. Se quisermos que fique aberto:
            // setParticipanteModal(null);
