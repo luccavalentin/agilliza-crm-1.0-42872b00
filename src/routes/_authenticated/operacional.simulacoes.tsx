@@ -79,11 +79,11 @@ function Pagina() {
   const obter = useServerFn(obterSimulacao);
   const listarColegasFn = useServerFn(listarColegas);
   const padrao = useMemo(() => intervaloMesAtual(), []);
-  const [escopo, setEscopo] = useState<"todas" | "minhas">("minhas");
+  const [escopo, setEscopo] = useState<"todas" | "minhas">("todas");
   const [q, setQ] = useState("");
   const [busca, setBusca] = useState("");
-  const [desde, setDesde] = useState(padrao.inicio);
-  const [ate, setAte] = useState(padrao.fim);
+  const [desde, setDesde] = useState("");
+  const [ate, setAte] = useState("");
   const [responsavel, setResponsavel] = useState<string>("todos");
   const [kpiAberto, setKpiAberto] = useState<string | null>(null);
   const [verExcluidas, setVerExcluidas] = useState(false);
@@ -601,8 +601,8 @@ function Pagina() {
         ate={ate}
         setAte={setAte}
         onLimpar={() => {
-          setDesde(padrao.inicio);
-          setAte(padrao.fim);
+          setDesde("");
+          setAte("");
           setResponsavel("todos");
         }}
         verExcluidas={verExcluidas}
