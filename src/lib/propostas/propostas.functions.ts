@@ -2181,22 +2181,25 @@ export const ressincronizarDadosParticipantes = createServerFn({ method: "POST" 
     let alteradosTotal = 0;
     const logs = [];
 
-    for (const env of envolvidos) {
+    for (const envObj of envolvidos) {
+      const env = envObj as any;
       if (!env.cliente_id) continue;
       
-      const { data: cliente } = await supabase
+      const { data: clienteObj } = await supabase
         .from("clientes")
         .select("*")
         .eq("id", env.cliente_id)
         .maybeSingle();
+      const cliente = clienteObj as any;
 
-      const { data: endereco } = await supabase
+      const { data: enderecoObj } = await supabase
         .from("cliente_enderecos")
         .select("*")
         .eq("cliente_id", env.cliente_id)
         .order("principal", { ascending: false })
         .limit(1)
         .maybeSingle();
+      const endereco = enderecoObj as any;
 
       const patch: Record<string, any> = {};
       const camposCompletados: string[] = [];
@@ -2245,7 +2248,7 @@ export const ressincronizarDadosParticipantes = createServerFn({ method: "POST" 
       if (Object.keys(patch).length > 0) {
         const { error: updErr } = await supabase
           .from("proposta_envolvidos")
-          .update(patch)
+          .update(patch as any)
           .eq("id", env.id);
         
         if (!updErr) {
