@@ -19,6 +19,20 @@ import { formatBRL, formatPercent } from "@/lib/simulacao/format";
 import { rendaMinimaPelosBancos } from "@/lib/simulacao/renda";
 import { ErroBancoDetalhe } from "@/components/simulacao/erro-banco-detalhe";
 import {
+import { bancoInformou } from "@/lib/simulacao/origem-dados";
+/**
+ * Campos com fallback interno para o valor SOLICITADO: só exibimos quando o
+ * banco realmente informou (ver src/lib/simulacao/origem-dados.ts).
+ */
+const prazoMaxTexto = (b: any) =>
+  bancoInformou(b, "prazo_pagamento_max") && b.prazo_pagamento_max
+    ? `${b.prazo_pagamento_max}m`
+    : "—";
+const financMaxTexto = (b: any) =>
+  bancoInformou(b, "valor_financiamento_max") && b.valor_financiamento_max != null
+    ? formatBRL(b.valor_financiamento_max)
+    : "—";
+
   AmortizacaoTag,
   MobileStat,
   ResumoCelula,
@@ -175,11 +189,11 @@ export function ComparativoBancos({
                   />
                   <MobileStat
                     rotulo="Prazo máx"
-                    valor={b.prazo_pagamento_max ? `${b.prazo_pagamento_max}m` : "—"}
+                    valor={prazoMaxTexto(b)}
                   />
                   <MobileStat
                     rotulo="Financ. máx"
-                    valor={formatBRL(b.valor_financiamento_max)}
+                    valor={financMaxTexto(b)}
                   />
                   <MobileStat
                     rotulo="Total financiado"
@@ -313,10 +327,10 @@ export function ComparativoBancos({
                       {b.taxa_juros_ano != null ? formatPercent(b.taxa_juros_ano / 100) : "—"}
                     </TableCell>
                     <TableCell className="py-3 text-right text-sm tabular-nums whitespace-nowrap">
-                      {b.prazo_pagamento_max ? `${b.prazo_pagamento_max}m` : "—"}
+                      {prazoMaxTexto(b)}
                     </TableCell>
                     <TableCell className="py-3 text-right text-sm tabular-nums whitespace-nowrap">
-                      {formatBRL(b.valor_financiamento_max)}
+                      {financMaxTexto(b)}
                     </TableCell>
                     <TableCell className="py-3 text-right text-sm font-semibold tabular-nums whitespace-nowrap">
                       {formatBRL(totalFinanciado(b))}
