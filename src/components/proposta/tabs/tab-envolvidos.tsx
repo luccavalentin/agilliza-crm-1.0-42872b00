@@ -178,7 +178,9 @@ export function TabEnvolvidos({
         tipoQualificacaoFixo={tipo === "VD" ? "VD" : undefined}
         salvando={salvando}
         onSalvar={salvar}
+        idBanco={idBanco}
       />
+
 
       <Table>
         <TableHeader>
