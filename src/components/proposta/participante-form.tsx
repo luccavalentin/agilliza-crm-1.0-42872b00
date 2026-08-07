@@ -76,11 +76,17 @@ export function ParticipanteDialog({
 
   // Após a primeira tentativa, revalida ao vivo para o vermelho sumir conforme preenche.
   useEffect(() => {
-    if (tentouEnviar) setErros(camposFaltantes(f));
-  }, [f, tentouEnviar]);
+    if (tentouEnviar) {
+      setErros(camposFaltantes(f, { regimeObrigatorio: idBanco === TIPO_BANCO_SANTANDER }));
+    }
+  }, [f, tentouEnviar, idBanco]);
+
   useEffect(() => {
-    if (tentouEnviar) setErrosC(camposFaltantes(conjuge));
-  }, [conjuge, tentouEnviar]);
+    if (tentouEnviar) {
+      setErrosC(camposFaltantes(conjuge, { regimeObrigatorio: idBanco === TIPO_BANCO_SANTANDER }));
+    }
+  }, [conjuge, tentouEnviar, idBanco]);
+
 
   const pf = f.tipo_pessoa === "F";
   const permiteConjuge = true;
