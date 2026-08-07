@@ -90,7 +90,7 @@ export function ClienteSecao({
 
   const c = det.cliente as any;
 
-  if (secao === "vendedores") return <VendedoresTab clienteId={clienteId} />;
+  if (secao === "vendedores") return <VendedoresTab clienteId={clienteId} idBanco={idBanco} />;
   if (secao === "imovel") return <ImovelTab clienteId={clienteId} cliente={c} />;
   if (secao === "iq") return <IqTab clienteId={clienteId} cliente={c} />;
   if (secao === "documentos") return <DocumentosTab clienteId={clienteId} />;
