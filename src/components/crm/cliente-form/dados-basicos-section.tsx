@@ -36,12 +36,15 @@ export function DadosBasicosSection({
   set,
   setV,
   erros,
+  idBanco,
 }: {
   v: ClienteFormValues;
   set: SetCampo;
   setV: React.Dispatch<React.SetStateAction<ClienteFormValues>>;
   erros?: Set<string>;
+  idBanco?: number;
 }) {
+
   const cls = (k: string) => (erros?.has(k) ? CLASSE_ERRO : undefined);
   const clsBox = (k: string) => (erros?.has(k) ? "rounded-md ring-1 ring-destructive" : undefined);
 
