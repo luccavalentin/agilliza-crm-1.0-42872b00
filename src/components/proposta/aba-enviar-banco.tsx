@@ -309,10 +309,12 @@ export function AbaEnviarBanco({
                       </div>
                       {!ok && (
                         <Button
+                          variant="outline"
                           size="sm"
-                          variant="ghost"
-                          className="h-7 px-2 text-xs font-semibold text-destructive hover:text-destructive hover:bg-destructive/10"
-                          onClick={() => onCompletar?.(env)}
+                          className="h-8 gap-1.5 border-primary/20 bg-primary/5 text-primary hover:bg-primary hover:text-white transition-colors font-semibold"
+                          onClick={() => {
+                            if (onCompletar) onCompletar(env);
+                          }}
                         >
                           Completar agora
                         </Button>

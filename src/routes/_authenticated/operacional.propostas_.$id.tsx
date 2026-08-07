@@ -20,6 +20,18 @@ import {
   XCircle,
   Building2,
   Info,
+  AlertCircle,
+  Clock,
+  Check,
+  LayoutDashboard,
+  Users,
+  Store,
+  ClipboardList,
+  Home,
+  FolderOpen,
+  Activity,
+  MessageSquare,
+  ChevronDown,
 } from "lucide-react";
 import { assertModuloPermitido } from "@/lib/route-guards";
 import {
@@ -86,7 +98,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ChevronDown, Clock, Check, LayoutDashboard, Users, Store, ClipboardList, Home, FolderOpen, Activity, MessageSquare } from "lucide-react";
+import { envolventeParaForm } from "@/components/proposta/participante-form/types";
 import {
   baixarPropostaSimplificadaPDF,
   baixarPropostaDetalhadaPDF,
