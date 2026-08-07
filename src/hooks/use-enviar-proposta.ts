@@ -11,6 +11,7 @@ import { faltantesEnvolvido } from "@/lib/propostas/campos-obrigatorios";
 
 export function useEnviarProposta() {
   const router = useRouter();
+  const navigate = router.navigate;
   const qc = useQueryClient();
   const [busy, setBusy] = useState(false);
   const enviarFn = useServerFn(enviarPropostaHomeFin);
@@ -60,7 +61,7 @@ export function useEnviarProposta() {
         // Se estamos em outra tela, navega para a proposta
         const path = router.state.location.pathname;
         if (!path.includes(`/propostas/${propostaId}`)) {
-          router.navigate({
+          navigate({
             to: "/operacional/propostas/$id",
             params: { id: propostaId },
             search: { abrir_cadastro: primeiro.id },

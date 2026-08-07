@@ -15,7 +15,8 @@ import {
   TIPO_VINCULO_PESSOA,
   type TipoVinculo,
 } from "@/lib/crm/clientes.functions";
-import { enviarPropostaHomeFin, vincularClienteAProposta } from "@/lib/propostas/propostas.functions";
+import { vincularClienteAProposta } from "@/lib/propostas/propostas.functions";
+import { useEnviarProposta } from "@/hooks/use-enviar-proposta";
 import {
   validarDocumento,
   validarCPF,
@@ -84,7 +85,7 @@ export function ClienteForm({
   const listarParceiros = useServerFn(listarParceirosDisponiveis);
   const vincular = useServerFn(vincularParceiro);
   const vincularProposta = useServerFn(vincularClienteAProposta);
-  const enviarProposta = useServerFn(enviarPropostaHomeFin);
+  const { enviar: handleEnviarHook } = useEnviarProposta();
 
 
   const [v, setV] = useState<ClienteFormValues>(() => {
@@ -357,29 +358,15 @@ export function ClienteForm({
           await vincularProposta({ data: { proposta_id: vincularPropostaId, cliente_id: id } });
           await qc.invalidateQueries({ queryKey: ["proposta", vincularPropostaId] });
           if (enviarBancoAposVincular) {
-            const tid = toast.loading("Cliente vinculado. Enviando proposta ao banco…");
-            try {
-              const r: any = await enviarProposta({ data: { proposta_id: vincularPropostaId } });
-              const numero =
-                r?.bancos?.find((x: any) => x?.numero_proposta_banco)?.numero_proposta_banco ?? null;
-              toast.success(
-                numero
-                  ? `Proposta enviada ao banco. Nº do banco: ${numero}`
-                  : "Proposta enviada ao banco. O número será atualizado em instantes.",
-                { id: tid },
-              );
-              await qc.invalidateQueries({ queryKey: ["proposta", vincularPropostaId] });
-              navigate({ to: "/operacional/propostas/$id", params: { id: vincularPropostaId } });
-              return;
-            } catch (envioErr: any) {
-              toast.error(envioErr?.message ?? "Cliente salvo, mas o envio ao banco falhou.", { id: tid });
-              navigate({
-                to: "/operacional/propostas/$id",
-                params: { id: vincularPropostaId },
-                search: { complementar: 1 },
-              });
-              return;
+            await handleEnviarHook({ 
+              propostaId: vincularPropostaId 
+            });
+            await qc.invalidateQueries({ queryKey: ["proposta", vincularPropostaId] });
+            
+            if (!router.state.location.pathname.includes(`/propostas/${vincularPropostaId}`)) {
+                navigate({ to: "/operacional/propostas/$id", params: { id: vincularPropostaId } });
             }
+            return;
           }
           toast.success("Cliente cadastrado e vinculado à proposta.");
           navigate({ to: "/operacional/propostas/$id", params: { id: vincularPropostaId } });
