@@ -203,6 +203,7 @@ function Pagina() {
   const { complementar } = Route.useSearch();
   const router = useRouter();
   const qc = useQueryClient();
+  const { enviar: handleEnviarHook } = useEnviarProposta();
 
   const { data, isLoading } = useQuery({
     queryKey: ["proposta", id],
