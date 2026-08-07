@@ -62,14 +62,14 @@ export function TabelaSimulacoes({
                 />
               </TableHead>
             )}
-            <TableHead className="h-10 w-20 text-[10px] font-bold uppercase tracking-wider text-muted-foreground px-1.5">Número</TableHead>
-            <TableHead className="h-10 text-[10px] font-bold uppercase tracking-wider text-muted-foreground px-1.5">Cliente</TableHead>
-            <TableHead className="h-10 w-12 text-[10px] font-bold uppercase tracking-wider text-muted-foreground px-1">Prod.</TableHead>
-            <TableHead className="h-10 text-[10px] font-bold uppercase tracking-wider text-muted-foreground px-1.5">Bancos simulados</TableHead>
-            <TableHead className="h-10 w-24 text-right text-[10px] font-bold uppercase tracking-wider text-muted-foreground px-1.5">Valor imóvel</TableHead>
-            <TableHead className="h-10 w-16 text-right text-[10px] font-bold uppercase tracking-wider text-muted-foreground px-1.5">Prazo</TableHead>
-            <TableHead className="h-10 w-18 text-[10px] font-bold uppercase tracking-wider text-muted-foreground px-1.5">Status</TableHead>
-            <TableHead className="h-10 w-20 text-right text-[10px] font-bold uppercase tracking-wider text-muted-foreground px-1.5">Ações</TableHead>
+            <TableHead className="h-10 w-[100px] text-[11px] font-bold uppercase tracking-wider text-muted-foreground px-2">Número</TableHead>
+            <TableHead className="h-10 min-w-[150px] text-[11px] font-bold uppercase tracking-wider text-muted-foreground px-2">Cliente</TableHead>
+            <TableHead className="h-10 w-[70px] text-[11px] font-bold uppercase tracking-wider text-muted-foreground px-2">Prod.</TableHead>
+            <TableHead className="h-10 min-w-[180px] text-[11px] font-bold uppercase tracking-wider text-muted-foreground px-2">Bancos simulados</TableHead>
+            <TableHead className="h-10 w-[120px] text-right text-[11px] font-bold uppercase tracking-wider text-muted-foreground px-2">Valor imóvel</TableHead>
+            <TableHead className="h-10 w-[80px] text-right text-[11px] font-bold uppercase tracking-wider text-muted-foreground px-2">Prazo</TableHead>
+            <TableHead className="h-10 w-[110px] text-[11px] font-bold uppercase tracking-wider text-muted-foreground px-2">Status</TableHead>
+            <TableHead className="h-10 w-[100px] text-right text-[11px] font-bold uppercase tracking-wider text-muted-foreground px-2">Ações</TableHead>
           </TableRow>
         </TableHeader>
 
@@ -148,24 +148,24 @@ export function TabelaSimulacoes({
                     </span>
                   )}
                 </TableCell>
-                <TableCell className="py-2.5 px-1 w-12">
+                <TableCell className="py-3 px-2 w-[70px]">
                   <ProdutoBadge produto={s.produto} />
                 </TableCell>
-                <TableCell className="py-2.5 px-1.5 min-w-0">
+                <TableCell className="py-3 px-2 min-w-[180px]">
                   <BancosSimulados bancos={s.bancos} />
                 </TableCell>
-                <TableCell className="py-2.5 px-1.5 text-right font-bold tabular-nums text-foreground w-24 text-[10px]">
+                <TableCell className="py-3 px-2 text-right font-bold tabular-nums text-foreground w-[120px] text-[11px]">
                   {formatBRL(s.valor_imovel)}
                 </TableCell>
-                <TableCell className="py-2.5 px-1.5 text-right tabular-nums font-medium text-muted-foreground w-16 text-[10px]">
+                <TableCell className="py-3 px-2 text-right tabular-nums font-medium text-muted-foreground w-[80px] text-[11px]">
                   {s.prazo ? `${s.prazo}m` : "—"}
                 </TableCell>
-                <TableCell className="py-2.5 px-1.5 w-18 relative">
+                <TableCell className="py-3 px-2 w-[110px] relative">
                   <div className="flex items-center justify-start pr-2">
                     <SimulacaoStatusBadge status={s.status} />
                   </div>
                 </TableCell>
-                <TableCell className="text-right py-2.5 px-1.5 w-20" onClick={(e) => e.stopPropagation()}>
+                <TableCell className="text-right py-3 px-2 w-[100px]" onClick={(e) => e.stopPropagation()}>
                   {verExcluidas ? (
                     <Button
                       size="sm"
