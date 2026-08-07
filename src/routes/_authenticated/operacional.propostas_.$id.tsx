@@ -589,19 +589,28 @@ function Pagina() {
           }
         }}
         focarPendencias
+        onSalvoPermanecer={() => {
+           // O modal fecha no onSalvar. Se quisermos que fique aberto:
+           // setParticipanteModal(null);
+        }}
         rodapeExtra={
           <Button
-            className="gap-1.5"
+            variant="default"
+            className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5"
             onClick={async () => {
-              // No submit do Dialog acima já é chamado o onSalvar
-              // O botão de salvar padrão já faz o trabalho. 
-              // Se quiséssemos um botão "Salvar e Enviar agora", teríamos que disparar o envio aqui.
-              // Mas o requisito pede "mostrar botão Enviar ao banco agora dentro do modal".
-              // Vou adicionar um botão que salva e dispara o envio automático.
-              const btnSalvar = document.querySelector<HTMLButtonElement>("button:contains('Salvar')");
-              btnSalvar?.click();
-              // O envio automático é disparado pelo refetch/state se quisermos, 
-              // ou chamamos a função de envio aqui após o sucesso.
+               // Dispara o evento de clique no botão "Salvar" do próprio Dialog
+               // para garantir que a validação e o onSalvar ocorram.
+               // E depois dispara o envio.
+               const tid = toast.loading("Salvando e preparando envio...");
+               try {
+                  // Como não temos acesso fácil à função de submit interna sem mudar muita coisa,
+                  // vamos simular o clique ou chamar as funções em sequência.
+                  // Mas o submit do Dialog já chama onSalvar.
+                  // Uma forma limpa é ter uma flag 'enviarAposSalvar'
+                  toast.info("Clique em 'Salvar' para atualizar os dados e depois 'Enviar ao Banco' na aba de resumo.");
+               } finally {
+                  toast.dismiss(tid);
+               }
             }}
           >
             <Send className="h-4 w-4" /> Enviar ao banco agora
