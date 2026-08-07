@@ -317,6 +317,13 @@ export async function enviarSimulacaoImpl({
   if (simPreCheck) {
     const faltantesObrigatorios = validarCamposSimulacao(simPreCheck);
     if (faltantesObrigatorios.length > 0) {
+      // Registrar log antes de estourar o erro
+      await supabase.from("simulacao_historico").insert({
+        simulacao_id: simulacaoId,
+        tipo: "erro",
+        descricao: mensagemCamposFaltantes(faltantesObrigatorios),
+        ator_id: userId,
+      });
       throw new Error(mensagemCamposFaltantes(faltantesObrigatorios));
     }
   }
