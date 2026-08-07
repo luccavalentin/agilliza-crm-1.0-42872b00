@@ -1,4 +1,5 @@
 import { ESTADO_CIVIL_COM_REGIME } from "@/lib/propostas/dominios";
+import { faltantesEnvolvido } from "@/lib/propostas/campos-obrigatorios";
 import { maskCpfCnpj, maskCelular, apenasDigitos, validarCpfCnpj } from "@/lib/simulacao/format";
 
 export type ParticipanteForm = {
@@ -140,64 +141,26 @@ export function formParaEnvolvido(f: ParticipanteForm) {
 
 /** Verifica se um envolvido (linha do banco) tem todos os dados obrigatórios. */
 export function participanteCompleto(e: any): boolean {
-  const base =
-    e.nome &&
-    e.cpf_cnpj &&
-    e.profissao &&
-    e.renda &&
-    e.email &&
-    e.celular &&
-    e.cep &&
-    e.logradouro &&
-    e.numero_logradouro &&
-    e.bairro &&
-    e.municipio &&
-    e.uf &&
-    e.fg_autorizacao_dados;
-  const pf = (e.tipo_pessoa ?? "F") === "F";
-  const pessoais = !pf || (e.data_nascimento && e.nome_mae && e.tipo_sexo && e.estado_civil);
-  return Boolean(base && pessoais);
+  return faltantesEnvolvido(e ?? {}).length === 0;
 }
 
 /**
- * Retorna a lista de chaves de campos obrigatórios que ainda estão vazios/invalidos.
- * Usada para destacar os campos em vermelho.
+ * Retorna a lista de chaves de campos obrigatórios que ainda estão vazios/inválidos.
+ * A base é a lista OFICIAL de 25 campos "S" da documentação
+ * (`CAMPOS_OBRIGATORIOS_PARTICIPANTE`); aqui só acrescentamos as validações de
+ * FORMATO que o formulário consegue fazer (CPF, e-mail, celular).
+ *
+ * `tipoRegimeCasamento` e `dataExpedicao` NÃO são obrigatórios pela
+ * documentação e nunca entram nesta lista.
  */
-export function camposFaltantes(f: ParticipanteForm, context?: { regimeObrigatorio?: boolean }): Set<string> {
-  const pf = f.tipo_pessoa === "F";
-  const faltando = new Set<string>();
-  if (!f.nome.trim()) faltando.add("nome");
-  if (!apenasDigitos(f.cpf_cnpj) || !validarCpfCnpj(f.cpf_cnpj)) faltando.add("cpf_cnpj");
-  if (pf) {
-    if (!f.data_nascimento) faltando.add("data_nascimento");
-    if (!f.nome_mae.trim()) faltando.add("nome_mae");
-    if (!f.tipo_sexo) faltando.add("tipo_sexo");
-    if (!f.estado_civil) faltando.add("estado_civil");
-    
-    // Problema 1a: Regime de casamento obrigatório para CA/UE no Santander
-    if (context?.regimeObrigatorio && (f.estado_civil === "casado" || f.estado_civil === "uniao_estavel") && !f.regime_casamento) {
-      faltando.add("regime_casamento");
-    }
-
-    // Documento de identidade (RG/CNH/etc.) — obrigatório pela HomeFin.
-    if (!String(f.numero_documento ?? "").trim()) faltando.add("numero_documento");
-    if (!String(f.tipo_documento_identidade ?? "").trim()) faltando.add("tipo_documento_identidade");
-    if (!String(f.orgao_expedidor ?? "").trim()) faltando.add("orgao_expedidor");
-    if (!String(f.uf_expedicao ?? "").trim()) faltando.add("uf_expedicao");
-    if (!f.data_expedicao) faltando.add("data_expedicao");
-  }
-  if (!f.profissao.trim()) faltando.add("profissao");
-  if (!f.renda || f.renda <= 0) faltando.add("renda");
-  if (!f.email.trim() || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(f.email.trim())) faltando.add("email");
+export function camposFaltantes(f: ParticipanteForm): Set<string> {
+  const faltando = new Set(faltantesEnvolvido(f as any).map((c) => c.chave));
+  // Validações de formato (o campo existe, mas o valor não serve).
+  if (!validarCpfCnpj(f.cpf_cnpj)) faltando.add("cpf_cnpj");
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(f.email.trim())) faltando.add("email");
   if (apenasDigitos(f.celular).length < 10) faltando.add("celular");
-  if (!apenasDigitos(f.cep)) faltando.add("cep");
-  if (!f.logradouro.trim()) faltando.add("logradouro");
-  if (!f.numero_logradouro.trim()) faltando.add("numero_logradouro");
-  if (!f.bairro.trim()) faltando.add("bairro");
-  if (!f.municipio.trim()) faltando.add("municipio");
-  if (!f.uf) faltando.add("uf");
-  if (!f.fg_autorizacao_dados) faltando.add("fg_autorizacao_dados");
   return faltando;
+
 }
 
 

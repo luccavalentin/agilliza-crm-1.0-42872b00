@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { ESTADO_CIVIL_COM_REGIME } from "@/lib/propostas/dominios";
-import { TIPO_BANCO_SANTANDER } from "@/lib/simulacao/homefin.server";
+import { LABEL_POR_CHAVE } from "@/lib/propostas/campos-obrigatorios";
 
 import { CamposParticipante } from "./participante-form/campos-participante";
 import {
@@ -39,6 +39,9 @@ export function ParticipanteDialog({
   salvando,
   onSalvar,
   idBanco,
+  focarPendencias,
+  rodapeExtra,
+  avisoTopo,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
@@ -52,6 +55,12 @@ export function ParticipanteDialog({
     conjuge: ReturnType<typeof formParaEnvolvido> | null,
   ) => Promise<void> | void;
   idBanco?: number;
+  /** Abre já destacando (e rolando até) o primeiro campo obrigatório pendente. */
+  focarPendencias?: boolean;
+  /** Conteúdo extra no rodapé (ex.: "Enviar ao banco agora"). */
+  rodapeExtra?: React.ReactNode;
+  /** Faixa informativa no topo do formulário. */
+  avisoTopo?: React.ReactNode;
 }) {
 
   const [f, setF] = useState<ParticipanteForm>(inicial ?? VAZIO);
@@ -63,6 +72,7 @@ export function ParticipanteDialog({
   const [erros, setErros] = useState<Set<string>>(new Set());
   const [errosC, setErrosC] = useState<Set<string>>(new Set());
   const [tentouEnviar, setTentouEnviar] = useState(false);
+  const corpoRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (open) {
@@ -70,22 +80,30 @@ export function ParticipanteDialog({
       setConjuge(conjugeInicial ?? { ...VAZIO, tipo_qualificacao: "TI" });
       setErros(new Set());
       setErrosC(new Set());
-      setTentouEnviar(false);
+      setTentouEnviar(Boolean(focarPendencias));
     }
-  }, [open, inicial, conjugeInicial, tipoQualificacaoFixo]);
+  }, [open, inicial, conjugeInicial, tipoQualificacaoFixo, focarPendencias]);
 
   // Após a primeira tentativa, revalida ao vivo para o vermelho sumir conforme preenche.
   useEffect(() => {
-    if (tentouEnviar) {
-      setErros(camposFaltantes(f, { regimeObrigatorio: idBanco === TIPO_BANCO_SANTANDER }));
-    }
-  }, [f, tentouEnviar, idBanco]);
+    if (tentouEnviar) setErros(camposFaltantes(f));
+  }, [f, tentouEnviar]);
 
   useEffect(() => {
-    if (tentouEnviar) {
-      setErrosC(camposFaltantes(conjuge, { regimeObrigatorio: idBanco === TIPO_BANCO_SANTANDER }));
-    }
-  }, [conjuge, tentouEnviar, idBanco]);
+    if (tentouEnviar) setErrosC(camposFaltantes(conjuge));
+  }, [conjuge, tentouEnviar]);
+
+  // Rola até o primeiro campo pendente quando o modal abre em modo "completar".
+  useEffect(() => {
+    if (!open || !focarPendencias) return;
+    const t = setTimeout(() => {
+      const alvo = corpoRef.current?.querySelector<HTMLElement>(".border-destructive");
+      alvo?.scrollIntoView({ block: "center", behavior: "smooth" });
+      alvo?.focus?.();
+    }, 120);
+    return () => clearTimeout(t);
+  }, [open, focarPendencias, erros]);
+
 
 
   const pf = f.tipo_pessoa === "F";
@@ -150,8 +168,7 @@ export function ParticipanteDialog({
 
   async function submit() {
     setTentouEnviar(true);
-    const context = { regimeObrigatorio: idBanco === TIPO_BANCO_SANTANDER };
-    const faltando = camposFaltantes(f, context);
+    const faltando = camposFaltantes(f);
     setErros(faltando);
 
     const c: ParticipanteForm | null = (precisaConjuge && conjugeTemDados)
@@ -163,17 +180,19 @@ export function ParticipanteDialog({
           regime_casamento: f.regime_casamento,
         }
       : null;
-    const faltandoC = c ? camposFaltantes(c, context) : new Set<string>();
+    const faltandoC = c ? camposFaltantes(c) : new Set<string>();
     setErrosC(faltandoC);
 
-
     if (faltando.size > 0 || faltandoC.size > 0) {
-      const total = faltando.size + faltandoC.size;
+      const nomes = [...faltando, ...faltandoC]
+        .map((k) => LABEL_POR_CHAVE[k] ?? k)
+        .filter((v, i, a) => a.indexOf(v) === i);
       toast.error(
-        `Preencha ${total} campo${total > 1 ? "s" : ""} obrigatório${total > 1 ? "s" : ""} destacado${total > 1 ? "s" : ""} em vermelho.`,
+        `Não é possível salvar: ${nomes.length > 1 ? "faltam os campos" : "falta o campo"} ${nomes.join(", ")}. Estão destacados em vermelho.`,
       );
       return;
     }
+
 
     const conjugePayload = c ? formParaEnvolvido(c) : null;
     await onSalvar(formParaEnvolvido(f), conjugePayload);
@@ -189,7 +208,8 @@ export function ParticipanteDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-5">
+        <div className="space-y-5" ref={corpoRef}>
+          {avisoTopo}
           <CamposParticipante
             f={f}
             set={set}
@@ -226,7 +246,8 @@ export function ParticipanteDialog({
           )}
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="flex-col gap-2 sm:flex-row">
+          {rodapeExtra}
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={salvando}>
             Cancelar
           </Button>
@@ -235,6 +256,7 @@ export function ParticipanteDialog({
             Salvar
           </Button>
         </DialogFooter>
+
       </DialogContent>
     </Dialog>
   );
