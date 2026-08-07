@@ -8,6 +8,7 @@ import { taxaAnoDeBanco } from "@/lib/simulacao/simulacao-rapida";
 import { completaSchema } from "@/lib/simulacao/schemas";
 import { formatBRL, maskCpfCnpj, maskCelular } from "@/lib/simulacao/format";
 import { ajustarPrazoPorIdade, prazoMaximoParaProponentes } from "@/lib/simulacao/prazo";
+import { obterConfiguracoesModulos } from "@/lib/admin/configuracoes-modulos.functions";
 import {
   listarBancosAtivos,
   listarOperacoes,
@@ -82,6 +83,15 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
   const { data: operacoes } = useQuery({
     queryKey: ["operacoes"],
     queryFn: () => listarOperacoes(),
+  });
+
+  // Prazos mínimos APRENDIDOS com as respostas das IFs (banco + tipo de imóvel).
+  // Não há mínimo documentado além de PRAZO_MIN; estes valores são apenas aviso
+  // e ajuste automático, nunca bloqueio.
+  const { data: configModulos } = useQuery({
+    queryKey: ["configuracoes-modulos"],
+    queryFn: () => obterConfiguracoesModulos(),
+    staleTime: 5 * 60 * 1000,
   });
 
   // Carrega a simulação de origem quando estamos duplicando.
@@ -322,24 +332,35 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
     const he = isHomeEquity ? 240 : 420;
     return Math.min(restr, he);
   }, [restricaoEspecial, isHomeEquity]);
-  /** Piso de prazo da modalidade (terreno no Bradesco = 180 meses). */
-  const prazoMinOperacional = useMemo(
-    () => (restricaoEspecial.ativo ? restricaoEspecial.prazoMin : 0),
-    [restricaoEspecial],
-  );
+  /**
+   * Piso de prazo aprendido com as respostas das IFs para os bancos
+   * selecionados e o tipo de imóvel atual. Vazio = sem piso conhecido.
+   */
+  const prazoMinOperacional = useMemo(() => {
+    const aprendidos = (configModulos?.["simulacao_prazos_minimos"] ?? {}) as Record<string, unknown>;
+    const tipo = f.tipo_imovel || "NA";
+    const selecionados = (bancos ?? []).filter((b: any) => f.bancos_ids.includes(b.id));
+    let maior = 0;
+    for (const b of selecionados) {
+      const cod = String((b as any).codigo_banco ?? "").replace(/^0+/, "");
+      const nome = String((b as any).nome_banco ?? "").toLowerCase();
+      const valor = Number(aprendidos[`${cod}:${tipo}`] ?? aprendidos[`${nome}:${tipo}`] ?? 0);
+      if (Number.isFinite(valor) && valor > maior) maior = valor;
+    }
+    return maior;
+  }, [configModulos, f.tipo_imovel, f.bancos_ids, bancos]);
   const prazoMaximo = useMemo(() => {
     const idade = maxPrazoIdade ?? 420;
     return Math.min(idade, prazoMaxOperacional);
   }, [maxPrazoIdade, prazoMaxOperacional]);
   /**
-   * Terreno exige no mínimo 180 meses no Bradesco. Se o teto por idade dos
-   * proponentes for menor que esse piso, a operação é inviável — sinalizamos
-   * na tela e bloqueamos o envio em vez de mandar e falhar no banco.
+   * Aviso (nunca bloqueio): o piso aprendido para esta combinação é maior que
+   * o teto por idade dos proponentes, então o banco provavelmente recusará.
    */
   const terrenoInviavelPorIdade =
     prazoMinOperacional > 0 && maxPrazoIdade != null && maxPrazoIdade < prazoMinOperacional;
   const mensagemPrazoInviavel = terrenoInviavelPorIdade
-    ? `${restricaoEspecial.motivo}: o prazo mínimo é de ${prazoMinOperacional} meses, mas a idade dos proponentes permite no máximo ${maxPrazoIdade} meses. Operação não elegível nesta modalidade.`
+    ? `Em operações anteriores este banco exigiu no mínimo ${prazoMinOperacional} meses, mas a idade dos proponentes permite no máximo ${maxPrazoIdade}. O banco pode recusar.`
     : null;
   const financiamentoMaximo = useMemo(
     () => Math.floor((Number(f.valor_imovel) || 0) * ltvMax),
@@ -384,11 +405,11 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
     }
     if (prazoMinOperacional > 0 && final < prazoMinOperacional) {
       if (maxPrazoIdade != null && maxPrazoIdade < prazoMinOperacional) {
-        toast.error(mensagemPrazoInviavel ?? "Prazo mínimo incompatível com a idade dos proponentes.");
+        toast.warning(mensagemPrazoInviavel ?? "Prazo abaixo do mínimo já exigido por este banco.");
       } else {
         final = prazoMinOperacional;
         toast.warning(
-          `${restricaoEspecial.motivo}: prazo mínimo de ${prazoMinOperacional} meses. Ajustamos o campo automaticamente.`,
+          `Este banco já exigiu no mínimo ${prazoMinOperacional} meses nesta modalidade. Ajustamos o campo automaticamente.`,
         );
       }
     }
@@ -877,12 +898,14 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
   }
 
   async function enviar() {
-    // Terreno abaixo do piso do Bradesco por limite de idade: operação não
-    // elegível — melhor avisar aqui do que receber o 422 do banco.
-    if (terrenoInviavelPorIdade) {
-      toast.error(mensagemPrazoInviavel ?? "Operação não elegível nesta modalidade.");
+    // Modo "Ambos" (SAC + PRICE): o schema aceita apenas "S"/"P", então o
+    // desvio precisa vir ANTES do parse. Cada simulação é validada
+    // separadamente dentro de executarEnvioAmbos.
+    if (f.sistema_amortizacao === "B") {
+      await enviarAmbos();
       return;
     }
+
     // 1. Validar esquema completo (Zod)
     const parsed = completaSchema.safeParse({ ...f, id_operacao_homefin: idOperacao });
     if (!parsed.success) {
@@ -915,23 +938,6 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
     }
     setErros({});
 
-    // Problema 2: Endereço do imóvel obrigatório
-    const faltandoEndereco = [];
-    if (!f.cep_imovel?.trim()) faltandoEndereco.push("CEP");
-    if (!f.logradouro_imovel?.trim()) faltandoEndereco.push("Endereço");
-    if (!f.numero_imovel?.trim()) faltandoEndereco.push("Número");
-    if (!f.municipio_imovel?.trim()) faltandoEndereco.push("Cidade");
-    if (!f.uf_imovel?.trim()) faltandoEndereco.push("UF");
-
-    if (faltandoEndereco.length > 0) {
-      toast.error(
-        `Os dados do imóvel são obrigatórios para os bancos (especialmente Santander): ${faltandoEndereco.join(", ")}. Por favor, preencha a aba "Garantia/Imóvel".`,
-        { duration: 5000 }
-      );
-      // Opcional: ativar a aba de imóvel se houver erro nela
-      return;
-    }
-
     const imovel = Number(f.valor_imovel) || 0;
     const entrada = Number(f.valor_entrada) || 0;
     const fin = Number(f.valor_financiamento) || 0;
@@ -942,11 +948,6 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
       return;
 
     }
-    if (f.sistema_amortizacao === "B") {
-      await enviarAmbos();
-      return;
-    }
-    
     if (financiamentoExcedido) {
       toast.error(
         f.fg_financiar_despesas

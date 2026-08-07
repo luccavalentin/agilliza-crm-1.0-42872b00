@@ -887,13 +887,12 @@ export async function enviarSimulacaoImpl({
               userId,
             );
           }
-          const terreno = sim.tipo_imovel === "TE" || sim.tipo_imovel === "TC";
-          const bradesco =
-            codigoBancoNormalizado(b) === "237" || nomeBanco.includes("bradesco");
-          const prazoTerrenoValido =
-            prazoSolicitado != null && prazoSolicitado >= PRAZO_MIN && prazoSolicitado <= 240;
+          // Não há prazo mínimo documentado: adotamos exatamente o número que a
+          // própria API informou, para qualquer banco e tipo de imóvel.
+          const prazoAjustavel =
+            prazoSolicitado != null && prazoSolicitado >= PRAZO_MIN && prazoSolicitado <= 420;
 
-          if (!terreno || !bradesco || !prazoTerrenoValido || prazoSolicitado === prazoBanco) {
+          if (!prazoAjustavel || prazoSolicitado === prazoBanco) {
             throw erroIntegracao;
           }
 
@@ -940,7 +939,7 @@ export async function enviarSimulacaoImpl({
           await supabase.from("simulacao_historico").insert({
             simulacao_id: simulacaoId,
             tipo: "ajuste",
-            descricao: `Prazo ajustado automaticamente de ${prazoBanco} para ${prazoSolicitado} meses conforme o limite devolvido pelo Bradesco para terreno.`,
+            descricao: `Prazo ajustado automaticamente de ${prazoBanco} para ${prazoSolicitado} meses conforme o mínimo devolvido pela API do banco.`,
             ator_id: userId,
           });
           sim.prazo = prazoSolicitado;
