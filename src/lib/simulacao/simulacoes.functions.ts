@@ -811,7 +811,7 @@ export const listarSimulacoes = createServerFn({ method: "GET" })
         _agrupadas_ids: grupo.slice(1).map((g: any) => g.id),
       });
     }
-    linhas.sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
+    linhas.sort((a, b) => (new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
     const paginadas = linhas.slice(0, data.porPagina);
     // Ajusta o total contando cada grupo como 1
     const totalCru = count ?? 0;
