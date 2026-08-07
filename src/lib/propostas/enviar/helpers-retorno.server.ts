@@ -459,16 +459,19 @@ export function referenciaIntegracaoBanco(sim: any): string | null {
 
 
 export function numeroBancoDaOportunidade(op: any): string | null {
-  const numero = buscarCampoRetorno(op, [
-    "numeroPropostaBanco",
-    "numeroProposta",
-    "proposalNumber",
-    "codigoPropostaBanco",
-    "codigoOportunidadeBanco",
-    "codigoSimulacaoBanco",
-  ]);
-  return numero == null || numero === "" ? null : String(numero);
+  // Busca RASA: o payload da oportunidade contém as simulações de TODOS os
+  // bancos; descer nele copiaria o protocolo de um banco para outro.
+  return protocoloValido(
+    buscarCampoRaso(op, [
+      "numeroPropostaBanco",
+      "numeroProposta",
+      "proposalNumber",
+      "codigoPropostaBanco",
+      "codigoOportunidadeBanco",
+    ]),
+  );
 }
+
 
 export function numeroAtualEhReferenciaTecnica(pb: any, sim: any): boolean {
   const atual = String(pb?.numero_proposta_banco ?? "").trim();
