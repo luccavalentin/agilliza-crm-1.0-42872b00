@@ -73,6 +73,10 @@ export function AcoesTopo({
   const proximos = TRANSICOES[status].filter((s) => s !== "cancelada");
 
   async function enviar() {
+    if (jaEnviou && bancosPendentes.length === 0) {
+      toast.info("Nenhum banco novo selecionado. Selecione outro banco para enviar.");
+      return;
+    }
     setBusy(true);
     try {
       const r = await enviarFn({ data: { proposta_id: propostaId } });
@@ -161,7 +165,7 @@ export function AcoesTopo({
           </Button>
         )}
         {podeEnviarNovos && (
-          <Button size="sm" onClick={enviar} disabled={busy}>
+          <Button size="sm" onClick={enviar} disabled={busy} variant="secondary">
             {busy ? (
               <Loader2 className="mr-1 h-4 w-4 animate-spin" />
             ) : (
