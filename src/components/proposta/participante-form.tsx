@@ -208,7 +208,14 @@ export function ParticipanteDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] w-[95vw] max-w-2xl overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{titulo}</DialogTitle>
+          <div className="flex items-center justify-between gap-4">
+            <DialogTitle>{titulo}</DialogTitle>
+            {participanteIndex !== undefined && totalParticipantes !== undefined && (
+              <span className="text-xs font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                Participante {participanteIndex} de {totalParticipantes}
+              </span>
+            )}
+          </div>
           <DialogDescription>
             Dados complementares enviados aos bancos quando a proposta é processada.
           </DialogDescription>
