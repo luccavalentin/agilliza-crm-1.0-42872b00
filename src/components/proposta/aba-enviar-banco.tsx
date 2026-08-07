@@ -169,7 +169,7 @@ export function AbaEnviarBanco({
   );
 
   function recarregar() {
-    qc.invalidateQueries({ queryKey: ["cliente-docs", clienteId] });
+    qc.removeQueries({ queryKey: ["cliente-docs", clienteId] });
   }
 
   async function visualizar(storage_path: string, nome: string) {
