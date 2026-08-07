@@ -788,37 +788,13 @@ export const listarSimulacoes = createServerFn({ method: "GET" })
     // Para manter a paginação correta e previsível, a lista exibe cada registro
     // de simulação como um item individual. O front-end pode agrupar visualmente
     // se necessário, mas o servidor entrega a lista plana.
-    const linhas = (rows ?? []).map(r => ({ ...r, _agrupadas_ids: [] as string[] }));
-      const lista = porGrupo.get(key) ?? [];
-      lista.push(r);
-      porGrupo.set(key, lista);
-    }
-    for (const grupo of porGrupo.values()) {
-      grupo.sort((a: any, b: any) => (a.created_at < b.created_at ? -1 : 1));
-      const principal = grupo[0];
-      linhas.push({
-        ...principal,
-        sistema_amortizacao: "B",
-        _agrupadas_ids: grupo.slice(1).map((g: any) => g.id),
-      });
-    }
-    linhas.sort((a, b) => (new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
-    const paginadas = linhas.slice(0, data.porPagina);
-    // Ajusta o total contando cada grupo como 1
-    const totalCru = count ?? 0;
-    const colapsadosNaPagina = Array.from(porGrupo.values()).reduce(
-      (acc, g) => acc + Math.max(0, g.length - 1),
-      0,
-    );
-    const total = Math.max(0, totalCru - colapsadosNaPagina);
+    const paginadas = (rows ?? []).map(r => ({ ...r, _agrupadas_ids: [] as string[] }));
+    const total = count ?? 0;
 
-    // Carrega bancos de TODAS as simulações (principais + agrupadas) para
-    // consolidar a exibição.
-    const idsPrincipais = paginadas.map((r: any) => r.id);
-    const idsAgrupadas = paginadas.flatMap((r: any) => r._agrupadas_ids ?? []);
-    const idsTodos = [...idsPrincipais, ...idsAgrupadas];
+    // Carrega bancos de TODAS as simulações paginadas para consolidar a exibição.
+    const idsTodos = paginadas.map((r: any) => r.id);
     const sistemaPorSimulacao = new Map(
-      (rows ?? []).map((r: any) => [r.id, r.sistema_amortizacao ?? null]),
+      paginadas.map((r: any) => [r.id, r.sistema_amortizacao ?? null]),
     );
     const bancosPorSim = new Map<string, SimulacaoBancoResumo[]>();
     if (idsTodos.length) {
