@@ -2,7 +2,6 @@ import { Link2, Repeat } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -194,22 +193,6 @@ export function SecaoTitular({ ctx }: { ctx: SimulacaoCompletaCtx }) {
           />
           <Erro erros={erros} campo="celular" />
         </Campo>
-        <Campo label="Composição de renda">
-          <div className="flex flex-col gap-2 pt-2">
-            <label className="flex items-center gap-3 text-sm font-medium">
-              <Switch
-                checked={f.compoe_renda}
-                onCheckedChange={(c) => {
-                  set("compoe_renda", Boolean(c));
-                  // Quando ativa/desativa a composição, sincroniza a flag interna do cônjuge
-                  set("compoe_renda_conjuge", Boolean(c));
-                }}
-              />
-              Compor renda com cônjuge/coobrigado?
-            </label>
-          </div>
-        </Campo>
-
       </div>
       {podePuxarConjugeCrm && (
         <div className="flex flex-col gap-2 rounded-lg border border-primary/30 bg-primary/5 p-3 sm:flex-row sm:items-center sm:justify-between">

@@ -145,8 +145,12 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
       email: s.email || EMAIL_PADRAO,
       celular: s.celular ?? "",
       possui_conjuge: Boolean(s.possui_conjuge),
-      compoe_renda: true,
-      compoe_renda_conjuge: s.compoe_renda_conjuge !== undefined ? Boolean(s.compoe_renda_conjuge) : Boolean(s.possui_conjuge),
+      compoe_renda: Boolean(s.compoe_renda) && Boolean(s.possui_conjuge),
+      compoe_renda_conjuge:
+        Boolean(s.possui_conjuge) &&
+        (s.compoe_renda_conjuge !== undefined
+          ? Boolean(s.compoe_renda_conjuge)
+          : Boolean(s.compoe_renda)),
       
       nome_conjuge: s.nome_conjuge ?? "",
       cpf_conjuge: s.cpf_conjuge ?? "",
@@ -204,6 +208,7 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
           next.compoe_renda = true;
         } else {
           next.compoe_renda_conjuge = false;
+          next.compoe_renda = false;
         }
       }
       return next;
@@ -317,10 +322,25 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
     const he = isHomeEquity ? 240 : 420;
     return Math.min(restr, he);
   }, [restricaoEspecial, isHomeEquity]);
+  /** Piso de prazo da modalidade (terreno no Bradesco = 180 meses). */
+  const prazoMinOperacional = useMemo(
+    () => (restricaoEspecial.ativo ? restricaoEspecial.prazoMin : 0),
+    [restricaoEspecial],
+  );
   const prazoMaximo = useMemo(() => {
     const idade = maxPrazoIdade ?? 420;
     return Math.min(idade, prazoMaxOperacional);
   }, [maxPrazoIdade, prazoMaxOperacional]);
+  /**
+   * Terreno exige no mínimo 180 meses no Bradesco. Se o teto por idade dos
+   * proponentes for menor que esse piso, a operação é inviável — sinalizamos
+   * na tela e bloqueamos o envio em vez de mandar e falhar no banco.
+   */
+  const terrenoInviavelPorIdade =
+    prazoMinOperacional > 0 && maxPrazoIdade != null && maxPrazoIdade < prazoMinOperacional;
+  const mensagemPrazoInviavel = terrenoInviavelPorIdade
+    ? `${restricaoEspecial.motivo}: o prazo mínimo é de ${prazoMinOperacional} meses, mas a idade dos proponentes permite no máximo ${maxPrazoIdade} meses. Operação não elegível nesta modalidade.`
+    : null;
   const financiamentoMaximo = useMemo(
     () => Math.floor((Number(f.valor_imovel) || 0) * ltvMax),
     [f.valor_imovel, ltvMax],
@@ -362,18 +382,44 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
     } else if (ajustado && mensagem) {
       toast.warning(mensagem);
     }
+    if (prazoMinOperacional > 0 && final < prazoMinOperacional) {
+      if (maxPrazoIdade != null && maxPrazoIdade < prazoMinOperacional) {
+        toast.error(mensagemPrazoInviavel ?? "Prazo mínimo incompatível com a idade dos proponentes.");
+      } else {
+        final = prazoMinOperacional;
+        toast.warning(
+          `${restricaoEspecial.motivo}: prazo mínimo de ${prazoMinOperacional} meses. Ajustamos o campo automaticamente.`,
+        );
+      }
+    }
     set("prazo", final);
   }
 
-  // Reajusta o prazo se a data de nascimento reduzir o máximo permitido.
+  // Recalcula o prazo sempre que o titular, o cônjuge ou as datas de nascimento
+  // mudarem: o valor não pode ser herdado da simulação anterior. Reaplica o teto
+  // por idade e o piso/teto operacional da modalidade.
   useEffect(() => {
-    if (maxPrazoIdade != null && f.prazo > maxPrazoIdade) {
-      const { mensagem } = ajustarPrazoPorIdade(f.prazo, f.data_nascimento, datasProponentesPrazo);
-      if (mensagem) toast.warning(mensagem);
-      set("prazo", maxPrazoIdade);
-    }
+    setF((prev) => {
+      const atual = Number(prev.prazo) || 0;
+      if (atual <= 0) return prev;
+      let alvo = atual;
+      if (maxPrazoIdade != null && alvo > maxPrazoIdade) alvo = maxPrazoIdade;
+      if (alvo > prazoMaxOperacional) alvo = prazoMaxOperacional;
+      if (
+        prazoMinOperacional > 0 &&
+        alvo < prazoMinOperacional &&
+        (maxPrazoIdade == null || maxPrazoIdade >= prazoMinOperacional)
+      ) {
+        alvo = prazoMinOperacional;
+      }
+      if (alvo === atual) return prev;
+      toast.warning(
+        `Prazo recalculado de ${atual} para ${alvo} meses conforme a idade dos proponentes e os limites da modalidade.`,
+      );
+      return { ...prev, prazo: alvo };
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [maxPrazoIdade]);
+  }, [maxPrazoIdade, prazoMaxOperacional, prazoMinOperacional, f.cpf_cnpj, f.cliente_id]);
 
   // Aplica restrições operacionais:
   //  - Terreno/Comercial: prazo <=240m; Terreno filtra apenas Bradesco.
@@ -385,7 +431,14 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
         const b = (bancos ?? []).find((x) => x.id === id);
         return b ? aceitaBancoNaOperacao(b) : false;
       });
-      const prazoClamp = Math.min(prev.prazo, prazoMaxOperacional);
+      let prazoClamp = Math.min(prev.prazo, prazoMaxOperacional);
+      if (
+        prazoMinOperacional > 0 &&
+        prazoClamp < prazoMinOperacional &&
+        (maxPrazoIdade == null || maxPrazoIdade >= prazoMinOperacional)
+      ) {
+        prazoClamp = prazoMinOperacional;
+      }
       const mudouBancos = bancosFiltrados.length !== prev.bancos_ids.length;
       const mudouPrazo = prazoClamp !== prev.prazo;
       if (!mudouBancos && !mudouPrazo) return prev;
@@ -649,6 +702,17 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
   }
 
 
+  // Invariante: composição de renda só existe com estado civil CA/UE.
+  useEffect(() => {
+    const casado = f.estado_civil === "CA" || f.estado_civil === "UE";
+    if (casado) return;
+    setF((prev) =>
+      prev.compoe_renda || prev.compoe_renda_conjuge
+        ? { ...prev, compoe_renda: false, compoe_renda_conjuge: false }
+        : prev,
+    );
+  }, [f.estado_civil]);
+
   const mostraConjuge = f.possui_conjuge;
 
   const obterClienteCrmFn = useServerFn(obterClienteCRM);
@@ -813,6 +877,12 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
   }
 
   async function enviar() {
+    // Terreno abaixo do piso do Bradesco por limite de idade: operação não
+    // elegível — melhor avisar aqui do que receber o 422 do banco.
+    if (terrenoInviavelPorIdade) {
+      toast.error(mensagemPrazoInviavel ?? "Operação não elegível nesta modalidade.");
+      return;
+    }
     // 1. Validar esquema completo (Zod)
     const parsed = completaSchema.safeParse({ ...f, id_operacao_homefin: idOperacao });
     if (!parsed.success) {
@@ -921,6 +991,9 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
     aceitaPrice,
     aceitaBancoNaOperacao,
     restricaoEspecial,
+    prazoMinOperacional,
+    terrenoInviavelPorIdade,
+    mensagemPrazoInviavel,
     prazoMaximo,
     // valores calculados
     ltvMax,

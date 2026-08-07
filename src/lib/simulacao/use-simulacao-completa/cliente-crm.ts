@@ -35,7 +35,10 @@ export function patchSelecionarClienteCRM(prev: Form, c: any): {
     cep_imovel: c.imovel_cep ?? prev.cep_imovel,
     uf: c.imovel_uf ?? prev.uf,
     possui_conjuge: temConjuge,
-    compoe_renda: prev.compoe_renda || (temConjuge && Number(c.conjuge_renda) > 0),
+    // Nunca herdar a flag do cliente anterior: ela é derivada apenas do
+    // cadastro selecionado agora.
+    compoe_renda: temConjuge && Number(c.conjuge_renda) > 0,
+    compoe_renda_conjuge: temConjuge && Number(c.conjuge_renda) > 0,
     nome_conjuge: c.conjuge_nome ?? "",
     cpf_conjuge: c.conjuge_cpf ? maskCpfCnpj(c.conjuge_cpf) : "",
     renda_conjuge: c.conjuge_renda ?? 0,
@@ -61,6 +64,7 @@ export function patchLimparTitular(prev: Form): Form {
     renda_total: 0,
     possui_conjuge: false,
     compoe_renda: false,
+    compoe_renda_conjuge: false,
     nome_conjuge: "",
     cpf_conjuge: "",
     renda_conjuge: 0,
@@ -98,6 +102,7 @@ export function patchPuxarConjugeCRM(prev: Form, crm: any): Form {
     ...prev,
     possui_conjuge: true,
     compoe_renda: prev.compoe_renda || Number(crm.conjuge_renda) > 0,
+    compoe_renda_conjuge: prev.compoe_renda_conjuge || Number(crm.conjuge_renda) > 0,
     estado_civil: ecTitular,
     estado_civil_conjuge: ecTitular,
   };

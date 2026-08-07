@@ -1,5 +1,8 @@
 import type { Form } from "./state";
 
+/** Prazo mínimo aceito pelo Bradesco em terreno (meses). */
+export const PRAZO_MIN_TERRENO_BRADESCO = 180;
+
 /**
  * Helpers puros para regras de elegibilidade de bancos por operação/
  * produto/restrição especial. Todas as funções aqui são determinísticas
@@ -22,6 +25,8 @@ export interface RestricaoEspecial {
   isComercial: boolean;
   ltvMax: number;
   prazoMax: number;
+  /** Prazo mínimo exigido pela IF na modalidade (terreno no Bradesco = 180). */
+  prazoMin: number;
   /** Apenas terreno restringe os bancos elegíveis a Bradesco. */
   apenasBradesco: boolean;
 }
@@ -49,6 +54,9 @@ export function calcularRestricaoEspecial(f: Form): RestricaoEspecial {
     isComercial,
     ltvMax: 0.7,
     prazoMax: 240,
+    // O Bradesco recusa terreno com prazo inferior a 180 meses
+    // ("Favor informar um prazo de pagamento igual ou superior a: 180").
+    prazoMin: isTerreno ? PRAZO_MIN_TERRENO_BRADESCO : 0,
     apenasBradesco: isTerreno,
   };
 }

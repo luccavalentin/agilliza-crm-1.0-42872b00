@@ -52,6 +52,42 @@ function prazoMinimoSolicitadoPeloBanco(mensagem: unknown): number | null {
   return Number.isInteger(prazo) && prazo > 0 ? prazo : null;
 }
 
+/**
+ * Aprendizado sem deploy: guarda o prazo mínimo devolvido pela API para a
+ * combinação banco + tipo de imóvel em `configuracoes_modulos`, módulo
+ * `simulacao_prazos_minimos`. Falhas aqui nunca interrompem o envio.
+ */
+async function registrarPrazoMinimoAprendido(
+  supabase: SupabaseClient<any>,
+  correspondenteId: string | null | undefined,
+  chave: string,
+  prazoMinimo: number,
+  userId?: string | null,
+) {
+  try {
+    if (!correspondenteId) return;
+    const { data: atual } = await supabase
+      .from("configuracoes_modulos")
+      .select("id, config")
+      .eq("correspondente_id", correspondenteId)
+      .eq("modulo", "simulacao_prazos_minimos")
+      .maybeSingle();
+    const config = { ...((atual?.config as Record<string, unknown>) ?? {}), [chave]: prazoMinimo };
+    if (atual?.id) {
+      await supabase.from("configuracoes_modulos").update({ config, updated_by: userId ?? null }).eq("id", atual.id);
+    } else {
+      await supabase.from("configuracoes_modulos").insert({
+        correspondente_id: correspondenteId,
+        modulo: "simulacao_prazos_minimos",
+        config,
+        updated_by: userId ?? null,
+      });
+    }
+  } catch (e) {
+    console.error("[enviar.server] Não foi possível registrar prazo mínimo aprendido:", e);
+  }
+}
+
 function soDigitos(v: unknown): string | undefined {
   const s = String(v ?? "").replace(/\D/g, "");
   return s.length ? s : undefined;
@@ -842,6 +878,15 @@ export async function enviarSimulacaoImpl({
             erroIntegracao instanceof Error ? erroIntegracao.message : String(erroIntegracao);
           const prazoSolicitado = prazoMinimoSolicitadoPeloBanco(mensagem);
           const nomeBanco = String(b.nome_banco ?? "").toLowerCase();
+          if (prazoSolicitado != null) {
+            await registrarPrazoMinimoAprendido(
+              supabase,
+              sim.correspondente_id,
+              `${codigoBancoNormalizado(b) || nomeBanco}:${sim.tipo_imovel ?? "NA"}`,
+              prazoSolicitado,
+              userId,
+            );
+          }
           const terreno = sim.tipo_imovel === "TE" || sim.tipo_imovel === "TC";
           const bradesco =
             codigoBancoNormalizado(b) === "237" || nomeBanco.includes("bradesco");
@@ -852,21 +897,42 @@ export async function enviarSimulacaoImpl({
             throw erroIntegracao;
           }
 
-          const oportunidadeAjustada = { ...dadosOportunidade, prazo: prazoSolicitado };
+          // O teto por idade dos proponentes é intransponível: se o prazo
+          // exigido pelo banco o ultrapassar, a operação é inviável e a
+          // mensagem original do banco deve prevalecer.
+          const tetoIdade = prazoMaxIdade;
+          if (tetoIdade != null && prazoSolicitado > tetoIdade) {
+            throw erroIntegracao;
+          }
+
+          // O PUT /oportunidade aceita SOMENTE estes três campos. Enviar o
+          // objeto completo devolve HTTP 500 INTERNAL_ERROR.
+          const oportunidadeAjustada = {
+            valorImovel: num(sim.valor_imovel),
+            valorFinanciamento: num(sim.valor_financiamento),
+            prazo: prazoSolicitado,
+          };
           const simulacaoAjustada = { ...putPayload, prazo: prazoSolicitado };
 
-          await chamarIntegracao<any>(
-            `/oportunidade/${idOportunidade}`,
-            "PUT",
-            oportunidadeAjustada,
-            ctx,
-          );
-          await chamarIntegracao<any>(
-            `/oportunidade/${idOportunidade}/simulacao/${idSimulacao}`,
-            "PUT",
-            simulacaoAjustada,
-            ctx,
-          );
+          try {
+            await chamarIntegracao<any>(
+              `/oportunidade/${idOportunidade}`,
+              "PUT",
+              oportunidadeAjustada,
+              ctx,
+            );
+            await chamarIntegracao<any>(
+              `/oportunidade/${idOportunidade}/simulacao/${idSimulacao}`,
+              "PUT",
+              simulacaoAjustada,
+              ctx,
+            );
+          } catch (erroAjuste) {
+            // Nunca deixar o erro do reenvio mascarar o motivo informado pelo
+            // banco (ex.: "prazo igual ou superior a 180").
+            console.error("[enviar.server] Falha ao ajustar prazo:", erroAjuste);
+            throw erroIntegracao;
+          }
           await supabase
             .from("simulacoes")
             .update({ prazo: prazoSolicitado })
