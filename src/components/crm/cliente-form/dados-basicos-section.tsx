@@ -273,7 +273,7 @@ export function DadosBasicosSection({
         {v.tipo_pessoa === "PF" &&
           (v.estado_civil === "casado" || v.estado_civil === "uniao_estavel") && (
             <div className="space-y-1.5">
-              <Label>Regime de casamento</Label>
+              <Label>Regime de casamento {v.tipo_pessoa === "PF" && (v.estado_civil === "casado" || v.estado_civil === "uniao_estavel") && "*"}</Label>
               <Select value={v.regime_casamento} onValueChange={(x) => set("regime_casamento", x)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione" />
