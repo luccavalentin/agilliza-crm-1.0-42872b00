@@ -2,7 +2,7 @@ import { createFileRoute, useRouter, Link } from "@tanstack/react-router";
 import { corDoBanco } from "@/lib/bancos/cores";
 import { numeroBancoParaExibir } from "@/lib/propostas/numero-banco-display";
 import { BancoLogo } from "@/components/bancos/banco-logo";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -32,6 +32,7 @@ import {
   Activity,
   MessageSquare,
   ChevronDown,
+  AlertTriangle,
 } from "lucide-react";
 import { assertModuloPermitido } from "@/lib/route-guards";
 import {
@@ -194,9 +195,21 @@ function Pagina() {
   const { complementar } = Route.useSearch();
   const router = useRouter();
   const qc = useQueryClient();
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["proposta", id],
+    queryFn: () => obterProposta({ data: { id } }),
+    refetchInterval: (q: any) => {
+      const st = q.state.data?.proposta?.status as string | undefined;
+      if (!st) return 30_000;
+      const terminais = ["contrato_emitido", "cancelada", "credito_recusado"];
+      return terminais.includes(st) ? false : 30_000;
+    },
+    refetchOnWindowFocus: true,
+  });
+
   const [tab, setTab] = useState<Tab>("RESUMO");
   const [enviandoAuto, setEnviandoAuto] = useState(false);
-  // Quando o envio falha por cadastro incompleto, destaca os campos obrigatórios pendentes.
   const [destacarObrigatorios, setDestacarObrigatorios] = useState(false);
   const [participanteModal, setParticipanteModal] = useState<any>(null);
   const [indiceParticipante, setIndiceParticipante] = useState(0);
@@ -219,27 +232,13 @@ function Pagina() {
   };
   const enviarAutoFn = useServerFn(enviarPropostaHomeFin);
   const onCadastroIncompleto = () => {
-    setTab("COMPRADORES");
-    // Reinicia o destaque para forçar novo scroll até o primeiro campo pendente,
-    // mesmo quando o usuário já estava com o destaque ativo.
-    setDestacarObrigatorios(false);
-    requestAnimationFrame(() => setDestacarObrigatorios(true));
+    abrirCadastroPendente();
   };
 
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["proposta", id],
-    queryFn: () => obterProposta({ data: { id } }),
-    // Fallback de atualização automática caso o realtime não entregue o evento
-    // (aba em background, websocket caído, etc.). Para em desfechos terminais.
-    refetchInterval: (q: any) => {
-      const st = q.state.data?.proposta?.status as string | undefined;
-      if (!st) return 30_000;
-      const terminais = ["contrato_emitido", "cancelada", "credito_recusado"];
-      return terminais.includes(st) ? false : 30_000;
-    },
-    refetchOnWindowFocus: true,
-  });
+  const p = data?.proposta;
+  const bancos = data?.bancos ?? [];
+  const envolvidos = data?.envolvidos ?? [];
 
   // Polling automático silencioso da API do banco (Itaú, Santander, Bradesco…).
   // Enquanto a proposta estiver em análise ativa, dispara sincronização a cada 60s
