@@ -855,7 +855,7 @@ export async function enviarSimulacaoImpl({
           // O teto por idade dos proponentes é intransponível: se o prazo
           // exigido pelo banco o ultrapassar, a operação é inviável e a
           // mensagem original do banco deve prevalecer.
-          const tetoIdade = prazoMaximoParaProponentes(sim);
+          const tetoIdade = prazoMaxIdade;
           if (tetoIdade != null && prazoSolicitado > tetoIdade) {
             throw erroIntegracao;
           }
