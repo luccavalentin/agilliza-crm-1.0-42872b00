@@ -59,24 +59,42 @@ export function EnviarPropostaDialog({
         <div className="space-y-2">
           {carregando ? (
             <p className="py-6 text-center text-sm text-muted-foreground">Carregando bancos…</p>
-          ) : (envio?.bancos.length ?? 0) === 0 ? (
-            <div className="py-8 text-center">
-              <p className="text-sm text-muted-foreground mb-4">
-                Não há bancos disponíveis para envio nesta simulação. 
-                Gere os resultados primeiro clicando em "Gerar Simulação".
-              </p>
-              <Button variant="outline" size="sm" onClick={onClose}>
-                Voltar e Gerar Resultados
-              </Button>
-            </div>
-          ) : (
-            envio?.bancos.map((b: any) => {
+          ) : (() => {
+            const bancosComId = (envio?.bancos ?? []).filter((b: any) => b.banco_id);
+            const simulados = bancosComId.filter((b: any) => b.status_banco === "simulada");
+            
+            if (bancosComId.length === 0) {
+              return (
+                <div className="py-8 text-center">
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Nenhum banco foi selecionado para esta simulação. 
+                    Por favor, selecione os bancos e tente novamente.
+                  </p>
+                  <Button variant="outline" size="sm" onClick={onClose}>
+                    Fechar
+                  </Button>
+                </div>
+              );
+            }
+
+            if (simulados.length === 0) {
+              return (
+                <div className="py-8 text-center">
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Não há bancos com status "Simulada" disponíveis. 
+                    Gere os resultados primeiro clicando em "Gerar Simulação".
+                  </p>
+                  <Button variant="outline" size="sm" onClick={onClose}>
+                    Voltar e Gerar Resultados
+                  </Button>
+                </div>
+              );
+            }
+
+            return simulados.map((b: any) => {
               const criada = propostasCriadas.find((p) => p.simulacao_banco_id === b.id);
               const esteEnviando = enviandoBancoId === b.id;
               const cor = corDoBanco(b.nome_banco);
-              // Prioriza o sistema REQUISITADO na simulação. O retorno da API
-              // (sistema_amortizacao_banco) é usado só como fallback porque o
-              // Santander devolve "SAC" mesmo em simulações executadas em PRICE.
               const req = String(b.sistema_amortizacao ?? "").toUpperCase();
               const api = String(b.sistema_amortizacao_banco ?? "").toUpperCase();
               const sis =
@@ -143,8 +161,8 @@ export function EnviarPropostaDialog({
                   )}
                 </div>
               );
-            })
-          )}
+            });
+          })()}
         </div>
 
         <DialogFooter>
