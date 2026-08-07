@@ -145,8 +145,12 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
       email: s.email || EMAIL_PADRAO,
       celular: s.celular ?? "",
       possui_conjuge: Boolean(s.possui_conjuge),
-      compoe_renda: true,
-      compoe_renda_conjuge: s.compoe_renda_conjuge !== undefined ? Boolean(s.compoe_renda_conjuge) : Boolean(s.possui_conjuge),
+      compoe_renda: Boolean(s.compoe_renda) && Boolean(s.possui_conjuge),
+      compoe_renda_conjuge:
+        Boolean(s.possui_conjuge) &&
+        (s.compoe_renda_conjuge !== undefined
+          ? Boolean(s.compoe_renda_conjuge)
+          : Boolean(s.compoe_renda)),
       
       nome_conjuge: s.nome_conjuge ?? "",
       cpf_conjuge: s.cpf_conjuge ?? "",
@@ -204,6 +208,7 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
           next.compoe_renda = true;
         } else {
           next.compoe_renda_conjuge = false;
+          next.compoe_renda = false;
         }
       }
       return next;
@@ -696,6 +701,17 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
     });
   }
 
+
+  // Invariante: composição de renda só existe com estado civil CA/UE.
+  useEffect(() => {
+    const casado = f.estado_civil === "CA" || f.estado_civil === "UE";
+    if (casado) return;
+    setF((prev) =>
+      prev.compoe_renda || prev.compoe_renda_conjuge
+        ? { ...prev, compoe_renda: false, compoe_renda_conjuge: false }
+        : prev,
+    );
+  }, [f.estado_civil]);
 
   const mostraConjuge = f.possui_conjuge;
 
