@@ -110,11 +110,13 @@ export function AbaEnviarBanco({
   propostaId,
   envolvidos = [],
   onCompletar,
+  proposta,
 }: {
   clienteId: string | null | undefined;
   propostaId: string;
   envolvidos?: any[];
   onCompletar?: (participante: any) => void;
+  proposta: any;
 }) {
   const qc = useQueryClient();
   const listar = useServerFn(listarDocumentos);
@@ -135,6 +137,15 @@ export function AbaEnviarBanco({
     erros: { nome: string; motivo: string; participante?: string | null }[];
   } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const pendencias = useMemo(() => {
+    return (envolvidos ?? []).map(env => ({
+      env,
+      faltantes: faltantesEnvolvido(env)
+    })).filter(p => p.faltantes.length > 0);
+  }, [envolvidos]);
+
+  const bloqueado = pendencias.length > 0;
 
   const { data: docs, isLoading } = useQuery({
     queryKey: ["cliente-docs", clienteId],
@@ -236,6 +247,10 @@ export function AbaEnviarBanco({
   }
 
   async function enviarAoBanco(documentoIds?: string[]) {
+    if (bloqueado) {
+      toast.error("Complete os dados obrigatórios de todos os participantes antes de enviar.");
+      return;
+    }
     const individual = Array.isArray(documentoIds) && documentoIds.length === 1;
     if (individual) setEnviandoId(documentoIds![0]);
     else setEnviando(true);
@@ -365,14 +380,35 @@ export function AbaEnviarBanco({
               </p>
             </div>
           </div>
-          <Button
-            onClick={() => enviarAoBanco()}
-            disabled={enviando || totalPdfs === 0}
-            className="h-11 w-full gap-2 rounded-xl px-6 font-semibold shadow-md shadow-primary/20 transition-all hover:shadow-lg hover:shadow-primary/25 active:scale-[0.98] disabled:shadow-none sm:w-auto"
-          >
-            {enviando ? <Loader2 className="h-4 w-4 animate-spin" /> : <Landmark className="h-4 w-4" />}
-            {enviando ? "Enviando…" : "Enviar todos os documentos ao banco"}
-          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span>
+                  <Button
+                    onClick={() => enviarAoBanco()}
+                    disabled={enviando || totalPdfs === 0 || bloqueado}
+                    className="h-11 w-full gap-2 rounded-xl px-6 font-semibold shadow-md shadow-primary/20 transition-all hover:shadow-lg hover:shadow-primary/25 active:scale-[0.98] disabled:shadow-none sm:w-auto"
+                  >
+                    {enviando ? <Loader2 className="h-4 w-4 animate-spin" /> : <Landmark className="h-4 w-4" />}
+                    {enviando ? "Enviando…" : "Enviar todos os documentos ao banco"}
+                  </Button>
+                </span>
+              </TooltipTrigger>
+              {bloqueado && (
+                <TooltipContent className="max-w-xs space-y-2">
+                  <p className="font-semibold text-destructive flex items-center gap-1">
+                    <AlertTriangle className="h-3 w-3" /> Dados incompletos
+                  </p>
+                  <ul className="text-xs space-y-1">
+                    {pendencias.map((p, i) => (
+                      <li key={i}>• {descreverParticipante(p.env)}</li>
+                    ))}
+                  </ul>
+                  <p className="text-xs text-muted-foreground">Complete os dados dos participantes acima para habilitar o envio.</p>
+                </TooltipContent>
+              )}
+            </Tooltip>
+          </TooltipProvider>
         </CardContent>
       </Card>
 
