@@ -1580,3 +1580,10 @@ export {
 } from "./enviar/participantes-crud.server";
 // Re-export públicos dos helpers de retorno para retrocompatibilidade da API.
 export { ehFalhaIntegracaoBanco, bancoJaEnviado } from "./enviar/helpers-retorno.server";
+
+// Ciclo de vida da proposta
+export {
+  cancelarPropostaHomefinImpl,
+  cancelarOportunidadeHomefinGenerico,
+} from "./enviar/lifecycle.server";
+
