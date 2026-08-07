@@ -103,8 +103,8 @@ export function ResultadoInlineCompleta({ simulacaoId, onFechar, isSecundaria }:
     };
   }, [simulacaoId, qc]);
 
-  // Download automático dos PDFs individuais (um por banco) assim que os
-  // retornos chegam. Só dispara uma vez por simulação.
+  // Remoção do download automático conforme solicitado.
+  // O PDF deve ser gerado apenas no clique manual.
   useEffect(() => {
     if (jaBaixou.current || !data) return;
     const bancos = (data.bancos as any[]) ?? [];
@@ -113,33 +113,8 @@ export function ResultadoInlineCompleta({ simulacaoId, onFechar, isSecundaria }:
       (b) => b.status_banco === "aguardando" || b.status_banco === "enviando",
     );
     if (aindaProcessando) return;
-    const simulados = bancos.filter((b) => b.status_banco === "simulada");
-    if (simulados.length === 0) return;
     jaBaixou.current = true;
-    (async () => {
-      try {
-        if (isSecundaria) {
-          console.log("[PDF Automático] Ignorando download de simulação secundária (testagem CPF).");
-          return;
-        }
-
-        const { baixarSimulacaoDetalhadaPDF } = await import("@/lib/simulacao/simulacao-pdf");
-        // Baixa TODOS os bancos simulados (um extrato por banco), em sequência
-        // com intervalo para o navegador não bloquear downloads múltiplos.
-        for (const b of simulados) {
-          await baixarSimulacaoDetalhadaPDF({ simulacao: data.simulacao, bancos: [b] });
-          await new Promise((r) => setTimeout(r, 800));
-        }
-        toast.success(
-          simulados.length > 1
-            ? `Simulação realizada. ${simulados.length} extratos disponíveis para download.`
-            : "Simulação realizada. Extrato do titular disponível para download.",
-        );
-
-      } catch (e) {
-        console.error("[PDF Automático]", e);
-      }
-    })();
+    // Não executa download automático.
   }, [data]);
 
   async function reenviarBanco(bancoId: string) {
