@@ -731,9 +731,6 @@ export const listarSimulacoes = createServerFn({ method: "GET" })
     const from = (data.pagina - 1) * data.porPagina;
     const to = from + data.porPagina - 1;
 
-    // Buscamos mais que porPagina para poder colapsar pares agrupados
-    // (SAC + PRICE criados como "Ambos") em um único item da lista.
-    const overFetch = data.porPagina * 2;
     // Para usuários com visibilidade restrita (RLS), o Supabase já aplica o filtro.
     // Garantimos que o correspondente_id seja filtrado se não formos admin total.
     const { data: me } = await supabase
