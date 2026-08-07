@@ -54,6 +54,7 @@ export function ClienteForm({
   destacarObrigatorios,
   enviarBancoAposVincular,
   onSalvoEmbutido,
+  idBanco,
 }: {
   inicial?: Partial<ClienteFormValues>;
   portalAtivo?: boolean;
@@ -65,17 +66,14 @@ export function ClienteForm({
     cidade?: string;
     uf?: string;
   } | null;
-  /** Quando presente, ao criar o cliente ele é vinculado a esta proposta e o usuário volta para a ficha. */
   vincularPropostaId?: string;
-  /** Quando true, o formulário é renderizado embutido (ex.: ficha da proposta). Ao salvar, não navega — mantém o usuário na tela atual. */
   embutido?: boolean;
-  /** Quando true, destaca em vermelho os campos obrigatórios ainda pendentes para envio da proposta. */
   destacarObrigatorios?: boolean;
-  /** Fluxo de nova proposta direta: após vincular o cliente, envia a proposta ao banco selecionado. */
   enviarBancoAposVincular?: boolean;
-  /** Chamado após salvar com sucesso no modo embutido (ex.: para direcionar ao envio ao banco). */
   onSalvoEmbutido?: () => void;
+  idBanco?: number;
 }) {
+
 
   const navigate = useNavigate();
   const qc = useQueryClient();
