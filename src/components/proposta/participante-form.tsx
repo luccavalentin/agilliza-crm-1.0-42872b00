@@ -22,14 +22,7 @@ import {
   VAZIO,
   type ParticipanteForm,
   envolvidoParaForm,
-} from "./participante-form/types";
-
-import { CamposParticipante } from "./participante-form/campos-participante";
-import {
-  camposFaltantes,
-  formParaEnvolvido,
-  VAZIO,
-  type ParticipanteForm,
+  participanteCompleto,
 } from "./participante-form/types";
 
 // Re-exports públicos (mantém compatibilidade com callers atuais).
