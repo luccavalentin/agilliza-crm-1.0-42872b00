@@ -291,17 +291,17 @@ function drawInfoFinanciamento(
   const cols = opts?.cols ?? 3;
   const itens: { label: string; valor: string }[] = [
     { label: "Valor de compra e venda", valor: brlOuTraco(d?.valorImovel ?? s.valor_imovel) },
-    { label: "Despesas financiadas", valor: brlOuTraco(d?.despesasFinanciadas) },
+    { label: "Despesas financiadas", valor: brlOuTraco(d?.despesasFinanciadas ?? s.valor_despesas_financiadas) },
     {
       label: "Valor de financiamento total",
-      valor: brlOuTraco(d?.financiamentoTotal ?? d?.valorFinanciamento ?? s.valor_financiamento),
+      valor: brlOuTraco((d?.financiamentoTotal ?? d?.valorFinanciamento ?? s.valor_financiamento ?? 0) + (d?.despesasFinanciadas ?? s.valor_despesas_financiadas ?? 0)),
     },
     { label: "Entrada", valor: brlOuTraco((() => {
       const e = d?.valorEntrada ?? s.valor_entrada;
       if (e != null && Number(e) > 0) return e;
       const vi = Number(d?.valorImovel ?? s.valor_imovel ?? 0);
       const vf = Number(d?.financiamentoTotal ?? d?.valorFinanciamento ?? s.valor_financiamento ?? 0);
-      const df = Number(d?.despesasFinanciadas ?? 0);
+      const df = Number(d?.despesasFinanciadas ?? s.valor_despesas_financiadas ?? 0);
       const calc = vi - (vf - df);
       return vi > 0 && vf > 0 && calc > 0 ? calc : null;
     })()) },
@@ -691,7 +691,10 @@ export function baixarSimulacaoPDF(input: SimulacaoPdfInput) {
 
   const kpis: ReportKpi[] = [
     { label: "Valor do imóvel", valor: formatBRL(s.valor_imovel) },
-    { label: "Financiamento", valor: formatBRL(s.valor_financiamento) },
+    { 
+      label: "Financiamento", 
+      valor: formatBRL((Number(s.valor_financiamento) || 0) + (Number(s.valor_despesas_financiadas) || 0)) 
+    },
     { label: "Entrada", valor: formatBRL(s.valor_entrada) },
     { label: "Prazo", valor: s.prazo ? `${s.prazo} meses` : "—" },
     { label: "Sistema", valor: sistemaKpi },
