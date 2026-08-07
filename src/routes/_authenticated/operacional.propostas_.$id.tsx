@@ -98,7 +98,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { envolventeParaForm } from "@/components/proposta/participante-form/types";
+import { envolvidoParaForm } from "@/components/proposta/participante-form/types";
 import {
   baixarPropostaSimplificadaPDF,
   baixarPropostaDetalhadaPDF,
