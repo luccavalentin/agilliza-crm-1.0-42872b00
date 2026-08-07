@@ -39,6 +39,9 @@ export function ParticipanteDialog({
   salvando,
   onSalvar,
   idBanco,
+  focarPendencias,
+  rodapeExtra,
+  avisoTopo,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
@@ -52,6 +55,12 @@ export function ParticipanteDialog({
     conjuge: ReturnType<typeof formParaEnvolvido> | null,
   ) => Promise<void> | void;
   idBanco?: number;
+  /** Abre já destacando (e rolando até) o primeiro campo obrigatório pendente. */
+  focarPendencias?: boolean;
+  /** Conteúdo extra no rodapé (ex.: "Enviar ao banco agora"). */
+  rodapeExtra?: React.ReactNode;
+  /** Faixa informativa no topo do formulário. */
+  avisoTopo?: React.ReactNode;
 }) {
 
   const [f, setF] = useState<ParticipanteForm>(inicial ?? VAZIO);
@@ -63,6 +72,7 @@ export function ParticipanteDialog({
   const [erros, setErros] = useState<Set<string>>(new Set());
   const [errosC, setErrosC] = useState<Set<string>>(new Set());
   const [tentouEnviar, setTentouEnviar] = useState(false);
+  const corpoRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (open) {
@@ -70,22 +80,30 @@ export function ParticipanteDialog({
       setConjuge(conjugeInicial ?? { ...VAZIO, tipo_qualificacao: "TI" });
       setErros(new Set());
       setErrosC(new Set());
-      setTentouEnviar(false);
+      setTentouEnviar(Boolean(focarPendencias));
     }
-  }, [open, inicial, conjugeInicial, tipoQualificacaoFixo]);
+  }, [open, inicial, conjugeInicial, tipoQualificacaoFixo, focarPendencias]);
 
   // Após a primeira tentativa, revalida ao vivo para o vermelho sumir conforme preenche.
   useEffect(() => {
-    if (tentouEnviar) {
-      setErros(camposFaltantes(f, { regimeObrigatorio: idBanco === TIPO_BANCO_SANTANDER }));
-    }
-  }, [f, tentouEnviar, idBanco]);
+    if (tentouEnviar) setErros(camposFaltantes(f));
+  }, [f, tentouEnviar]);
 
   useEffect(() => {
-    if (tentouEnviar) {
-      setErrosC(camposFaltantes(conjuge, { regimeObrigatorio: idBanco === TIPO_BANCO_SANTANDER }));
-    }
-  }, [conjuge, tentouEnviar, idBanco]);
+    if (tentouEnviar) setErrosC(camposFaltantes(conjuge));
+  }, [conjuge, tentouEnviar]);
+
+  // Rola até o primeiro campo pendente quando o modal abre em modo "completar".
+  useEffect(() => {
+    if (!open || !focarPendencias) return;
+    const t = setTimeout(() => {
+      const alvo = corpoRef.current?.querySelector<HTMLElement>(".border-destructive");
+      alvo?.scrollIntoView({ block: "center", behavior: "smooth" });
+      alvo?.focus?.();
+    }, 120);
+    return () => clearTimeout(t);
+  }, [open, focarPendencias, erros]);
+
 
 
   const pf = f.tipo_pessoa === "F";
