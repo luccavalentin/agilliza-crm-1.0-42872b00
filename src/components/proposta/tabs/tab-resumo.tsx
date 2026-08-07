@@ -33,6 +33,7 @@ import {
   selecionarBancoProposta,
   definirSituacaoBanco,
   SITUACOES_BANCO,
+  enviarPropostaHomeFin,
 } from "@/lib/propostas/propostas.functions";
 import { useEnviarProposta } from "@/hooks/use-enviar-proposta";
 import { SITUACAO_BANCO_LABEL, type SituacaoBanco } from "@/components/proposta/situacao-banco-labels";
