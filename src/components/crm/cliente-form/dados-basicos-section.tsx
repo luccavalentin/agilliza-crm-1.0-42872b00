@@ -4,6 +4,8 @@ import { Input } from "@/components/ui/input";
 import { DateInput } from "@/components/shared/date-input";
 import { Combobox } from "@/components/ui/combobox";
 import { Label } from "@/components/ui/label";
+import { TIPO_BANCO_SANTANDER } from "@/lib/simulacao/homefin.server";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
