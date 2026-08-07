@@ -1316,9 +1316,20 @@ export async function sincronizarPropostaImpl({
       statusBancos === "credito_recusado" ||
       statusEtapa === "credito_recusado" ||
       statusAtividade.status === "credito_recusado";
-    if (!novoStatus && houveRecusa && prop.status !== "credito_recusado") {
+
+    // CASO 2a: Ao processar o retorno, sempre recalcule propostas.status a partir do estado atual
+    // dos bancos, nunca deixando resíduo de tentativa anterior.
+    // Se o banco retornou protocolo real e está em análise, garantimos que o status seja coerente.
+    if (houveRecusa && prop.status !== "credito_recusado") {
       novoStatus = "credito_recusado";
     }
+
+    // Se houve desfecho positivo de algum banco (análise ou aprovado),
+    // isso deve prevalecer sobre recusas de outros bancos ou de tentativas anteriores.
+    if (statusBancos === "em_analise_credito" || statusBancos === "credito_aprovado") {
+      novoStatus = statusBancos;
+    }
+
     // Falha de integração sem outro desfecho positivo: força erro_envio para
     // habilitar reenvio (não é recusa de crédito real). NUNCA regride uma
     // proposta que já foi confirmada como enviada ao banco — nesse caso o
