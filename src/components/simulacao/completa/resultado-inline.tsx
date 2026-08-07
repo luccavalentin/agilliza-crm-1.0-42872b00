@@ -76,8 +76,8 @@ export function ResultadoInlineCompleta({ simulacaoId, onFechar, isSecundaria }:
   const qc = useQueryClient();
   const [reenviandoBanco, setReenviandoBanco] = useState<string | null>(null);
   const [criandoBanco, setCriandoBanco] = useState<string | null>(null);
+  const { enviar: handleEnviarHook, busy: enviandoBanco } = useEnviarProposta();
   const enviarPropostaFn = useServerFn(enviarPropostaHomeFin);
-  const { enviar: handleEnviarHook } = useEnviarProposta();
   const jaBaixou = useRef(false);
 
   const { data, isLoading } = useQuery({
