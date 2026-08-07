@@ -179,7 +179,7 @@ export function ResultadoInlineAmbos({ simulacaoIdSac, simulacaoIdPrice, onFecha
     }
   }
 
-  // Download automático para modo Ambos quando os resultados chegam
+  // Remoção do download automático para modo Ambos conforme solicitado.
   useEffect(() => {
     if (jaBaixou.current || (!dataSac && !dataPrice)) return;
     const bancosSac = bancosDaSimulacaoAtual(dataSac);
@@ -188,25 +188,8 @@ export function ResultadoInlineAmbos({ simulacaoIdSac, simulacaoIdPrice, onFecha
     if (todosBancos.length === 0) return;
     const processando = todosBancos.some(b => b.status_banco === "aguardando" || b.status_banco === "enviando");
     if (processando) return;
-    const simulados = todosBancos.filter(b => b.status_banco === "simulada");
-    if (simulados.length === 0) return;
     jaBaixou.current = true;
-    (async () => {
-      try {
-        const { baixarSimulacaoDetalhadaPDF } = await import("@/lib/simulacao/simulacao-pdf");
-        // Baixa TODOS os bancos simulados, tanto do SAC quanto do PRICE.
-        for (const b of simulados) {
-          const ehSac = bancosSac.some((x) => x.id === b.id);
-          const simRef = ehSac ? dataSac?.simulacao : dataPrice?.simulacao;
-          if (!simRef) continue;
-          await baixarSimulacaoDetalhadaPDF({ simulacao: simRef, bancos: [b] });
-          await new Promise((r) => setTimeout(r, 800));
-        }
-
-      } catch (e) {
-        console.error("[PDF Automático Ambos Inline]", e);
-      }
-    })();
+    // Não executa download automático.
   }, [dataSac, dataPrice]);
 
   const carregando = (simulacaoIdSac && !dataSac) || (simulacaoIdPrice && !dataPrice);
