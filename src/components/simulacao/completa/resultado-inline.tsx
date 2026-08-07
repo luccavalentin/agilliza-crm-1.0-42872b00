@@ -325,6 +325,7 @@ export function ResultadoInlineCompleta({ simulacaoId, onFechar, isSecundaria }:
                               : "—"
                           }
                         />
+                        <MobileStat rotulo="Prazo" valor={`${s.prazo}m`} />
                         <MobileStat
                           rotulo="Prazo máx"
                           valor={prazoMaxTexto(b)}
