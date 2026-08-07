@@ -342,52 +342,6 @@ function normalizarChaveRetorno(v: string): string {
     .replace(/[\u0300-\u036f]/g, "");
 }
 
-function buscarCampoRetorno(obj: unknown, chaves: string[], visitados = new WeakSet<object>()): string | null {
-  if (obj == null) return null;
-  if (typeof obj === "string") {
-    const texto = obj.trim();
-    if (!texto) return null;
-    if (texto.startsWith("{") || texto.startsWith("[")) {
-      try {
-        const parsed = JSON.parse(texto);
-        const achado = buscarCampoRetorno(parsed, chaves, visitados);
-        if (achado) return achado;
-      } catch {
-        // Continua para extração por regex em strings não-JSON ou JSON malformado.
-      }
-    }
-    for (const chave of chaves) {
-      const re = new RegExp(`"?${chave}"?\\s*[:=]\\s*"?([A-Za-z0-9._/-]+)`, "i");
-      const match = texto.match(re);
-      if (match?.[1]) return match[1];
-    }
-    return null;
-  }
-  if (typeof obj !== "object") return null;
-  if (visitados.has(obj)) return null;
-  visitados.add(obj);
-
-  if (Array.isArray(obj)) {
-    for (const item of obj) {
-      const achado = buscarCampoRetorno(item, chaves, visitados);
-      if (achado) return achado;
-    }
-    return null;
-  }
-
-  const mapaChaves = new Set(chaves.map(normalizarChaveRetorno));
-  for (const [k, v] of Object.entries(obj as Record<string, unknown>)) {
-    if (mapaChaves.has(normalizarChaveRetorno(k)) && v != null && String(v).trim()) {
-      return String(v).trim();
-    }
-  }
-  for (const v of Object.values(obj as Record<string, unknown>)) {
-    const achado = buscarCampoRetorno(v, chaves, visitados);
-    if (achado) return achado;
-  }
-  return null;
-}
-
 /**
  * Busca RASA: só as chaves próprias do objeto da simulação e dos seus
  * envelopes diretos de resposta (`descricaoRespostaBanco`, `retornoIntegracao`).
