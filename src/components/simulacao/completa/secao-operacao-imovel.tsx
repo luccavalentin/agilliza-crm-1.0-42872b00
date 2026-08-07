@@ -38,6 +38,8 @@ export function SecaoOperacaoImovel({ ctx }: { ctx: SimulacaoCompletaCtx }) {
     maxPrazoIdade,
     prazoMaximo,
     restricaoEspecial,
+    prazoMinOperacional,
+    mensagemPrazoInviavel,
     aplicarEntradaSugerida,
     aplicarPorFinanciamento,
     aplicarPorFinanciamentoTotal,
@@ -79,7 +81,7 @@ export function SecaoOperacaoImovel({ ctx }: { ctx: SimulacaoCompletaCtx }) {
           <div className="flex-1 space-y-0.5">
             <p className="text-sm font-semibold leading-none text-foreground">Restrições para {restricaoEspecial.motivo}</p>
             <p className="text-[13px] text-muted-foreground leading-snug">
-              Financiamento máx. <span className="font-semibold text-foreground">{Math.round(restricaoEspecial.ltvMax * 100)}%</span> (entrada mín. de {Math.round((1 - restricaoEspecial.ltvMax) * 100)}%), prazo máx. de <span className="font-semibold text-foreground">{restricaoEspecial.prazoMax} meses</span>{restricaoEspecial.apenasBradesco ? ", operado apenas pelo Bradesco" : ""}.
+              Financiamento máx. <span className="font-semibold text-foreground">{Math.round(restricaoEspecial.ltvMax * 100)}%</span> (entrada mín. de {Math.round((1 - restricaoEspecial.ltvMax) * 100)}%), prazo {prazoMinOperacional > 0 ? "de " : "máx. de "}<span className="font-semibold text-foreground">{prazoMinOperacional > 0 ? `${prazoMinOperacional} a ${restricaoEspecial.prazoMax}` : restricaoEspecial.prazoMax} meses</span>{restricaoEspecial.apenasBradesco ? ", operado apenas pelo Bradesco" : ""}.
             </p>
           </div>
         </div>
@@ -367,7 +369,7 @@ export function SecaoOperacaoImovel({ ctx }: { ctx: SimulacaoCompletaCtx }) {
         <Campo label={<>Prazo (meses) <Ast /></>}>
           <Input
             type="number"
-            min={60}
+            min={prazoMinOperacional > 0 ? prazoMinOperacional : 60}
             max={prazoMaximo ?? 420}
             step={12}
             value={f.prazo || ""}
@@ -378,8 +380,14 @@ export function SecaoOperacaoImovel({ ctx }: { ctx: SimulacaoCompletaCtx }) {
           />
           {restricaoEspecial.ativo && (
             <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">
-              {restricaoEspecial.motivo}: máx. {restricaoEspecial.prazoMax} meses.
+              {restricaoEspecial.motivo}:{" "}
+              {prazoMinOperacional > 0
+                ? `de ${prazoMinOperacional} a ${restricaoEspecial.prazoMax} meses.`
+                : `máx. ${restricaoEspecial.prazoMax} meses.`}
             </p>
+          )}
+          {mensagemPrazoInviavel && (
+            <p className="mt-1 text-xs font-medium text-destructive">{mensagemPrazoInviavel}</p>
           )}
           {maxPrazoIdade != null && (
             <p className="mt-1 text-xs text-muted-foreground">
