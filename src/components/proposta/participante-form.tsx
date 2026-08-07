@@ -173,6 +173,7 @@ export function ParticipanteDialog({
   }
 
   async function submit() {
+    // 1. Ressincroniza antes de qualquer validação (P1.g)
     setTentouEnviar(true);
     const faltando = camposFaltantes(f);
     setErros(faltando);
