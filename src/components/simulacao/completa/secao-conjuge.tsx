@@ -20,14 +20,22 @@ import type { SimulacaoCompletaCtx } from "@/lib/simulacao/use-simulacao-complet
 export function SecaoConjuge({ ctx }: { ctx: SimulacaoCompletaCtx }) {
   const { f, set, podeInverter, inverterPrincipal } = ctx;
 
+  // Único controle de composição de renda do sistema. Só faz sentido com
+  // cônjuge — para solteiros fica desligado e desabilitado.
+  const casado = f.estado_civil === "CA" || f.estado_civil === "UE";
+
   return (
     <section className="space-y-4">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-4">
         <div className="flex items-center gap-3">
           <Switch
             id="compoe-renda-conjuge"
-            checked={f.compoe_renda_conjuge}
-            onCheckedChange={(checked) => set("compoe_renda_conjuge", checked)}
+            checked={casado && Boolean(f.compoe_renda_conjuge)}
+            disabled={!casado}
+            onCheckedChange={(checked) => {
+              set("compoe_renda_conjuge", checked);
+              set("compoe_renda", checked);
+            }}
           />
           <Label
             htmlFor="compoe-renda-conjuge"
@@ -35,6 +43,11 @@ export function SecaoConjuge({ ctx }: { ctx: SimulacaoCompletaCtx }) {
           >
             Compor renda com este cônjuge
           </Label>
+          {!casado && (
+            <span className="text-[11px] text-muted-foreground">
+              Disponível apenas para casado(a) ou união estável.
+            </span>
+          )}
         </div>
 
         <div className="flex flex-col items-end gap-1">
