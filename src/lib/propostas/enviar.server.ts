@@ -1075,7 +1075,7 @@ async function enviarPropostaImplInner({
     acao: "proposta.enviar_banco",
     entidade: "propostas",
     entidadeId: propostaId,
-    payloadNovo: { status: novoStatus, bancos: resultados.length },
+    payloadNovo: { status: novoStatusGlobal, bancos: resultados.length },
   });
 
   // O retorno definitivo dos bancos é reconciliado pelo polling automático.
