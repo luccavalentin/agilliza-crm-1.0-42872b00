@@ -990,9 +990,11 @@ export const excluirSimulacao = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     const { data: sim } = await supabase
       .from("simulacoes")
-      .select("cliente_id")
+      .select("cliente_id, homefin_id_oportunidade, correspondente_id")
       .eq("id", data.id)
       .maybeSingle();
+    if (!sim) throw new Error("Simulação não encontrada.");
+
     const { error } = await supabase
       .from("simulacoes")
       .update({
@@ -1003,6 +1005,27 @@ export const excluirSimulacao = createServerFn({ method: "POST" })
       .eq("id", data.id)
       .is("deleted_at", null);
     if (error) throw error;
+
+    // Espelhamento na HomeFin (Exclusão = Cancelamento Oportunidade)
+    if (sim.homefin_id_oportunidade) {
+      const cancelarNoBanco = (async () => {
+        try {
+          const { cancelarOportunidadeHomefinGenerico } = await import("@/lib/propostas/enviar/lifecycle.server");
+          await cancelarOportunidadeHomefinGenerico({
+            idOportunidade: sim.homefin_id_oportunidade as string,
+            simulacaoId: data.id,
+            correspondenteId: sim.correspondente_id as string,
+            supabase,
+          });
+        } catch (e) {
+          console.error("[HomeFin] Erro ao cancelar oportunidade da simulação excluída:", e);
+        }
+      })();
+      const waitUntil = (globalThis as any)?.ctx?.waitUntil ?? (globalThis as any)?.waitUntil;
+      if (typeof waitUntil === "function") waitUntil(cancelarNoBanco);
+      else cancelarNoBanco.catch(() => {});
+    }
+
     // Cascata: demandas/alertas e notificações vinculadas somente a esta simulação
     try {
       const agora = new Date().toISOString();
@@ -1023,6 +1046,7 @@ export const excluirSimulacao = createServerFn({ method: "POST" })
     }
     return { ok: true };
   });
+
 
 /** Restaura uma simulação excluída logicamente. */
 export const restaurarSimulacao = createServerFn({ method: "POST" })

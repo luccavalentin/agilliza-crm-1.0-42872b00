@@ -1414,7 +1414,7 @@ export const cancelarProposta = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     const { data: prop } = await supabase
       .from("propostas")
-      .select("status, enviada_em")
+      .select("status, homefin_id_oportunidade")
       .eq("id", data.proposta_id)
       .maybeSingle();
     if (!prop) throw new Error("Proposta não encontrada.");
@@ -1441,23 +1441,29 @@ export const cancelarProposta = createServerFn({ method: "POST" })
       ator_id: userId,
     });
 
-    if (prop.enviada_em) {
-      // Notifica o banco do cancelamento em background — o cancelamento local
-      // já está persistido e não deve esperar a integração (que pode demorar).
+    if (prop.homefin_id_oportunidade) {
+      // Notifica o banco do cancelamento em background.
       const notificarBanco = (async () => {
         try {
           const { cancelarPropostaHomefinImpl } = await import("./enviar.server");
           await cancelarPropostaHomefinImpl({ propostaId: data.proposta_id, supabase });
-        } catch {
-          /* falha externa não bloqueia o cancelamento local */
+        } catch (e) {
+          // Erro já logado dentro da implementação (historico e flag pendente)
+          console.error("[Cancelamento] Erro ao notificar banco:", e);
         }
       })();
+      
       const waitUntil = (globalThis as any)?.ctx?.waitUntil ?? (globalThis as any)?.waitUntil;
-      if (typeof waitUntil === "function") waitUntil(notificarBanco);
-      else await notificarBanco;
+      if (typeof waitUntil === "function") {
+        waitUntil(notificarBanco);
+      } else {
+        // Se não houver waitUntil (dev ou runtime limitado), não bloqueamos o retorno ao usuário
+        notificarBanco.catch(() => {});
+      }
     }
     return { ok: true };
   });
+
 
 /** ===== Enviar / reenviar ao banco ===== */
 export const enviarPropostaHomeFin = createServerFn({ method: "POST" })
@@ -1648,8 +1654,31 @@ export const excluirProposta = createServerFn({ method: "POST" })
       })
       .eq("id", data.id)
       .is("deleted_at", null)
-      .select("id");
+      .select("id, homefin_id_oportunidade, simulacao_id, correspondente_id");
     if (error) throw error;
+
+    // Espelhamento na HomeFin (Exclusão = Cancelamento Oportunidade)
+    const pRem = removidas?.[0];
+    if (pRem?.homefin_id_oportunidade) {
+      const cancelarNoBanco = (async () => {
+        try {
+          const { cancelarOportunidadeHomefinGenerico } = await import("./enviar.server");
+          await cancelarOportunidadeHomefinGenerico({
+            idOportunidade: pRem.homefin_id_oportunidade as string,
+            simulacaoId: pRem.simulacao_id as string | null,
+            propostaId: data.id,
+            correspondenteId: pRem.correspondente_id as string | null,
+            supabase,
+          });
+        } catch (e) {
+          console.error("[HomeFin] Erro ao cancelar oportunidade da proposta excluída:", e);
+        }
+      })();
+      const waitUntil = (globalThis as any)?.ctx?.waitUntil ?? (globalThis as any)?.waitUntil;
+      if (typeof waitUntil === "function") waitUntil(cancelarNoBanco);
+      else cancelarNoBanco.catch(() => {});
+    }
+
 
     if (!removidas || removidas.length === 0) {
       if (!correspondente || prop.correspondente_id !== correspondente) {
