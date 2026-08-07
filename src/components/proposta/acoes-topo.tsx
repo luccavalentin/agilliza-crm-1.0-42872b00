@@ -194,10 +194,10 @@ export function AcoesTopo({
                   </p>
                   <ul className="text-xs space-y-1">
                     {pendencias.map((p, i) => (
-                      <li key={i}>• {descreverParticipante(p.env)}</li>
+                      <li key={i}>• Faltam dados obrigatórios de {p.descrever}. Clique para preencher agora.</li>
                     ))}
                   </ul>
-                  <p className="text-xs text-muted-foreground">Clique no participante na aba "Enviar ao banco" para completar.</p>
+                  <p className="text-xs text-muted-foreground">Clique para abrir o cadastro.</p>
                 </TooltipContent>
               )}
             </Tooltip>
