@@ -84,7 +84,7 @@ export function CamposParticipante({
               <SelSelect label="Estado civil" value={f.estado_civil} options={TIPO_ESTADO_CIVIL} onChange={(v) => set({ estado_civil: v })} obrigatorio erro={err("estado_civil")} />
             )}
             {mostrarEstadoCivil && ESTADO_CIVIL_COM_REGIME.has(f.estado_civil) && (
-              <SelSelect label="Regime de casamento" value={f.regime_casamento} options={TIPO_REGIME_CASAMENTO} onChange={(v) => set({ regime_casamento: v })} className="sm:col-span-2" />
+              <SelSelect label="Regime de casamento" value={f.regime_casamento} options={TIPO_REGIME_CASAMENTO} onChange={(v) => set({ regime_casamento: v })} className="sm:col-span-2" obrigatorio={idBanco === 33} erro={err("regime_casamento")} />
             )}
           </div>
         </Secao>
