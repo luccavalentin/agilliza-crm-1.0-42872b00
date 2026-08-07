@@ -102,7 +102,6 @@ export function TabelaSimulacoes({
             </TableRow>
           )}
           {itens
-            .filter(s => !s.agrupador_id || s.agrupador_id === s.id) // Problema 4a: esconde secundárias (filhos do agrupador)
             .map((s) => {
             const corBanco = corDoBanco(s.bancos?.[0]?.nome_banco);
             return (
