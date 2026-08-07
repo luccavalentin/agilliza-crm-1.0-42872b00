@@ -177,13 +177,13 @@ export function AcoesTopo({
             <Tooltip>
               <TooltipTrigger asChild>
                 <span>
-                  <Button size="sm" onClick={enviar} disabled={busy || bloqueado}>
-                    {busy ? (
+                  <Button size="sm" onClick={enviar} disabled={isBusy}>
+                    {isBusy ? (
                       <Loader2 className="mr-1 h-4 w-4 animate-spin" />
                     ) : (
                       <Send className="mr-1 h-4 w-4" />
                     )}
-                    {proposta.enviada_em ? "Reenviar" : "Enviar ao banco"}
+                    {bloqueado ? "Completar cadastro e enviar" : (proposta.enviada_em ? "Reenviar" : "Enviar ao banco")}
                   </Button>
                 </span>
               </TooltipTrigger>
