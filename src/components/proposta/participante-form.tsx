@@ -189,7 +189,7 @@ export function ParticipanteDialog({
     setTentouEnviar(true);
     
     // 1. Ressincroniza antes de qualquer validação (P1.g)
-    if (propostaId && f.cliente_id && !salvandoInterno) {
+    if (propostaId && !salvandoInterno) {
       setSalvandoInterno(true);
       const tid = toast.loading("Sincronizando dados com o CRM...");
       try {
