@@ -785,17 +785,10 @@ export const listarSimulacoes = createServerFn({ method: "GET" })
     const { data: rows, error, count } = await query;
     if (error) throw new Error(error.message);
 
-    // Colapsa simulações que compartilham agrupador_id (modo Ambos SAC + PRICE)
-    // em uma única linha. Mantém o registro mais antigo (o SAC, criado primeiro)
-    // como "principal"; carrega os ids das demais para o front resolver ações.
-    const porGrupo = new Map<string, any[]>();
-    const linhas: any[] = [];
-    for (const r of rows ?? []) {
-      const key = (r as any).agrupador_id;
-      if (!key) {
-        linhas.push({ ...r, _agrupadas_ids: [] as string[] });
-        continue;
-      }
+    // Para manter a paginação correta e previsível, a lista exibe cada registro
+    // de simulação como um item individual. O front-end pode agrupar visualmente
+    // se necessário, mas o servidor entrega a lista plana.
+    const linhas = (rows ?? []).map(r => ({ ...r, _agrupadas_ids: [] as string[] }));
       const lista = porGrupo.get(key) ?? [];
       lista.push(r);
       porGrupo.set(key, lista);
