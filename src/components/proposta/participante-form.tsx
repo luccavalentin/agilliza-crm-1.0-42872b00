@@ -48,6 +48,8 @@ export function ParticipanteDialog({
   avisoTopo,
   participanteIndex,
   totalParticipantes,
+  propostaId,
+  onSalvoPermanecer,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;

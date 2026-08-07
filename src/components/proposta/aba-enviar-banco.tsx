@@ -303,10 +303,10 @@ export function AbaEnviarBanco({
                         <Button
                           size="sm"
                           variant="ghost"
-                          className="h-7 px-2 text-xs text-primary hover:text-primary hover:bg-primary/10"
+                          className="h-7 px-2 text-xs font-semibold text-destructive hover:text-destructive hover:bg-destructive/10"
                           onClick={() => onCompletar?.(env)}
                         >
-                          Completar
+                          Completar agora
                         </Button>
                       )}
                     </div>
