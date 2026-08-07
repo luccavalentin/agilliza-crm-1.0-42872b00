@@ -1268,7 +1268,9 @@ export async function sincronizarPropostaImpl({
   }
 
 
-  // Status candidato a partir dos bancos (melhor desfecho prevalece).
+  // ---- 1.5) Recálculo do status global (propostas.status) a partir dos bancos ----
+  // Garante uma fonte única de verdade: propostas.status deve ser derivado de
+  // proposta_bancos, e nunca divergir dele.
   let statusBancos: PropostaStatus | null = null;
   if (algumAprovado) statusBancos = "credito_aprovado";
   else if (algumEmAnalise) statusBancos = "em_analise_credito";
