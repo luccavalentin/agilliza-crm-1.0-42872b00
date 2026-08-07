@@ -117,7 +117,7 @@ function Pagina() {
 
 
   const { data, isLoading } = useQuery({
-    queryKey: ["simulacoes", escopo, busca, desde, ate, responsavel, verExcluidas],
+    queryKey: ["simulacoes", escopo, busca, desde, ate, responsavel, verExcluidas, data?.itens?.length],
     refetchOnWindowFocus: true,
     refetchInterval: 10000,
     staleTime: 0,
