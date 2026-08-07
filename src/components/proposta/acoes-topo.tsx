@@ -208,14 +208,13 @@ export function AcoesTopo({
             <Tooltip>
               <TooltipTrigger asChild>
                 <span>
-                  <Button size="sm" onClick={enviar} disabled={busy || bloqueado} variant="secondary">
-                    {busy ? (
+                  <Button size="sm" onClick={enviar} disabled={isBusy} variant="secondary">
+                    {isBusy ? (
                       <Loader2 className="mr-1 h-4 w-4 animate-spin" />
                     ) : (
                       <Send className="mr-1 h-4 w-4" />
                     )}
-                    Enviar a{" "}
-                    {bancosPendentes.length > 1 ? `${bancosPendentes.length} novos bancos` : "novo banco"}
+                    {bloqueado ? "Completar cadastro e enviar" : `Enviar a ${bancosPendentes.length > 1 ? `${bancosPendentes.length} novos bancos` : "novo banco"}`}
                   </Button>
                 </span>
               </TooltipTrigger>
