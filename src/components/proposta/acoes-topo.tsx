@@ -70,18 +70,21 @@ export function AcoesTopo({
   onCadastroIncompleto?: () => void;
 }) {
   const qc = useQueryClient();
-  const [busy, setBusy] = useState(false);
   const [cancelOpen, setCancelOpen] = useState(false);
   const [motivo, setMotivo] = useState("");
-  const enviarFn = useServerFn(enviarPropostaHomeFin);
+  const { enviar: handleEnviar, busy: enviarBusy } = useEnviarProposta();
   const cancelarFn = useServerFn(cancelarProposta);
   const moverFn = useServerFn(moverStatusProposta);
   const sincronizarFn = useServerFn(sincronizarProposta);
-  const ressincronizarFn = useServerFn(ressincronizarDadosParticipantes);
+  
+  const [busy, setBusy] = useState(false);
+  const isBusy = busy || enviarBusy;
+
   const status = proposta.status as PropostaStatus;
   const proximos = TRANSICOES[status].filter((s) => s !== "cancelada");
 
   const pendencias = useMemo(() => {
+    const { faltantesEnvolvido } = require("@/lib/propostas/campos-obrigatorios");
     return (envolvidos ?? []).map(env => ({
       env,
       faltantes: faltantesEnvolvido(env),
@@ -92,36 +95,19 @@ export function AcoesTopo({
   const bloqueado = pendencias.length > 0;
 
   async function enviar() {
-    if (bloqueado) {
-      onCadastroIncompleto?.();
-      return;
-    }
     if (jaEnviou && bancosPendentes.length === 0) {
       toast.info("Nenhum banco novo selecionado. Selecione outro banco para enviar.");
       return;
     }
 
-    setBusy(true);
     try {
-      // 1. Ressincroniza dados antes de qualquer tentativa (P1)
-      const res = await ressincronizarFn({ data: { proposta_id: propostaId } });
-      if (res.alterados > 0) {
-        toast.success(`${res.alterados} dado(s) atualizado(s) do cadastro.`);
-        await qc.invalidateQueries({ queryKey: ["proposta", propostaId] });
-      }
-
-      // 2. Tenta enviar
-      const r = await enviarFn({ data: { proposta_id: propostaId } });
-      toast.success(`Proposta enviada (${r.status}).`);
-      qc.invalidateQueries({ queryKey: ["proposta", propostaId] });
+      await handleEnviar({
+        propostaId,
+        envolvidos,
+        onCadastroIncompleto: () => onCadastroIncompleto?.()
+      });
     } catch (e) {
-      const msg = e instanceof Error ? e.message : "Falha ao enviar.";
-      toast.error(msg);
-      if (/cadastro complementar|cadastro incompleto|obrigat/i.test(msg)) {
-        onCadastroIncompleto?.();
-      }
-    } finally {
-      setBusy(false);
+      // toast já mostrado pelo hook
     }
   }
 
