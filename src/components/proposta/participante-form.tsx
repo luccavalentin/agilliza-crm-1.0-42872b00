@@ -188,7 +188,7 @@ export function ParticipanteDialog({
         .map((k) => LABEL_POR_CHAVE[k] ?? k)
         .filter((v, i, a) => a.indexOf(v) === i);
       toast.error(
-        `Não é possível salvar: ${nomes.length > 1 ? "faltam os campos" : "falta o campo"} ${nomes.join(", ")}. Estão destacados em vermelho.`,
+        `Não é possível salvar: faltam dados obrigatórios destacados em vermelho.`,
       );
       return;
     }

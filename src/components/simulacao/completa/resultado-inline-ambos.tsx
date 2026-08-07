@@ -35,7 +35,7 @@ import { bancoInformou } from "@/lib/simulacao/origem-dados";
  * banco realmente informou (ver src/lib/simulacao/origem-dados.ts).
  */
 const prazoMaxTexto = (b: any) =>
-  bancoInformou(b, "prazo_pagamento_max") && b.prazo_pagamento_max
+  bancoInformou(b, "prazo_pagamento_max") && b.prazo_pagamento_max && b.prazo_pagamento_max !== b.prazo_contratado
     ? `${b.prazo_pagamento_max}m`
     : "—";
 const financMaxTexto = (b: any) =>
@@ -179,7 +179,7 @@ export function ResultadoInlineAmbos({ simulacaoIdSac, simulacaoIdPrice, onFecha
     }
   }
 
-  // Download automático para modo Ambos quando os resultados chegam
+  // Remoção do download automático para modo Ambos conforme solicitado.
   useEffect(() => {
     if (jaBaixou.current || (!dataSac && !dataPrice)) return;
     const bancosSac = bancosDaSimulacaoAtual(dataSac);
@@ -188,25 +188,8 @@ export function ResultadoInlineAmbos({ simulacaoIdSac, simulacaoIdPrice, onFecha
     if (todosBancos.length === 0) return;
     const processando = todosBancos.some(b => b.status_banco === "aguardando" || b.status_banco === "enviando");
     if (processando) return;
-    const simulados = todosBancos.filter(b => b.status_banco === "simulada");
-    if (simulados.length === 0) return;
     jaBaixou.current = true;
-    (async () => {
-      try {
-        const { baixarSimulacaoDetalhadaPDF } = await import("@/lib/simulacao/simulacao-pdf");
-        // Baixa TODOS os bancos simulados, tanto do SAC quanto do PRICE.
-        for (const b of simulados) {
-          const ehSac = bancosSac.some((x) => x.id === b.id);
-          const simRef = ehSac ? dataSac?.simulacao : dataPrice?.simulacao;
-          if (!simRef) continue;
-          await baixarSimulacaoDetalhadaPDF({ simulacao: simRef, bancos: [b] });
-          await new Promise((r) => setTimeout(r, 800));
-        }
-
-      } catch (e) {
-        console.error("[PDF Automático Ambos Inline]", e);
-      }
-    })();
+    // Não executa download automático.
   }, [dataSac, dataPrice]);
 
   const carregando = (simulacaoIdSac && !dataSac) || (simulacaoIdPrice && !dataPrice);
@@ -373,6 +356,7 @@ export function ResultadoInlineAmbos({ simulacaoIdSac, simulacaoIdPrice, onFecha
                           rotulo="Taxa a.a."
                           valor={b.taxa_juros_ano != null ? formatPercent(b.taxa_juros_ano / 100) : "—"}
                         />
+                        <MobileStat rotulo="Prazo" valor={`${l.simulacao.prazo}m`} />
                         <MobileStat
                           rotulo="Prazo máx"
                           valor={prazoMaxTexto(b)}
@@ -433,6 +417,7 @@ export function ResultadoInlineAmbos({ simulacaoIdSac, simulacaoIdPrice, onFecha
                     <TableHead className="w-[11%] text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Parcela</TableHead>
                     <TableHead className="w-[7%] text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Taxa</TableHead>
                     <TableHead className="w-[7%] text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Prazo</TableHead>
+                    <TableHead className="w-[8%] text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Prazo máx</TableHead>
                     <TableHead className="w-[12%] text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Financiado</TableHead>
                     <TableHead className="w-[9%] text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">IOF</TableHead>
                     <TableHead className="w-[11%] text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Renda est.</TableHead>
@@ -495,6 +480,9 @@ export function ResultadoInlineAmbos({ simulacaoIdSac, simulacaoIdPrice, onFecha
                         </TableCell>
                         <TableCell className="py-3 text-right text-sm tabular-nums whitespace-nowrap">
                           {b.taxa_juros_ano != null ? formatPercent(b.taxa_juros_ano / 100) : "—"}
+                        </TableCell>
+                        <TableCell className="py-3 text-right text-sm tabular-nums whitespace-nowrap">
+                          {l.simulacao.prazo}m
                         </TableCell>
                         <TableCell className="py-3 text-right text-sm tabular-nums whitespace-nowrap">
                           {prazoMaxTexto(b)}

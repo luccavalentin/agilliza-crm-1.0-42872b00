@@ -2204,14 +2204,19 @@ export const ressincronizarDadosParticipantes = createServerFn({ method: "POST" 
       const patch: Record<string, any> = {};
       const camposCompletados: string[] = [];
 
-      // Mapeamento campos de cliente -> envolvidos
+      // Mapeamento campos de cliente -> envolvidos (lista de 25 campos "S")
       const mapaCliente: Record<string, string> = {
         nome: "nome",
+        tipo_pessoa: "tipo_pessoa",
         cpf_cnpj: "cpf_cnpj",
         data_nascimento: "data_nascimento",
         nome_mae: "nome_mae",
         sexo: "tipo_sexo",
         estado_civil: "estado_civil",
+        tipo_documento_identidade: "tipo_documento_identidade",
+        numero_documento: "numero_documento",
+        orgao_expedidor: "orgao_expedidor",
+        uf_expedicao: "uf_expedicao",
         profissao: "profissao",
         renda: "renda",
         email: "email",
