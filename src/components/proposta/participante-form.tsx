@@ -71,7 +71,14 @@ export function ParticipanteDialog({
   participanteIndex?: number;
   /** Total de participantes para exibição de progresso. */
   totalParticipantes?: number;
+  /** ID da proposta para ressincronização. */
+  propostaId?: string;
+  /** Callback opcional chamado após salvar com sucesso e permanecer no modal. */
+  onSalvoPermanecer?: () => void;
 }) {
+  const qc = useQueryClient();
+  const ressincronizarFn = useServerFn(ressincronizarDadosParticipantes);
+  const [salvandoInterno, setSalvandoInterno] = useState(false);
 
   const [f, setF] = useState<ParticipanteForm>(inicial ?? VAZIO);
   const [conjuge, setConjuge] = useState<ParticipanteForm>(
