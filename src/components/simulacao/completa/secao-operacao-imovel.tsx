@@ -335,7 +335,7 @@ export function SecaoOperacaoImovel({ ctx }: { ctx: SimulacaoCompletaCtx }) {
                 <>
                   O banco financia no máximo {Math.round(ltvMax * 100)}% do imóvel (
                   {formatBRL(financiamentoMaximo)}). Informe uma entrada de pelo menos{" "}
-                  {formatBRL(entradaMinima)}.
+                  {formatBRL(entradaMinima + 1)}.
                 </>
               )}
             </p>
