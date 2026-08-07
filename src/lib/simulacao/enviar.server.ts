@@ -1048,6 +1048,7 @@ export async function enviarSimulacaoImpl({
           .update({
             homefin_id_simulacao_banco: idSimulacao,
             status_banco: "simulada",
+            mensagem_banco: null, // Limpa qualquer erro residual de tentativa anterior
             // Marca a ORIGEM dos campos que têm fallback para o valor
             // solicitado: a tela só exibe como resposta do banco o que o banco
             // realmente informou (ver src/lib/simulacao/origem-dados.ts).
@@ -1058,7 +1059,7 @@ export async function enviarSimulacaoImpl({
 
             simulado_em: new Date().toISOString(),
             valor_parcela: dadosApi?.valorParcelaBanco ?? dadosApi?.valorParcelaSimulacao ?? null,
-            taxa_juros_ano: dadosApi?.taxaJurosAnoBanco ?? null,
+            taxa_juros_ano: dadosApi?.taxa_juros_ano_banco ?? dadosApi?.taxaJurosAnoBanco ?? null,
             prazo_pagamento_max:
               dadosApi?.prazoPagamentoBancoMax ??
               dadosApi?.prazoPagamentoBanco ??
