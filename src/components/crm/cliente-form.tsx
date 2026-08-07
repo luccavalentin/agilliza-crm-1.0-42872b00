@@ -363,9 +363,7 @@ export function ClienteForm({
             });
             await qc.invalidateQueries({ queryKey: ["proposta", vincularPropostaId] });
             
-            if (!router.state.location.pathname.includes(`/propostas/${vincularPropostaId}`)) {
-                navigate({ to: "/operacional/propostas/$id", params: { id: vincularPropostaId } });
-            }
+            navigate({ to: "/operacional/propostas/$id", params: { id: vincularPropostaId } });
             return;
           }
           toast.success("Cliente cadastrado e vinculado à proposta.");
