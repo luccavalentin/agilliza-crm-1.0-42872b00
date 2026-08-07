@@ -175,7 +175,7 @@ export function camposFaltantes(f: ParticipanteForm, context?: { regimeObrigator
     if (!f.estado_civil) faltando.add("estado_civil");
     
     // Problema 1a: Regime de casamento obrigatório para CA/UE no Santander
-    if (context?.regimeObrigatorio && (f.estado_civil === "CA" || f.estado_civil === "UE") && !f.regime_casamento) {
+    if (context?.regimeObrigatorio && (f.estado_civil === "casado" || f.estado_civil === "uniao_estavel") && !f.regime_casamento) {
       faltando.add("regime_casamento");
     }
 
