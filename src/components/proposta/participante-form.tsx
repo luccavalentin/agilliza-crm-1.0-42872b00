@@ -42,6 +42,8 @@ export function ParticipanteDialog({
   focarPendencias,
   rodapeExtra,
   avisoTopo,
+  participanteIndex,
+  totalParticipantes,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
@@ -61,6 +63,10 @@ export function ParticipanteDialog({
   rodapeExtra?: React.ReactNode;
   /** Faixa informativa no topo do formulário. */
   avisoTopo?: React.ReactNode;
+  /** Índice do participante atual para exibição de progresso. */
+  participanteIndex?: number;
+  /** Total de participantes para exibição de progresso. */
+  totalParticipantes?: number;
 }) {
 
   const [f, setF] = useState<ParticipanteForm>(inicial ?? VAZIO);
