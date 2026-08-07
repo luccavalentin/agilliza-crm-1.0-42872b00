@@ -475,6 +475,9 @@ export function ResultadoInlineCompleta({ simulacaoId, onFechar, isSecundaria }:
                             {b.taxa_juros_ano != null ? formatPercent(b.taxa_juros_ano / 100) : "—"}
                           </TableCell>
                           <TableCell className="px-2 py-2 text-right tabular-nums whitespace-nowrap">
+                            {s.prazo}m
+                          </TableCell>
+                          <TableCell className="px-2 py-2 text-right tabular-nums whitespace-nowrap">
                             {prazoMaxTexto(b)}
                           </TableCell>
                           <TableCell className="px-2 py-2 text-right tabular-nums whitespace-nowrap">
