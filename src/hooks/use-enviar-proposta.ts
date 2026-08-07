@@ -14,20 +14,23 @@ export function useEnviarProposta() {
   const navigate = router.navigate;
   const qc = useQueryClient();
   const [busy, setBusy] = useState(false);
-  const enviarFn = useServerFn(enviarPropostaHomeFin);
+  const enviarFnDefault = useServerFn(enviarPropostaHomeFin);
   const ressincronizarFn = useServerFn(ressincronizarDadosParticipantes);
 
   const enviar = useCallback(async ({ 
     propostaId, 
     bancoId,
     envolvidos,
-    onCadastroIncompleto
+    onCadastroIncompleto,
+    enviarFn: customEnviarFn
   }: { 
     propostaId: string; 
     bancoId?: string;
     envolvidos?: any[];
     onCadastroIncompleto?: (primeiroPendente: any) => void;
+    enviarFn?: (args: { data: { proposta_id: string; banco_id?: string } }) => Promise<any>;
   }) => {
+    const fnParaUsar = customEnviarFn || enviarFnDefault;
     setBusy(true);
     const tid = toast.loading("Processando proposta...");
     try {
@@ -73,7 +76,7 @@ export function useEnviarProposta() {
       }
 
       // 4. Enviar
-      const r = await enviarFn({ data: { proposta_id: propostaId, banco_id: bancoId } });
+      const r = await fnParaUsar({ data: { proposta_id: propostaId, banco_id: bancoId } });
       toast.success("Proposta enviada com sucesso.", { id: tid });
       
       await qc.invalidateQueries({ queryKey: ["proposta", propostaId] });

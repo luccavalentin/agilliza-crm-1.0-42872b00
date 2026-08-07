@@ -108,7 +108,8 @@ export function TabResumo({
       const r = await handleEnviarHook({ 
         propostaId: propostaId, 
         bancoId: pbId,
-        envolvidos: proposta?.envolvidos
+        envolvidos: proposta?.envolvidos,
+        enviarFn: enviarPropostaFn
       });
       if (r && r.bancos && r.bancos.length > 0) {
         setResultadoEnvio(r.bancos);
