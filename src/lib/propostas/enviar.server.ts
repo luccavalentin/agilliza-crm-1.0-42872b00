@@ -1086,10 +1086,8 @@ async function enviarPropostaImplInner({
 
 }
 
-export {
-  enviarFollowupHomefinImpl,
-  cancelarPropostaHomefinImpl,
-} from "./enviar/lifecycle.server";
+export { enviarFollowupHomefinImpl } from "./enviar/lifecycle.server";
+
 
 // Helpers de retorno/status foram extraídos para ./enviar/helpers-retorno.server.ts
 // e são importados no topo deste arquivo.
