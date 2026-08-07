@@ -733,13 +733,26 @@ export const listarSimulacoes = createServerFn({ method: "GET" })
     // Buscamos mais que porPagina para poder colapsar pares agrupados
     // (SAC + PRICE criados como "Ambos") em um único item da lista.
     const overFetch = data.porPagina * 2;
+    // Para usuários com visibilidade restrita (RLS), o Supabase já aplica o filtro.
+    // Garantimos que o correspondente_id seja filtrado se não formos admin total.
+    const { data: me } = await supabase
+      .from("profiles")
+      .select("correspondente_id")
+      .eq("id", userId)
+      .maybeSingle();
+
     let query = supabase
       .from("simulacoes")
       .select(
         "id, numero_simulacao, nome_cliente, produto, valor_imovel, valor_financiamento, prazo, status, created_at, usuario_criador_id, deleted_at, deleted_by, deleted_motivo, sistema_amortizacao, agrupador_id",
         { count: "exact" },
-      )
-      .order("created_at", { ascending: false })
+      );
+
+    if (me?.correspondente_id) {
+      query = query.eq("correspondente_id", me.correspondente_id);
+    }
+
+    query = query.order("created_at", { ascending: false })
       .range(from, from + overFetch - 1);
 
     if (data.apenas_excluidas) query = query.not("deleted_at", "is", null);
@@ -798,7 +811,7 @@ export const listarSimulacoes = createServerFn({ method: "GET" })
         _agrupadas_ids: grupo.slice(1).map((g: any) => g.id),
       });
     }
-    linhas.sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
+    linhas.sort((a, b) => (new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
     const paginadas = linhas.slice(0, data.porPagina);
     // Ajusta o total contando cada grupo como 1
     const totalCru = count ?? 0;

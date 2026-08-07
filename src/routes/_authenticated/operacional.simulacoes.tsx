@@ -118,17 +118,20 @@ function Pagina() {
 
   const { data, isLoading } = useQuery({
     queryKey: ["simulacoes", escopo, busca, desde, ate, responsavel, verExcluidas],
+    refetchOnWindowFocus: true,
+    refetchInterval: 10000,
+    staleTime: 0,
     queryFn: () =>
       listarSimulacoes({
         data: {
           escopo,
           q: busca || undefined,
-          desde: desde || undefined,
-          ate: ate || undefined,
+          desde: (desde && desde !== "") ? desde : undefined,
+          ate: (ate && ate !== "") ? ate : undefined,
           responsavel:
             escopo === "todas" && responsavel !== "todos" ? responsavel : undefined,
           pagina: 1,
-          porPagina: 30,
+          porPagina: 50,
           apenas_excluidas: verExcluidas,
         },
       }),
