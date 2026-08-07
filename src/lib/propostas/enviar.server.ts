@@ -137,8 +137,12 @@ function textoLivreParaBanco(v: unknown): string | undefined {
     .replace(/[(){}[\]]/g, " ")
     .replace(/\s+/g, " ")
     .trim();
+  // Caso 3a: Registro de payload completo em proposta_logs_homefin
+  // Nota: O log agora preserva campos estruturais e mascara apenas CPF, e-mail e renda.
+  // A lógica de mascaramento foi ajustada em homefin.server.ts para este fim.
   return s || undefined;
 }
+
 
 /**
  * Verifica no provedor se a simulação vinculada ao banco ainda pode ser usada
