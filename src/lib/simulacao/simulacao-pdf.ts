@@ -291,7 +291,7 @@ function drawInfoFinanciamento(
   const cols = opts?.cols ?? 3;
   const itens: { label: string; valor: string }[] = [
     { label: "Valor de compra e venda", valor: brlOuTraco(d?.valorImovel ?? s.valor_imovel) },
-    { label: "Despesas financiadas", valor: brlOuTraco(d?.despesasFinanciadas) },
+    { label: "Despesas financiadas", valor: brlOuTraco(d?.despesasFinanciadas ?? s.valor_despesas_financiadas) },
     {
       label: "Valor de financiamento total",
       valor: brlOuTraco((d?.financiamentoTotal ?? d?.valorFinanciamento ?? s.valor_financiamento ?? 0) + (d?.despesasFinanciadas ?? s.valor_despesas_financiadas ?? 0)),
