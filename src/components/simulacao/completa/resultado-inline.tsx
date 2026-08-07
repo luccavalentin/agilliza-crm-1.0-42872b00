@@ -41,7 +41,7 @@ import { bancoInformou } from "@/lib/simulacao/origem-dados";
  * Campos com fallback interno para o valor SOLICITADO: só exibimos quando o
  * banco realmente informou (ver src/lib/simulacao/origem-dados.ts).
  */
-const prazoMaxTexto = (b: any) => {
+const prazoMaxTexto = (b: any, data: any) => {
   const contratado = Number(data?.simulacao?.prazo) || 0;
   const max = Number(b.prazo_pagamento_max) || 0;
   if (bancoInformou(b, "prazo_pagamento_max") && max && max !== contratado) {
