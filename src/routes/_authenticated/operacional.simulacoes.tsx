@@ -601,8 +601,8 @@ function Pagina() {
         ate={ate}
         setAte={setAte}
         onLimpar={() => {
-          setDesde(padrao.inicio);
-          setAte(padrao.fim);
+          setDesde("");
+          setAte("");
           setResponsavel("todos");
         }}
         verExcluidas={verExcluidas}
