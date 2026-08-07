@@ -33,7 +33,7 @@ import {
   obterSimulacao,
   enviarSimulacaoBanco,
 } from "@/lib/simulacao/simulacoes.functions";
-import { criarProposta, enviarPropostaHomeFin } from "@/lib/propostas/propostas.functions";
+// Import já realizado no topo
 import { formatBRL, formatPercent } from "@/lib/simulacao/format";
 import { corDoBanco } from "@/lib/bancos/cores";
 import { extrairDetalheBanco } from "@/lib/simulacao/detalhe-banco";
