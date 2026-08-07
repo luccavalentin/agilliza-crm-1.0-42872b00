@@ -35,6 +35,8 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { assertModuloPermitido } from "@/lib/route-guards";
+import { propostaQueryOptions } from "@/lib/propostas/queries";
+
 import {
   obterProposta,
   selecionarBancoProposta,
