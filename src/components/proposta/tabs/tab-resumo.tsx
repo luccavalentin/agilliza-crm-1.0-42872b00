@@ -63,6 +63,7 @@ export function TabResumo({
 }) {
   const qc = useQueryClient();
   const selecionarFn = useServerFn(selecionarBancoProposta);
+  const enviarPropostaFn = useServerFn(enviarPropostaHomeFin);
   const { enviar: handleEnviarHook } = useEnviarProposta();
   const situacaoFn = useServerFn(definirSituacaoBanco);
   const [enviandoId, setEnviandoId] = useState<string | null>(null);
