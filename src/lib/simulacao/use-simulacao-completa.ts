@@ -812,7 +812,17 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
 
   /** Inverte titular ⇄ cônjuge. */
   const inverterPrincipal = useCallback(() => {
-    setF(patchInverterPrincipal);
+    setF((prev) => {
+      const next = patchInverterPrincipal(prev);
+      
+      // Validação de CPFs iguais após inversão
+      if (next.cpf_cnpj && next.cpf_cnpj === next.cpf_conjuge) {
+        toast.error("O titular e o cônjuge não podem ter o mesmo CPF.");
+        return prev; // Cancela inversão se forem iguais
+      }
+      
+      return next;
+    });
     setInvertido((v) => !v);
     setErros({});
     toast.success("Titular e cônjuge invertidos. Confira os dados obrigatórios.");
