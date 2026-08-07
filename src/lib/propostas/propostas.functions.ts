@@ -2161,3 +2161,108 @@ export const listarUsuariosParceiros = createServerFn({ method: "GET" })
     const { listarUsuariosParceirosImpl } = await import("./enviar.server");
     return await listarUsuariosParceirosImpl();
   });
+
+/**
+ * Ressincroniza dados ausentes nos envolvidos da proposta a partir do cadastro 
+ * (clientes e cliente_enderecos).
+ */
+export const ressincronizarDadosParticipantes = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data) => z.object({ proposta_id: z.string().uuid() }).parse(data))
+  .handler(async ({ context, data }) => {
+    const { supabase } = context;
+    const { data: envolvidos, error } = await supabase
+      .from("proposta_envolvidos")
+      .select("*")
+      .eq("proposta_id", data.proposta_id);
+
+    if (error || !envolvidos) throw new Error(error?.message ?? "Participantes não encontrados.");
+
+    let alteradosTotal = 0;
+    const logs = [];
+
+    for (const env of envolvidos) {
+      if (!env.cliente_id) continue;
+      
+      const { data: cliente } = await supabase
+        .from("clientes")
+        .select("*")
+        .eq("id", env.cliente_id)
+        .maybeSingle();
+
+      const { data: endereco } = await supabase
+        .from("cliente_enderecos")
+        .select("*")
+        .eq("cliente_id", env.cliente_id)
+        .order("principal", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      const patch: Record<string, any> = {};
+      const camposCompletados: string[] = [];
+
+      // Mapeamento campos de cliente -> envolvidos
+      const mapaCliente: Record<string, string> = {
+        nome: "nome",
+        cpf_cnpj: "cpf_cnpj",
+        data_nascimento: "data_nascimento",
+        nome_mae: "nome_mae",
+        sexo: "tipo_sexo",
+        estado_civil: "estado_civil",
+        profissao: "profissao",
+        renda: "renda",
+        email: "email",
+        celular: "celular"
+      };
+
+      for (const [de, para] of Object.entries(mapaCliente)) {
+        if ((env[para] === null || env[para] === undefined || env[para] === "") && cliente?.[de]) {
+          patch[para] = cliente[de];
+          camposCompletados.push(para);
+        }
+      }
+
+      // Mapeamento campos de endereço -> envolvidos
+      const mapaEndereco: Record<string, string> = {
+        cep: "cep",
+        logradouro: "logradouro",
+        numero: "numero_logradouro",
+        complemento: "complemento",
+        bairro: "bairro",
+        municipio: "municipio",
+        uf: "uf"
+      };
+
+      if (endereco) {
+        for (const [de, para] of Object.entries(mapaEndereco)) {
+          if ((env[para] === null || env[para] === undefined || env[para] === "") && endereco[de]) {
+            patch[para] = endereco[de];
+            camposCompletados.push(para);
+          }
+        }
+      }
+
+      if (Object.keys(patch).length > 0) {
+        const { error: updErr } = await supabase
+          .from("proposta_envolvidos")
+          .update(patch)
+          .eq("id", env.id);
+        
+        if (!updErr) {
+          alteradosTotal++;
+          const nome = env.nome || "Participante";
+          logs.push({
+            proposta_id: data.proposta_id,
+            tipo_evento: "sincronizacao",
+            descricao: `Dados de ${nome} completados via cadastro: ${camposCompletados.join(", ")}.`
+          });
+        }
+      }
+    }
+
+    if (logs.length > 0) {
+      await supabase.from("proposta_historico").insert(logs);
+    }
+
+    return { alterados: alteradosTotal };
+  });
