@@ -385,10 +385,10 @@ function buscarCampoRetorno(obj: unknown, chaves: string[], visitados = new Weak
 
 /**
  * Número real da proposta no banco. A API devolve, dependendo da instituição:
- *  - `numeroPropostaBanco` / `codigoPropostaBanco` (raro, alguns bancos)
+ *  - `numeroPropostaBanco` / `numeroProposta` / `proposalNumber` / `codigoPropostaBanco`
  *  - `codigoOportunidadeBanco` quando o retorno está em análise/aprovado
- * Códigos de simulação são referência técnica da integração e não devem ser
- * exibidos como número de proposta.
+ *
+ * Filtramos IDs internos (UUIDs) que não são protocolos reais do banco.
  */
 export function numeroPropostaBancoReal(sim: any): string | null {
   const numero = buscarCampoRetorno(sim, [
@@ -398,7 +398,16 @@ export function numeroPropostaBancoReal(sim: any): string | null {
     "codigoPropostaBanco",
     "codigoOportunidadeBanco",
   ]);
-  return numero == null || numero === "" ? null : String(numero);
+
+  const valor = numero == null || numero === "" ? null : String(numero).trim();
+
+  // Caso 1b: Valide o formato — rejeite qualquer valor no formato UUID
+  // (8-4-4-4-12 hexadecimal) como protocolo de banco.
+  const isUuid =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(valor ?? "");
+  if (isUuid) return null;
+
+  return valor;
 }
 
 export function referenciaIntegracaoBanco(sim: any): string | null {

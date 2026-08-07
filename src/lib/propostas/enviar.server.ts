@@ -831,17 +831,20 @@ async function enviarPropostaImplInner({
     );
   }
 
+  // Reenvio (ou primeiro envio) limpa o status e o erro da tentativa anterior
+  // dos campos da proposta para garantir fonte única de verdade no início do processo.
+  const patchProposta: Record<string, any> = {
+    enviada_em: new Date().toISOString(),
+    ip_consentimento: ip,
+    ultimo_erro: null,
+    detalhe_status_atual: null,
+  };
+
   if (primeiroEnvio) {
-    await supabase
-      .from("propostas")
-      .update({
-        status: "enviada_banco",
-        enviada_em: new Date().toISOString(),
-        ip_consentimento: ip,
-        ultimo_erro: null,
-      })
-      .eq("id", propostaId);
+    patchProposta.status = "enviada_banco";
   }
+
+  await supabase.from("propostas").update(patchProposta).eq("id", propostaId);
 
   const ctx = {
     simulacao_id: prop.simulacao_id,
@@ -1027,19 +1030,40 @@ async function enviarPropostaImplInner({
 
 
 
-  // No primeiro envio o status avança; em envios adicionais o status já reflete
-  // a análise em andamento e não deve retroceder.
-  let novoStatus = statusAtual;
-  if (primeiroEnvio) {
-    novoStatus = sucesso > 0 ? "enviada_banco" : "erro_envio";
-    await supabase.from("propostas").update({ status: novoStatus }).eq("id", propostaId);
+  // ---- 3) Recálculo do status global (propostas.status) a partir dos bancos ----
+  // Garante uma fonte única de verdade: propostas.status deve ser derivado de
+  // proposta_bancos, e nunca divergir dele.
+  let algumAprovado = false;
+  let algumEmAnalise = false;
+  let algumRecusado = false;
+
+  const { data: todosBancos } = await supabase
+    .from("proposta_bancos")
+    .select("situacao_banco")
+    .eq("proposta_id", propostaId);
+
+  for (const tb of (todosBancos ?? []) as any[]) {
+    const s = String(tb.situacao_banco);
+    if (s === "aprovado" || s === "condicionado") algumAprovado = true;
+    else if (s === "em_analise") algumEmAnalise = true;
+    else if (s === "recusado") algumRecusado = true;
+  }
+
+  let novoStatusGlobal: PropostaStatus = statusAtual;
+  if (algumAprovado) novoStatusGlobal = "credito_aprovado";
+  else if (algumEmAnalise) novoStatusGlobal = "em_analise_credito";
+  else if (algumRecusado) novoStatusGlobal = "credito_recusado";
+  else if (sucesso === 0 && primeiroEnvio) novoStatusGlobal = "erro_envio";
+
+  if (novoStatusGlobal !== statusAtual) {
+    await supabase.from("propostas").update({ status: novoStatusGlobal }).eq("id", propostaId);
   }
 
   await supabase.from("proposta_historico").insert({
     proposta_id: propostaId,
     tipo_evento: sucesso > 0 ? "enviada_ao_banco" : "erro_envio",
     descricao: sucesso > 0 ? "Proposta enviada ao banco" : "Falha ao enviar proposta ao banco",
-    status_novo: novoStatus,
+    status_novo: novoStatusGlobal,
     ator_id: userId,
   });
 
@@ -1051,14 +1075,14 @@ async function enviarPropostaImplInner({
     acao: "proposta.enviar_banco",
     entidade: "propostas",
     entidadeId: propostaId,
-    payloadNovo: { status: novoStatus, bancos: resultados.length },
+    payloadNovo: { status: novoStatusGlobal, bancos: resultados.length },
   });
 
   // O retorno definitivo dos bancos é reconciliado pelo polling automático.
   // Evitamos uma consulta imediata aqui para não transformar códigos
   // intermediários em falso "erro de envio" antes do banco concluir a análise.
 
-  return { status: novoStatus, bancos: resultados };
+  return { status: novoStatusGlobal, bancos: resultados };
 
 }
 
@@ -1244,7 +1268,9 @@ export async function sincronizarPropostaImpl({
   }
 
 
-  // Status candidato a partir dos bancos (melhor desfecho prevalece).
+  // ---- 1.5) Recálculo do status global (propostas.status) a partir dos bancos ----
+  // Garante uma fonte única de verdade: propostas.status deve ser derivado de
+  // proposta_bancos, e nunca divergir dele.
   let statusBancos: PropostaStatus | null = null;
   if (algumAprovado) statusBancos = "credito_aprovado";
   else if (algumEmAnalise) statusBancos = "em_analise_credito";
@@ -1290,9 +1316,20 @@ export async function sincronizarPropostaImpl({
       statusBancos === "credito_recusado" ||
       statusEtapa === "credito_recusado" ||
       statusAtividade.status === "credito_recusado";
-    if (!novoStatus && houveRecusa && prop.status !== "credito_recusado") {
+
+    // CASO 2a: Ao processar o retorno, sempre recalcule propostas.status a partir do estado atual
+    // dos bancos, nunca deixando resíduo de tentativa anterior.
+    // Se o banco retornou protocolo real e está em análise, garantimos que o status seja coerente.
+    if (houveRecusa && prop.status !== "credito_recusado") {
       novoStatus = "credito_recusado";
     }
+
+    // Se houve desfecho positivo de algum banco (análise ou aprovado),
+    // isso deve prevalecer sobre recusas de outros bancos ou de tentativas anteriores.
+    if (statusBancos === "em_analise_credito" || statusBancos === "credito_aprovado") {
+      novoStatus = statusBancos;
+    }
+
     // Falha de integração sem outro desfecho positivo: força erro_envio para
     // habilitar reenvio (não é recusa de crédito real). NUNCA regride uma
     // proposta que já foi confirmada como enviada ao banco — nesse caso o
