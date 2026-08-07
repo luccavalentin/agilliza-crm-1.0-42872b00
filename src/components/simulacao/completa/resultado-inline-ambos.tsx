@@ -498,6 +498,9 @@ export function ResultadoInlineAmbos({ simulacaoIdSac, simulacaoIdPrice, onFecha
                           {b.taxa_juros_ano != null ? formatPercent(b.taxa_juros_ano / 100) : "—"}
                         </TableCell>
                         <TableCell className="py-3 text-right text-sm tabular-nums whitespace-nowrap">
+                          {l.simulacao.prazo}m
+                        </TableCell>
+                        <TableCell className="py-3 text-right text-sm tabular-nums whitespace-nowrap">
                           {prazoMaxTexto(b)}
                         </TableCell>
                         <TableCell className="py-3 text-right text-sm font-semibold tabular-nums whitespace-nowrap">
