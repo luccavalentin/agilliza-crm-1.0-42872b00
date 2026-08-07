@@ -729,10 +729,12 @@ export const listarSimulacoes = createServerFn({ method: "GET" })
   .handler(async ({ data, context }): Promise<{ itens: SimulacaoListaItem[]; total: number }> => {
     const { supabase, userId } = context;
     const from = (data.pagina - 1) * data.porPagina;
+    const to = from + data.porPagina - 1;
 
-    // Buscamos mais que porPagina para poder colapsar pares agrupados
-    // (SAC + PRICE criados como "Ambos") em um único item da lista.
-    const overFetch = data.porPagina * 2;
+    // A listagem colapsa visualmente apenas na UI se necessário, mas o servidor
+    // agora busca sem o overFetch excessivo que causava duplicidade no offset.
+    // Para manter a integridade, buscamos o range exato.
+
     // Para usuários com visibilidade restrita (RLS), o Supabase já aplica o filtro.
     // Garantimos que o correspondente_id seja filtrado se não formos admin total.
     const { data: me } = await supabase
@@ -745,7 +747,7 @@ export const listarSimulacoes = createServerFn({ method: "GET" })
       .from("simulacoes")
       .select(
         "id, numero_simulacao, nome_cliente, produto, valor_imovel, valor_financiamento, prazo, status, created_at, usuario_criador_id, deleted_at, deleted_by, deleted_motivo, sistema_amortizacao, agrupador_id",
-        { count: "exact" },
+        { count: "exact" }
       );
 
     if (me?.correspondente_id) {
@@ -753,7 +755,7 @@ export const listarSimulacoes = createServerFn({ method: "GET" })
     }
 
     query = query.order("created_at", { ascending: false })
-      .range(from, from + overFetch - 1);
+      .range(from, to);
 
     if (data.apenas_excluidas) query = query.not("deleted_at", "is", null);
     else query = query.is("deleted_at", null);
@@ -787,47 +789,16 @@ export const listarSimulacoes = createServerFn({ method: "GET" })
     const { data: rows, error, count } = await query;
     if (error) throw new Error(error.message);
 
-    // Colapsa simulações que compartilham agrupador_id (modo Ambos SAC + PRICE)
-    // em uma única linha. Mantém o registro mais antigo (o SAC, criado primeiro)
-    // como "principal"; carrega os ids das demais para o front resolver ações.
-    const porGrupo = new Map<string, any[]>();
-    const linhas: any[] = [];
-    for (const r of rows ?? []) {
-      const key = (r as any).agrupador_id;
-      if (!key) {
-        linhas.push({ ...r, _agrupadas_ids: [] as string[] });
-        continue;
-      }
-      const lista = porGrupo.get(key) ?? [];
-      lista.push(r);
-      porGrupo.set(key, lista);
-    }
-    for (const grupo of porGrupo.values()) {
-      grupo.sort((a: any, b: any) => (a.created_at < b.created_at ? -1 : 1));
-      const principal = grupo[0];
-      linhas.push({
-        ...principal,
-        sistema_amortizacao: "B",
-        _agrupadas_ids: grupo.slice(1).map((g: any) => g.id),
-      });
-    }
-    linhas.sort((a, b) => (new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
-    const paginadas = linhas.slice(0, data.porPagina);
-    // Ajusta o total contando cada grupo como 1
-    const totalCru = count ?? 0;
-    const colapsadosNaPagina = Array.from(porGrupo.values()).reduce(
-      (acc, g) => acc + Math.max(0, g.length - 1),
-      0,
-    );
-    const total = Math.max(0, totalCru - colapsadosNaPagina);
+    // Para manter a paginação correta e previsível, a lista exibe cada registro
+    // de simulação como um item individual. O front-end pode agrupar visualmente
+    // se necessário, mas o servidor entrega a lista plana.
+    const paginadas = (rows ?? []).map(r => ({ ...r, _agrupadas_ids: [] as string[] }));
+    const total = count ?? 0;
 
-    // Carrega bancos de TODAS as simulações (principais + agrupadas) para
-    // consolidar a exibição.
-    const idsPrincipais = paginadas.map((r: any) => r.id);
-    const idsAgrupadas = paginadas.flatMap((r: any) => r._agrupadas_ids ?? []);
-    const idsTodos = [...idsPrincipais, ...idsAgrupadas];
+    // Carrega bancos de TODAS as simulações paginadas para consolidar a exibição.
+    const idsTodos = paginadas.map((r: any) => r.id);
     const sistemaPorSimulacao = new Map(
-      (rows ?? []).map((r: any) => [r.id, r.sistema_amortizacao ?? null]),
+      paginadas.map((r: any) => [r.id, r.sistema_amortizacao ?? null]),
     );
     const bancosPorSim = new Map<string, SimulacaoBancoResumo[]>();
     if (idsTodos.length) {

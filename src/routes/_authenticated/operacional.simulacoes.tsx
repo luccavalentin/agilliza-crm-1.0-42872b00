@@ -78,7 +78,7 @@ function Pagina() {
 
   const obter = useServerFn(obterSimulacao);
   const listarColegasFn = useServerFn(listarColegas);
-  const padrao = useMemo(() => intervaloMesAtual(), []);
+  const padrao = useMemo(() => ({ inicio: "", fim: "" }), []);
   const [escopo, setEscopo] = useState<"todas" | "minhas">("todas");
   const [q, setQ] = useState("");
   const [busca, setBusca] = useState("");
@@ -119,7 +119,7 @@ function Pagina() {
   const { data, isLoading } = useQuery({
     queryKey: ["simulacoes", escopo, busca, desde, ate, responsavel, verExcluidas],
     refetchOnWindowFocus: true,
-    refetchInterval: 10000,
+    refetchInterval: 5000,
     staleTime: 0,
     queryFn: () =>
       listarSimulacoes({

@@ -56,7 +56,6 @@ export function CartoesSimulacoes({
         </div>
       )}
       {itens
-        .filter(s => !s.agrupador_id || s.agrupador_id === s.id) // Problema 4a: esconde secundárias
         .map((s) => {
 
         const bancoPrincipal = s.bancos?.[0]?.nome_banco ?? null;
