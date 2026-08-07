@@ -30,11 +30,11 @@ export interface PropostaListaItem {
   status_atualizado_em: string | null;
   ultima_sincronizacao_em: string | null;
   created_at: string;
-    responsavel_id: string | null;
-    nome_responsavel: string | null;
-    imobiliaria_nome: string | null;
-    corretor_nome: string | null;
-    bancos: PropostaBancoResumo[];
+  responsavel_id: string | null;
+  nome_responsavel: string | null;
+  imobiliaria_nome: string | null;
+  corretor_nome: string | null;
+  bancos: PropostaBancoResumo[];
   deleted_at?: string | null;
   deleted_by?: string | null;
   deleted_motivo?: string | null;
