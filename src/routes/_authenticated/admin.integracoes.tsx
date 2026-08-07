@@ -2,7 +2,7 @@ import { AdminHero } from "@/components/admin/admin-hero";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Plug, Landmark, Activity, RefreshCw } from "lucide-react";
+import { Plug, Landmark, Activity, RefreshCw, AlertTriangle, CheckCircle2, XCircle, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -23,12 +23,16 @@ import {
   testarConectividade,
   sincronizarDominios,
 } from "@/lib/admin/integracoes.functions";
+import { listarOportunidadesOrfas, cancelarOrfaEmLote } from "@/lib/admin/orfas.functions";
+import { useState } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const Route = createFileRoute("/_authenticated/admin/integracoes")({
   head: () => ({ meta: [{ title: "Integrações — Agilliza" }] }),
   beforeLoad: () => assertModuloPermitido("admin.integracoes"),
   component: Pagina,
 });
+
 
 function StatusBadge({ ativo }: { ativo: boolean }) {
   return <Badge variant={ativo ? "default" : "secondary"}>{ativo ? "Ativo" : "Inativo"}</Badge>;
