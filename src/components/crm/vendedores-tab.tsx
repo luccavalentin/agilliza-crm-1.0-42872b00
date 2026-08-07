@@ -18,7 +18,7 @@ import { CardVendedor } from "./vendedores-tab/card-vendedor";
 import { DialogVendedor } from "./vendedores-tab/dialog-vendedor";
 import { paraForm, VAZIO, type VendedorForm } from "./vendedores-tab/types";
 
-export function VendedoresTab({ clienteId }: { clienteId: string }) {
+export function VendedoresTab({ clienteId, idBanco }: { clienteId: string; idBanco?: number }) {
   const qc = useQueryClient();
   const listar = useServerFn(listarVendedores);
   const salvar = useServerFn(salvarVendedor);
