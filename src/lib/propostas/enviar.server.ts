@@ -838,8 +838,23 @@ async function enviarPropostaImplInner({
     );
   }
 
-  // Reenvio (ou primeiro envio) limpa o status e o erro da tentativa anterior
-  // dos campos da proposta para garantir fonte única de verdade no início do processo.
+  // Reenvio (ou primeiro envio) limpa o resíduo da tentativa anterior — tanto
+  // na proposta quanto nas LINHAS DE BANCO que estão sendo reenviadas. Sem
+  // isso, `propostas.status` fica preso em `credito_recusado`/`erro_envio` de
+  // uma tentativa antiga e o protocolo velho continua gravado.
+  await supabase
+    .from("proposta_bancos")
+    .update({
+      status_banco: "aguardando",
+      situacao_banco: "nao_enviado",
+      mensagem_banco: null,
+      numero_proposta_banco: null,
+    } as any)
+    .in(
+      "id",
+      (bancos as any[]).map((b) => b.id),
+    );
+
   const patchProposta: Record<string, any> = {
     enviada_em: new Date().toISOString(),
     ip_consentimento: ip,
@@ -847,9 +862,17 @@ async function enviarPropostaImplInner({
     detalhe_status_atual: null,
   };
 
-  if (primeiroEnvio) {
+  // O status também é resíduo: uma proposta em reenvio não pode continuar
+  // marcada como recusada/erro da tentativa anterior.
+  if (
+    primeiroEnvio ||
+    prop.status === "erro_envio" ||
+    prop.status === "credito_recusado" ||
+    prop.status === "rascunho"
+  ) {
     patchProposta.status = "enviada_banco";
   }
+
 
   await supabase.from("propostas").update(patchProposta).eq("id", propostaId);
 
