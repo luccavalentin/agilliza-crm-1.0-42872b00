@@ -640,7 +640,6 @@ function Pagina() {
             toast.error(e?.message ?? "Falha ao salvar participante.");
           }
         }}
-        focarPendencias={true}
         onSalvoPermanecer={() => {
            // O modal fecha no onSalvar. Se quisermos que fique aberto:
            // setParticipanteModal(null);
