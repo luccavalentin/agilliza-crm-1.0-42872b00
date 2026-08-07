@@ -199,6 +199,24 @@ function Pagina() {
   // Quando o envio falha por cadastro incompleto, destaca os campos obrigatórios pendentes.
   const [destacarObrigatorios, setDestacarObrigatorios] = useState(false);
   const [participanteModal, setParticipanteModal] = useState<any>(null);
+  const [indiceParticipante, setIndiceParticipante] = useState(0);
+
+  const pendentes = useMemo(() => {
+    return (data?.envolvidos ?? []).map((env, index) => ({
+      env,
+      faltantes: faltantesEnvolvido(env),
+      index: index + 1
+    })).filter(p => p.faltantes.length > 0);
+  }, [data?.envolvidos]);
+
+  const totalPendentes = (data?.envolvidos ?? []).length;
+  const proximoPendente = pendentes[0];
+
+  const abrirCadastroPendente = () => {
+    if (!proximoPendente) return;
+    setParticipanteModal(proximoPendente.env);
+    setIndiceParticipante(proximoPendente.index);
+  };
   const enviarAutoFn = useServerFn(enviarPropostaHomeFin);
   const onCadastroIncompleto = () => {
     setTab("COMPRADORES");
@@ -547,6 +565,7 @@ function Pagina() {
             clienteId={p.cliente_id}
             propostaId={id}
             envolvidos={data.envolvidos}
+            proposta={p}
             onCompletar={(env) => {
               if (env.tipo_qualificacao === "CO") {
                 setTab("COMPRADORES");
@@ -565,8 +584,20 @@ function Pagina() {
         open={Boolean(participanteModal)}
         onOpenChange={(v) => !v && setParticipanteModal(null)}
         titulo="Completar dados do participante"
+        avisoTopo={
+          participanteModal && (
+            <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive font-medium leading-relaxed">
+              <AlertTriangle className="inline-block h-4 w-4 mr-1.5 align-text-bottom" />
+              Faltam {faltantesEnvolvido(participanteModal).length} dados obrigatórios de{" "}
+              {descreverParticipante(participanteModal)} para enviar ao banco. Preencha os campos destacados em vermelho.
+            </div>
+          )
+        }
+        participanteIndex={indiceParticipante}
+        totalParticipantes={totalPendentes}
         inicial={participanteModal ? envolvidoParaForm(participanteModal) : undefined}
         propostaId={id}
+        focarPendencias={true}
         onSalvar={async (principal, conjuge) => {
           if (!participanteModal?.id) return;
           try {
@@ -594,8 +625,16 @@ function Pagina() {
               });
             }
             toast.success("Dados do participante atualizados.");
-            qc.invalidateQueries({ queryKey: ["proposta", id] });
-            setParticipanteModal(null);
+            await qc.invalidateQueries({ queryKey: ["proposta", id] });
+            
+            // Avança para o próximo pendente ou habilita o botão
+            const novosPendentes = pendentes.filter(p => p.env.id !== participanteModal.id);
+            if (novosPendentes.length > 0) {
+              setParticipanteModal(novosPendentes[0].env);
+              setIndiceParticipante(novosPendentes[0].index);
+            } else {
+              setParticipanteModal(null);
+            }
           } catch (e: any) {
             toast.error(e?.message ?? "Falha ao salvar participante.");
           }
