@@ -165,7 +165,7 @@ export function AcoesTopo({
           </Button>
         )}
         {podeEnviarNovos && (
-          <Button size="sm" onClick={enviar} disabled={busy}>
+          <Button size="sm" onClick={enviar} disabled={busy} variant="secondary">
             {busy ? (
               <Loader2 className="mr-1 h-4 w-4 animate-spin" />
             ) : (
