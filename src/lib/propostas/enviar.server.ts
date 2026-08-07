@@ -880,6 +880,7 @@ async function enviarPropostaImplInner({
     try {
       await garantirEnderecoParticipantes({
         prop,
+        pb: b,
         idOportunidade: prop.homefin_id_oportunidade,
         ctx,
         supabase,
