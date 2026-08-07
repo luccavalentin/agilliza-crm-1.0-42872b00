@@ -329,13 +329,13 @@ export function SecaoOperacaoImovel({ ctx }: { ctx: SimulacaoCompletaCtx }) {
                 <>
                   Financiamento + despesas não pode passar de {Math.round(ltvMax * 100)}% do
                   imóvel ({formatBRL(financiamentoMaximo)}). Informe uma entrada de pelo menos{" "}
-                  {formatBRL(entradaMinimaEfetiva)}.
+                  {formatBRL(entradaMinimaEfetiva + 1)}.
                 </>
               ) : (
                 <>
                   O banco financia no máximo {Math.round(ltvMax * 100)}% do imóvel (
                   {formatBRL(financiamentoMaximo)}). Informe uma entrada de pelo menos{" "}
-                  {formatBRL(entradaMinima)}.
+                  {formatBRL(entradaMinima + 1)}.
                 </>
               )}
             </p>
