@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -195,9 +195,6 @@ export function ParticipanteDialog({
       try {
         await ressincronizarFn({ data: { proposta_id: propostaId } });
         await qc.invalidateQueries({ queryKey: ["proposta", propostaId] });
-        
-        // Se temos o participante no cache agora, atualizamos o formulário local
-        // Isso é opcional pois o parent deve recarregar, mas ajuda na reatividade
         toast.success("Dados sincronizados.", { id: tid });
       } catch (err) {
         console.error("Erro na ressincronização automática:", err);
@@ -232,9 +229,7 @@ export function ParticipanteDialog({
     const conjugePayload = c ? formParaEnvolvido(c) : null;
     await onSalvar(formParaEnvolvido(f), conjugePayload);
     
-    // Se ainda houver pendências (em outro participante, por exemplo), 
-    // o parent vai fechar este modal e abrir o próximo ou manter se for o mesmo.
-    // Mas se o objetivo é revalidar e mostrar o botão de envio no modal:
+    // Após salvar, revalida para atualizar o estado visual se permanecer no modal
     setTentouEnviar(true);
     onSalvoPermanecer?.();
   }
@@ -294,15 +289,24 @@ export function ParticipanteDialog({
           )}
         </div>
 
-        <DialogFooter className="flex-col gap-2 sm:flex-row">
-          {rodapeExtra}
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={salvando}>
-            Cancelar
-          </Button>
-          <Button onClick={submit} disabled={salvando}>
-            {salvando && <Loader2 className="mr-1 h-4 w-4 animate-spin" />}
-            Salvar
-          </Button>
+        <DialogFooter className="flex-col gap-2 sm:flex-row sm:items-center">
+          <div className="flex-1">
+            {tentouEnviar && (erros.size === 0 && errosC.size === 0) && (
+              <p className="text-[11px] font-bold text-emerald-600 flex items-center gap-1 uppercase tracking-wider">
+                <CheckCircle2 className="h-3.5 w-3.5" /> Tudo pronto para enviar
+              </p>
+            )}
+          </div>
+          <div className="flex gap-2">
+            {rodapeExtra}
+            <Button variant="outline" onClick={() => onOpenChange(false)} disabled={salvando}>
+              Cancelar
+            </Button>
+            <Button onClick={submit} disabled={salvando}>
+              {salvando && <Loader2 className="mr-1 h-4 w-4 animate-spin" />}
+              Salvar
+            </Button>
+          </div>
         </DialogFooter>
 
       </DialogContent>
