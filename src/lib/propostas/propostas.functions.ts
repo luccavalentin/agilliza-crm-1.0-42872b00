@@ -1654,8 +1654,31 @@ export const excluirProposta = createServerFn({ method: "POST" })
       })
       .eq("id", data.id)
       .is("deleted_at", null)
-      .select("id");
+      .select("id, homefin_id_oportunidade, simulacao_id, correspondente_id");
     if (error) throw error;
+
+    // Espelhamento na HomeFin (Exclusão = Cancelamento Oportunidade)
+    const pRem = removidas?.[0];
+    if (pRem?.homefin_id_oportunidade) {
+      const cancelarNoBanco = (async () => {
+        try {
+          const { cancelarOportunidadeHomefinGenerico } = await import("./enviar.server");
+          await cancelarOportunidadeHomefinGenerico({
+            idOportunidade: pRem.homefin_id_oportunidade as string,
+            simulacaoId: pRem.simulacao_id as string | null,
+            propostaId: data.id,
+            correspondenteId: pRem.correspondente_id as string | null,
+            supabase,
+          });
+        } catch (e) {
+          console.error("[HomeFin] Erro ao cancelar oportunidade da proposta excluída:", e);
+        }
+      })();
+      const waitUntil = (globalThis as any)?.ctx?.waitUntil ?? (globalThis as any)?.waitUntil;
+      if (typeof waitUntil === "function") waitUntil(cancelarNoBanco);
+      else cancelarNoBanco.catch(() => {});
+    }
+
 
     if (!removidas || removidas.length === 0) {
       if (!correspondente || prop.correspondente_id !== correspondente) {
