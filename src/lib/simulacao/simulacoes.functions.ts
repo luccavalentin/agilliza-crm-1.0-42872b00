@@ -754,7 +754,7 @@ export const listarSimulacoes = createServerFn({ method: "GET" })
     }
 
     query = query.order("created_at", { ascending: false })
-      .range(from, from + overFetch - 1);
+      .range(from, to);
 
     if (data.apenas_excluidas) query = query.not("deleted_at", "is", null);
     else query = query.is("deleted_at", null);
