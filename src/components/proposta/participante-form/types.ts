@@ -1,4 +1,5 @@
 import { ESTADO_CIVIL_COM_REGIME } from "@/lib/propostas/dominios";
+import { faltantesEnvolvido } from "@/lib/propostas/campos-obrigatorios";
 import { maskCpfCnpj, maskCelular, apenasDigitos, validarCpfCnpj } from "@/lib/simulacao/format";
 
 export type ParticipanteForm = {
