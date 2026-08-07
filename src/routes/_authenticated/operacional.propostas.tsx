@@ -248,6 +248,9 @@ function Pagina() {
     }
     setExcluindoLote(false);
     setSelecionados([]);
+    for (const id of selecionados) {
+      queryClient.removeQueries({ queryKey: ["proposta", id] });
+    }
     queryClient.invalidateQueries({ queryKey: ["propostas"] });
     queryClient.invalidateQueries({ queryKey: ["crm-painel"] });
     queryClient.invalidateQueries({ queryKey: ["clientes"] });
