@@ -102,6 +102,8 @@ export function ClienteSecao({
       vincularPropostaId={propostaId}
       onSalvoEmbutido={onSalvoComprador}
       destacarObrigatorios={destacarObrigatorios}
+      idBanco={idBanco}
+
       portalAtivo={c.portal_acesso_ativo}
 
 
