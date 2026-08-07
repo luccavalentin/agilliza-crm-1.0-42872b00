@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useEnviarProposta } from "@/hooks/use-enviar-proposta";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   AlertDialog,
