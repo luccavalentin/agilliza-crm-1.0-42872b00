@@ -731,6 +731,10 @@ export const listarSimulacoes = createServerFn({ method: "GET" })
     const from = (data.pagina - 1) * data.porPagina;
     const to = from + data.porPagina - 1;
 
+    // A listagem colapsa visualmente apenas na UI se necessário, mas o servidor
+    // agora busca sem o overFetch excessivo que causava duplicidade no offset.
+    // Para manter a integridade, buscamos o range exato.
+
     // Para usuários com visibilidade restrita (RLS), o Supabase já aplica o filtro.
     // Garantimos que o correspondente_id seja filtrado se não formos admin total.
     const { data: me } = await supabase
