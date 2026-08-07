@@ -184,8 +184,27 @@ export function ParticipanteDialog({
   }
 
   async function submit() {
-    // 1. Ressincroniza antes de qualquer validação (P1.g)
     setTentouEnviar(true);
+    
+    // 1. Ressincroniza antes de qualquer validação (P1.g)
+    if (propostaId && f.cliente_id && !salvandoInterno) {
+      setSalvandoInterno(true);
+      const tid = toast.loading("Sincronizando dados com o CRM...");
+      try {
+        await ressincronizarFn({ data: { proposta_id: propostaId } });
+        await qc.invalidateQueries({ queryKey: ["proposta", propostaId] });
+        
+        // Se temos o participante no cache agora, atualizamos o formulário local
+        // Isso é opcional pois o parent deve recarregar, mas ajuda na reatividade
+        toast.success("Dados sincronizados.", { id: tid });
+      } catch (err) {
+        console.error("Erro na ressincronização automática:", err);
+        toast.dismiss(tid);
+      } finally {
+        setSalvandoInterno(false);
+      }
+    }
+
     const faltando = camposFaltantes(f);
     setErros(faltando);
 
@@ -202,18 +221,15 @@ export function ParticipanteDialog({
     setErrosC(faltandoC);
 
     if (faltando.size > 0 || faltandoC.size > 0) {
-      const nomes = [...faltando, ...faltandoC]
-        .map((k) => LABEL_POR_CHAVE[k] ?? k)
-        .filter((v, i, a) => a.indexOf(v) === i);
       toast.error(
         `Não é possível salvar: faltam dados obrigatórios destacados em vermelho.`,
       );
       return;
     }
 
-
     const conjugePayload = c ? formParaEnvolvido(c) : null;
     await onSalvar(formParaEnvolvido(f), conjugePayload);
+    onSalvoPermanecer?.();
   }
 
   return (
