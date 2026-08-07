@@ -55,8 +55,8 @@ function Pagina() {
   const [q, setQ] = useState("");
   const [busca, setBusca] = useState("");
   const [responsavel, setResponsavel] = useState<string>("todos");
-  const [dataInicio, setDataInicio] = useState(padrao.inicio);
-  const [dataFim, setDataFim] = useState(padrao.fim);
+  const [dataInicio, setDataInicio] = useState("");
+  const [dataFim, setDataFim] = useState("");
 
   const listarColegasFn = useServerFn(listarColegas);
   const { data: colegas } = useQuery({
@@ -193,8 +193,8 @@ function Pagina() {
     setQ("");
     setBusca("");
     setResponsavel("todos");
-    setDataInicio(padrao.inicio);
-    setDataFim(padrao.fim);
+    setDataInicio("");
+    setDataFim("");
     setEscopo("minhas");
     setGrupo(null);
   }

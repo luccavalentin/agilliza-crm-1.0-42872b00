@@ -123,11 +123,11 @@ function Pagina() {
   const [arrastando, setArrastando] = useState<{ id: string; status: PropostaStatus } | null>(null);
 
   const padrao = useMemo(() => intervaloMesAtual(), []);
-  const [escopo, setEscopo] = useState<"todas" | "minhas">(qInicial ? "todas" : "minhas");
-  const [q, setQ] = useState(qInicial ?? "");
-  const [busca, setBusca] = useState(qInicial ?? "");
-  const [dataInicio, setDataInicio] = useState(qInicial ? "" : padrao.inicio);
-  const [dataFim, setDataFim] = useState(qInicial ? "" : padrao.fim);
+  const [escopo, setEscopo] = useState<"todas" | "minhas">("minhas");
+  const [q, setQ] = useState("");
+  const [busca, setBusca] = useState("");
+  const [dataInicio, setDataInicio] = useState("");
+  const [dataFim, setDataFim] = useState("");
   const [respFiltro, setRespFiltro] = useState("todos");
   const [corretorFiltro, setCorretorFiltro] = useState("todos");
   const [imobFiltro, setImobFiltro] = useState("todos");
@@ -180,8 +180,8 @@ function Pagina() {
   function limparFiltros() {
     setQ("");
     setBusca("");
-    setDataInicio(padrao.inicio);
-    setDataFim(padrao.fim);
+    setDataInicio("");
+    setDataFim("");
     setEscopo("minhas");
     setRespFiltro("todos");
     setCorretorFiltro("todos");
@@ -450,23 +450,25 @@ function Pagina() {
               className="h-11 w-[9.5rem] rounded-xl"
             />
           </div>
-          <div className="flex flex-col gap-1">
-            <Label className="text-xs text-muted-foreground">Responsável</Label>
-            <select
-              value={respFiltro}
-              onChange={(e) => setRespFiltro(e.target.value)}
-              className="h-11 w-[10rem] rounded-xl border border-input bg-background px-3 text-sm shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              <option value="todos">Todos</option>
-              {responsaveis.map((r) => <option key={r} value={r}>{r}</option>)}
-            </select>
-          </div>
+          {escopo === "todas" && (
+            <div className="flex flex-col gap-1">
+              <Label className="text-xs text-muted-foreground">Responsável</Label>
+              <select
+                value={respFiltro}
+                onChange={(e) => setRespFiltro(e.target.value)}
+                className="h-11 w-[12rem] rounded-xl border border-input bg-background px-3 text-sm shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <option value="todos">Todos</option>
+                {responsaveis.map((r) => <option key={r} value={r}>{r}</option>)}
+              </select>
+            </div>
+          )}
           <div className="flex flex-col gap-1">
             <Label className="text-xs text-muted-foreground">Corretor</Label>
             <select
               value={corretorFiltro}
               onChange={(e) => setCorretorFiltro(e.target.value)}
-              className="h-11 w-[10rem] rounded-xl border border-input bg-background px-3 text-sm shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="h-11 w-[12rem] rounded-xl border border-input bg-background px-3 text-sm shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <option value="todos">Todos</option>
               {corretores.map((r) => <option key={r} value={r}>{r}</option>)}
@@ -477,7 +479,7 @@ function Pagina() {
             <select
               value={imobFiltro}
               onChange={(e) => setImobFiltro(e.target.value)}
-              className="h-11 w-[10rem] rounded-xl border border-input bg-background px-3 text-sm shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="h-11 w-[12rem] rounded-xl border border-input bg-background px-3 text-sm shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <option value="todos">Todos</option>
               {imobiliarias.map((r) => <option key={r} value={r}>{r}</option>)}
