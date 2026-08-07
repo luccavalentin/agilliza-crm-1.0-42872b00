@@ -54,6 +54,10 @@ import {
   definirSituacaoBanco,
   SITUACOES_BANCO,
 } from "@/lib/propostas/propostas.functions";
+import { 
+  faltantesEnvolvido, 
+  descreverParticipante 
+} from "@/lib/propostas/campos-obrigatorios";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { VisualizadorArquivo } from "@/components/comum/visualizador-arquivo";
@@ -626,7 +630,7 @@ function Pagina() {
             await qc.invalidateQueries({ queryKey: ["proposta", id] });
             
             // Avança para o próximo pendente ou habilita o botão
-            const novosPendentes = pendentes.filter(p => p.env.id !== participanteModal.id);
+            const novosPendentes = pendentes.filter((item: any) => item.env.id !== participanteModal.id);
             if (novosPendentes.length > 0) {
               setParticipanteModal(novosPendentes[0].env);
               setIndiceParticipante(novosPendentes[0].index);
