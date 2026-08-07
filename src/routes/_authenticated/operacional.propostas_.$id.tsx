@@ -529,7 +529,17 @@ function Pagina() {
         {tab === "IQ" && <ClienteSecao clienteId={p.cliente_id} propostaId={id} secao="iq" />}
         {tab === "IMÓVEL" && <ClienteSecao clienteId={p.cliente_id} propostaId={id} secao="imovel" />}
         {tab === "DOCUMENTOS" && <ClienteSecao clienteId={p.cliente_id} propostaId={id} secao="documentos" />}
-        {tab === "ENVIAR_BANCO" && <AbaEnviarBanco clienteId={p.cliente_id} propostaId={id} />}
+        {tab === "ENVIAR_BANCO" && (
+          <AbaEnviarBanco
+            clienteId={p.cliente_id}
+            propostaId={id}
+            envolvidos={data.envolvidos}
+            onCompletar={(env) => {
+              setTab("COMPRADORES");
+              setDestacarObrigatorios(true);
+            }}
+          />
+        )}
         {tab === "ATIVIDADES" && <TabAtividades historico={data.historico} />}
         {tab === "FUP" && <TabFup propostaId={id} followups={data.followups} />}
       </div>
