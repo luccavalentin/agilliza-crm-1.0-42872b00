@@ -433,6 +433,7 @@ export function ResultadoInlineAmbos({ simulacaoIdSac, simulacaoIdPrice, onFecha
                     <TableHead className="w-[11%] text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Parcela</TableHead>
                     <TableHead className="w-[7%] text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Taxa</TableHead>
                     <TableHead className="w-[7%] text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Prazo</TableHead>
+                    <TableHead className="w-[8%] text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Prazo máx</TableHead>
                     <TableHead className="w-[12%] text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Financiado</TableHead>
                     <TableHead className="w-[9%] text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">IOF</TableHead>
                     <TableHead className="w-[11%] text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Renda est.</TableHead>
