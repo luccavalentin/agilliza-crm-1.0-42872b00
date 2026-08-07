@@ -47,11 +47,47 @@ export async function cancelarPropostaHomefinImpl({
     .eq("id", propostaId)
     .maybeSingle();
 
-  if (!prop?.homefin_id_oportunidade) return;
+  const idOp = prop?.homefin_id_oportunidade;
+  if (!idOp) return;
+
+  // Requisito 1: Só cancelar na HomeFin quando for o ÚLTIMO uso.
+  // Verifica se existem outras propostas ativas usando a mesma oportunidade.
+  const { count: outrasAtivas } = await supabase
+    .from("propostas")
+    .select("id", { count: "exact", head: true })
+    .eq("homefin_id_oportunidade", idOp)
+    .neq("id", propostaId)
+    .not("status", "eq", "cancelada")
+    .is("deleted_at", null);
+
+  // Verifica se a simulação de origem ainda aponta para esta oportunidade.
+  const { data: simOrigem } = prop.simulacao_id
+    ? await supabase
+        .from("simulacoes")
+        .select("id, homefin_id_oportunidade")
+        .eq("id", prop.simulacao_id)
+        .maybeSingle()
+    : { data: null };
+
+  const emUsoPelaSimulacao = simOrigem?.homefin_id_oportunidade === idOp;
+  const emUsoPorOutras = (outrasAtivas ?? 0) > 0;
+
+  if (emUsoPelaSimulacao || emUsoPorOutras) {
+    console.log(
+      `[HomeFin] Cancelamento da proposta ${propostaId} apenas local. Oportunidade ${idOp} continua em uso (Simulação: ${emUsoPelaSimulacao}, Outras Propostas: ${emUsoPorOutras})`,
+    );
+    await supabase.from("proposta_historico").insert({
+      proposta_id: propostaId,
+      tipo_evento: "cancelada",
+      descricao: "Cancelamento local concluído. A oportunidade bancária permanece ativa para outros usos vinculados.",
+      status_novo: "cancelada",
+    });
+    return;
+  }
 
   try {
     await chamarIntegracao<any>(
-      `/oportunidade/${prop.homefin_id_oportunidade}`,
+      `/oportunidade/${idOp}`,
       "PUT",
       { tipoSituacao: "C" },
       {
@@ -77,11 +113,11 @@ export async function cancelarPropostaHomefinImpl({
   } catch (error: any) {
     // Registra falha e marca como pendente
     const msg = error?.message || "Erro desconhecido na integração";
-    
+
     await Promise.all([
       supabase.from("proposta_logs_homefin").insert({
         proposta_id: propostaId,
-        endpoint: `/oportunidade/${prop.homefin_id_oportunidade}`,
+        endpoint: `/oportunidade/${idOp}`,
         metodo: "PUT",
         payload: { tipoSituacao: "C" },
         resposta: { error: msg },
@@ -100,12 +136,13 @@ export async function cancelarPropostaHomefinImpl({
         .eq("id", propostaId),
     ]);
 
-    throw error; // Repropaga para que o retry ou background context saiba que falhou
+    throw error;
   }
 }
 
 /**
  * Versão genérica para cancelar oportunidade via Simulação ou Proposta (incluindo excluídas).
+ * Agora também respeita a regra de "último uso".
  */
 export async function cancelarOportunidadeHomefinGenerico({
   idOportunidade,
@@ -120,6 +157,29 @@ export async function cancelarOportunidadeHomefinGenerico({
   correspondenteId?: string | null;
   supabase: SupabaseClient<any, any, any>;
 }): Promise<void> {
+  const { count: outrasAtivas } = await supabase
+    .from("propostas")
+    .select("id", { count: "exact", head: true })
+    .eq("homefin_id_oportunidade", idOportunidade)
+    .filter("id", "neq", propostaId || "00000000-0000-0000-0000-000000000000")
+    .not("status", "eq", "cancelada")
+    .is("deleted_at", null);
+
+  const { data: simUso } = await supabase
+    .from("simulacoes")
+    .select("id")
+    .eq("homefin_id_oportunidade", idOportunidade)
+    .filter("id", "neq", simulacaoId || "00000000-0000-0000-0000-000000000000")
+    .is("deleted_at", null)
+    .maybeSingle();
+
+  if ((outrasAtivas ?? 0) > 0 || simUso) {
+    console.log(
+      `[HomeFin] Oportunidade ${idOportunidade} não será cancelada no banco pois ainda está em uso por outros registros.`,
+    );
+    return;
+  }
+
   try {
     await chamarIntegracao<any>(
       `/oportunidade/${idOportunidade}`,
@@ -132,7 +192,6 @@ export async function cancelarOportunidadeHomefinGenerico({
       },
     );
   } catch (error: any) {
-    // Para exclusões, registramos o erro mas não travamos
     console.error(`[HomeFin] Falha ao cancelar oportunidade ${idOportunidade}:`, error);
     throw error;
   }

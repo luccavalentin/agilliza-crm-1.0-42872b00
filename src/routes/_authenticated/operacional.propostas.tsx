@@ -11,6 +11,8 @@ import {
   restaurarProposta,
   sincronizarPropostasAtivas,
 } from "@/lib/propostas/propostas.functions";
+import { propostaQueryOptions } from "@/lib/propostas/queries";
+
 import { Button } from "@/components/ui/button";
 import { listarColegas } from "@/lib/operacional/shared.functions";
 import {
@@ -203,6 +205,7 @@ function Pagina() {
     try {
       await excluir({ data: { id } });
       toast.success("Proposta excluída.");
+      queryClient.removeQueries({ queryKey: ["proposta", id] });
       queryClient.invalidateQueries({ queryKey: ["propostas"] });
       queryClient.invalidateQueries({ queryKey: ["crm-painel"] });
       queryClient.invalidateQueries({ queryKey: ["clientes"] });
@@ -245,6 +248,9 @@ function Pagina() {
     }
     setExcluindoLote(false);
     setSelecionados([]);
+    for (const id of selecionados) {
+      queryClient.removeQueries({ queryKey: ["proposta", id] });
+    }
     queryClient.invalidateQueries({ queryKey: ["propostas"] });
     queryClient.invalidateQueries({ queryKey: ["crm-painel"] });
     queryClient.invalidateQueries({ queryKey: ["clientes"] });

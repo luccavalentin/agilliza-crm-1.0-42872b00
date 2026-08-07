@@ -9,6 +9,8 @@ import {
   type PropostaStatus,
 } from "./state-machine";
 import { estadoCivilCrmParaCodigo, regimeCasamentoCrmParaCodigo } from "./dominios";
+import { propostaQueryOptions } from "./queries";
+
 
 /** ===== Tipos de saída ===== */
 export interface PropostaBancoResumo {

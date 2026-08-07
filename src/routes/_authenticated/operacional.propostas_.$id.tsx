@@ -35,6 +35,8 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { assertModuloPermitido } from "@/lib/route-guards";
+import { propostaQueryOptions } from "@/lib/propostas/queries";
+
 import {
   obterProposta,
   selecionarBancoProposta,
@@ -206,8 +208,7 @@ function Pagina() {
   const { enviar: handleEnviarHook } = useEnviarProposta();
 
   const { data, isLoading } = useQuery({
-    queryKey: ["proposta", id],
-    queryFn: () => obterProposta({ data: { id } }),
+    ...propostaQueryOptions(id),
     refetchInterval: (q: any) => {
       const st = q.state.data?.proposta?.status as string | undefined;
       if (!st) return 30_000;
