@@ -168,8 +168,7 @@ export function ParticipanteDialog({
 
   async function submit() {
     setTentouEnviar(true);
-    const context = { regimeObrigatorio: idBanco === TIPO_BANCO_SANTANDER };
-    const faltando = camposFaltantes(f, context);
+    const faltando = camposFaltantes(f);
     setErros(faltando);
 
     const c: ParticipanteForm | null = (precisaConjuge && conjugeTemDados)
@@ -181,17 +180,19 @@ export function ParticipanteDialog({
           regime_casamento: f.regime_casamento,
         }
       : null;
-    const faltandoC = c ? camposFaltantes(c, context) : new Set<string>();
+    const faltandoC = c ? camposFaltantes(c) : new Set<string>();
     setErrosC(faltandoC);
 
-
     if (faltando.size > 0 || faltandoC.size > 0) {
-      const total = faltando.size + faltandoC.size;
+      const nomes = [...faltando, ...faltandoC]
+        .map((k) => LABEL_POR_CHAVE[k] ?? k)
+        .filter((v, i, a) => a.indexOf(v) === i);
       toast.error(
-        `Preencha ${total} campo${total > 1 ? "s" : ""} obrigatório${total > 1 ? "s" : ""} destacado${total > 1 ? "s" : ""} em vermelho.`,
+        `Não é possível salvar: ${nomes.length > 1 ? "faltam os campos" : "falta o campo"} ${nomes.join(", ")}. Estão destacados em vermelho.`,
       );
       return;
     }
+
 
     const conjugePayload = c ? formParaEnvolvido(c) : null;
     await onSalvar(formParaEnvolvido(f), conjugePayload);
