@@ -73,12 +73,7 @@ export function useEnviarProposta() {
 
       // 4. Enviar
       const r = await enviarFn({ data: { proposta_id: propostaId, banco_id: bancoId } });
-      toast.success(
-        r?.numero_proposta_banco 
-          ? `Proposta enviada ao banco. Nº: ${r.numero_proposta_banco}`
-          : "Proposta enviada com sucesso.", 
-        { id: tid }
-      );
+      toast.success("Proposta enviada com sucesso.", { id: tid });
       
       await qc.invalidateQueries({ queryKey: ["proposta", propostaId] });
       
