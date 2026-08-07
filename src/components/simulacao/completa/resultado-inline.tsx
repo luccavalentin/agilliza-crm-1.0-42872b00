@@ -42,7 +42,7 @@ import { bancoInformou } from "@/lib/simulacao/origem-dados";
  * banco realmente informou (ver src/lib/simulacao/origem-dados.ts).
  */
 const prazoMaxTexto = (b: any) =>
-  bancoInformou(b, "prazo_pagamento_max") && b.prazo_pagamento_max
+  bancoInformou(b, "prazo_pagamento_max") && b.prazo_pagamento_max && b.prazo_pagamento_max !== b.prazo_contratado
     ? `${b.prazo_pagamento_max}m`
     : "—";
 const financMaxTexto = (b: any) =>
