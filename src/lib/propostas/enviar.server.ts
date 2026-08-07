@@ -8,7 +8,9 @@ import {
   chamarIntegracao,
   IntegracaoBancariaError,
   sanitizarMensagemErro,
+  TIPO_BANCO_SANTANDER,
 } from "@/lib/simulacao/homefin.server";
+
 import { transicaoPermitida, type PropostaStatus } from "./state-machine";
 
 import {
