@@ -231,6 +231,11 @@ export function ParticipanteDialog({
 
     const conjugePayload = c ? formParaEnvolvido(c) : null;
     await onSalvar(formParaEnvolvido(f), conjugePayload);
+    
+    // Se ainda houver pendências (em outro participante, por exemplo), 
+    // o parent vai fechar este modal e abrir o próximo ou manter se for o mesmo.
+    // Mas se o objetivo é revalidar e mostrar o botão de envio no modal:
+    setTentouEnviar(true);
     onSalvoPermanecer?.();
   }
 

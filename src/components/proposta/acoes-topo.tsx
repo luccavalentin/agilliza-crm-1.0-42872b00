@@ -85,13 +85,18 @@ export function AcoesTopo({
   const pendencias = useMemo(() => {
     return (envolvidos ?? []).map(env => ({
       env,
-      faltantes: faltantesEnvolvido(env)
+      faltantes: faltantesEnvolvido(env),
+      descrever: descreverParticipante(env)
     })).filter(p => p.faltantes.length > 0);
   }, [envolvidos]);
 
   const bloqueado = pendencias.length > 0;
 
   async function enviar() {
+    if (bloqueado) {
+      onCadastroIncompleto?.();
+      return;
+    }
     if (jaEnviou && bancosPendentes.length === 0) {
       toast.info("Nenhum banco novo selecionado. Selecione outro banco para enviar.");
       return;

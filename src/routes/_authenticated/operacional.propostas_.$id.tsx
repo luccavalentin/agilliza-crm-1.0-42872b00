@@ -2,7 +2,7 @@ import { createFileRoute, useRouter, Link } from "@tanstack/react-router";
 import { corDoBanco } from "@/lib/bancos/cores";
 import { numeroBancoParaExibir } from "@/lib/propostas/numero-banco-display";
 import { BancoLogo } from "@/components/bancos/banco-logo";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -32,6 +32,7 @@ import {
   Activity,
   MessageSquare,
   ChevronDown,
+  AlertTriangle,
 } from "lucide-react";
 import { assertModuloPermitido } from "@/lib/route-guards";
 import {
@@ -53,6 +54,10 @@ import {
   definirSituacaoBanco,
   SITUACOES_BANCO,
 } from "@/lib/propostas/propostas.functions";
+import { 
+  faltantesEnvolvido, 
+  descreverParticipante 
+} from "@/lib/propostas/campos-obrigatorios";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { VisualizadorArquivo } from "@/components/comum/visualizador-arquivo";
@@ -194,26 +199,10 @@ function Pagina() {
   const { complementar } = Route.useSearch();
   const router = useRouter();
   const qc = useQueryClient();
-  const [tab, setTab] = useState<Tab>("RESUMO");
-  const [enviandoAuto, setEnviandoAuto] = useState(false);
-  // Quando o envio falha por cadastro incompleto, destaca os campos obrigatórios pendentes.
-  const [destacarObrigatorios, setDestacarObrigatorios] = useState(false);
-  const [participanteModal, setParticipanteModal] = useState<any>(null);
-  const enviarAutoFn = useServerFn(enviarPropostaHomeFin);
-  const onCadastroIncompleto = () => {
-    setTab("COMPRADORES");
-    // Reinicia o destaque para forçar novo scroll até o primeiro campo pendente,
-    // mesmo quando o usuário já estava com o destaque ativo.
-    setDestacarObrigatorios(false);
-    requestAnimationFrame(() => setDestacarObrigatorios(true));
-  };
-
 
   const { data, isLoading } = useQuery({
     queryKey: ["proposta", id],
     queryFn: () => obterProposta({ data: { id } }),
-    // Fallback de atualização automática caso o realtime não entregue o evento
-    // (aba em background, websocket caído, etc.). Para em desfechos terminais.
     refetchInterval: (q: any) => {
       const st = q.state.data?.proposta?.status as string | undefined;
       if (!st) return 30_000;
@@ -222,6 +211,37 @@ function Pagina() {
     },
     refetchOnWindowFocus: true,
   });
+
+  const bancos = data?.bancos ?? [];
+  const envolvidos = data?.envolvidos ?? [];
+  const p = data?.proposta as any;
+
+  const [tab, setTab] = useState<Tab>("RESUMO");
+  const [enviandoAuto, setEnviandoAuto] = useState(false);
+  const [destacarObrigatorios, setDestacarObrigatorios] = useState(false);
+  const [participanteModal, setParticipanteModal] = useState<any>(null);
+  const [indiceParticipante, setIndiceParticipante] = useState(0);
+
+  const pendentes = useMemo(() => {
+    return (envolvidos ?? []).map((env, index) => ({
+      env,
+      faltantes: faltantesEnvolvido(env),
+      index: index + 1
+    })).filter((item: any) => item.faltantes.length > 0);
+  }, [envolvidos]);
+
+  const totalPendentes = (envolvidos ?? []).length;
+  const proximoPendente = pendentes[0];
+
+  const abrirCadastroPendente = () => {
+    if (!proximoPendente) return;
+    setParticipanteModal(proximoPendente.env);
+    setIndiceParticipante(proximoPendente.index);
+  };
+  const enviarAutoFn = useServerFn(enviarPropostaHomeFin);
+  const onCadastroIncompleto = () => {
+    abrirCadastroPendente();
+  };
 
   // Polling automático silencioso da API do banco (Itaú, Santander, Bradesco…).
   // Enquanto a proposta estiver em análise ativa, dispara sincronização a cada 60s
@@ -353,7 +373,6 @@ function Pagina() {
     return <div className="p-6 text-sm text-muted-foreground">Carregando…</div>;
   }
 
-  const p = data.proposta as any;
   const status = p.status as PropostaStatus;
   const diasDesde = Math.max(
     0,
@@ -547,6 +566,7 @@ function Pagina() {
             clienteId={p.cliente_id}
             propostaId={id}
             envolvidos={data.envolvidos}
+            proposta={p}
             onCompletar={(env) => {
               if (env.tipo_qualificacao === "CO") {
                 setTab("COMPRADORES");
@@ -565,8 +585,20 @@ function Pagina() {
         open={Boolean(participanteModal)}
         onOpenChange={(v) => !v && setParticipanteModal(null)}
         titulo="Completar dados do participante"
+        avisoTopo={
+          participanteModal && (
+            <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive font-medium leading-relaxed">
+              <AlertTriangle className="inline-block h-4 w-4 mr-1.5 align-text-bottom" />
+              Faltam {faltantesEnvolvido(participanteModal).length} dados obrigatórios de{" "}
+              {descreverParticipante(participanteModal)} para enviar ao banco. Preencha os campos destacados em vermelho.
+            </div>
+          )
+        }
+        participanteIndex={indiceParticipante}
+        totalParticipantes={totalPendentes}
         inicial={participanteModal ? envolvidoParaForm(participanteModal) : undefined}
         propostaId={id}
+        focarPendencias={true}
         onSalvar={async (principal, conjuge) => {
           if (!participanteModal?.id) return;
           try {
@@ -594,13 +626,20 @@ function Pagina() {
               });
             }
             toast.success("Dados do participante atualizados.");
-            qc.invalidateQueries({ queryKey: ["proposta", id] });
-            setParticipanteModal(null);
+            await qc.invalidateQueries({ queryKey: ["proposta", id] });
+            
+            // Avança para o próximo pendente ou habilita o botão
+            const novosPendentes = pendentes.filter((item: any) => item.env.id !== participanteModal.id);
+            if (novosPendentes.length > 0) {
+              setParticipanteModal(novosPendentes[0].env);
+              setIndiceParticipante(novosPendentes[0].index);
+            } else {
+              setParticipanteModal(null);
+            }
           } catch (e: any) {
             toast.error(e?.message ?? "Falha ao salvar participante.");
           }
         }}
-        focarPendencias
         onSalvoPermanecer={() => {
            // O modal fecha no onSalvar. Se quisermos que fique aberto:
            // setParticipanteModal(null);
