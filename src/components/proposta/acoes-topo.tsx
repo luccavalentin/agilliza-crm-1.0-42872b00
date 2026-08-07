@@ -37,13 +37,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  enviarPropostaHomeFin,
   cancelarProposta,
   moverStatusProposta,
   sincronizarProposta,
-  ressincronizarDadosParticipantes,
 } from "@/lib/propostas/propostas.functions";
-import { faltantesEnvolvido, descreverParticipante } from "@/lib/propostas/campos-obrigatorios";
+import { useEnviarProposta } from "@/hooks/use-enviar-proposta";
+import { descreverParticipante } from "@/lib/propostas/campos-obrigatorios";
 import { bancoJaEnviado } from "@/components/proposta/status-bancos-proposta";
 import { TRANSICOES, type PropostaStatus } from "@/lib/propostas/state-machine";
 import { statusProposta } from "@/components/propostas/status";
