@@ -356,6 +356,7 @@ export function ResultadoInlineAmbos({ simulacaoIdSac, simulacaoIdPrice, onFecha
                           rotulo="Taxa a.a."
                           valor={b.taxa_juros_ano != null ? formatPercent(b.taxa_juros_ano / 100) : "—"}
                         />
+                        <MobileStat rotulo="Prazo" valor={`${l.simulacao.prazo}m`} />
                         <MobileStat
                           rotulo="Prazo máx"
                           valor={prazoMaxTexto(b)}
