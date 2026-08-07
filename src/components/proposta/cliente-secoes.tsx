@@ -24,13 +24,16 @@ export function ClienteSecao({
   propostaId,
   destacarObrigatorios,
   onSalvoComprador,
+  idBanco,
 }: {
   clienteId: string | null | undefined;
   secao: SecaoCliente;
   propostaId?: string;
   destacarObrigatorios?: boolean;
   onSalvoComprador?: () => void;
+  idBanco?: number;
 }) {
+
 
   const getCli = useServerFn(getCliente);
   const getEnd = useServerFn(getEndereco);
