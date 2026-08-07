@@ -1414,7 +1414,7 @@ export const cancelarProposta = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     const { data: prop } = await supabase
       .from("propostas")
-      .select("status, enviada_em")
+      .select("status, homefin_id_oportunidade")
       .eq("id", data.proposta_id)
       .maybeSingle();
     if (!prop) throw new Error("Proposta não encontrada.");
@@ -1441,23 +1441,29 @@ export const cancelarProposta = createServerFn({ method: "POST" })
       ator_id: userId,
     });
 
-    if (prop.enviada_em) {
-      // Notifica o banco do cancelamento em background — o cancelamento local
-      // já está persistido e não deve esperar a integração (que pode demorar).
+    if (prop.homefin_id_oportunidade) {
+      // Notifica o banco do cancelamento em background.
       const notificarBanco = (async () => {
         try {
           const { cancelarPropostaHomefinImpl } = await import("./enviar.server");
           await cancelarPropostaHomefinImpl({ propostaId: data.proposta_id, supabase });
-        } catch {
-          /* falha externa não bloqueia o cancelamento local */
+        } catch (e) {
+          // Erro já logado dentro da implementação (historico e flag pendente)
+          console.error("[Cancelamento] Erro ao notificar banco:", e);
         }
       })();
+      
       const waitUntil = (globalThis as any)?.ctx?.waitUntil ?? (globalThis as any)?.waitUntil;
-      if (typeof waitUntil === "function") waitUntil(notificarBanco);
-      else await notificarBanco;
+      if (typeof waitUntil === "function") {
+        waitUntil(notificarBanco);
+      } else {
+        // Se não houver waitUntil (dev ou runtime limitado), não bloqueamos o retorno ao usuário
+        notificarBanco.catch(() => {});
+      }
     }
     return { ok: true };
   });
+
 
 /** ===== Enviar / reenviar ao banco ===== */
 export const enviarPropostaHomeFin = createServerFn({ method: "POST" })
