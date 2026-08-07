@@ -169,6 +169,18 @@ export function ClienteForm({
   const set = <K extends keyof ClienteFormValues>(k: K, val: ClienteFormValues[K]) =>
     setV((prev) => ({ ...prev, [k]: val }));
 
+  // Foca no primeiro campo com erro quando destacarObrigatorios é ativado
+  useEffect(() => {
+    if (destacarObrigatorios) {
+      const t = setTimeout(() => {
+        const alvo = document.querySelector<HTMLElement>(".border-destructive");
+        alvo?.scrollIntoView({ block: "center", behavior: "smooth" });
+        alvo?.focus?.();
+      }, 150);
+      return () => clearTimeout(t);
+    }
+  }, [destacarObrigatorios]);
+
   // Busca automática do endereço pelo CEP (ViaCEP) — apenas visual/preenchimento.
   async function buscarCep(cepRaw: string) {
     const cep = cepRaw.replace(/\D/g, "");

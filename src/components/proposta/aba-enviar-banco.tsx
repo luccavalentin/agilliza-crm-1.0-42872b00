@@ -42,6 +42,7 @@ import {
   faltantesEnvolvido,
   descreverParticipante,
   listarLabels,
+  QUALIFICACAO_LABEL,
 } from "@/lib/propostas/campos-obrigatorios";
 import { ParticipanteDialog } from "./participante-form";
 import {
@@ -286,17 +287,24 @@ export function AbaEnviarBanco({
                     <div className="flex items-start justify-between gap-2">
                       <div className="space-y-1">
                         <p className="text-sm font-medium leading-none text-foreground">
-                          {descreverParticipante(env)}
+                          {env.nome}
+                        </p>
+                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                          {QUALIFICACAO_LABEL[env.tipo_qualificacao] ?? env.tipo_qualificacao}
                         </p>
                         {ok ? (
-                          <p className="text-xs text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                          <p className="text-xs text-emerald-600 dark:text-emerald-400 flex items-center gap-1 pt-1">
                             <CheckCircle2 className="h-3 w-3" /> Todos os dados preenchidos
                           </p>
                         ) : (
-                          <p className="text-xs text-destructive flex items-start gap-1">
-                            <AlertTriangle className="h-3 w-3 mt-0.5 shrink-0" />
-                            <span>Faltam: {listarLabels(faltantes)}</span>
-                          </p>
+                          <div className="pt-1.5 space-y-1">
+                            <p className="text-[11px] font-bold text-destructive uppercase flex items-center gap-1">
+                              <AlertTriangle className="h-3 w-3" /> PENDENTE
+                            </p>
+                            <p className="text-xs text-destructive/80 leading-relaxed italic">
+                              Falta: {listarLabels(faltantes)}
+                            </p>
+                          </div>
                         )}
                       </div>
                       {!ok && (
