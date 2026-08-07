@@ -939,7 +939,7 @@ export async function enviarSimulacaoImpl({
           await supabase.from("simulacao_historico").insert({
             simulacao_id: simulacaoId,
             tipo: "ajuste",
-            descricao: `Prazo ajustado automaticamente de ${prazoBanco} para ${prazoSolicitado} meses conforme o limite devolvido pelo Bradesco para terreno.`,
+            descricao: `Prazo ajustado automaticamente de ${prazoBanco} para ${prazoSolicitado} meses conforme o mínimo devolvido pela API do banco.`,
             ator_id: userId,
           });
           sim.prazo = prazoSolicitado;
