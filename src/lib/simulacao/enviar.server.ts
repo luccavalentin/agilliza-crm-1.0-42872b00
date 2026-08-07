@@ -14,6 +14,7 @@ import { prazoMaximoParaProponentes, PRAZO_MIN } from "./prazo";
 import {
   validarCamposSimulacao,
   validarCamposParticipante,
+  mensagemCamposFaltantes,
 } from "./campos-obrigatorios";
 
 interface EnviarArgs {
