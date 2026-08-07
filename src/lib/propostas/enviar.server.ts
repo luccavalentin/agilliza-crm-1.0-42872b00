@@ -225,7 +225,7 @@ async function renovarSimulacaoSeConsumida({
   );
   if (!(valorImovel > 0) || !(valorFinanciamento > 0) || !(prazo > 0)) {
     throw new Error(
-      `Dados financeiros incompletos para reenviar ao ${pb.nome_banco ?? "banco"}. Revise valor do imóvel, financiamento e prazo.`,
+      `O valor do imóvel, o financiamento e o prazo não podem ser zero. Por favor, revise os dados financeiros antes de reenviar ao ${pb.nome_banco ?? "banco"}.`,
     );
   }
   const financiarDespesas = Boolean(prop.financia_despesas_cartorarias ?? simLocal?.fg_financiar_despesas);
@@ -465,6 +465,40 @@ async function garantirEnderecoParticipantes({
   ctx: { simulacao_id: any; proposta_id: string; correspondente_id: any };
   supabase: SupabaseClient<any, any, any>;
 }): Promise<void> {
+  // Ressincroniza endereços de cliente_enderecos para proposta_envolvidos antes do envio
+  const { data: envsToSync } = await supabase
+    .from("proposta_envolvidos")
+    .select("id, cliente_id, tipo_qualificacao")
+    .eq("proposta_id", prop.id);
+
+  if (envsToSync) {
+    for (const envSync of envsToSync) {
+      if (!envSync.cliente_id) continue;
+      const { data: endSync } = await supabase
+        .from("cliente_enderecos")
+        .select("*")
+        .eq("cliente_id", envSync.cliente_id)
+        .order("principal", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (endSync) {
+        await supabase
+          .from("proposta_envolvidos")
+          .update({
+            cep: endSync.cep,
+            logradouro: endSync.logradouro,
+            numero_logradouro: endSync.numero,
+            complemento: endSync.complemento,
+            bairro: endSync.bairro,
+            municipio: endSync.cidade,
+            uf: endSync.uf,
+          } as any)
+          .eq("id", envSync.id);
+      }
+    }
+  }
+
   let participantes: any[] = [];
   try {
     const resp = await chamarIntegracao<any>(
@@ -560,6 +594,13 @@ async function garantirEnderecoParticipantes({
     // principal está casado ou em união estável. Sempre reenviamos, pois a
     // oportunidade pode ter sido criada sem esses campos.
     const casado = ehPrincipal && exigeConjugePorEstadoCivil(estadoCivil);
+    if (casado) {
+      const cpfTit = soDigitos(env?.cpf_cnpj ?? src?.documento ?? prop.cpf_cnpj);
+      const cpfConj = soDigitos(conjuge?.cpf_cnpj ?? src?.conjuge_cpf ?? sim?.cpf_conjuge);
+      if (cpfTit && cpfConj && cpfTit === cpfConj) {
+        throw new Error(`O CPF do titular e do cônjuge não podem ser iguais (${cpfTit}). Por favor, corrija o cadastro.`);
+      }
+    }
     const dadosConjuge = casado
       ? {
           nomeConjuge:
@@ -668,6 +709,26 @@ async function garantirEnderecoParticipantes({
       uf: uf ?? undefined,
       ...dadosConjuge,
     };
+
+    // Validação de endereço obrigatório na proposta
+    if (!payload.logradouro || !payload.numeroLogradouro) {
+      throw new Error(`O endereço (logradouro e número) é obrigatório para enviar a proposta (${payload.nomeParticipante}).`);
+    }
+
+    // Validação de cônjuge obrigatório na proposta para casados/UE
+    if (casado) {
+      const faltantesConj = [
+        !payload.nomeConjuge && "Nome do cônjuge",
+        !payload.cpfConjuge && "CPF do cônjuge",
+        !payload.dataNascimentoConjuge && "Data de nascimento do cônjuge",
+        !payload.tipoEstadoCivilConjuge && "Estado civil do cônjuge",
+        !payload.numeroDocumentoConjuge && "Documento do cônjuge",
+      ].filter(Boolean);
+
+      if (faltantesConj.length > 0) {
+        throw new Error(`Dados do cônjuge obrigatórios para ${payload.nomeParticipante}: ${faltantesConj.join(", ")}.`);
+      }
+    }
 
 
     try {
@@ -811,6 +872,14 @@ async function enviarPropostaImplInner({
   // ao banco. Cada envio mantém seu próprio try/catch: a falha de um (ex.:
   // Itaú recusando por validação) não impede o envio dos demais.
   const enviarBancoIntegracao = async (b: any): Promise<EnviarResultado["bancos"][number]> => {
+    // Garantia de que prazo, valor do imóvel e financiamento não são zero
+    const valImovel = num(prop.valor_imovel);
+    const valFinan = num(prop.valor_financiamento);
+    const pr = num(prop.prazo);
+    if (!(valImovel > 0) || !(valFinan > 0) || !(pr > 0)) {
+      throw new Error(`A proposta não pode ser enviada com valor do imóvel, financiamento ou prazo zerados (${b.nome_banco}).`);
+    }
+
     try {
       await garantirEnderecoParticipantes({
         prop,
