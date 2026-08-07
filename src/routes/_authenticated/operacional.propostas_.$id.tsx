@@ -238,7 +238,7 @@ function Pagina() {
         router.navigate({
             to: "/operacional/propostas/$id",
             params: { id },
-            search: (prev) => {
+            search: (prev: any) => {
                 const { abrir_cadastro: _, ...rest } = prev;
                 return rest;
             },
