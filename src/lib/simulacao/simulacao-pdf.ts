@@ -691,7 +691,10 @@ export function baixarSimulacaoPDF(input: SimulacaoPdfInput) {
 
   const kpis: ReportKpi[] = [
     { label: "Valor do imóvel", valor: formatBRL(s.valor_imovel) },
-    { label: "Financiamento", valor: formatBRL(s.valor_financiamento) },
+    { 
+      label: "Financiamento", 
+      valor: formatBRL((Number(s.valor_financiamento) || 0) + (Number(s.valor_despesas_financiadas) || 0)) 
+    },
     { label: "Entrada", valor: formatBRL(s.valor_entrada) },
     { label: "Prazo", valor: s.prazo ? `${s.prazo} meses` : "—" },
     { label: "Sistema", valor: sistemaKpi },
