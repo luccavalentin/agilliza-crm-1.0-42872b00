@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { Database } from "@/integrations/supabase/types";
 
 export interface OrfaHomefin {
   tipo: "proposta" | "simulacao";
@@ -19,12 +20,20 @@ export const listarOportunidadesOrfas = createServerFn({ method: "GET" })
     const { supabase } = context;
 
     // 1. Propostas canceladas ou excluídas com homefin_id_oportunidade
+    // Usamos query builder flexível para evitar erros de tipagem com relacionamentos complexos
     const { data: props, error: errP } = await supabase
       .from("propostas")
-      .select("id, numero_proposta, homefin_id_oportunidade, status, deleted_at, cancelamento_pendente_banco, envolvido_principal:proposta_envolvidos(nome_completo)")
+      .select(`
+        id, 
+        numero_proposta, 
+        homefin_id_oportunidade, 
+        status, 
+        deleted_at, 
+        cancelamento_pendente_banco,
+        proposta_envolvidos(nome_completo, tipo_qualificacao)
+      `)
       .not("homefin_id_oportunidade", "is", null)
       .or("status.eq.cancelada,deleted_at.not.is.null")
-      .eq("proposta_envolvidos.tipo_qualificacao", "titular")
       .limit(300);
 
     if (errP) throw errP;
@@ -42,11 +51,14 @@ export const listarOportunidadesOrfas = createServerFn({ method: "GET" })
     const result: OrfaHomefin[] = [];
 
     (props ?? []).forEach((p: any) => {
+      // Filtra o titular localmente para garantir o nome correto
+      const titular = p.proposta_envolvidos?.find((e: any) => e.tipo_qualificacao === "titular");
+      
       result.push({
         tipo: "proposta",
         id: p.id,
         codigo: p.numero_proposta || `ID: ${p.id.slice(0, 8)}`,
-        cliente: p.envolvido_principal?.[0]?.nome_completo || "Não identificado",
+        cliente: titular?.nome_completo || "Não identificado",
         id_oportunidade: p.homefin_id_oportunidade,
         status_crm: p.deleted_at ? "Excluída" : "Cancelada",
         cancelamento_pendente: !!p.cancelamento_pendente_banco,
@@ -87,24 +99,29 @@ export const cancelarOrfaEmLote = createServerFn({ method: "POST" })
     for (const id of data.ids) {
       try {
         const table = data.tipo === "proposta" ? "propostas" : "simulacoes";
-        const { data: item } = await supabase
-          .from(table)
+        const { data: item, error: fetchErr } = await supabase
+          .from(table as any)
           .select("homefin_id_oportunidade, simulacao_id, correspondente_id")
           .eq("id", id)
           .maybeSingle();
 
-        if (item?.homefin_id_oportunidade) {
+        if (fetchErr) throw fetchErr;
+
+        if (item && (item as any).homefin_id_oportunidade) {
           await cancelarOportunidadeHomefinGenerico({
-            idOportunidade: item.homefin_id_oportunidade,
+            idOportunidade: (item as any).homefin_id_oportunidade,
             simulacaoId: data.tipo === "simulacao" ? id : (item as any).simulacao_id,
             propostaId: data.tipo === "proposta" ? id : null,
-            correspondenteId: item.correspondente_id,
+            correspondenteId: (item as any).correspondente_id,
             supabase,
           });
 
           // Se for proposta, limpa flag de pendência
           if (data.tipo === "proposta") {
-            await supabase.from("propostas").update({ cancelamento_pendente_banco: false } as any).eq("id", id);
+            await supabase
+              .from("propostas")
+              .update({ cancelamento_pendente_banco: false } as any)
+              .eq("id", id);
           }
           sucessos++;
           relatorio.push(`OK: ${id} cancelado no banco.`);
@@ -117,3 +134,4 @@ export const cancelarOrfaEmLote = createServerFn({ method: "POST" })
 
     return { sucessos, falhas, relatorio };
   });
+
