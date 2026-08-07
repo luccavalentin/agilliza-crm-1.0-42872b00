@@ -170,6 +170,7 @@ interface TokenInfo {
  */
 let _tokenCache: { info: TokenInfo; expiresAt: number } | null = null;
 let _tokenEmVoo: Promise<TokenInfo> | null = null;
+const _pollingQueue = Promise.resolve();
 
 async function solicitarToken(): Promise<TokenInfo> {
   const { base, secretId, secretKey } = config();
@@ -216,7 +217,9 @@ async function solicitarToken(): Promise<TokenInfo> {
 
 /** Retorna token válido, reutilizando cache e deduplicando chamadas simultâneas. */
 export async function obterToken(forcarRenovacao = false): Promise<TokenInfo> {
-  if (!forcarRenovacao && _tokenCache && _tokenCache.expiresAt > Date.now()) {
+  // Se temos cache válido e NÃO estamos forçando renovação, retorna cache.
+  // Usamos margem de 1 minuto para evitar expiração durante o uso.
+  if (!forcarRenovacao && _tokenCache && _tokenCache.expiresAt > Date.now() + 60000) {
     return _tokenCache.info;
   }
   // Se outra chamada já está renovando, aguarda o mesmo resultado.
@@ -238,6 +241,35 @@ export interface HomefinRequestCtx {
 
 /** Executa uma chamada autenticada à integração, registrando log. */
 export async function chamarIntegracao<T = unknown>(
+  endpoint: string,
+  method: "GET" | "POST" | "PUT" | "DELETE",
+  body: unknown | undefined,
+  ctx: HomefinRequestCtx = {},
+): Promise<T> {
+  // Serialização de chamadas para evitar rajadas de 401 que invalidam tokens
+  // Apenas para endpoints que costumam ser chamados em paralelo (polling/oportunidade/participante)
+  const deveSerializar = !endpoint.startsWith("/auth") && !endpoint.includes("/dominios");
+  
+  if (deveSerializar) {
+    return (async () => {
+      // @ts-ignore - _pollingQueue is a simple Promise.resolve()
+      return new Promise((resolve, reject) => {
+        // @ts-ignore
+        (globalThis._hfQueue = (globalThis._hfQueue || Promise.resolve()).then(async () => {
+          try {
+            resolve(await executarChamada<T>(endpoint, method, body, ctx));
+          } catch (e) {
+            reject(e);
+          }
+        }));
+      });
+    })();
+  }
+  
+  return executarChamada<T>(endpoint, method, body, ctx);
+}
+
+async function executarChamada<T = unknown>(
   endpoint: string,
   method: "GET" | "POST" | "PUT" | "DELETE",
   body: unknown | undefined,
