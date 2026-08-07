@@ -1082,7 +1082,7 @@ async function enviarPropostaImplInner({
   // Evitamos uma consulta imediata aqui para não transformar códigos
   // intermediários em falso "erro de envio" antes do banco concluir a análise.
 
-  return { status: novoStatus, bancos: resultados };
+  return { status: novoStatusGlobal, bancos: resultados };
 
 }
 
