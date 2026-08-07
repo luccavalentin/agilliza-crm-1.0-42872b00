@@ -175,7 +175,8 @@ export function DialogVendedor({
                 {casado && (
                   <Campo label={`Regime de casamento ${idBanco === 33 ? "*" : ""}`}>
                     <Select value={form.regime_casamento} onValueChange={(v) => set({ regime_casamento: v })}>
-                      <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                      <SelectTrigger className={cls("regime_casamento")}><SelectValue placeholder="Selecione" /></SelectTrigger>
+
                       <SelectContent>
                         {REGIMES.map((o) => <SelectItem key={o.v} value={o.v}>{o.l}</SelectItem>)}
                       </SelectContent>
