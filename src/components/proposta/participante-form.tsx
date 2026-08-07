@@ -1,4 +1,6 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,7 +13,8 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { ESTADO_CIVIL_COM_REGIME } from "@/lib/propostas/dominios";
-import { LABEL_POR_CHAVE } from "@/lib/propostas/campos-obrigatorios";
+import { LABEL_POR_CHAVE, faltantesEnvolvido } from "@/lib/propostas/campos-obrigatorios";
+import { ressincronizarDadosParticipantes } from "@/lib/propostas/propostas.functions";
 
 import { CamposParticipante } from "./participante-form/campos-participante";
 import {
