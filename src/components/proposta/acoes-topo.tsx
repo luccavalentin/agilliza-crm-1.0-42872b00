@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -9,8 +9,15 @@ import {
   Download,
   RefreshCw,
   ChevronDown,
+  AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -34,7 +41,9 @@ import {
   cancelarProposta,
   moverStatusProposta,
   sincronizarProposta,
+  ressincronizarDadosParticipantes,
 } from "@/lib/propostas/propostas.functions";
+import { faltantesEnvolvido, descreverParticipante } from "@/lib/propostas/campos-obrigatorios";
 import { bancoJaEnviado } from "@/components/proposta/status-bancos-proposta";
 import { TRANSICOES, type PropostaStatus } from "@/lib/propostas/state-machine";
 import { statusProposta } from "@/components/propostas/status";
@@ -69,16 +78,35 @@ export function AcoesTopo({
   const cancelarFn = useServerFn(cancelarProposta);
   const moverFn = useServerFn(moverStatusProposta);
   const sincronizarFn = useServerFn(sincronizarProposta);
+  const ressincronizarFn = useServerFn(ressincronizarDadosParticipantes);
   const status = proposta.status as PropostaStatus;
   const proximos = TRANSICOES[status].filter((s) => s !== "cancelada");
+
+  const pendencias = useMemo(() => {
+    return (envolvidos ?? []).map(env => ({
+      env,
+      faltantes: faltantesEnvolvido(env)
+    })).filter(p => p.faltantes.length > 0);
+  }, [envolvidos]);
+
+  const bloqueado = pendencias.length > 0;
 
   async function enviar() {
     if (jaEnviou && bancosPendentes.length === 0) {
       toast.info("Nenhum banco novo selecionado. Selecione outro banco para enviar.");
       return;
     }
+
     setBusy(true);
     try {
+      // 1. Ressincroniza dados antes de qualquer tentativa (P1)
+      const res = await ressincronizarFn({ data: { proposta_id: propostaId } });
+      if (res.alterados > 0) {
+        toast.success(`${res.alterados} dado(s) atualizado(s) do cadastro.`);
+        await qc.invalidateQueries({ queryKey: ["proposta", propostaId] });
+      }
+
+      // 2. Tenta enviar
       const r = await enviarFn({ data: { proposta_id: propostaId } });
       toast.success(`Proposta enviada (${r.status}).`);
       qc.invalidateQueries({ queryKey: ["proposta", propostaId] });
@@ -155,25 +183,66 @@ export function AcoesTopo({
     <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center lg:justify-end">
       <div className="flex flex-wrap items-center gap-2">
         {(status === "rascunho" || status === "erro_envio") && (
-          <Button size="sm" onClick={enviar} disabled={busy}>
-            {busy ? (
-              <Loader2 className="mr-1 h-4 w-4 animate-spin" />
-            ) : (
-              <Send className="mr-1 h-4 w-4" />
-            )}
-            {proposta.enviada_em ? "Reenviar" : "Enviar ao banco"}
-          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span>
+                  <Button size="sm" onClick={enviar} disabled={busy || bloqueado}>
+                    {busy ? (
+                      <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Send className="mr-1 h-4 w-4" />
+                    )}
+                    {proposta.enviada_em ? "Reenviar" : "Enviar ao banco"}
+                  </Button>
+                </span>
+              </TooltipTrigger>
+              {bloqueado && (
+                <TooltipContent className="max-w-xs space-y-2">
+                  <p className="font-semibold text-destructive flex items-center gap-1">
+                    <AlertTriangle className="h-3 w-3" /> Dados incompletos
+                  </p>
+                  <ul className="text-xs space-y-1">
+                    {pendencias.map((p, i) => (
+                      <li key={i}>• {descreverParticipante(p.env)}</li>
+                    ))}
+                  </ul>
+                  <p className="text-xs text-muted-foreground">Clique no participante na aba "Enviar ao banco" para completar.</p>
+                </TooltipContent>
+              )}
+            </Tooltip>
+          </TooltipProvider>
         )}
         {podeEnviarNovos && (
-          <Button size="sm" onClick={enviar} disabled={busy} variant="secondary">
-            {busy ? (
-              <Loader2 className="mr-1 h-4 w-4 animate-spin" />
-            ) : (
-              <Send className="mr-1 h-4 w-4" />
-            )}
-            Enviar a{" "}
-            {bancosPendentes.length > 1 ? `${bancosPendentes.length} novos bancos` : "novo banco"}
-          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span>
+                  <Button size="sm" onClick={enviar} disabled={busy || bloqueado} variant="secondary">
+                    {busy ? (
+                      <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Send className="mr-1 h-4 w-4" />
+                    )}
+                    Enviar a{" "}
+                    {bancosPendentes.length > 1 ? `${bancosPendentes.length} novos bancos` : "novo banco"}
+                  </Button>
+                </span>
+              </TooltipTrigger>
+              {bloqueado && (
+                <TooltipContent className="max-w-xs space-y-2">
+                  <p className="font-semibold text-destructive flex items-center gap-1">
+                    <AlertTriangle className="h-3 w-3" /> Dados incompletos
+                  </p>
+                  <ul className="text-xs space-y-1">
+                    {pendencias.map((p, i) => (
+                      <li key={i}>• {descreverParticipante(p.env)}</li>
+                    ))}
+                  </ul>
+                </TooltipContent>
+              )}
+            </Tooltip>
+          </TooltipProvider>
         )}
         {proposta.homefin_id_oportunidade && status !== "cancelada" && (
           <Button size="sm" variant="outline" onClick={sincronizar} disabled={busy}>

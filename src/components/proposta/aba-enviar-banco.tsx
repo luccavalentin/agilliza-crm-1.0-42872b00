@@ -31,7 +31,19 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  faltantesEnvolvido,
+  descreverParticipante,
+  listarLabels,
+} from "@/lib/propostas/campos-obrigatorios";
+import { ParticipanteDialog } from "./participante-form";
 import {
   listarDocumentos,
   anexarDocumento,
@@ -95,9 +107,13 @@ function ehFormatoBanco(d: { mime_type?: string | null; nome_arquivo?: string | 
 export function AbaEnviarBanco({
   clienteId,
   propostaId,
+  envolvidos = [],
+  onCompletar,
 }: {
   clienteId: string | null | undefined;
   propostaId: string;
+  envolvidos?: any[];
+  onCompletar?: (participante: any) => void;
 }) {
   const qc = useQueryClient();
   const listar = useServerFn(listarDocumentos);
@@ -252,7 +268,56 @@ export function AbaEnviarBanco({
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
+      {/* Checklist de Dados Obrigatórios */}
+      {envolvidos.length > 0 && (
+        <div className="space-y-3">
+          <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+            <UserCheck className="h-4 w-4 text-primary" />
+            Checklist de dados obrigatórios
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {envolvidos.map((env) => {
+              const faltantes = faltantesEnvolvido(env);
+              const ok = faltantes.length === 0;
+              return (
+                <Card key={env.id} className={cn("overflow-hidden border-l-4 transition-colors", ok ? "border-l-emerald-500 bg-emerald-500/5" : "border-l-destructive bg-destructive/5")}>
+                  <CardContent className="p-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="space-y-1">
+                        <p className="text-sm font-medium leading-none text-foreground">
+                          {descreverParticipante(env)}
+                        </p>
+                        {ok ? (
+                          <p className="text-xs text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                            <CheckCircle2 className="h-3 w-3" /> Todos os dados preenchidos
+                          </p>
+                        ) : (
+                          <p className="text-xs text-destructive flex items-start gap-1">
+                            <AlertTriangle className="h-3 w-3 mt-0.5 shrink-0" />
+                            <span>Faltam: {listarLabels(faltantes)}</span>
+                          </p>
+                        )}
+                      </div>
+                      {!ok && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-7 px-2 text-xs text-primary hover:text-primary hover:bg-primary/10"
+                          onClick={() => onCompletar?.(env)}
+                        >
+                          Completar
+                        </Button>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       <input ref={inputRef} type="file" multiple className="hidden" onChange={onFile} />
 
       {/* Disclaimer PDF — enxuto */}

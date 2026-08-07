@@ -10,6 +10,8 @@ import {
   sanitizarMensagemErro,
   TIPO_BANCO_SANTANDER,
 } from "@/lib/simulacao/homefin.server";
+import { faltantesEnvolvido } from "./campos-obrigatorios";
+import { msgCadastroIncompleto } from "./mensagens-envio";
 
 import { transicaoPermitida, type PropostaStatus } from "./state-machine";
 
