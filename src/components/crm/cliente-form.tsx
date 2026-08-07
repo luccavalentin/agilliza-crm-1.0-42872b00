@@ -506,7 +506,7 @@ export function ClienteForm({
         alternarPortal={alternarPortal}
       />
 
-      <DadosBasicosSection v={v} set={set} setV={setV} erros={erros} />
+      <DadosBasicosSection v={v} set={set} setV={setV} erros={erros} idBanco={idBanco} />
 
       {casadoPF && <ConjugeSection v={v} set={set} />}
 
