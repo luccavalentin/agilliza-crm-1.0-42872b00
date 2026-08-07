@@ -141,8 +141,11 @@ import {
 export const Route = createFileRoute("/_authenticated/operacional/propostas_/$id")({
   head: () => ({ meta: [{ title: "Proposta — Agilliza" }] }),
   beforeLoad: () => assertModuloPermitido("operacional.propostas"),
-  validateSearch: (search: Record<string, unknown>): { complementar?: 1 } =>
-    search.complementar === 1 || search.complementar === "1" ? { complementar: 1 } : {},
+  validateSearch: (search: Record<string, unknown>): { complementar?: 1; abrir_cadastro?: string } =>
+    ({ 
+      complementar: search.complementar === 1 || search.complementar === "1" ? 1 : undefined,
+      abrir_cadastro: typeof search.abrir_cadastro === 'string' ? search.abrir_cadastro : undefined
+    }),
   component: Pagina,
   errorComponent: () => (
     <div className="p-6 text-sm text-muted-foreground">Não foi possível carregar a proposta.</div>
