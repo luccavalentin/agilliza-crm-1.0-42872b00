@@ -852,21 +852,42 @@ export async function enviarSimulacaoImpl({
             throw erroIntegracao;
           }
 
-          const oportunidadeAjustada = { ...dadosOportunidade, prazo: prazoSolicitado };
+          // O teto por idade dos proponentes é intransponível: se o prazo
+          // exigido pelo banco o ultrapassar, a operação é inviável e a
+          // mensagem original do banco deve prevalecer.
+          const tetoIdade = prazoMaximoParaProponentes(sim);
+          if (tetoIdade != null && prazoSolicitado > tetoIdade) {
+            throw erroIntegracao;
+          }
+
+          // O PUT /oportunidade aceita SOMENTE estes três campos. Enviar o
+          // objeto completo devolve HTTP 500 INTERNAL_ERROR.
+          const oportunidadeAjustada = {
+            valorImovel: num(sim.valor_imovel),
+            valorFinanciamento: num(sim.valor_financiamento),
+            prazo: prazoSolicitado,
+          };
           const simulacaoAjustada = { ...putPayload, prazo: prazoSolicitado };
 
-          await chamarIntegracao<any>(
-            `/oportunidade/${idOportunidade}`,
-            "PUT",
-            oportunidadeAjustada,
-            ctx,
-          );
-          await chamarIntegracao<any>(
-            `/oportunidade/${idOportunidade}/simulacao/${idSimulacao}`,
-            "PUT",
-            simulacaoAjustada,
-            ctx,
-          );
+          try {
+            await chamarIntegracao<any>(
+              `/oportunidade/${idOportunidade}`,
+              "PUT",
+              oportunidadeAjustada,
+              ctx,
+            );
+            await chamarIntegracao<any>(
+              `/oportunidade/${idOportunidade}/simulacao/${idSimulacao}`,
+              "PUT",
+              simulacaoAjustada,
+              ctx,
+            );
+          } catch (erroAjuste) {
+            // Nunca deixar o erro do reenvio mascarar o motivo informado pelo
+            // banco (ex.: "prazo igual ou superior a 180").
+            console.error("[enviar.server] Falha ao ajustar prazo:", erroAjuste);
+            throw erroIntegracao;
+          }
           await supabase
             .from("simulacoes")
             .update({ prazo: prazoSolicitado })
