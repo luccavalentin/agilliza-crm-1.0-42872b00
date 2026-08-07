@@ -215,14 +215,14 @@ function Pagina() {
   const [indiceParticipante, setIndiceParticipante] = useState(0);
 
   const pendentes = useMemo(() => {
-    return (data?.envolvidos ?? []).map((env, index) => ({
+    return (envolvidos ?? []).map((env, index) => ({
       env,
       faltantes: faltantesEnvolvido(env),
       index: index + 1
     })).filter(p => p.faltantes.length > 0);
-  }, [data?.envolvidos]);
+  }, [envolvidos]);
 
-  const totalPendentes = (data?.envolvidos ?? []).length;
+  const totalPendentes = (envolvidos ?? []).length;
   const proximoPendente = pendentes[0];
 
   const abrirCadastroPendente = () => {
@@ -236,9 +236,9 @@ function Pagina() {
   };
 
 
-  const p = data?.proposta;
   const bancos = data?.bancos ?? [];
   const envolvidos = data?.envolvidos ?? [];
+  const p = data?.proposta as any;
 
   // Polling automático silencioso da API do banco (Itaú, Santander, Bradesco…).
   // Enquanto a proposta estiver em análise ativa, dispara sincronização a cada 60s
@@ -370,7 +370,6 @@ function Pagina() {
     return <div className="p-6 text-sm text-muted-foreground">Carregando…</div>;
   }
 
-  const p = data.proposta as any;
   const status = p.status as PropostaStatus;
   const diasDesde = Math.max(
     0,
