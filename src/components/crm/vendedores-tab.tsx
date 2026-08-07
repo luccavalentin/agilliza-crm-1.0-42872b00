@@ -79,6 +79,16 @@ export function VendedoresTab({ clienteId, idBanco }: { clienteId: string; idBan
     if (form.email && !validarEmail(form.email)) e.add("email");
     if (form.telefone_celular && !validarTelefone(form.telefone_celular))
       e.add("telefone_celular");
+
+    if (
+      idBanco === 33 &&
+      form.tipo_pessoa === "PF" &&
+      (form.estado_civil === "casado" || form.estado_civil === "uniao_estavel") &&
+      !form.regime_casamento
+    ) {
+      e.add("regime_casamento");
+    }
+
     setErros(e);
     if (e.size > 0) {
       const primeiro = e.has("nome")
@@ -87,10 +97,13 @@ export function VendedoresTab({ clienteId, idBanco }: { clienteId: string; idBan
           ? `${form.tipo_pessoa === "PJ" ? "CNPJ" : "CPF"} inválido.`
           : e.has("email")
             ? "E-mail inválido."
-            : "Telefone inválido.";
+            : e.has("regime_casamento")
+              ? "Informe o regime de casamento (obrigatório para Santander)."
+              : "Telefone inválido.";
       toast.error(primeiro);
       return;
     }
+
     setSalvando(true);
     try {
       await salvar({ data: { ...form, cliente_id: clienteId } as any });
