@@ -36,6 +36,7 @@ export function ParticipanteDialog({
   tipoQualificacaoFixo,
   salvando,
   onSalvar,
+  idBanco,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
@@ -48,6 +49,9 @@ export function ParticipanteDialog({
     principal: ReturnType<typeof formParaEnvolvido>,
     conjuge: ReturnType<typeof formParaEnvolvido> | null,
   ) => Promise<void> | void;
+  idBanco?: number;
+}) {
+
 }) {
   const [f, setF] = useState<ParticipanteForm>(inicial ?? VAZIO);
   const [conjuge, setConjuge] = useState<ParticipanteForm>(
