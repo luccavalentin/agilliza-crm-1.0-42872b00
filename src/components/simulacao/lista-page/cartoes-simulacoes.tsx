@@ -76,7 +76,12 @@ export function CartoesSimulacoes({
             <span className="absolute inset-y-0 left-0 w-1 bg-[var(--banco)]" />
             <div className="flex items-start justify-between gap-3 pl-1">
               <div className="min-w-0">
-                <p className="font-mono font-semibold text-primary">{s.numero_simulacao}</p>
+                <div className="flex items-center gap-2">
+                  <p className="font-mono font-semibold text-primary">{s.numero_simulacao}</p>
+                  <span className="text-[9px] font-medium text-muted-foreground uppercase tracking-tight">
+                    {formatDataHoraBR(s.created_at)}
+                  </span>
+                </div>
                 <p className="truncate text-sm font-medium text-foreground transition-colors group-hover/card:text-primary">
                   {s.nome_cliente ?? "—"}
                 </p>

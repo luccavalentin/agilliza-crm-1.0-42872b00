@@ -157,8 +157,11 @@ export function ListaDesktop({
                           </div>
                         </>
                       ) : (
-                        <div className="font-medium tabular-nums text-foreground transition-colors group-hover/row:text-[var(--banco)]">
-                          {p.numero_proposta}
+                        <div className="flex flex-col gap-0.5 font-medium tabular-nums text-foreground transition-colors group-hover/row:text-[var(--banco)]">
+                          <span>{p.numero_proposta}</span>
+                          <span className="text-[9px] font-medium text-muted-foreground uppercase tracking-tight">
+                            {formatDataHora(p.created_at)}
+                          </span>
                         </div>
                       );
                     })()}
