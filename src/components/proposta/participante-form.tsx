@@ -15,6 +15,14 @@ import {
 import { ESTADO_CIVIL_COM_REGIME } from "@/lib/propostas/dominios";
 import { LABEL_POR_CHAVE, faltantesEnvolvido } from "@/lib/propostas/campos-obrigatorios";
 import { ressincronizarDadosParticipantes } from "@/lib/propostas/propostas.functions";
+import { CamposParticipante } from "./participante-form/campos-participante";
+import {
+  camposFaltantes,
+  formParaEnvolvido,
+  VAZIO,
+  type ParticipanteForm,
+  envolvidoParaForm,
+} from "./participante-form/types";
 
 import { CamposParticipante } from "./participante-form/campos-participante";
 import {
