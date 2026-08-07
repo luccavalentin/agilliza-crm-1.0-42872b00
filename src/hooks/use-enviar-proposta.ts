@@ -89,7 +89,7 @@ export function useEnviarProposta() {
     } finally {
       setBusy(false);
     }
-  }, [enviarFn, ressincronizarFn, qc, router]);
+  }, [enviarFnDefault, ressincronizarFn, qc, router, navigate]);
 
   return { enviar, busy };
 }
