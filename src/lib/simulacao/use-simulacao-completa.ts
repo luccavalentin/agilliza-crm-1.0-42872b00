@@ -883,6 +883,14 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
       toast.error(mensagemPrazoInviavel ?? "Operação não elegível nesta modalidade.");
       return;
     }
+    // Modo "Ambos" (SAC + PRICE): o schema aceita apenas "S"/"P", então o
+    // desvio precisa vir ANTES do parse. Cada simulação é validada
+    // separadamente dentro de executarEnvioAmbos.
+    if (f.sistema_amortizacao === "B") {
+      await enviarAmbos();
+      return;
+    }
+
     // 1. Validar esquema completo (Zod)
     const parsed = completaSchema.safeParse({ ...f, id_operacao_homefin: idOperacao });
     if (!parsed.success) {
@@ -915,23 +923,6 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
     }
     setErros({});
 
-    // Problema 2: Endereço do imóvel obrigatório
-    const faltandoEndereco = [];
-    if (!f.cep_imovel?.trim()) faltandoEndereco.push("CEP");
-    if (!f.logradouro_imovel?.trim()) faltandoEndereco.push("Endereço");
-    if (!f.numero_imovel?.trim()) faltandoEndereco.push("Número");
-    if (!f.municipio_imovel?.trim()) faltandoEndereco.push("Cidade");
-    if (!f.uf_imovel?.trim()) faltandoEndereco.push("UF");
-
-    if (faltandoEndereco.length > 0) {
-      toast.error(
-        `Os dados do imóvel são obrigatórios para os bancos (especialmente Santander): ${faltandoEndereco.join(", ")}. Por favor, preencha a aba "Garantia/Imóvel".`,
-        { duration: 5000 }
-      );
-      // Opcional: ativar a aba de imóvel se houver erro nela
-      return;
-    }
-
     const imovel = Number(f.valor_imovel) || 0;
     const entrada = Number(f.valor_entrada) || 0;
     const fin = Number(f.valor_financiamento) || 0;
@@ -942,11 +933,6 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
       return;
 
     }
-    if (f.sistema_amortizacao === "B") {
-      await enviarAmbos();
-      return;
-    }
-    
     if (financiamentoExcedido) {
       toast.error(
         f.fg_financiar_despesas
