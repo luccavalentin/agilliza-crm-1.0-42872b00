@@ -78,7 +78,7 @@ function Pagina() {
 
   const obter = useServerFn(obterSimulacao);
   const listarColegasFn = useServerFn(listarColegas);
-  const padrao = useMemo(() => intervaloMesAtual(), []);
+  const padrao = useMemo(() => ({ inicio: "", fim: "" }), []);
   const [escopo, setEscopo] = useState<"todas" | "minhas">("todas");
   const [q, setQ] = useState("");
   const [busca, setBusca] = useState("");
