@@ -11,6 +11,8 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { ESTADO_CIVIL_COM_REGIME } from "@/lib/propostas/dominios";
+import { TIPO_BANCO_SANTANDER } from "@/lib/simulacao/homefin.server";
+
 import { CamposParticipante } from "./participante-form/campos-participante";
 import {
   camposFaltantes,
