@@ -27,7 +27,7 @@ export function KpiDetalheDialog({
   const k = kpis.find((x) => x.id === aberto);
   return (
     <Dialog open={!!aberto} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-h-[85vh] overflow-hidden sm:max-w-lg">
+      <DialogContent className="max-h-[85vh] overflow-hidden sm:max-w-lg flex flex-col">
         {k && (
           <>
             <DialogHeader>
@@ -39,7 +39,7 @@ export function KpiDetalheDialog({
               </DialogTitle>
               <DialogDescription>Valor atual: {k.valor}</DialogDescription>
             </DialogHeader>
-            <div className="overflow-y-auto pr-1">{k.detalhe}</div>
+            <div className="flex-1 overflow-y-auto pr-1 min-h-0">{k.detalhe}</div>
           </>
         )}
       </DialogContent>
