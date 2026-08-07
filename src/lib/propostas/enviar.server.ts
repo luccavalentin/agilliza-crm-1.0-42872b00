@@ -719,24 +719,11 @@ async function garantirEnderecoParticipantes({
       ...dadosConjuge,
     };
 
-    // Validação de endereço obrigatório na proposta
-    if (!payload.logradouro || !payload.numeroLogradouro) {
-      throw new Error(`O endereço (logradouro e número) é obrigatório para enviar a proposta (${payload.nomeParticipante}).`);
-    }
-
-    // Validação de cônjuge obrigatório na proposta para casados/UE
-    if (casado) {
-      const faltantesConj = [
-        !payload.nomeConjuge && "Nome do cônjuge",
-        !payload.cpfConjuge && "CPF do cônjuge",
-        !payload.dataNascimentoConjuge && "Data de nascimento do cônjuge",
-        !payload.tipoEstadoCivilConjuge && "Estado civil do cônjuge",
-        !payload.numeroDocumentoConjuge && "Documento do cônjuge",
-      ].filter(Boolean);
-
-      if (faltantesConj.length > 0) {
-        throw new Error(`Dados do cônjuge obrigatórios para ${payload.nomeParticipante}: ${faltantesConj.join(", ")}.`);
-      }
+    // Validação OFICIAL baseada nos 25 campos obrigatórios
+    const faltantes = faltantesEnvolvido(env || {});
+    if (faltantes.length > 0) {
+      const msg = msgCadastroIncompleto(pb.nome_banco ?? "banco", env || {}, faltantes);
+      throw new IntegracaoBancariaError(msg.texto);
     }
 
 
