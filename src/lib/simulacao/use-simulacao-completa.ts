@@ -861,6 +861,12 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
   }
 
   async function enviar() {
+    // Terreno abaixo do piso do Bradesco por limite de idade: operação não
+    // elegível — melhor avisar aqui do que receber o 422 do banco.
+    if (terrenoInviavelPorIdade) {
+      toast.error(mensagemPrazoInviavel ?? "Operação não elegível nesta modalidade.");
+      return;
+    }
     // 1. Validar esquema completo (Zod)
     const parsed = completaSchema.safeParse({ ...f, id_operacao_homefin: idOperacao });
     if (!parsed.success) {
