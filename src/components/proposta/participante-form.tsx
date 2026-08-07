@@ -150,10 +150,11 @@ export function ParticipanteDialog({
 
   async function submit() {
     setTentouEnviar(true);
-    const faltando = camposFaltantes(f);
+    const context = { regimeObrigatorio: idBanco === TIPO_BANCO_SANTANDER };
+    const faltando = camposFaltantes(f, context);
     setErros(faltando);
 
-    const c: ParticipanteForm | null = precisaConjuge && conjugeTemDados
+    const c: ParticipanteForm | null = (precisaConjuge && conjugeTemDados)
       ? {
           ...conjuge,
           tipo_qualificacao: "TI",
@@ -162,8 +163,9 @@ export function ParticipanteDialog({
           regime_casamento: f.regime_casamento,
         }
       : null;
-    const faltandoC = c ? camposFaltantes(c) : new Set<string>();
+    const faltandoC = c ? camposFaltantes(c, context) : new Set<string>();
     setErrosC(faltandoC);
+
 
     if (faltando.size > 0 || faltandoC.size > 0) {
       const total = faltando.size + faltandoC.size;
