@@ -601,6 +601,39 @@ export async function enviarSimulacaoImpl({
       ? null
       : (sim.homefin_id_oportunidade as string | null);
 
+    // Requisito 2 e 3: Não reusar oportunidade cancelada.
+    if (idOportunidade && !usaRotaSantanderHomeEquity) {
+      try {
+        const checkOp = await chamarIntegracao<any>(
+          `/oportunidade/${idOportunidade}`,
+          "GET",
+          undefined,
+          ctx,
+        );
+        const opData = checkOp?.oportunidade ?? checkOp ?? {};
+        const situacao = String(opData?.tipoSituacao ?? "").toUpperCase().charAt(0);
+        
+        // C = Cancelada, T = Contrato Emitido
+        if (situacao === "C" || situacao === "T") {
+          console.log(`[HomeFin] Oportunidade ${idOportunidade} está em estado terminal (${situacao}). Criando uma nova.`);
+          idOportunidade = null;
+          // Se for cancelada, avisamos no histórico para transparência (Requisito 3)
+          if (situacao === "C") {
+            await supabase.from("simulacao_historico").insert({
+              simulacao_id: simulacaoId,
+              tipo: "info",
+              descricao: "A oportunidade desta simulação estava cancelada na integração. Uma nova oportunidade será gerada automaticamente.",
+              ator_id: userId,
+            });
+          }
+        }
+      } catch (e) {
+        console.warn(`[HomeFin] Falha ao validar estado da oportunidade ${idOportunidade}:`, e);
+        // Em caso de erro 404 ou falha crítica de leitura, melhor criar uma nova
+        idOportunidade = null;
+      }
+    }
+
     // Campos que dependem da simulação atual e podem ter mudado desde a
     // primeira criação da oportunidade (ex.: usuário marcou "financiar despesas"
     // e reenviou). Precisam ser sincronizados também no reenvio, senão o banco
