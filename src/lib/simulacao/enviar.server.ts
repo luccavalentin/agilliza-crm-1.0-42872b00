@@ -786,17 +786,15 @@ export async function enviarSimulacaoImpl({
       let timeoutId: any;
       const timeoutPromise = new Promise((_, reject) => {
         timeoutId = setTimeout(() => {
-          reject(new Error("sem resposta do banco no tempo esperado — reenviar"));
+          reject(new Error(`Timeout: o banco ${b.nome_banco || ''} não respondeu em 240s.`));
         }, TIMEOUT_BANCO_MS);
       });
 
       const processarBanco = async () => {
-
-
-      // O contrato oficial não define teto fixo de 360 meses para o Itaú.
-      // Enviamos o prazo já validado pela idade, limitado a até 420 meses.
-      const prazoBanco = num(sim.prazo);
-      try {
+        // O contrato oficial não define teto fixo de 360 meses para o Itaú.
+        // Enviamos o prazo já validado pela idade, limitado a até 420 meses.
+        const prazoBanco = num(sim.prazo);
+        try {
         const simPayload = {
           valorImovel: num(sim.valor_imovel),
           valorFinanciamento: num(sim.valor_financiamento),
