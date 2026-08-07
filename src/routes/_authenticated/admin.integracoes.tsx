@@ -104,7 +104,11 @@ function Pagina() {
           <TabsTrigger value="health">
             <Activity className="mr-2 size-4" /> Conectividade
           </TabsTrigger>
+          <TabsTrigger value="orfas">
+            <AlertTriangle className="mr-2 size-4" /> Oportunidades Órfãs
+          </TabsTrigger>
         </TabsList>
+
 
         <TabsContent value="bancos" className="mt-4">
           <div className="overflow-x-auto rounded-lg border border-border">
