@@ -363,7 +363,7 @@ export function ResultadoInlineAmbos({ simulacaoIdSac, simulacaoIdPrice, onFecha
                         <MobileStat rotulo="Prazo" valor={`${l.simulacao.prazo}m`} />
                         <MobileStat
                           rotulo="Prazo máx"
-                          valor={prazoMaxTexto(b)}
+                          valor={prazoMaxTexto(b, l.simulacao)}
                         />
                         <MobileStat rotulo="Financ. máx" valor={financMaxTexto(b)} />
                         <MobileStat rotulo="Total financiado" valor={formatBRL(totalFinanciado(b))} />
@@ -489,7 +489,7 @@ export function ResultadoInlineAmbos({ simulacaoIdSac, simulacaoIdPrice, onFecha
                           {l.simulacao.prazo}m
                         </TableCell>
                         <TableCell className="py-3 text-right text-sm tabular-nums whitespace-nowrap">
-                          {prazoMaxTexto(b)}
+                          {prazoMaxTexto(b, l.simulacao)}
                         </TableCell>
                         <TableCell className="py-3 text-right text-sm font-semibold tabular-nums whitespace-nowrap">
                           {formatBRL(totalFinanciado(b))}
