@@ -18,7 +18,8 @@ import {
   destravarSimulacao,
 } from "@/lib/simulacao/simulacoes.functions";
 
-import { criarProposta, enviarPropostaHomeFin } from "@/lib/propostas/propostas.functions";
+import { criarProposta } from "@/lib/propostas/propostas.functions";
+import { useEnviarProposta } from "@/hooks/use-enviar-proposta";
 import { Button } from "@/components/ui/button";
 
 import { SelecionarBancosPdfDialog } from "@/components/simulacao/selecionar-bancos-pdf-dialog";
@@ -72,7 +73,7 @@ function Pagina() {
   const excluir = useServerFn(excluirSimulacao);
   const restaurar = useServerFn(restaurarSimulacao);
   const criar = useServerFn(criarProposta);
-  const enviarAoBancoFn = useServerFn(enviarPropostaHomeFin);
+  const { enviar: handleEnviarHook } = useEnviarProposta();
   const destravar = useServerFn(destravarSimulacao);
 
 
@@ -282,30 +283,11 @@ function Pagina() {
           numero: res.numero_proposta,
         },
       ]);
-      // Dispara o envio ao banco em background: não travamos a UI esperando
-      // o HomeFin responder — o realtime/polling atualiza o status assim que
-      // o retorno chega. Isso mantém o botão responsivo mesmo quando a
-      // integração leva vários segundos.
-      const toastId = toast.loading(
-        `Enviando ${res.numero_proposta} ao ${banco.nome_banco}...`,
-      );
-      void enviarAoBancoFn({ data: { proposta_id: res.proposta_id } })
-        .then((env) => {
-          toast.success(
-            `Proposta ${res.numero_proposta} enviada ao ${banco.nome_banco} (${env.status}).`,
-            { id: toastId },
-          );
-          queryClient.invalidateQueries({ queryKey: ["simulacoes"] });
-          queryClient.invalidateQueries({ queryKey: ["propostas"] });
-        })
-        .catch((e) => {
-          const msg = e instanceof Error ? e.message : "Falha ao enviar ao banco.";
-          toast.error(
-            `Proposta ${res.numero_proposta} criada, mas envio falhou: ${msg}`,
-            { id: toastId, duration: 15000 },
-          );
-          console.error("[simulacoes.enviarBancoIndividual] falhou", e);
-        });
+      // Centraliza o envio através do hook único que cuida de validações e navegação
+      await handleEnviarHook({
+        propostaId: res.proposta_id,
+        bancoId: banco.banco_id,
+      });
 
       queryClient.invalidateQueries({ queryKey: ["simulacoes"] });
       queryClient.invalidateQueries({ queryKey: ["propostas"] });

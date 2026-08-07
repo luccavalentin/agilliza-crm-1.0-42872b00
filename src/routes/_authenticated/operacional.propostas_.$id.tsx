@@ -135,14 +135,18 @@ import {
   SITUACAO_BANCO_TONE,
   type SituacaoBanco,
 } from "@/components/proposta/situacao-banco-labels";
+import { useEnviarProposta } from "@/hooks/use-enviar-proposta";
 
 
 
 export const Route = createFileRoute("/_authenticated/operacional/propostas_/$id")({
   head: () => ({ meta: [{ title: "Proposta — Agilliza" }] }),
   beforeLoad: () => assertModuloPermitido("operacional.propostas"),
-  validateSearch: (search: Record<string, unknown>): { complementar?: 1 } =>
-    search.complementar === 1 || search.complementar === "1" ? { complementar: 1 } : {},
+  validateSearch: (search: Record<string, unknown>): { complementar?: 1; abrir_cadastro?: string } =>
+    ({ 
+      complementar: search.complementar === 1 || search.complementar === "1" ? 1 : undefined,
+      abrir_cadastro: typeof search.abrir_cadastro === 'string' ? search.abrir_cadastro : undefined
+    }),
   component: Pagina,
   errorComponent: () => (
     <div className="p-6 text-sm text-muted-foreground">Não foi possível carregar a proposta.</div>
@@ -199,6 +203,7 @@ function Pagina() {
   const { complementar } = Route.useSearch();
   const router = useRouter();
   const qc = useQueryClient();
+  const { enviar: handleEnviarHook } = useEnviarProposta();
 
   const { data, isLoading } = useQuery({
     queryKey: ["proposta", id],
@@ -220,7 +225,30 @@ function Pagina() {
   const [enviandoAuto, setEnviandoAuto] = useState(false);
   const [destacarObrigatorios, setDestacarObrigatorios] = useState(false);
   const [participanteModal, setParticipanteModal] = useState<any>(null);
+  const { abrir_cadastro } = Route.useSearch();
   const [indiceParticipante, setIndiceParticipante] = useState(0);
+
+  useEffect(() => {
+    if (abrir_cadastro && envolvidos.length > 0) {
+      const env = envolvidos.find((e: any) => e.id === abrir_cadastro);
+      if (env) {
+        setParticipanteModal(env);
+        const idx = envolvidos.findIndex((e: any) => e.id === abrir_cadastro);
+        setIndiceParticipante(idx + 1);
+        
+        // Limpa a query string para não reabrir ao atualizar
+        router.navigate({
+            to: "/operacional/propostas/$id",
+            params: { id },
+            search: (prev: any) => {
+                const { abrir_cadastro: _, ...rest } = prev;
+                return rest;
+            },
+            replace: true
+        });
+      }
+    }
+  }, [abrir_cadastro, envolvidos, id, router]);
 
   const pendentes = useMemo(() => {
     return (envolvidos ?? []).map((env, index) => ({
@@ -415,7 +443,7 @@ function Pagina() {
                 : `Ativa há ${diasDesde} dia(s)`}
             </p>
           </div>
-          <AcoesTopo proposta={p} propostaId={id} bancos={data.bancos} envolvidos={data.envolvidos} documentos={data.documentos} followups={data.followups} onCadastroIncompleto={onCadastroIncompleto} />
+          <AcoesTopo proposta={p} propostaId={id} bancos={data.bancos} envolvidos={data.envolvidos} documentos={data.documentos} followups={data.followups} onCadastroIncompleto={() => abrirCadastroPendente()} />
         </div>
 
         {/* KPIs */}
@@ -585,6 +613,18 @@ function Pagina() {
         open={Boolean(participanteModal)}
         onOpenChange={(v) => !v && setParticipanteModal(null)}
         titulo="Completar dados do participante"
+        onEnviarAgora={() => {
+            const bancosProp = data?.bancos ?? [];
+            const bancosPendentes = bancosProp.filter((b: any) => b.selecionado && !bancoJaEnviado(b));
+            const bancoId = bancosPendentes.length === 1 ? bancosPendentes[0].banco_id : undefined;
+            
+            setParticipanteModal(null);
+            handleEnviarHook({
+                propostaId: id,
+                bancoId,
+                envolvidos: data?.envolvidos
+            });
+        }}
         avisoTopo={
           participanteModal && (
             <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive font-medium leading-relaxed">

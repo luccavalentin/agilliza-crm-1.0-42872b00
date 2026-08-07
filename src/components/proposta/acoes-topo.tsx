@@ -37,13 +37,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  enviarPropostaHomeFin,
   cancelarProposta,
   moverStatusProposta,
   sincronizarProposta,
-  ressincronizarDadosParticipantes,
 } from "@/lib/propostas/propostas.functions";
-import { faltantesEnvolvido, descreverParticipante } from "@/lib/propostas/campos-obrigatorios";
+import { useEnviarProposta } from "@/hooks/use-enviar-proposta";
+import { descreverParticipante } from "@/lib/propostas/campos-obrigatorios";
 import { bancoJaEnviado } from "@/components/proposta/status-bancos-proposta";
 import { TRANSICOES, type PropostaStatus } from "@/lib/propostas/state-machine";
 import { statusProposta } from "@/components/propostas/status";
@@ -71,18 +70,21 @@ export function AcoesTopo({
   onCadastroIncompleto?: () => void;
 }) {
   const qc = useQueryClient();
-  const [busy, setBusy] = useState(false);
   const [cancelOpen, setCancelOpen] = useState(false);
   const [motivo, setMotivo] = useState("");
-  const enviarFn = useServerFn(enviarPropostaHomeFin);
+  const { enviar: handleEnviar, busy: enviarBusy } = useEnviarProposta();
   const cancelarFn = useServerFn(cancelarProposta);
   const moverFn = useServerFn(moverStatusProposta);
   const sincronizarFn = useServerFn(sincronizarProposta);
-  const ressincronizarFn = useServerFn(ressincronizarDadosParticipantes);
+  
+  const [busy, setBusy] = useState(false);
+  const isBusy = busy || enviarBusy;
+
   const status = proposta.status as PropostaStatus;
   const proximos = TRANSICOES[status].filter((s) => s !== "cancelada");
 
   const pendencias = useMemo(() => {
+    const { faltantesEnvolvido } = require("@/lib/propostas/campos-obrigatorios");
     return (envolvidos ?? []).map(env => ({
       env,
       faltantes: faltantesEnvolvido(env),
@@ -93,36 +95,19 @@ export function AcoesTopo({
   const bloqueado = pendencias.length > 0;
 
   async function enviar() {
-    if (bloqueado) {
-      onCadastroIncompleto?.();
-      return;
-    }
     if (jaEnviou && bancosPendentes.length === 0) {
       toast.info("Nenhum banco novo selecionado. Selecione outro banco para enviar.");
       return;
     }
 
-    setBusy(true);
     try {
-      // 1. Ressincroniza dados antes de qualquer tentativa (P1)
-      const res = await ressincronizarFn({ data: { proposta_id: propostaId } });
-      if (res.alterados > 0) {
-        toast.success(`${res.alterados} dado(s) atualizado(s) do cadastro.`);
-        await qc.invalidateQueries({ queryKey: ["proposta", propostaId] });
-      }
-
-      // 2. Tenta enviar
-      const r = await enviarFn({ data: { proposta_id: propostaId } });
-      toast.success(`Proposta enviada (${r.status}).`);
-      qc.invalidateQueries({ queryKey: ["proposta", propostaId] });
+      await handleEnviar({
+        propostaId,
+        envolvidos,
+        onCadastroIncompleto: () => onCadastroIncompleto?.()
+      });
     } catch (e) {
-      const msg = e instanceof Error ? e.message : "Falha ao enviar.";
-      toast.error(msg);
-      if (/cadastro complementar|cadastro incompleto|obrigat/i.test(msg)) {
-        onCadastroIncompleto?.();
-      }
-    } finally {
-      setBusy(false);
+      // toast já mostrado pelo hook
     }
   }
 
@@ -192,13 +177,13 @@ export function AcoesTopo({
             <Tooltip>
               <TooltipTrigger asChild>
                 <span>
-                  <Button size="sm" onClick={enviar} disabled={busy || bloqueado}>
-                    {busy ? (
+                  <Button size="sm" onClick={enviar} disabled={isBusy}>
+                    {isBusy ? (
                       <Loader2 className="mr-1 h-4 w-4 animate-spin" />
                     ) : (
                       <Send className="mr-1 h-4 w-4" />
                     )}
-                    {proposta.enviada_em ? "Reenviar" : "Enviar ao banco"}
+                    {bloqueado ? "Completar cadastro e enviar" : (proposta.enviada_em ? "Reenviar" : "Enviar ao banco")}
                   </Button>
                 </span>
               </TooltipTrigger>
@@ -209,10 +194,10 @@ export function AcoesTopo({
                   </p>
                   <ul className="text-xs space-y-1">
                     {pendencias.map((p, i) => (
-                      <li key={i}>• {descreverParticipante(p.env)}</li>
+                      <li key={i}>• Faltam dados obrigatórios de {p.descrever}. Clique para preencher agora.</li>
                     ))}
                   </ul>
-                  <p className="text-xs text-muted-foreground">Clique no participante na aba "Enviar ao banco" para completar.</p>
+                  <p className="text-xs text-muted-foreground">Clique para abrir o cadastro.</p>
                 </TooltipContent>
               )}
             </Tooltip>
@@ -223,14 +208,13 @@ export function AcoesTopo({
             <Tooltip>
               <TooltipTrigger asChild>
                 <span>
-                  <Button size="sm" onClick={enviar} disabled={busy || bloqueado} variant="secondary">
-                    {busy ? (
+                  <Button size="sm" onClick={enviar} disabled={isBusy} variant="secondary">
+                    {isBusy ? (
                       <Loader2 className="mr-1 h-4 w-4 animate-spin" />
                     ) : (
                       <Send className="mr-1 h-4 w-4" />
                     )}
-                    Enviar a{" "}
-                    {bancosPendentes.length > 1 ? `${bancosPendentes.length} novos bancos` : "novo banco"}
+                    {bloqueado ? "Completar cadastro e enviar" : `Enviar a ${bancosPendentes.length > 1 ? `${bancosPendentes.length} novos bancos` : "novo banco"}`}
                   </Button>
                 </span>
               </TooltipTrigger>

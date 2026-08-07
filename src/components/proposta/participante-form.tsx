@@ -37,6 +37,7 @@ export function ParticipanteDialog({
   open,
   onOpenChange,
   titulo,
+  onEnviarAgora,
   inicial,
   conjugeInicial,
   tipoQualificacaoFixo,
@@ -62,6 +63,8 @@ export function ParticipanteDialog({
     principal: ReturnType<typeof formParaEnvolvido>,
     conjuge: ReturnType<typeof formParaEnvolvido> | null,
   ) => Promise<void> | void;
+  /** Callback para disparar o envio ao banco diretamente do modal após validar/salvar. */
+  onEnviarAgora?: () => void;
   idBanco?: number;
   /** Abre já destacando (e rolando até) o primeiro campo obrigatório pendente. */
   focarPendencias?: boolean;
@@ -292,9 +295,21 @@ export function ParticipanteDialog({
         <DialogFooter className="flex-col gap-2 sm:flex-row sm:items-center">
           <div className="flex-1">
             {tentouEnviar && (erros.size === 0 && errosC.size === 0) && (
-              <p className="text-[11px] font-bold text-emerald-600 flex items-center gap-1 uppercase tracking-wider">
-                <CheckCircle2 className="h-3.5 w-3.5" /> Tudo pronto para enviar
-              </p>
+              <div className="flex items-center gap-3">
+                <p className="text-[11px] font-bold text-emerald-600 flex items-center gap-1 uppercase tracking-wider">
+                  <CheckCircle2 className="h-3.5 w-3.5" /> Tudo pronto para enviar
+                </p>
+                {onEnviarAgora && (
+                  <Button 
+                    variant="link" 
+                    size="sm" 
+                    className="h-auto p-0 text-primary font-bold animate-pulse" 
+                    onClick={onEnviarAgora}
+                  >
+                    Enviar proposta agora →
+                  </Button>
+                )}
+              </div>
             )}
           </div>
           <div className="flex gap-2">

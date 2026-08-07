@@ -173,4 +173,4 @@ export function mascararCep(raw: string) {
 
 /** Classe aplicada a um campo obrigatório vazio (destaque em vermelho). */
 export const CLASSE_ERRO =
-  "border-destructive ring-1 ring-destructive/40 focus-visible:ring-destructive";
+  "border-destructive ring-1 ring-destructive/40 focus-visible:ring-destructive animate-in fade-in zoom-in duration-200";

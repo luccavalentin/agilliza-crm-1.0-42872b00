@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback, useMemo, Fragment } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import {
   ExternalLink,
@@ -8,10 +9,13 @@ import {
   X,
   Download,
   Send,
+  Loader2,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { useEnviarProposta } from "@/hooks/use-enviar-proposta";
 import { Card } from "@/components/ui/card";
+import { criarProposta, enviarPropostaHomeFin } from "@/lib/propostas/propostas.functions";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
@@ -29,7 +33,7 @@ import {
   obterSimulacao,
   enviarSimulacaoBanco,
 } from "@/lib/simulacao/simulacoes.functions";
-import { criarProposta, enviarPropostaHomeFin } from "@/lib/propostas/propostas.functions";
+// Import já realizado no topo
 import { formatBRL, formatPercent } from "@/lib/simulacao/format";
 import { corDoBanco } from "@/lib/bancos/cores";
 import { extrairDetalheBanco } from "@/lib/simulacao/detalhe-banco";
@@ -72,6 +76,8 @@ export function ResultadoInlineCompleta({ simulacaoId, onFechar, isSecundaria }:
   const qc = useQueryClient();
   const [reenviandoBanco, setReenviandoBanco] = useState<string | null>(null);
   const [criandoBanco, setCriandoBanco] = useState<string | null>(null);
+  const { enviar: handleEnviarHook, busy: enviandoBanco } = useEnviarProposta();
+  const enviarPropostaFn = useServerFn(enviarPropostaHomeFin);
   const jaBaixou = useRef(false);
 
   const { data, isLoading } = useQuery({
@@ -140,23 +146,21 @@ export function ResultadoInlineCompleta({ simulacaoId, onFechar, isSecundaria }:
       const { proposta_id } = await criarProposta({
         data: { simulacao_id: simulacaoId, banco_id: bancoId },
       });
-      try {
-        await enviarPropostaHomeFin({ data: { proposta_id, banco_id: bancoId } });
-        toast.success("Proposta enviada ao banco.");
-      } catch (envioErr) {
-        toast.warning(
-          envioErr instanceof Error
-            ? `Proposta criada. Complete os dados para enviar: ${envioErr.message}`
-            : "Proposta criada. Complete os dados para enviar ao banco.",
-        );
-      }
-      router.navigate({
-        to: "/operacional/propostas/$id",
-        params: { id: proposta_id },
-        search: { complementar: 1 },
+      
+      await handleEnviarHook({
+        propostaId: proposta_id,
+        bancoId,
+        enviarFn: enviarPropostaFn
       });
+
+      if (!router.state.location.pathname.includes(`/propostas/${proposta_id}`)) {
+          router.navigate({
+            to: "/operacional/propostas/$id",
+            params: { id: proposta_id },
+          });
+      }
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Falha ao criar proposta.");
+      // Erros já mostrados pelo hook/toast
     } finally {
       setCriandoBanco(null);
     }
@@ -383,11 +387,11 @@ export function ResultadoInlineCompleta({ simulacaoId, onFechar, isSecundaria }:
                           <Button
                             size="sm"
                             className="bg-gradient-to-b from-primary to-primary/90 shadow-sm transition-all duration-200 hover:-translate-y-px hover:shadow-md hover:brightness-105 active:translate-y-0 active:scale-[0.98]"
-                            disabled={b.status_banco !== "simulada" || criandoBanco !== null}
+                            disabled={b.status_banco !== "simulada" || criandoBanco !== null || enviandoBanco}
                             onClick={() => enviarAprovacao(b.banco_id)}
                           >
-                            <Send className="mr-1 h-4 w-4" />
-                            {criandoBanco === b.banco_id ? "Enviando…" : "Enviar Aprovação"}
+                            {criandoBanco === b.banco_id || (enviandoBanco && criandoBanco === b.banco_id) ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Send className="mr-1 h-4 w-4" />}
+                            {criandoBanco === b.banco_id || (enviandoBanco && criandoBanco === b.banco_id) ? "Enviando…" : "Enviar Aprovação"}
                           </Button>
                         )}
                       </div>

@@ -31,10 +31,11 @@ import { DetalhamentoBancoDialog } from "@/components/proposta/dialogs/detalhame
 import { EnvioResultadoDialog } from "@/components/proposta/dialogs/envio-resultado-dialog";
 import {
   selecionarBancoProposta,
-  enviarPropostaHomeFin,
   definirSituacaoBanco,
   SITUACOES_BANCO,
+  enviarPropostaHomeFin,
 } from "@/lib/propostas/propostas.functions";
+import { useEnviarProposta } from "@/hooks/use-enviar-proposta";
 import { SITUACAO_BANCO_LABEL, type SituacaoBanco } from "@/components/proposta/situacao-banco-labels";
 import type { PropostaStatus } from "@/lib/propostas/state-machine";
 import { formatBRL } from "@/lib/simulacao/format";
@@ -62,7 +63,8 @@ export function TabResumo({
 }) {
   const qc = useQueryClient();
   const selecionarFn = useServerFn(selecionarBancoProposta);
-  const enviarFn = useServerFn(enviarPropostaHomeFin);
+  const enviarPropostaFn = useServerFn(enviarPropostaHomeFin);
+  const { enviar: handleEnviarHook } = useEnviarProposta();
   const situacaoFn = useServerFn(definirSituacaoBanco);
   const [enviandoId, setEnviandoId] = useState<string | null>(null);
   const [resultadoEnvio, setResultadoEnvio] = useState<
@@ -103,15 +105,17 @@ export function TabResumo({
   async function enviarBanco(pbId: string) {
     setEnviandoId(pbId);
     try {
-      const r = await enviarFn({ data: { proposta_id: propostaId, banco_id: pbId } });
-      qc.invalidateQueries({ queryKey: ["proposta", propostaId] });
-      if (r.bancos.length > 0) {
+      const r = await handleEnviarHook({ 
+        propostaId: propostaId, 
+        bancoId: pbId,
+        envolvidos: proposta?.envolvidos,
+        enviarFn: enviarPropostaFn
+      });
+      if (r && r.bancos && r.bancos.length > 0) {
         setResultadoEnvio(r.bancos);
-      } else {
-        toast.error("Nenhum banco foi enviado.");
       }
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Falha ao enviar ao banco.");
+      // Erros já mostrados pelo hook/toast
     } finally {
       setEnviandoId(null);
     }
