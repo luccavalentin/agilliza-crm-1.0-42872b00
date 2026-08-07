@@ -697,7 +697,7 @@ async function garantirEnderecoParticipantes({
     // Validação OFICIAL baseada nos 25 campos obrigatórios
     const faltantes = faltantesEnvolvido(env || {});
     if (faltantes.length > 0) {
-      const msg = msgCadastroIncompleto(pb.nome_banco ?? "banco", env || {}, faltantes);
+      const msg = msgCadastroIncompleto(pb?.nome_banco ?? "banco", env || {}, faltantes);
       throw new IntegracaoBancariaError(msg.texto);
     }
 
