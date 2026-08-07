@@ -30,6 +30,7 @@ export function CamposParticipante({
   mostrarQualificacao,
   mostrarEstadoCivil,
   mostrarIdentificacaoExtra,
+  idBanco,
 }: {
   f: ParticipanteForm;
   set: (patch: Partial<ParticipanteForm>) => void;
@@ -39,7 +40,9 @@ export function CamposParticipante({
   mostrarQualificacao: boolean;
   mostrarEstadoCivil: boolean;
   mostrarIdentificacaoExtra: boolean;
+  idBanco?: number;
 }) {
+
   const pf = f.tipo_pessoa === "F";
   const err = (k: string) => erros.has(k);
   const cls = (k: string) => (err(k) ? CLASSE_ERRO : undefined);
