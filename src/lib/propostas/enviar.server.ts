@@ -8,7 +8,9 @@ import {
   chamarIntegracao,
   IntegracaoBancariaError,
   sanitizarMensagemErro,
+  TIPO_BANCO_SANTANDER,
 } from "@/lib/simulacao/homefin.server";
+
 import { transicaoPermitida, type PropostaStatus } from "./state-machine";
 
 import {
@@ -135,8 +137,12 @@ function textoLivreParaBanco(v: unknown): string | undefined {
     .replace(/[(){}[\]]/g, " ")
     .replace(/\s+/g, " ")
     .trim();
+  // Caso 3a: Registro de payload completo em proposta_logs_homefin
+  // Nota: O log agora preserva campos estruturais e mascara apenas CPF, e-mail e renda.
+  // A lógica de mascaramento foi ajustada em homefin.server.ts para este fim.
   return s || undefined;
 }
+
 
 /**
  * Verifica no provedor se a simulação vinculada ao banco ainda pode ser usada
@@ -682,9 +688,10 @@ async function garantirEnderecoParticipantes({
       dataNascimento:
         part?.dataNascimento ?? env?.data_nascimento ?? src?.data_nascimento ?? prop.data_nascimento ?? undefined,
       tipoEstadoCivil: estadoCivil ?? undefined,
-      tipoRegimeCasamento: exigeConjugePorEstadoCivil(estadoCivil)
+      tipoRegimeCasamento: (exigeConjugePorEstadoCivil(estadoCivil) || (part?.idBanco === TIPO_BANCO_SANTANDER && (estadoCivil === "CA" || estadoCivil === "UE")))
         ? enumBancoId(env?.regime_casamento) ?? enumBancoId(src?.regime_casamento) ?? enumBancoId(part?.tipoRegimeCasamento)
         : undefined,
+
       tipoSexo: enumBancoId(part?.tipoSexo) ?? env?.tipo_sexo ?? undefined,
       tipoDocumentoIdentidade:
         enumBancoId(part?.tipoDocumentoIdentidade) ?? env?.tipo_documento_identidade ?? undefined,

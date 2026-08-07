@@ -33,6 +33,7 @@ export function TabEnvolvidos({
   autoAbrir,
   onAutoAbriu,
   onFechouAposSalvar,
+  idBanco,
 }: {
   tipo: "CO" | "VD";
   propostaId: string;
@@ -40,7 +41,9 @@ export function TabEnvolvidos({
   autoAbrir?: boolean;
   onAutoAbriu?: () => void;
   onFechouAposSalvar?: () => void;
+  idBanco?: number;
 }) {
+
   const qc = useQueryClient();
   const addFn = useServerFn(adicionarEnvolvido);
   const updFn = useServerFn(atualizarEnvolvido);
@@ -175,7 +178,9 @@ export function TabEnvolvidos({
         tipoQualificacaoFixo={tipo === "VD" ? "VD" : undefined}
         salvando={salvando}
         onSalvar={salvar}
+        idBanco={idBanco}
       />
+
 
       <Table>
         <TableHeader>

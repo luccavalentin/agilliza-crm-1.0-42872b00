@@ -11,6 +11,8 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { ESTADO_CIVIL_COM_REGIME } from "@/lib/propostas/dominios";
+import { TIPO_BANCO_SANTANDER } from "@/lib/simulacao/homefin.server";
+
 import { CamposParticipante } from "./participante-form/campos-participante";
 import {
   camposFaltantes,
@@ -36,6 +38,7 @@ export function ParticipanteDialog({
   tipoQualificacaoFixo,
   salvando,
   onSalvar,
+  idBanco,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
@@ -48,7 +51,9 @@ export function ParticipanteDialog({
     principal: ReturnType<typeof formParaEnvolvido>,
     conjuge: ReturnType<typeof formParaEnvolvido> | null,
   ) => Promise<void> | void;
+  idBanco?: number;
 }) {
+
   const [f, setF] = useState<ParticipanteForm>(inicial ?? VAZIO);
   const [conjuge, setConjuge] = useState<ParticipanteForm>(
     conjugeInicial ?? { ...VAZIO, tipo_qualificacao: "TI" },
@@ -71,11 +76,17 @@ export function ParticipanteDialog({
 
   // Após a primeira tentativa, revalida ao vivo para o vermelho sumir conforme preenche.
   useEffect(() => {
-    if (tentouEnviar) setErros(camposFaltantes(f));
-  }, [f, tentouEnviar]);
+    if (tentouEnviar) {
+      setErros(camposFaltantes(f, { regimeObrigatorio: idBanco === TIPO_BANCO_SANTANDER }));
+    }
+  }, [f, tentouEnviar, idBanco]);
+
   useEffect(() => {
-    if (tentouEnviar) setErrosC(camposFaltantes(conjuge));
-  }, [conjuge, tentouEnviar]);
+    if (tentouEnviar) {
+      setErrosC(camposFaltantes(conjuge, { regimeObrigatorio: idBanco === TIPO_BANCO_SANTANDER }));
+    }
+  }, [conjuge, tentouEnviar, idBanco]);
+
 
   const pf = f.tipo_pessoa === "F";
   const permiteConjuge = true;
@@ -139,10 +150,11 @@ export function ParticipanteDialog({
 
   async function submit() {
     setTentouEnviar(true);
-    const faltando = camposFaltantes(f);
+    const context = { regimeObrigatorio: idBanco === TIPO_BANCO_SANTANDER };
+    const faltando = camposFaltantes(f, context);
     setErros(faltando);
 
-    const c: ParticipanteForm | null = precisaConjuge && conjugeTemDados
+    const c: ParticipanteForm | null = (precisaConjuge && conjugeTemDados)
       ? {
           ...conjuge,
           tipo_qualificacao: "TI",
@@ -151,8 +163,9 @@ export function ParticipanteDialog({
           regime_casamento: f.regime_casamento,
         }
       : null;
-    const faltandoC = c ? camposFaltantes(c) : new Set<string>();
+    const faltandoC = c ? camposFaltantes(c, context) : new Set<string>();
     setErrosC(faltandoC);
+
 
     if (faltando.size > 0 || faltandoC.size > 0) {
       const total = faltando.size + faltandoC.size;
@@ -186,7 +199,9 @@ export function ParticipanteDialog({
             mostrarQualificacao={!tipoQualificacaoFixo}
             mostrarEstadoCivil
             mostrarIdentificacaoExtra
+            idBanco={idBanco}
           />
+
 
           {precisaConjuge && (
             <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 sm:p-4">
@@ -203,7 +218,9 @@ export function ParticipanteDialog({
                   mostrarQualificacao={false}
                   mostrarEstadoCivil={false}
                   mostrarIdentificacaoExtra={false}
+                  idBanco={idBanco}
                 />
+
               </div>
             </div>
           )}

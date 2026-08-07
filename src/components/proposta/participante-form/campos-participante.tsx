@@ -30,6 +30,7 @@ export function CamposParticipante({
   mostrarQualificacao,
   mostrarEstadoCivil,
   mostrarIdentificacaoExtra,
+  idBanco,
 }: {
   f: ParticipanteForm;
   set: (patch: Partial<ParticipanteForm>) => void;
@@ -39,7 +40,9 @@ export function CamposParticipante({
   mostrarQualificacao: boolean;
   mostrarEstadoCivil: boolean;
   mostrarIdentificacaoExtra: boolean;
+  idBanco?: number;
 }) {
+
   const pf = f.tipo_pessoa === "F";
   const err = (k: string) => erros.has(k);
   const cls = (k: string) => (err(k) ? CLASSE_ERRO : undefined);
@@ -81,7 +84,7 @@ export function CamposParticipante({
               <SelSelect label="Estado civil" value={f.estado_civil} options={TIPO_ESTADO_CIVIL} onChange={(v) => set({ estado_civil: v })} obrigatorio erro={err("estado_civil")} />
             )}
             {mostrarEstadoCivil && ESTADO_CIVIL_COM_REGIME.has(f.estado_civil) && (
-              <SelSelect label="Regime de casamento" value={f.regime_casamento} options={TIPO_REGIME_CASAMENTO} onChange={(v) => set({ regime_casamento: v })} className="sm:col-span-2" />
+              <SelSelect label="Regime de casamento" value={f.regime_casamento} options={TIPO_REGIME_CASAMENTO} onChange={(v) => set({ regime_casamento: v })} className="sm:col-span-2" obrigatorio={idBanco === 33} erro={err("regime_casamento")} />
             )}
           </div>
         </Secao>

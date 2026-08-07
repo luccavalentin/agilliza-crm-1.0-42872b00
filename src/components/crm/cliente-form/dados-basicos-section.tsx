@@ -4,6 +4,8 @@ import { Input } from "@/components/ui/input";
 import { DateInput } from "@/components/shared/date-input";
 import { Combobox } from "@/components/ui/combobox";
 import { Label } from "@/components/ui/label";
+import { TIPO_BANCO_SANTANDER } from "@/lib/simulacao/homefin.server";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
@@ -34,12 +36,15 @@ export function DadosBasicosSection({
   set,
   setV,
   erros,
+  idBanco,
 }: {
   v: ClienteFormValues;
   set: SetCampo;
   setV: React.Dispatch<React.SetStateAction<ClienteFormValues>>;
   erros?: Set<string>;
+  idBanco?: number;
 }) {
+
   const cls = (k: string) => (erros?.has(k) ? CLASSE_ERRO : undefined);
   const clsBox = (k: string) => (erros?.has(k) ? "rounded-md ring-1 ring-destructive" : undefined);
 
@@ -273,9 +278,10 @@ export function DadosBasicosSection({
         {v.tipo_pessoa === "PF" &&
           (v.estado_civil === "casado" || v.estado_civil === "uniao_estavel") && (
             <div className="space-y-1.5">
-              <Label>Regime de casamento</Label>
+              <Label>Regime de casamento {v.tipo_pessoa === "PF" && (v.estado_civil === "casado" || v.estado_civil === "uniao_estavel") && idBanco === TIPO_BANCO_SANTANDER && "*"}</Label>
               <Select value={v.regime_casamento} onValueChange={(x) => set("regime_casamento", x)}>
-                <SelectTrigger>
+                <SelectTrigger className={cls("regime_casamento")}>
+
                   <SelectValue placeholder="Selecione" />
                 </SelectTrigger>
                 <SelectContent>

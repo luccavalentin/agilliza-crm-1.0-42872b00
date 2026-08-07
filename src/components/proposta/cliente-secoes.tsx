@@ -24,13 +24,16 @@ export function ClienteSecao({
   propostaId,
   destacarObrigatorios,
   onSalvoComprador,
+  idBanco,
 }: {
   clienteId: string | null | undefined;
   secao: SecaoCliente;
   propostaId?: string;
   destacarObrigatorios?: boolean;
   onSalvoComprador?: () => void;
+  idBanco?: number;
 }) {
+
 
   const getCli = useServerFn(getCliente);
   const getEnd = useServerFn(getEndereco);
@@ -87,7 +90,7 @@ export function ClienteSecao({
 
   const c = det.cliente as any;
 
-  if (secao === "vendedores") return <VendedoresTab clienteId={clienteId} />;
+  if (secao === "vendedores") return <VendedoresTab clienteId={clienteId} idBanco={idBanco} />;
   if (secao === "imovel") return <ImovelTab clienteId={clienteId} cliente={c} />;
   if (secao === "iq") return <IqTab clienteId={clienteId} cliente={c} />;
   if (secao === "documentos") return <DocumentosTab clienteId={clienteId} />;
@@ -99,6 +102,8 @@ export function ClienteSecao({
       vincularPropostaId={propostaId}
       onSalvoEmbutido={onSalvoComprador}
       destacarObrigatorios={destacarObrigatorios}
+      idBanco={idBanco}
+
       portalAtivo={c.portal_acesso_ativo}
 
 

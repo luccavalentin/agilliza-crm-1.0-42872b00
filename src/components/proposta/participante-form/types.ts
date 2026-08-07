@@ -163,7 +163,7 @@ export function participanteCompleto(e: any): boolean {
  * Retorna a lista de chaves de campos obrigatórios que ainda estão vazios/invalidos.
  * Usada para destacar os campos em vermelho.
  */
-export function camposFaltantes(f: ParticipanteForm): Set<string> {
+export function camposFaltantes(f: ParticipanteForm, context?: { regimeObrigatorio?: boolean }): Set<string> {
   const pf = f.tipo_pessoa === "F";
   const faltando = new Set<string>();
   if (!f.nome.trim()) faltando.add("nome");
@@ -173,6 +173,12 @@ export function camposFaltantes(f: ParticipanteForm): Set<string> {
     if (!f.nome_mae.trim()) faltando.add("nome_mae");
     if (!f.tipo_sexo) faltando.add("tipo_sexo");
     if (!f.estado_civil) faltando.add("estado_civil");
+    
+    // Problema 1a: Regime de casamento obrigatório para CA/UE no Santander
+    if (context?.regimeObrigatorio && (f.estado_civil === "casado" || f.estado_civil === "uniao_estavel") && !f.regime_casamento) {
+      faltando.add("regime_casamento");
+    }
+
     // Documento de identidade (RG/CNH/etc.) — obrigatório pela HomeFin.
     if (!String(f.numero_documento ?? "").trim()) faltando.add("numero_documento");
     if (!String(f.tipo_documento_identidade ?? "").trim()) faltando.add("tipo_documento_identidade");
@@ -193,6 +199,7 @@ export function camposFaltantes(f: ParticipanteForm): Set<string> {
   if (!f.fg_autorizacao_dados) faltando.add("fg_autorizacao_dados");
   return faltando;
 }
+
 
 export function mascararCep(raw: string) {
   const d = raw.replace(/\D/g, "").slice(0, 8);

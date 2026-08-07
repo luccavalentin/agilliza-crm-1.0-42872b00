@@ -18,7 +18,7 @@ import { CardVendedor } from "./vendedores-tab/card-vendedor";
 import { DialogVendedor } from "./vendedores-tab/dialog-vendedor";
 import { paraForm, VAZIO, type VendedorForm } from "./vendedores-tab/types";
 
-export function VendedoresTab({ clienteId }: { clienteId: string }) {
+export function VendedoresTab({ clienteId, idBanco }: { clienteId: string; idBanco?: number }) {
   const qc = useQueryClient();
   const listar = useServerFn(listarVendedores);
   const salvar = useServerFn(salvarVendedor);
@@ -79,6 +79,16 @@ export function VendedoresTab({ clienteId }: { clienteId: string }) {
     if (form.email && !validarEmail(form.email)) e.add("email");
     if (form.telefone_celular && !validarTelefone(form.telefone_celular))
       e.add("telefone_celular");
+
+    if (
+      idBanco === 33 &&
+      form.tipo_pessoa === "PF" &&
+      (form.estado_civil === "casado" || form.estado_civil === "uniao_estavel") &&
+      !form.regime_casamento
+    ) {
+      e.add("regime_casamento");
+    }
+
     setErros(e);
     if (e.size > 0) {
       const primeiro = e.has("nome")
@@ -87,10 +97,13 @@ export function VendedoresTab({ clienteId }: { clienteId: string }) {
           ? `${form.tipo_pessoa === "PJ" ? "CNPJ" : "CPF"} inválido.`
           : e.has("email")
             ? "E-mail inválido."
-            : "Telefone inválido.";
+            : e.has("regime_casamento")
+              ? "Informe o regime de casamento (obrigatório para Santander)."
+              : "Telefone inválido.";
       toast.error(primeiro);
       return;
     }
+
     setSalvando(true);
     try {
       await salvar({ data: { ...form, cliente_id: clienteId } as any });
@@ -151,7 +164,9 @@ export function VendedoresTab({ clienteId }: { clienteId: string }) {
         buscarCep={buscarCep}
         salvando={salvando}
         onSubmeter={submeter}
+        idBanco={idBanco}
       />
+
     </div>
   );
 }

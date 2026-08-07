@@ -50,6 +50,7 @@ export function DialogVendedor({
   buscarCep,
   salvando,
   onSubmeter,
+  idBanco,
 }: {
   aberto: boolean;
   onOpenChange: (v: boolean) => void;
@@ -60,7 +61,9 @@ export function DialogVendedor({
   buscarCep: (cepRaw: string) => void;
   salvando: boolean;
   onSubmeter: () => void;
+  idBanco?: number;
 }) {
+
   const pf = form.tipo_pessoa === "PF";
   const casado =
     form.estado_civil === "casado" || form.estado_civil === "uniao_estavel";
@@ -170,9 +173,10 @@ export function DialogVendedor({
                   </Select>
                 </Campo>
                 {casado && (
-                  <Campo label="Regime de casamento">
+                  <Campo label={`Regime de casamento ${idBanco === 33 ? "*" : ""}`}>
                     <Select value={form.regime_casamento} onValueChange={(v) => set({ regime_casamento: v })}>
-                      <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                      <SelectTrigger className={cls("regime_casamento")}><SelectValue placeholder="Selecione" /></SelectTrigger>
+
                       <SelectContent>
                         {REGIMES.map((o) => <SelectItem key={o.v} value={o.v}>{o.l}</SelectItem>)}
                       </SelectContent>
