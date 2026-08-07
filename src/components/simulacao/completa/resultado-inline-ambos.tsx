@@ -22,7 +22,8 @@ import {
   obterSimulacao,
   enviarSimulacaoBanco,
 } from "@/lib/simulacao/simulacoes.functions";
-import { criarProposta, enviarPropostaHomeFin } from "@/lib/propostas/propostas.functions";
+import { criarProposta } from "@/lib/propostas/propostas.functions";
+import { useEnviarProposta } from "@/hooks/use-enviar-proposta";
 import { formatBRL, formatPercent } from "@/lib/simulacao/format";
 import { corDoBanco } from "@/lib/bancos/cores";
 import { extrairDetalheBanco } from "@/lib/simulacao/detalhe-banco";
@@ -134,6 +135,7 @@ export function ResultadoInlineAmbos({ simulacaoIdSac, simulacaoIdPrice, onFecha
   const qc = useQueryClient();
   const [reenviandoBanco, setReenviandoBanco] = useState<string | null>(null);
   const [criandoBanco, setCriandoBanco] = useState<string | null>(null);
+  const { enviar: handleEnviarHook } = useEnviarProposta();
   const jaBaixou = useRef(false);
 
   const qSac = useSimQuery(simulacaoIdSac);
@@ -161,23 +163,22 @@ export function ResultadoInlineAmbos({ simulacaoIdSac, simulacaoIdPrice, onFecha
       const { proposta_id } = await criarProposta({
         data: { simulacao_id: simId, banco_id: bancoId },
       });
-      try {
-        await enviarPropostaHomeFin({ data: { proposta_id, banco_id: bancoId } });
-        toast.success("Proposta enviada ao banco.");
-      } catch (envioErr) {
-        toast.warning(
-          envioErr instanceof Error
-            ? `Proposta criada. Complete os dados para enviar: ${envioErr.message}`
-            : "Proposta criada. Complete os dados para enviar ao banco.",
-        );
-      }
-      router.navigate({
-        to: "/operacional/propostas/$id",
-        params: { id: proposta_id },
-        search: { complementar: 1 },
+      
+      await handleEnviarHook({
+        propostaId: proposta_id,
+        bancoId,
       });
+
+      // Navegação já é tratada pelo hook se houver pendência. 
+      // Se deu certo, o hook já mostra o toast de sucesso.
+      if (!router.state.location.pathname.includes(`/propostas/${proposta_id}`)) {
+          router.navigate({
+            to: "/operacional/propostas/$id",
+            params: { id: proposta_id },
+          });
+      }
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Falha ao criar proposta.");
+      // Erros já mostrados pelo hook/toast
     } finally {
       setCriandoBanco(null);
     }
