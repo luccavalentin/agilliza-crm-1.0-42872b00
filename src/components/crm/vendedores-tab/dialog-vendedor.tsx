@@ -50,6 +50,7 @@ export function DialogVendedor({
   buscarCep,
   salvando,
   onSubmeter,
+  idBanco,
 }: {
   aberto: boolean;
   onOpenChange: (v: boolean) => void;
@@ -60,7 +61,9 @@ export function DialogVendedor({
   buscarCep: (cepRaw: string) => void;
   salvando: boolean;
   onSubmeter: () => void;
+  idBanco?: number;
 }) {
+
   const pf = form.tipo_pessoa === "PF";
   const casado =
     form.estado_civil === "casado" || form.estado_civil === "uniao_estavel";
