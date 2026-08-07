@@ -8,9 +8,11 @@ import {
   X,
   Download,
   Send,
+  Loader2,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { useEnviarProposta } from "@/hooks/use-enviar-proposta";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -71,6 +73,7 @@ export function ResultadoInlineCompleta({ simulacaoId, onFechar, isSecundaria }:
   const router = useRouter();
   const qc = useQueryClient();
   const [reenviandoBanco, setReenviandoBanco] = useState<string | null>(null);
+  const { enviar: handleEnviar, busy: enviandoBanco } = useEnviarProposta();
   const [criandoBanco, setCriandoBanco] = useState<string | null>(null);
   const jaBaixou = useRef(false);
 
@@ -140,20 +143,15 @@ export function ResultadoInlineCompleta({ simulacaoId, onFechar, isSecundaria }:
       const { proposta_id } = await criarProposta({
         data: { simulacao_id: simulacaoId, banco_id: bancoId },
       });
-      try {
-        await enviarPropostaHomeFin({ data: { proposta_id, banco_id: bancoId } });
-        toast.success("Proposta enviada ao banco.");
-      } catch (envioErr) {
-        toast.warning(
-          envioErr instanceof Error
-            ? `Proposta criada. Complete os dados para enviar: ${envioErr.message}`
-            : "Proposta criada. Complete os dados para enviar ao banco.",
-        );
-      }
+      
+      await handleEnviar({
+        propostaId: proposta_id,
+        bancoId,
+      });
+
       router.navigate({
         to: "/operacional/propostas/$id",
         params: { id: proposta_id },
-        search: { complementar: 1 },
       });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Falha ao criar proposta.");
@@ -383,11 +381,11 @@ export function ResultadoInlineCompleta({ simulacaoId, onFechar, isSecundaria }:
                           <Button
                             size="sm"
                             className="bg-gradient-to-b from-primary to-primary/90 shadow-sm transition-all duration-200 hover:-translate-y-px hover:shadow-md hover:brightness-105 active:translate-y-0 active:scale-[0.98]"
-                            disabled={b.status_banco !== "simulada" || criandoBanco !== null}
+                            disabled={b.status_banco !== "simulada" || criandoBanco !== null || enviandoBanco}
                             onClick={() => enviarAprovacao(b.banco_id)}
                           >
-                            <Send className="mr-1 h-4 w-4" />
-                            {criandoBanco === b.banco_id ? "Enviando…" : "Enviar Aprovação"}
+                            {criandoBanco === b.banco_id || (enviandoBanco && criandoBanco === b.banco_id) ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Send className="mr-1 h-4 w-4" />}
+                            {criandoBanco === b.banco_id || (enviandoBanco && criandoBanco === b.banco_id) ? "Enviando…" : "Enviar Aprovação"}
                           </Button>
                         )}
                       </div>

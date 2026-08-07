@@ -128,6 +128,7 @@ export function AbaEnviarBanco({
 
   const [visualizando, setVisualizando] = useState<{ url: string; nome: string } | null>(null);
   const [excluindo, setExcluindo] = useState<{ id: string; nome: string } | null>(null);
+  const { enviar: handleEnviar, busy: enviandoBanco } = useEnviarProposta();
   const [enviando, setEnviando] = useState(false);
   const [enviandoId, setEnviandoId] = useState<string | null>(null);
   const [uploadCat, setUploadCat] = useState<Categoria | null>(null);
@@ -249,7 +250,11 @@ export function AbaEnviarBanco({
 
   async function enviarAoBanco(documentoIds?: string[]) {
     if (bloqueado) {
-      toast.error("Complete os dados obrigatórios de todos os participantes antes de enviar.");
+      handleEnviar({
+        propostaId,
+        envolvidos,
+        onCadastroIncompleto: (primeiro) => onCompletar?.(primeiro)
+      });
       return;
     }
     const individual = Array.isArray(documentoIds) && documentoIds.length === 1;
@@ -387,11 +392,11 @@ export function AbaEnviarBanco({
                 <span>
                   <Button
                     onClick={() => enviarAoBanco()}
-                    disabled={enviando || totalPdfs === 0 || bloqueado}
+                    disabled={enviando || enviandoBanco || totalPdfs === 0}
                     className="h-11 w-full gap-2 rounded-xl px-6 font-semibold shadow-md shadow-primary/20 transition-all hover:shadow-lg hover:shadow-primary/25 active:scale-[0.98] disabled:shadow-none sm:w-auto"
                   >
-                    {enviando ? <Loader2 className="h-4 w-4 animate-spin" /> : <Landmark className="h-4 w-4" />}
-                    {enviando ? "Enviando…" : "Enviar todos os documentos ao banco"}
+                    {enviando || enviandoBanco ? <Loader2 className="h-4 w-4 animate-spin" /> : <Landmark className="h-4 w-4" />}
+                    {enviando || enviandoBanco ? "Enviando…" : (bloqueado ? "Completar cadastro e enviar documentos" : "Enviar todos os documentos ao banco")}
                   </Button>
                 </span>
               </TooltipTrigger>

@@ -223,7 +223,30 @@ function Pagina() {
   const [enviandoAuto, setEnviandoAuto] = useState(false);
   const [destacarObrigatorios, setDestacarObrigatorios] = useState(false);
   const [participanteModal, setParticipanteModal] = useState<any>(null);
+  const { abrir_cadastro } = Route.useSearch();
   const [indiceParticipante, setIndiceParticipante] = useState(0);
+
+  useEffect(() => {
+    if (abrir_cadastro && envolvidos.length > 0) {
+      const env = envolvidos.find((e: any) => e.id === abrir_cadastro);
+      if (env) {
+        setParticipanteModal(env);
+        const idx = envolvidos.findIndex((e: any) => e.id === abrir_cadastro);
+        setIndiceParticipante(idx + 1);
+        
+        // Limpa a query string para não reabrir ao atualizar
+        router.navigate({
+            to: "/operacional/propostas/$id",
+            params: { id },
+            search: (prev) => {
+                const { abrir_cadastro: _, ...rest } = prev;
+                return rest;
+            },
+            replace: true
+        });
+      }
+    }
+  }, [abrir_cadastro, envolvidos, id, router]);
 
   const pendentes = useMemo(() => {
     return (envolvidos ?? []).map((env, index) => ({
