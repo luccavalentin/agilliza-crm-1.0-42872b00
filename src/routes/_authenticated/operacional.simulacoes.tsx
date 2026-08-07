@@ -82,6 +82,14 @@ function Pagina() {
   const [escopo, setEscopo] = useState<"todas" | "minhas">("todas");
   const [q, setQ] = useState("");
   const [busca, setBusca] = useState("");
+  
+  // Debounce manual para não sobrecarregar o servidor em cada tecla
+  useMemo(() => {
+    const timer = setTimeout(() => {
+      setBusca(q);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [q]);
   const [desde, setDesde] = useState("");
   const [ate, setAte] = useState("");
   const [responsavel, setResponsavel] = useState<string>("todos");

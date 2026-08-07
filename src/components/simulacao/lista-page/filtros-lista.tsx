@@ -54,26 +54,20 @@ export function FiltrosLista({
         </TabsList>
       </Tabs>
       <div className="flex flex-wrap items-center gap-2">
-        <form
-          className="flex min-w-0 flex-1 items-center gap-2 sm:flex-none"
-          onSubmit={(e) => {
-            e.preventDefault();
-            onBuscar();
-          }}
-        >
+        <div className="flex min-w-0 flex-1 items-center gap-2 sm:flex-none">
           <div className="relative flex-1 sm:flex-none">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               className="h-8 w-full pl-9 xl:w-56 2xl:w-64 text-xs"
               placeholder="Número, cliente ou documento"
               value={q}
-              onChange={(e) => setQ(e.target.value)}
+              onChange={(e) => {
+                setQ(e.target.value);
+                onBuscar(); // Busca reativa enquanto digita
+              }}
             />
           </div>
-          <Button type="submit" variant="secondary" size="sm" className="h-8 shrink-0 text-xs">
-            Buscar
-          </Button>
-        </form>
+        </div>
         {escopo === "todas" && (
           <UsuarioCombobox
             value={responsavel}
