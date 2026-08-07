@@ -831,17 +831,20 @@ async function enviarPropostaImplInner({
     );
   }
 
+  // Reenvio (ou primeiro envio) limpa o status e o erro da tentativa anterior
+  // dos campos da proposta para garantir fonte única de verdade no início do processo.
+  const patchProposta: Record<string, any> = {
+    enviada_em: new Date().toISOString(),
+    ip_consentimento: ip,
+    ultimo_erro: null,
+    detalhe_status_atual: null,
+  };
+
   if (primeiroEnvio) {
-    await supabase
-      .from("propostas")
-      .update({
-        status: "enviada_banco",
-        enviada_em: new Date().toISOString(),
-        ip_consentimento: ip,
-        ultimo_erro: null,
-      })
-      .eq("id", propostaId);
+    patchProposta.status = "enviada_banco";
   }
+
+  await supabase.from("propostas").update(patchProposta).eq("id", propostaId);
 
   const ctx = {
     simulacao_id: prop.simulacao_id,
