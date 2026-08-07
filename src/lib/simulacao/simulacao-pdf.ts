@@ -294,7 +294,7 @@ function drawInfoFinanciamento(
     { label: "Despesas financiadas", valor: brlOuTraco(d?.despesasFinanciadas) },
     {
       label: "Valor de financiamento total",
-      valor: brlOuTraco(d?.financiamentoTotal ?? d?.valorFinanciamento ?? s.valor_financiamento),
+      valor: brlOuTraco((d?.financiamentoTotal ?? d?.valorFinanciamento ?? s.valor_financiamento ?? 0) + (d?.despesasFinanciadas ?? s.valor_despesas_financiadas ?? 0)),
     },
     { label: "Entrada", valor: brlOuTraco((() => {
       const e = d?.valorEntrada ?? s.valor_entrada;
