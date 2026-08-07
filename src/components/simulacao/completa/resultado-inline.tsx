@@ -146,17 +146,20 @@ export function ResultadoInlineCompleta({ simulacaoId, onFechar, isSecundaria }:
         data: { simulacao_id: simulacaoId, banco_id: bancoId },
       });
       
-      await handleEnviar({
+      await handleEnviarHook({
         propostaId: proposta_id,
         bancoId,
+        enviarFn: enviarPropostaFn
       });
 
-      router.navigate({
-        to: "/operacional/propostas/$id",
-        params: { id: proposta_id },
-      });
+      if (!router.state.location.pathname.includes(`/propostas/${proposta_id}`)) {
+          router.navigate({
+            to: "/operacional/propostas/$id",
+            params: { id: proposta_id },
+          });
+      }
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Falha ao criar proposta.");
+      // Erros já mostrados pelo hook/toast
     } finally {
       setCriandoBanco(null);
     }
