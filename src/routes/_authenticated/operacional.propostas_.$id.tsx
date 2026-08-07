@@ -613,6 +613,18 @@ function Pagina() {
         open={Boolean(participanteModal)}
         onOpenChange={(v) => !v && setParticipanteModal(null)}
         titulo="Completar dados do participante"
+        onEnviarAgora={() => {
+            const bancosProp = data?.bancos ?? [];
+            const bancosPendentes = bancosProp.filter((b: any) => b.selecionado && !bancoJaEnviado(b));
+            const bancoId = bancosPendentes.length === 1 ? bancosPendentes[0].banco_id : undefined;
+            
+            setParticipanteModal(null);
+            handleEnviarHook({
+                propostaId: id,
+                bancoId,
+                envolvidos: data?.envolvidos
+            });
+        }}
         avisoTopo={
           participanteModal && (
             <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive font-medium leading-relaxed">
