@@ -414,6 +414,15 @@ export function ClienteForm({
     if (vazio(v.data_nascimento)) s.add("data_nascimento");
     if (vazio(v.email)) s.add("email");
     if (vazio(v.telefone_celular)) s.add("telefone_celular");
+    if (
+      idBanco === 33 &&
+      ehPF &&
+      (v.estado_civil === "casado" || v.estado_civil === "uniao_estavel") &&
+      vazio(v.regime_casamento)
+    ) {
+      s.add("regime_casamento");
+    }
+
     if (vazio(v.renda_total_declarada)) s.add("renda_total_declarada");
     // Profissão
     if (vazio(v.profissao)) s.add("profissao");
