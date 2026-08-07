@@ -108,7 +108,7 @@ export function TabResumo({
         bancoId: pbId,
         envolvidos: proposta?.envolvidos
       });
-      if (r?.bancos?.length > 0) {
+      if (r && r.bancos && r.bancos.length > 0) {
         setResultadoEnvio(r.bancos);
       }
     } catch (e) {
