@@ -208,7 +208,8 @@ export function ParticipanteDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-5">
+        <div className="space-y-5" ref={corpoRef}>
+          {avisoTopo}
           <CamposParticipante
             f={f}
             set={set}
@@ -245,7 +246,8 @@ export function ParticipanteDialog({
           )}
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="flex-col gap-2 sm:flex-row">
+          {rodapeExtra}
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={salvando}>
             Cancelar
           </Button>
@@ -254,6 +256,7 @@ export function ParticipanteDialog({
             Salvar
           </Button>
         </DialogFooter>
+
       </DialogContent>
     </Dialog>
   );
