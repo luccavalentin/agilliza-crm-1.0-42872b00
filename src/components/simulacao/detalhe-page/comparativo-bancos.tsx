@@ -19,7 +19,13 @@ import { formatBRL, formatPercent } from "@/lib/simulacao/format";
 import { rendaMinimaPelosBancos } from "@/lib/simulacao/renda";
 import { ErroBancoDetalhe } from "@/components/simulacao/erro-banco-detalhe";
 import {
+  AmortizacaoTag,
+  MobileStat,
+  ResumoCelula,
+  totalFinanciado,
+} from "@/components/simulacao/detalhe-page/ui";
 import { bancoInformou } from "@/lib/simulacao/origem-dados";
+
 /**
  * Campos com fallback interno para o valor SOLICITADO: só exibimos quando o
  * banco realmente informou (ver src/lib/simulacao/origem-dados.ts).
@@ -33,11 +39,6 @@ const financMaxTexto = (b: any) =>
     ? formatBRL(b.valor_financiamento_max)
     : "—";
 
-  AmortizacaoTag,
-  MobileStat,
-  ResumoCelula,
-  totalFinanciado,
-} from "@/components/simulacao/detalhe-page/ui";
 
 type Props = {
   s: any;
