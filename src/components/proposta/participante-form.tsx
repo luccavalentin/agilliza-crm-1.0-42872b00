@@ -218,7 +218,9 @@ export function ParticipanteDialog({
                   mostrarQualificacao={false}
                   mostrarEstadoCivil={false}
                   mostrarIdentificacaoExtra={false}
+                  idBanco={idBanco}
                 />
+
               </div>
             </div>
           )}
