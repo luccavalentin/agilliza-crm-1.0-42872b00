@@ -123,11 +123,11 @@ function Pagina() {
   const [arrastando, setArrastando] = useState<{ id: string; status: PropostaStatus } | null>(null);
 
   const padrao = useMemo(() => intervaloMesAtual(), []);
-  const [escopo, setEscopo] = useState<"todas" | "minhas">(qInicial ? "todas" : "minhas");
-  const [q, setQ] = useState(qInicial ?? "");
-  const [busca, setBusca] = useState(qInicial ?? "");
-  const [dataInicio, setDataInicio] = useState(qInicial ? "" : padrao.inicio);
-  const [dataFim, setDataFim] = useState(qInicial ? "" : padrao.fim);
+  const [escopo, setEscopo] = useState<"todas" | "minhas">("minhas");
+  const [q, setQ] = useState("");
+  const [busca, setBusca] = useState("");
+  const [dataInicio, setDataInicio] = useState("");
+  const [dataFim, setDataFim] = useState("");
   const [respFiltro, setRespFiltro] = useState("todos");
   const [corretorFiltro, setCorretorFiltro] = useState("todos");
   const [imobFiltro, setImobFiltro] = useState("todos");
@@ -180,8 +180,8 @@ function Pagina() {
   function limparFiltros() {
     setQ("");
     setBusca("");
-    setDataInicio(padrao.inicio);
-    setDataFim(padrao.fim);
+    setDataInicio("");
+    setDataFim("");
     setEscopo("minhas");
     setRespFiltro("todos");
     setCorretorFiltro("todos");
