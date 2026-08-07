@@ -988,12 +988,32 @@ async function enviarPropostaImplInner({
         mapa.banco === "erro"
           ? "em_analise"
           : situacaoBancoDeTipo(situacaoTipo, resp?.codigoSituacaoBanco, false, resp);
-      const numeroBanco = numeroPropostaBancoReal(resp);
+      const numeroExtraido = numeroPropostaBancoReal(resp);
       const referenciaBanco = referenciaIntegracaoBanco(resp);
-      if (numeroBanco) patchOk.numero_proposta_banco = numeroBanco;
-      else if (referenciaBanco && numeroAtualEhReferenciaTecnica(b, resp)) {
+      // Um mesmo protocolo não pode existir em duas propostas / bancos
+      // diferentes. Se acontecer, é vazamento de dado — loga e descarta.
+      let numeroBanco: string | null = numeroExtraido;
+      if (numeroExtraido) {
+        const { data: colisao } = await supabase
+          .from("proposta_bancos")
+          .select("id, proposta_id, banco_id")
+          .eq("numero_proposta_banco", numeroExtraido)
+          .neq("id", b.id)
+          .limit(1);
+        if (colisao && colisao.length > 0) {
+          console.error(
+            "[proposta] protocolo duplicado entre bancos/propostas — descartado",
+            { numero: numeroExtraido, atual: b.id, existente: colisao[0] },
+          );
+          numeroBanco = null;
+        }
+      }
+      // Sem protocolo devolvido pela API DESTA proposta/banco → campo NULO.
+      patchOk.numero_proposta_banco = numeroBanco;
+      if (!numeroBanco && referenciaBanco && numeroAtualEhReferenciaTecnica(b, resp)) {
         patchOk.numero_proposta_banco = null;
       }
+
       if (resp?.valorParcelaBanco != null) patchOk.valor_parcela = resp.valorParcelaBanco;
       if (resp?.taxaJurosAnoBanco != null) patchOk.taxa_juros_ano = resp.taxaJurosAnoBanco;
       if (resp?.prazoPagamentoBancoMax != null)
