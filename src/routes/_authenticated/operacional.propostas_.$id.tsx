@@ -535,8 +535,12 @@ function Pagina() {
             propostaId={id}
             envolvidos={data.envolvidos}
             onCompletar={(env) => {
-              setTab("COMPRADORES");
-              setDestacarObrigatorios(true);
+              if (env.tipo_qualificacao === "CO") {
+                setTab("COMPRADORES");
+                setDestacarObrigatorios(true);
+              } else {
+                setParticipanteModal(env);
+              }
             }}
           />
         )}
