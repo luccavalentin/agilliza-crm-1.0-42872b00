@@ -23,8 +23,6 @@ const SENSIVEIS = new Set([
   "rendaTotal",
   "renda",
   "rendaConjuge",
-  "dataNascimento",
-  "dataNascimentoConjuge",
   "email",
   "emailConjuge",
   "celular",
@@ -35,17 +33,24 @@ const SENSIVEIS = new Set([
   "jwt",
 ]);
 
+/** 
+ * Mascara apenas dados sensíveis (identificação, contato, renda). 
+ * Preserva campos estruturais como endereço, estado civil e regime 
+ * para facilitar o diagnóstico (Problema 3a).
+ */
 function mascarar(valor: unknown): unknown {
   if (Array.isArray(valor)) return valor.map(mascarar);
   if (valor && typeof valor === "object") {
     const out: Record<string, unknown> = {};
     for (const [k, v] of Object.entries(valor as Record<string, unknown>)) {
+      // Data de nascimento não é mais mascarada para facilitar diagnóstico de prazo/idade
       out[k] = SENSIVEIS.has(k) ? "***" : mascarar(v);
     }
     return out;
   }
   return valor;
 }
+
 
 const CAMPOS_TEXTO_LIVRE_BANCO = new Set([
   "nomeProfissao",
