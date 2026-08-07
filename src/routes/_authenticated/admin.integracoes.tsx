@@ -293,7 +293,11 @@ function Pagina() {
             </Table>
           </div>
         </TabsContent>
+        <TabsContent value="orfas" className="mt-4">
+          <OrfasTabContent />
+        </TabsContent>
       </Tabs>
+
     </div>
   );
 }
