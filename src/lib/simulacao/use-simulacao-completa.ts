@@ -337,7 +337,7 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
   );
   const entradaMinimaEfetiva = Math.max(
     0,
-    (Number(f.valor_imovel) || 0) - financiamentoImovelMaximo,
+    (Number(f.valor_imovel) || 0) - financiamentoImovelMaximo + 1,
   );
   const financiamentoExcedido =
     (Number(f.valor_imovel) || 0) > 0 &&
