@@ -205,6 +205,7 @@ function Pagina() {
     try {
       await excluir({ data: { id } });
       toast.success("Proposta excluída.");
+      queryClient.removeQueries({ queryKey: ["proposta", id] });
       queryClient.invalidateQueries({ queryKey: ["propostas"] });
       queryClient.invalidateQueries({ queryKey: ["crm-painel"] });
       queryClient.invalidateQueries({ queryKey: ["clientes"] });
