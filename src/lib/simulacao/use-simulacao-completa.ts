@@ -296,14 +296,19 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
     if (imovel <= 0) return;
     const finMax = Math.floor(imovel * ltvMax);
     const finAtual = Number(f.valor_financiamento) || 0;
-    if (finAtual <= finMax) return;
-    const novaEntrada = imovel - finMax;
-    setEntradaTocada(true);
-    setF((prev) => ({
-      ...prev,
-      valor_entrada: novaEntrada,
-      valor_financiamento: finMax,
-    }));
+
+    // Se o financiamento atual exceder o máximo permitido pelo LTV,
+    // ajustamos a entrada para cobrir a diferença.
+    // Usamos uma margem de segurança de 1 real para evitar erros de ponto flutuante/centavos no banco.
+    if (finAtual > finMax) {
+      const novaEntrada = imovel - finMax + 1;
+      setEntradaTocada(true);
+      setF((prev) => ({
+        ...prev,
+        valor_entrada: novaEntrada,
+        valor_financiamento: imovel - novaEntrada,
+      }));
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ltvMax]);
   // Home Equity: prazo máximo operacional de 240 meses (regra das IFs).
