@@ -86,6 +86,18 @@ export async function adicionarParticipanteImpl({
   }
   const cpfCnpj = soDigitosStr(participante.cpfCnpj);
   if (!cpfCnpj) throw new Error("CPF/CNPJ obrigatório para incluir participante.");
+  
+  // Deduplicação por CPF antes de montar o payload
+  const { data: envsExistentes } = await supabase
+    .from("proposta_envolvidos")
+    .select("cpf_cnpj")
+    .eq("proposta_id", propostaId);
+  
+  const cpfsExistentes = (envsExistentes ?? []).map(e => soDigitosStr(e.cpf_cnpj)).filter(Boolean);
+  if (cpfsExistentes.includes(cpfCnpj)) {
+    throw new Error("Este CPF/CNPJ já está cadastrado nesta proposta.");
+  }
+
   const payload = {
     tipoSituacao: participante.tipoSituacao ?? "A",
     tipoQualificacao: participante.tipoQualificacao ?? "CO",

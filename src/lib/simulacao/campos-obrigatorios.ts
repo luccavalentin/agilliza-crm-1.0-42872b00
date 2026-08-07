@@ -70,5 +70,5 @@ export function mensagemCamposFaltantes(faltantes: CampoFaltante[]): string {
     porOrigem.set(f.onde, lista);
   }
   const partes = [...porOrigem.entries()].map(([onde, campos]) => `${onde}: ${campos.join(", ")}`);
-  return `Não foi possível enviar ao banco — faltam dados obrigatórios. ${partes.join(" · ")}. Complete esses campos e reenvie.`;
+  return `Campos obrigatórios ausentes. ${partes.join(" · ")}. Complete esses campos e reenvie.`;
 }

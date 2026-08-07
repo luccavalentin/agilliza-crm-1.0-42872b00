@@ -14,6 +14,7 @@ import { prazoMaximoParaProponentes, PRAZO_MIN } from "./prazo";
 import {
   validarCamposSimulacao,
   validarCamposParticipante,
+  mensagemCamposFaltantes,
 } from "./campos-obrigatorios";
 
 interface EnviarArgs {
@@ -141,10 +142,11 @@ async function consultarCepSeguro(cep: string | undefined): Promise<{
   }
 }
 
-async function montarEnderecoParticipante(sim: any, cliente: any) {
+async function montarEnderecoParticipante(sim: any, cliente: any, endPrincipal?: any) {
   const cep = soDigitos(
     sim.cep_imovel ??
       cliente?.imovel_cep ??
+      endPrincipal?.cep ??
       cliente?.cep ??
       cliente?.endereco_cep,
   );
@@ -152,21 +154,23 @@ async function montarEnderecoParticipante(sim: any, cliente: any) {
   return {
     cep,
     logradouro: primeiroTexto(
+      endPrincipal?.logradouro,
       cliente?.logradouro,
       cliente?.endereco,
       cliente?.imovel_logradouro,
       viaCep.logradouro,
     ),
     numeroLogradouro: primeiroTexto(
+      endPrincipal?.numero,
       cliente?.numero,
       cliente?.numero_logradouro,
       cliente?.imovel_numero,
       "S/N",
     ),
-    complementoLogradouro: primeiroTexto(cliente?.complemento, cliente?.imovel_complemento),
-    bairro: primeiroTexto(cliente?.bairro, cliente?.imovel_bairro, viaCep.bairro),
-    municipio: primeiroTexto(cliente?.cidade, cliente?.municipio, cliente?.imovel_cidade, viaCep.municipio),
-    uf: primeiroTexto(cliente?.uf, cliente?.imovel_uf, sim.uf, viaCep.uf),
+    complementoLogradouro: primeiroTexto(endPrincipal?.complemento, cliente?.complemento, cliente?.imovel_complemento),
+    bairro: primeiroTexto(endPrincipal?.bairro, cliente?.bairro, cliente?.imovel_bairro, viaCep.bairro),
+    municipio: primeiroTexto(endPrincipal?.cidade, endPrincipal?.municipio, cliente?.cidade, cliente?.municipio, cliente?.imovel_cidade, viaCep.municipio),
+    uf: primeiroTexto(endPrincipal?.uf, cliente?.uf, cliente?.imovel_uf, sim.uf, viaCep.uf),
   };
 }
 
@@ -187,11 +191,13 @@ async function montarEnderecoImovelGarantia(sim: any, cliente: any) {
 async function garantirDadosParticipantesSimulacao({
   sim,
   cliente,
+  endPrincipal,
   idOportunidade,
   ctx,
 }: {
   sim: any;
   cliente: any;
+  endPrincipal: any;
   idOportunidade: string;
   ctx: { simulacao_id: string; correspondente_id: any };
 }) {
@@ -210,7 +216,7 @@ async function garantirDadosParticipantesSimulacao({
   }
   if (participantes.length === 0) return;
 
-  const endereco = await montarEnderecoParticipante(sim, cliente);
+  const endereco = await montarEnderecoParticipante(sim, cliente, endPrincipal);
   const cpfTitular = soDigitos(sim.cpf_cnpj);
   const cpfConjuge = soDigitos(sim.cpf_conjuge);
 
@@ -236,7 +242,7 @@ async function garantirDadosParticipantesSimulacao({
         (ehConjuge ? sim.estado_civil_conjuge : sim.estado_civil) ??
         cliente?.estado_civil ?? 
         undefined,
-      tipoRegimeCasamento: part?.tipoRegimeCasamento ?? sim.regime_casamento ?? undefined,
+      tipoRegimeCasamento: part?.tipoRegimeCasamento ?? sim.regime_casamento ?? cliente?.regime_casamento ?? undefined,
       tipoSexo: part?.tipoSexo ?? normalizarSexo(cliente?.sexo),
       tipoDocumentoIdentidade:
         part?.tipoDocumentoIdentidade ?? cliente?.tipo_documento_identidade ?? undefined,
@@ -301,6 +307,27 @@ export async function enviarSimulacaoImpl({
   supabase,
   bancoIds,
 }: EnviarArgs): Promise<EnviarResultado> {
+  // Validação legítima antes de qualquer envio
+  const { data: simPreCheck } = await supabase
+    .from("simulacoes")
+    .select("*, cliente:clientes(*)")
+    .eq("id", simulacaoId)
+    .maybeSingle();
+  
+  if (simPreCheck) {
+    const faltantesObrigatorios = validarCamposSimulacao(simPreCheck);
+    if (faltantesObrigatorios.length > 0) {
+      // Registrar log antes de estourar o erro
+      await supabase.from("simulacao_historico").insert({
+        simulacao_id: simulacaoId,
+        tipo: "erro",
+        descricao: mensagemCamposFaltantes(faltantesObrigatorios),
+        ator_id: userId,
+      });
+      throw new Error(mensagemCamposFaltantes(faltantesObrigatorios));
+    }
+  }
+
   const retryLimit = 2; // Tentativas para erros 5xx
   const TIMEOUT_BANCO_MS = 240_000; // 240 segundos (4 minutos) para acomodar o polling do banco (até 200s no Itaú) e latência da rede.
 
@@ -323,7 +350,7 @@ export async function enviarSimulacaoImpl({
   if (error) throw new Error(error.message);
   if (!sim) throw new Error("Simulação não encontrada.");
 
-  const cliente = { ...(sim.cliente ?? {}), ...(end ?? {}) };
+  const cliente = { ...(sim.cliente ?? {}) };
   if (cliente) {
     // Sincronização automática dos dados do cliente do CRM para a simulação antes do envio.
     // Isso garante que se o usuário alterou o cadastro (nome, renda, etc.), a proposta use os dados novos.
@@ -592,7 +619,6 @@ export async function enviarSimulacaoImpl({
         email: sim.email,
         celular: (sim.celular ?? "").replace(/\D/g, ""),
         tipoEstadoCivil: sim.estado_civil ? { id: sim.estado_civil } : undefined,
-        regimeCasamento: sim.regime_casamento ? { id: sim.regime_casamento } : undefined,
 
         fgCompoeRenda: compoeRenda,
         ...(possuiConjuge
@@ -648,7 +674,6 @@ export async function enviarSimulacaoImpl({
         const updatePayload = {
           ...dadosOportunidade,
           tipoEstadoCivil: sim.estado_civil ? { id: sim.estado_civil } : undefined,
-          regimeCasamento: sim.regime_casamento ? { id: sim.regime_casamento } : undefined,
           fgCompoeRenda: compoeRenda,
           ...conjugeBloco,
         };
@@ -675,7 +700,7 @@ export async function enviarSimulacaoImpl({
     }
 
     if (idOportunidade) {
-      await garantirDadosParticipantesSimulacao({ sim, cliente: clienteCompleto, idOportunidade, ctx });
+      await garantirDadosParticipantesSimulacao({ sim, cliente: clienteCompleto, endPrincipal: end, idOportunidade, ctx });
     }
     
     // Auditoria de renda enviada ao banco (Princípio #2d - Log de auditoria)
