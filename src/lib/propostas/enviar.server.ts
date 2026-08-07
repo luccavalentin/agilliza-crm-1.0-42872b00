@@ -464,48 +464,23 @@ async function sincronizarSnapshotFamiliarLocal({
  */
 async function garantirEnderecoParticipantes({
   prop,
+  pb,
   idOportunidade,
   ctx,
   supabase,
 }: {
   prop: any;
+  pb: any;
   idOportunidade: string;
   ctx: { simulacao_id: any; proposta_id: string; correspondente_id: any };
   supabase: SupabaseClient<any, any, any>;
 }): Promise<void> {
   // Ressincroniza endereços de cliente_enderecos para proposta_envolvidos antes do envio
-  const { data: envsToSync } = await supabase
-    .from("proposta_envolvidos")
-    .select("id, cliente_id, tipo_qualificacao")
-    .eq("proposta_id", prop.id);
-
-  if (envsToSync) {
-    for (const envSync of envsToSync) {
-      if (!envSync.cliente_id) continue;
-      const { data: endSync } = await supabase
-        .from("cliente_enderecos")
-        .select("*")
-        .eq("cliente_id", envSync.cliente_id)
-        .order("principal", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      if (endSync) {
-        await supabase
-          .from("proposta_envolvidos")
-          .update({
-            cep: endSync.cep,
-            logradouro: endSync.logradouro,
-            numero_logradouro: endSync.numero,
-            complemento: endSync.complemento,
-            bairro: endSync.bairro,
-            municipio: endSync.cidade,
-            uf: endSync.uf,
-          } as any)
-          .eq("id", envSync.id);
-      }
-    }
-  }
+  const { ressincronizarDadosParticipantes } = await import("./propostas.functions");
+  await ressincronizarDadosParticipantes({
+    data: { proposta_id: prop.id },
+    context: { supabase } as any,
+  } as any);
 
   let participantes: any[] = [];
   try {
