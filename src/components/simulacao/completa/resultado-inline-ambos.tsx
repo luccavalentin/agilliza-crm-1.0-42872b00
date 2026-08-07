@@ -34,10 +34,14 @@ import { bancoInformou } from "@/lib/simulacao/origem-dados";
  * Campos com fallback interno para o valor SOLICITADO: só exibimos quando o
  * banco realmente informou (ver src/lib/simulacao/origem-dados.ts).
  */
-const prazoMaxTexto = (b: any) =>
-  bancoInformou(b, "prazo_pagamento_max") && b.prazo_pagamento_max && b.prazo_pagamento_max !== b.prazo_contratado
-    ? `${b.prazo_pagamento_max}m`
-    : "—";
+const prazoMaxTexto = (b: any, sim: any) => {
+  const contratado = Number(sim?.prazo) || 0;
+  const max = Number(b.prazo_pagamento_max) || 0;
+  if (bancoInformou(b, "prazo_pagamento_max") && max && max !== contratado) {
+    return `${max}m`;
+  }
+  return "—";
+};
 const financMaxTexto = (b: any) =>
   bancoInformou(b, "valor_financiamento_max") && b.valor_financiamento_max != null
     ? formatBRL(b.valor_financiamento_max)
@@ -359,7 +363,7 @@ export function ResultadoInlineAmbos({ simulacaoIdSac, simulacaoIdPrice, onFecha
                         <MobileStat rotulo="Prazo" valor={`${l.simulacao.prazo}m`} />
                         <MobileStat
                           rotulo="Prazo máx"
-                          valor={prazoMaxTexto(b)}
+                          valor={prazoMaxTexto(b, l.simulacao)}
                         />
                         <MobileStat rotulo="Financ. máx" valor={financMaxTexto(b)} />
                         <MobileStat rotulo="Total financiado" valor={formatBRL(totalFinanciado(b))} />
@@ -485,7 +489,7 @@ export function ResultadoInlineAmbos({ simulacaoIdSac, simulacaoIdPrice, onFecha
                           {l.simulacao.prazo}m
                         </TableCell>
                         <TableCell className="py-3 text-right text-sm tabular-nums whitespace-nowrap">
-                          {prazoMaxTexto(b)}
+                          {prazoMaxTexto(b, l.simulacao)}
                         </TableCell>
                         <TableCell className="py-3 text-right text-sm font-semibold tabular-nums whitespace-nowrap">
                           {formatBRL(totalFinanciado(b))}

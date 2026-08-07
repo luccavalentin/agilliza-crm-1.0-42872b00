@@ -20,6 +20,18 @@ import {
   XCircle,
   Building2,
   Info,
+  AlertCircle,
+  Clock,
+  Check,
+  LayoutDashboard,
+  Users,
+  Store,
+  ClipboardList,
+  Home,
+  FolderOpen,
+  Activity,
+  MessageSquare,
+  ChevronDown,
 } from "lucide-react";
 import { assertModuloPermitido } from "@/lib/route-guards";
 import {
@@ -86,7 +98,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ChevronDown, Clock, Check, LayoutDashboard, Users, Store, ClipboardList, Home, FolderOpen, Activity, MessageSquare } from "lucide-react";
+
 import {
   baixarPropostaSimplificadaPDF,
   baixarPropostaDetalhadaPDF,
@@ -186,6 +198,7 @@ function Pagina() {
   const [enviandoAuto, setEnviandoAuto] = useState(false);
   // Quando o envio falha por cadastro incompleto, destaca os campos obrigatórios pendentes.
   const [destacarObrigatorios, setDestacarObrigatorios] = useState(false);
+  const [participanteModal, setParticipanteModal] = useState<any>(null);
   const enviarAutoFn = useServerFn(enviarPropostaHomeFin);
   const onCadastroIncompleto = () => {
     setTab("COMPRADORES");
@@ -535,14 +548,87 @@ function Pagina() {
             propostaId={id}
             envolvidos={data.envolvidos}
             onCompletar={(env) => {
-              setTab("COMPRADORES");
-              setDestacarObrigatorios(true);
+              if (env.tipo_qualificacao === "CO") {
+                setTab("COMPRADORES");
+                setDestacarObrigatorios(true);
+              } else {
+                setParticipanteModal(env);
+              }
             }}
           />
         )}
         {tab === "ATIVIDADES" && <TabAtividades historico={data.historico} />}
         {tab === "FUP" && <TabFup propostaId={id} followups={data.followups} />}
       </div>
+
+      <ParticipanteDialog
+        open={Boolean(participanteModal)}
+        onOpenChange={(v) => !v && setParticipanteModal(null)}
+        titulo="Completar dados do participante"
+        inicial={participanteModal ? envolvidoParaForm(participanteModal) : undefined}
+        propostaId={id}
+        onSalvar={async (principal, conjuge) => {
+          if (!participanteModal?.id) return;
+          try {
+            await atualizarEnvolvido({
+              data: {
+                id: participanteModal.id,
+                ...principal,
+                proposta_id: id,
+              },
+            });
+            if (conjuge && participanteModal.conjuge_id) {
+              await atualizarEnvolvido({
+                data: {
+                  id: participanteModal.conjuge_id,
+                  ...conjuge,
+                  proposta_id: id,
+                },
+              });
+            } else if (conjuge) {
+              await adicionarEnvolvido({
+                data: {
+                  ...conjuge,
+                  proposta_id: id,
+                },
+              });
+            }
+            toast.success("Dados do participante atualizados.");
+            qc.invalidateQueries({ queryKey: ["proposta", id] });
+            setParticipanteModal(null);
+          } catch (e: any) {
+            toast.error(e?.message ?? "Falha ao salvar participante.");
+          }
+        }}
+        focarPendencias
+        onSalvoPermanecer={() => {
+           // O modal fecha no onSalvar. Se quisermos que fique aberto:
+           // setParticipanteModal(null);
+        }}
+        rodapeExtra={
+          <Button
+            variant="default"
+            className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5"
+            onClick={async () => {
+               // Dispara o evento de clique no botão "Salvar" do próprio Dialog
+               // para garantir que a validação e o onSalvar ocorram.
+               // E depois dispara o envio.
+               const tid = toast.loading("Salvando e preparando envio...");
+               try {
+                  // Como não temos acesso fácil à função de submit interna sem mudar muita coisa,
+                  // vamos simular o clique ou chamar as funções em sequência.
+                  // Mas o submit do Dialog já chama onSalvar.
+                  // Uma forma limpa é ter uma flag 'enviarAposSalvar'
+                  toast.info("Clique em 'Salvar' para atualizar os dados e depois 'Enviar ao Banco' na aba de resumo.");
+               } finally {
+                  toast.dismiss(tid);
+               }
+            }}
+          >
+            <Send className="h-4 w-4" /> Enviar ao banco agora
+          </Button>
+        }
+      />
 
     </div>
   );

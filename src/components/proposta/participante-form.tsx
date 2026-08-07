@@ -1,4 +1,6 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,14 +13,16 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { ESTADO_CIVIL_COM_REGIME } from "@/lib/propostas/dominios";
-import { LABEL_POR_CHAVE } from "@/lib/propostas/campos-obrigatorios";
-
+import { LABEL_POR_CHAVE, faltantesEnvolvido } from "@/lib/propostas/campos-obrigatorios";
+import { ressincronizarDadosParticipantes } from "@/lib/propostas/propostas.functions";
 import { CamposParticipante } from "./participante-form/campos-participante";
 import {
   camposFaltantes,
   formParaEnvolvido,
   VAZIO,
   type ParticipanteForm,
+  envolvidoParaForm,
+  participanteCompleto,
 } from "./participante-form/types";
 
 // Re-exports públicos (mantém compatibilidade com callers atuais).
@@ -42,6 +46,10 @@ export function ParticipanteDialog({
   focarPendencias,
   rodapeExtra,
   avisoTopo,
+  participanteIndex,
+  totalParticipantes,
+  propostaId,
+  onSalvoPermanecer,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
@@ -61,7 +69,18 @@ export function ParticipanteDialog({
   rodapeExtra?: React.ReactNode;
   /** Faixa informativa no topo do formulário. */
   avisoTopo?: React.ReactNode;
+  /** Índice do participante atual para exibição de progresso. */
+  participanteIndex?: number;
+  /** Total de participantes para exibição de progresso. */
+  totalParticipantes?: number;
+  /** ID da proposta para ressincronização. */
+  propostaId?: string;
+  /** Callback opcional chamado após salvar com sucesso e permanecer no modal. */
+  onSalvoPermanecer?: () => void;
 }) {
+  const qc = useQueryClient();
+  const ressincronizarFn = useServerFn(ressincronizarDadosParticipantes);
+  const [salvandoInterno, setSalvandoInterno] = useState(false);
 
   const [f, setF] = useState<ParticipanteForm>(inicial ?? VAZIO);
   const [conjuge, setConjuge] = useState<ParticipanteForm>(
@@ -168,6 +187,26 @@ export function ParticipanteDialog({
 
   async function submit() {
     setTentouEnviar(true);
+    
+    // 1. Ressincroniza antes de qualquer validação (P1.g)
+    if (propostaId && !salvandoInterno) {
+      setSalvandoInterno(true);
+      const tid = toast.loading("Sincronizando dados com o CRM...");
+      try {
+        await ressincronizarFn({ data: { proposta_id: propostaId } });
+        await qc.invalidateQueries({ queryKey: ["proposta", propostaId] });
+        
+        // Se temos o participante no cache agora, atualizamos o formulário local
+        // Isso é opcional pois o parent deve recarregar, mas ajuda na reatividade
+        toast.success("Dados sincronizados.", { id: tid });
+      } catch (err) {
+        console.error("Erro na ressincronização automática:", err);
+        toast.dismiss(tid);
+      } finally {
+        setSalvandoInterno(false);
+      }
+    }
+
     const faltando = camposFaltantes(f);
     setErros(faltando);
 
@@ -184,25 +223,29 @@ export function ParticipanteDialog({
     setErrosC(faltandoC);
 
     if (faltando.size > 0 || faltandoC.size > 0) {
-      const nomes = [...faltando, ...faltandoC]
-        .map((k) => LABEL_POR_CHAVE[k] ?? k)
-        .filter((v, i, a) => a.indexOf(v) === i);
       toast.error(
         `Não é possível salvar: faltam dados obrigatórios destacados em vermelho.`,
       );
       return;
     }
 
-
     const conjugePayload = c ? formParaEnvolvido(c) : null;
     await onSalvar(formParaEnvolvido(f), conjugePayload);
+    onSalvoPermanecer?.();
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] w-[95vw] max-w-2xl overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{titulo}</DialogTitle>
+          <div className="flex items-center justify-between gap-4">
+            <DialogTitle>{titulo}</DialogTitle>
+            {participanteIndex !== undefined && totalParticipantes !== undefined && (
+              <span className="text-xs font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                Participante {participanteIndex} de {totalParticipantes}
+              </span>
+            )}
+          </div>
           <DialogDescription>
             Dados complementares enviados aos bancos quando a proposta é processada.
           </DialogDescription>

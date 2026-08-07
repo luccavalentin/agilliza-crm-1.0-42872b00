@@ -40,6 +40,8 @@ export function PropostaPopupHost() {
     : null;
 
   async function baixarComparativo() {
+    // Requisito: REMOVER download automático no popup.
+    // O download agora é manual através do botão.
     if (!simulacaoBase || bancosComparativo.length === 0) return;
     setBaixando(true);
     try {

@@ -41,10 +41,14 @@ import { bancoInformou } from "@/lib/simulacao/origem-dados";
  * Campos com fallback interno para o valor SOLICITADO: só exibimos quando o
  * banco realmente informou (ver src/lib/simulacao/origem-dados.ts).
  */
-const prazoMaxTexto = (b: any) =>
-  bancoInformou(b, "prazo_pagamento_max") && b.prazo_pagamento_max && b.prazo_pagamento_max !== b.prazo_contratado
-    ? `${b.prazo_pagamento_max}m`
-    : "—";
+const prazoMaxTexto = (b: any, data: any) => {
+  const contratado = Number(data?.simulacao?.prazo) || 0;
+  const max = Number(b.prazo_pagamento_max) || 0;
+  if (bancoInformou(b, "prazo_pagamento_max") && max && max !== contratado) {
+    return `${max}m`;
+  }
+  return "—";
+};
 const financMaxTexto = (b: any) =>
   bancoInformou(b, "valor_financiamento_max") && b.valor_financiamento_max != null
     ? formatBRL(b.valor_financiamento_max)
@@ -328,7 +332,7 @@ export function ResultadoInlineCompleta({ simulacaoId, onFechar, isSecundaria }:
                         <MobileStat rotulo="Prazo" valor={`${s.prazo}m`} />
                         <MobileStat
                           rotulo="Prazo máx"
-                          valor={prazoMaxTexto(b)}
+                          valor={prazoMaxTexto(b, data)}
                         />
                         <MobileStat
                           rotulo="Financ. máx"
@@ -454,7 +458,7 @@ export function ResultadoInlineCompleta({ simulacaoId, onFechar, isSecundaria }:
                             {s.prazo}m
                           </TableCell>
                           <TableCell className="px-2 py-2 text-right tabular-nums whitespace-nowrap">
-                            {prazoMaxTexto(b)}
+                            {prazoMaxTexto(b, data)}
                           </TableCell>
                           <TableCell className="px-2 py-2 text-right tabular-nums whitespace-nowrap">
                             {financMaxTexto(b)}
