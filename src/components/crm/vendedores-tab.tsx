@@ -151,7 +151,9 @@ export function VendedoresTab({ clienteId, idBanco }: { clienteId: string; idBan
         buscarCep={buscarCep}
         salvando={salvando}
         onSubmeter={submeter}
+        idBanco={idBanco}
       />
+
     </div>
   );
 }
