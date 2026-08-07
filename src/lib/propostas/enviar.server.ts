@@ -684,9 +684,10 @@ async function garantirEnderecoParticipantes({
       dataNascimento:
         part?.dataNascimento ?? env?.data_nascimento ?? src?.data_nascimento ?? prop.data_nascimento ?? undefined,
       tipoEstadoCivil: estadoCivil ?? undefined,
-      tipoRegimeCasamento: exigeConjugePorEstadoCivil(estadoCivil)
+      tipoRegimeCasamento: (exigeConjugePorEstadoCivil(estadoCivil) || (part?.idBanco === TIPO_BANCO_SANTANDER && (estadoCivil === "CA" || estadoCivil === "UE")))
         ? enumBancoId(env?.regime_casamento) ?? enumBancoId(src?.regime_casamento) ?? enumBancoId(part?.tipoRegimeCasamento)
         : undefined,
+
       tipoSexo: enumBancoId(part?.tipoSexo) ?? env?.tipo_sexo ?? undefined,
       tipoDocumentoIdentidade:
         enumBancoId(part?.tipoDocumentoIdentidade) ?? env?.tipo_documento_identidade ?? undefined,
