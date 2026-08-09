@@ -834,7 +834,7 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
 
       return next;
     });
-    setInvertido((v) => !v);
+    setInvertido(true); // Mantém marcado que houve uma inversão para evitar o re-sync do CRM reverter os dados
     setErros({});
     toast.success("Titular e cônjuge invertidos. Confira os dados obrigatórios.");
   }, [f.cpf_cnpj, f.cpf_conjuge, f.nome_cliente, f.nome_conjuge]);
