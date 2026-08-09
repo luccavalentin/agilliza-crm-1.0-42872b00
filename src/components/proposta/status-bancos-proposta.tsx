@@ -96,7 +96,7 @@ export function StatusBancosProposta({
   fallbackStatus?: string | null;
 }) {
   if (!bancos || bancos.length === 0) {
-    return <span className="text-xs text-muted-foreground">{fallbackStatus ?? "—"}</span>;
+    return <span className="text-[13px] text-muted-foreground">{fallbackStatus ?? "—"}</span>;
   }
   const desfecho = DESFECHO_PROPOSTA[String(fallbackStatus ?? "")];
   return (
