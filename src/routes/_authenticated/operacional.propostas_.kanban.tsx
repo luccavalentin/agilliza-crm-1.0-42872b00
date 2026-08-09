@@ -528,6 +528,9 @@ function Pagina() {
                   <div className="flex items-center gap-2">
                     <div className="relative">
                       <FolderOpen className="h-4 w-4 text-primary" />
+                      <div className="absolute -right-2.5 -top-2.5 flex size-4.5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground shadow-sm ring-2 ring-background">
+                        {idx + 1}
+                      </div>
                     </div>
                     {excedente > 0
                       ? `Ver mais ${excedente} ${excedente === 1 ? "proposta" : "propostas"}`
