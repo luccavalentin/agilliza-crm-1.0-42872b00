@@ -12,6 +12,7 @@ import {
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import type { ComparativoMensal } from "@/lib/relatorios/shared";
 import { BancoLogo } from "@/components/bancos/banco-logo";
 import { corDoBanco } from "@/lib/bancos/cores";
@@ -240,14 +241,14 @@ export function MonthlyComparison({ dados }: { dados: ComparativoMensal }) {
 
 
       <Dialog open={mesAberto !== null} onOpenChange={(o) => !o && setMesAberto(null)}>
-        <DialogContent className="max-h-[85vh] max-w-lg overflow-y-auto">
-          <DialogHeader>
+        <DialogContent className="flex max-h-[85vh] max-w-lg flex-col p-0 overflow-hidden">
+          <DialogHeader className="p-6 pb-2 border-b">
             <DialogTitle>
               {mesAberto !== null ? `Detalhes de ${meses[mesAberto]}` : ""}
             </DialogTitle>
           </DialogHeader>
-          {mesAberto !== null && (
-            <div className="space-y-3 text-sm">
+          <ScrollArea className="flex-1">
+            <div className="p-6 space-y-3 text-sm">
               <div className="grid grid-cols-2 gap-3">
                 <div className="rounded-lg border border-border p-3">
                   <p className="text-xs text-muted-foreground">Propostas</p>
@@ -306,7 +307,8 @@ export function MonthlyComparison({ dados }: { dados: ComparativoMensal }) {
                   </tfoot>
                 </table>
               </div>
-            </div>
+              </div>
+            </ScrollArea>
           )}
         </DialogContent>
       </Dialog>
