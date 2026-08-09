@@ -21,7 +21,7 @@ export const listarParceiros = createServerFn({ method: "GET" })
     const { data, error } = await supabase
       .from("parceiro_detalhes")
       .select(
-        "id, profile_id, razao_social, creci, tipo_pessoa, percentual_comissao, profiles(nome, email, telefone)",
+        "id, profile_id, razao_social, creci, tipo_pessoa, percentual_comissao, profiles!parceiro_detalhes_profile_id_fkey(nome, email, telefone)",
       )
       .order("created_at", { ascending: false })
       .limit(300);
