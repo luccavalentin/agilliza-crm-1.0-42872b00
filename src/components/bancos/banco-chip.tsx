@@ -17,7 +17,7 @@ export function BancoChip({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-[4px] border px-1 py-0 text-[9px] font-bold whitespace-nowrap shadow-sm",
+        "inline-flex items-center gap-1 rounded-[4px] border px-1.5 py-0.5 text-[11px] font-bold whitespace-nowrap shadow-sm",
         className,
       )}
       style={{
