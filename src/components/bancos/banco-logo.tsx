@@ -55,7 +55,7 @@ function iniciaisDoBanco(nome: string): string {
 }
 
 const TAMANHOS = {
-  xs: 16,
+  xs: 18,
   sm: 20,
   md: 24,
   lg: 32,
