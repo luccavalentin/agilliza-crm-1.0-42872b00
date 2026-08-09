@@ -16,6 +16,7 @@ import {
   ChevronDown,
   Mail,
   MessageSquare,
+  Trash2,
 } from "lucide-react";
 import { ChatConfigSheet } from "@/components/shared/chat-config-sheet";
 import {
