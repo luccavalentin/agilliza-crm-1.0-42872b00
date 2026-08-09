@@ -507,11 +507,11 @@ function Pagina() {
             >
               <div className="shrink-0 overflow-hidden rounded-t-xl">
                 <div className={cn("h-[3px]", TONE_BAR[cfg.tone])} />
-                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2 px-3 py-2.5">
+                <div className="flex items-center justify-between gap-2 px-3 py-2.5">
                   <span className="min-w-0 text-xs font-semibold uppercase leading-snug text-muted-foreground">
                     {cfg.label}
                   </span>
-                  <span className="shrink-0 rounded-full bg-background px-1.5 text-xs text-muted-foreground">
+                  <span className="shrink-0 rounded-full bg-background px-2 py-0.5 text-xs font-bold text-primary shadow-sm ring-1 ring-primary/10">
                     {cards.length}
                   </span>
                 </div>
