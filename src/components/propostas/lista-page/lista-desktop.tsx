@@ -188,7 +188,7 @@ export function ListaDesktop({
                   <TableCell>
                     <BancosProposta bancos={p.bancos} />
                   </TableCell>
-                  <TableCell className="text-right font-medium tabular-nums text-foreground transition-colors group-hover/row:text-primary">
+                  <TableCell className="text-right font-medium tabular-nums text-foreground transition-colors group-hover/row:text-primary text-[13px]">
                     {formatBRL(p.valor_financiamento)}
                   </TableCell>
                   <TableCell>
