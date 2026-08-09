@@ -147,12 +147,30 @@ function ChatPage() {
           ) : (
             <ul>
               {lista.map((a) => (
-                <li key={a.atendente_id}>
+                <li key={a.atendente_id} className="group relative">
                   <ItemConversa
                     atendente={a}
                     selecionado={a.atendente_id === selId}
                     onClick={() => setSelId(a.atendente_id)}
                   />
+                  <button
+                    type="button"
+                    aria-label={`Excluir conversa com ${a.nome}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (!window.confirm("Excluir esta conversa da sua lista?")) return;
+                      import("@/lib/portal/cliente.functions").then((m) =>
+                        m.clienteExcluirConversa({ data: { atendente_id: a.atendente_id } })
+                      ).then(() => {
+                        toast.success("Conversa excluída.");
+                        qc.invalidateQueries({ queryKey: ["cliente", "atendentes"] });
+                        if (selId === a.atendente_id) setSelId(null);
+                      }).catch((err) => toast.error(err?.message ?? "Erro ao excluir."));
+                    }}
+                    className="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-background/90 text-muted-foreground opacity-100 shadow-sm backdrop-blur transition hover:bg-destructive/10 hover:text-destructive sm:opacity-0 sm:group-hover:opacity-100"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
                 </li>
               ))}
             </ul>
