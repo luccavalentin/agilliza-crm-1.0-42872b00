@@ -588,28 +588,39 @@ export const runReport = createServerFn({ method: "POST" })
       const statusMap = new Map<string, number>();
       const bancoMap = new Map<string, number>();
       const produtoMap = new Map<string, number>();
+      const somaValorStatus = new Map<string, number>();
+      const somaValorBanco = new Map<string, number>();
+      const somaValorProduto = new Map<string, number>();
+
       sims.forEach((s) => {
+        const val = s.valor_financiamento ?? 0;
         const statusLabel = cfg?.statusComoModulo
           ? STATUS_SIMULACAO_LABEL[s.status] ?? s.status
           : STATUS_SIMULACAO_LABEL[s.status] ?? s.status;
         statusMap.set(statusLabel, (statusMap.get(statusLabel) ?? 0) + 1);
+        somaValorStatus.set(statusLabel, (somaValorStatus.get(statusLabel) ?? 0) + val);
+
         produtoMap.set(s.produto ?? "—", (produtoMap.get(s.produto ?? "—") ?? 0) + 1);
-        (s.nomes_bancos?.length ? s.nomes_bancos : ["—"]).forEach((b: string) =>
-          bancoMap.set(b, (bancoMap.get(b) ?? 0) + 1),
-        );
+        somaValorProduto.set(s.produto ?? "—", (somaValorProduto.get(s.produto ?? "—") ?? 0) + val);
+
+        (s.nomes_bancos?.length ? s.nomes_bancos : ["—"]).forEach((b: string) => {
+          bancoMap.set(b, (bancoMap.get(b) ?? 0) + 1);
+          somaValorBanco.set(b, (somaValorBanco.get(b) ?? 0) + val);
+        });
       });
+
       return {
         titulo: cfg?.titulo ?? "Relatório de simulações",
         descricao: cfg?.descricao ?? "Volume, tipo e conversão de simulações.",
         modulo: cfg?.modulo ?? "Simulações",
         kpis: [
-          { label: "Total", valor: int(sims.length), tone: "neutral" },
-          { label: "Rápidas", valor: int(rapidas), tone: "neutral" },
-          { label: "Completas", valor: int(completas), tone: "brand" },
-          { label: "Com erro", valor: int(erro), tone: "danger" },
-          { label: "Volume simulado", valor: brl(volumeSimulado), tone: "success" },
-          { label: "Conversão sim→prop", valor: pct(conv), tone: "success" },
-          { label: "Ticket médio", valor: brl(ticket), tone: "brand" },
+          { label: "Total", valor: int(sims.length), tone: "neutral", filters: [{ key: "status", values: [...statusMap.keys()] }] },
+          { label: "Rápidas", valor: int(rapidas), tone: "neutral", filters: [{ key: "tipo", values: ["simplificada"] }] },
+          { label: "Completas", valor: int(completas), tone: "brand", filters: [{ key: "tipo", values: ["completa"] }] },
+          { label: "Com erro", valor: int(erro), tone: "danger", filters: [{ key: "status", values: [STATUS_SIMULACAO_LABEL["erro_banco"] ?? "erro_banco"] }] },
+          { label: "Volume simulado", valor: brl(volumeSimulado), tone: "success", filters: [{ key: "status", values: ["Simulada", "Parcialmente simulada", "Promovida"] }] },
+          { label: "Conversão sim→prop", valor: pct(conv), tone: "success", filters: [{ key: "status", values: ["Promovida"] }] },
+          { label: "Ticket médio", valor: brl(ticket), tone: "brand", filters: [{ key: "status", values: ["Simulada", "Parcialmente simulada", "Promovida"] }] },
         ],
         charts: [
           { titulo: "Distribuição por status", tipo: "barh", dados: topN(statusMap, 8) },
@@ -703,10 +714,10 @@ export const runReport = createServerFn({ method: "POST" })
         kpis: [
           { label: "Clientes", valor: int(cls.length), tone: "brand" },
           { label: "Simulações", valor: int(sims.length), tone: "neutral" },
-          { label: "Propostas", valor: int(enviadas.length), tone: "neutral" },
-          { label: "Aprovadas", valor: int(aprovadas.length), tone: "success" },
-          { label: "Contratos", valor: int(contratos.length), tone: "success" },
-          { label: "Volume contratado", valor: brl(volume), tone: "brand" },
+          { label: "Propostas", valor: int(enviadas.length), tone: "neutral", filters: [{ key: "status", values: Array.from(new Set(enviadas.map(p => p.status))) }] },
+          { label: "Aprovadas", valor: int(aprovadas.length), tone: "success", filters: [{ key: "status", values: Array.from(new Set(aprovadas.map(p => p.status))) }] },
+          { label: "Contratos", valor: int(contratos.length), tone: "success", filters: [{ key: "status", values: Array.from(new Set(contratos.map(p => p.status))) }] },
+          { label: "Volume contratado", valor: brl(volume), tone: "brand", filters: [{ key: "status", values: Array.from(new Set(contratos.map(p => p.status))) }] },
         ],
         charts: [
           { titulo: "Funil de conversão", tipo: "funnel", dados: funil },
@@ -814,14 +825,14 @@ export const runReport = createServerFn({ method: "POST" })
         descricao: "Desempenho de produção e resumo de ganhos por período e responsável.",
         modulo: "Comercial",
         kpis: [
-          { label: "Simulações", valor: int(sims.length), tone: "neutral" },
-          { label: "Propostas", valor: int(enviadas.length), tone: "neutral" },
-          { label: "Taxa de aprovação", valor: pct(taxa), tone: "success" },
-          { label: "Ticket médio", valor: brl(ticket), tone: "brand" },
-          { label: "Volume contratado", valor: brl(valor), tone: "success" },
-          { label: "Contratos", valor: int(contratos.length), tone: "success" },
-          { label: "Total Comissões", valor: brl(totalComissao), tone: "brand" },
-          { label: "Prev. Repasses", valor: brl(totalRepasse), tone: "neutral" },
+          { label: "Simulações", valor: int(sims.length), tone: "neutral", filters: [{ key: "resp", values: [...nomes.values()] }] },
+          { label: "Propostas", valor: int(enviadas.length), tone: "neutral", filters: [{ key: "resp", values: [...nomes.values()] }] },
+          { label: "Taxa de aprovação", valor: pct(taxa), tone: "success", filters: [{ key: "resp", values: [...nomes.values()] }] },
+          { label: "Ticket médio", valor: brl(ticket), tone: "brand", filters: [{ key: "resp", values: [...nomes.values()] }] },
+          { label: "Volume contratado", valor: brl(valor), tone: "success", filters: [{ key: "resp", values: [...nomes.values()] }] },
+          { label: "Contratos", valor: int(contratos.length), tone: "success", filters: [{ key: "resp", values: [...nomes.values()] }] },
+          { label: "Total Comissões", valor: brl(totalComissao), tone: "brand", filters: [{ key: "resp", values: [...nomes.values()] }] },
+          { label: "Prev. Repasses", valor: brl(totalRepasse), tone: "neutral", filters: [{ key: "resp", values: [...nomes.values()] }] },
           { label: "Banco líder", valor: bancoLider, tone: "neutral" },
         ],
         charts: [
@@ -1830,16 +1841,17 @@ export const runReport = createServerFn({ method: "POST" })
           "Status, bancos, produtos e volumes das propostas no período.",
         modulo: "Propostas",
         kpis: [
-          { label: "Total", valor: int(props.length), tone: "neutral" },
-          { label: "Em análise", valor: int(emAnalise.length), tone: "warning" },
-          { label: "Contratos", valor: int(contratos.length), tone: "success" },
-          { label: "Taxa de aprovação", valor: pct(taxaAprov), tone: "success" },
-          { label: "Ticket médio", valor: brl(ticket), tone: "brand" },
+          { label: "Total", valor: int(props.length), tone: "neutral", filters: [{ key: "status", values: [...statusMap.keys()] }] },
+          { label: "Em análise", valor: int(emAnalise.length), tone: "warning", filters: [{ key: "status", values: Array.from(STATUS_ENVIADAS).map(rotuloStatus) }] },
+          { label: "Contratos", valor: int(contratos.length), tone: "success", filters: [{ key: "status", values: Array.from(STATUS_APROVADAS).map(rotuloStatus) }] },
+          { label: "Taxa de aprovação", valor: pct(taxaAprov), tone: "success", filters: [{ key: "status", values: Array.from(STATUS_APROVADAS).map(rotuloStatus) }] },
+          { label: "Ticket médio", valor: brl(ticket), tone: "brand", filters: [{ key: "status", values: Array.from(STATUS_APROVADAS).map(rotuloStatus) }] },
           {
             label: "Volume contratado",
             valor: brl(volumeContratado),
             hint: `Enviado ${brl(volumeEnviado)}`,
             tone: "brand",
+            filters: [{ key: "status", values: Array.from(STATUS_APROVADAS).map(rotuloStatus) }],
           },
         ],
         charts: [
@@ -1914,10 +1926,10 @@ export const runReport = createServerFn({ method: "POST" })
         descricao: "Base de clientes cadastrados no período.",
         modulo: "CRM",
         kpis: [
-          { label: "Novos", valor: int(novos), tone: "brand" },
-          { label: "Ativos", valor: int(ativos), tone: "success" },
-          { label: "App habilitado", valor: int(appOn), tone: "neutral" },
-          { label: "Sem responsável", valor: int(semResp), tone: "warning" },
+          { label: "Novos", valor: int(novos), tone: "brand", filters: [{ key: "ativo", values: ["Sim", "Não"] }] },
+          { label: "Ativos", valor: int(ativos), tone: "success", filters: [{ key: "ativo", values: ["Sim"] }] },
+          { label: "App habilitado", valor: int(appOn), tone: "neutral", filters: [{ key: "app", values: ["Habilitado"] }] },
+          { label: "Sem responsável", valor: int(semResp), tone: "warning", filters: [{ key: "ativo", values: ["Sim", "Não"] }] },
         ],
         charts: [
           { titulo: "Tipo de pessoa", tipo: "barh", dados: topN(pfPj, 4) },
@@ -1969,10 +1981,10 @@ export const runReport = createServerFn({ method: "POST" })
         descricao: "Volume, SLA e conclusão de demandas.",
         modulo: "Operacional",
         kpis: [
-          { label: "Total", valor: int(dem.length), tone: "neutral" },
-          { label: "Abertas", valor: int(abertas), tone: "warning" },
-          { label: "Concluídas", valor: int(concluidas), tone: "success" },
-          { label: "SLA vencido", valor: int(slaVencido), tone: "danger" },
+          { label: "Total", valor: int(dem.length), tone: "neutral", filters: [{ key: "status", values: [...statusMap.keys()] }] },
+          { label: "Abertas", valor: int(abertas), tone: "warning", filters: [{ key: "status", values: Array.from(statusMap.keys()).filter(s => !["concluida", "cancelada"].includes(s)) }] },
+          { label: "Concluídas", valor: int(concluidas), tone: "success", filters: [{ key: "status", values: ["concluida"] }] },
+          { label: "SLA vencido", valor: int(slaVencido), tone: "danger", filters: [{ key: "status", values: Array.from(statusMap.keys()).filter(s => !["concluida", "cancelada"].includes(s)) }] },
         ],
         charts: [{ titulo: "Distribuição por status", tipo: "barh", dados: topN(statusMap, 6) }],
         columns: [
@@ -2013,10 +2025,10 @@ export const runReport = createServerFn({ method: "POST" })
         descricao: "Execução e prazos das tarefas no período.",
         modulo: "Operacional",
         kpis: [
-          { label: "Total", valor: int(tk.length), tone: "neutral" },
-          { label: "Abertas", valor: int(abertas), tone: "warning" },
-          { label: "Concluídas", valor: int(concluidas), tone: "success" },
-          { label: "Atrasadas", valor: int(atrasadas), tone: "danger" },
+          { label: "Total", valor: int(tk.length), tone: "neutral", filters: [{ key: "status", values: [...statusMap.keys()] }] },
+          { label: "Abertas", valor: int(abertas), tone: "warning", filters: [{ key: "status", values: Array.from(statusMap.keys()).filter(s => !["concluida", "cancelada"].includes(s)) }] },
+          { label: "Concluídas", valor: int(concluidas), tone: "success", filters: [{ key: "status", values: ["concluida"] }] },
+          { label: "Atrasadas", valor: int(atrasadas), tone: "danger", filters: [{ key: "status", values: Array.from(statusMap.keys()).filter(s => !["concluida", "cancelada"].includes(s)) }] },
         ],
         charts: [{ titulo: "Distribuição por status", tipo: "barh", dados: topN(statusMap, 6) }],
         columns: [
@@ -2164,13 +2176,13 @@ export const runReport = createServerFn({ method: "POST" })
           "Visão consolidada da operação por data: simulações, aprovações, tarefas e demandas.",
         modulo: "Operacional",
         kpis: [
-          { label: "Simulações", valor: int(sims.length), hint: `${int(simuladas)} simuladas`, tone: "brand" },
-          { label: "Aprovações", valor: int(aprovadas.length), hint: `Taxa ${pct(taxaAprov)}`, tone: "success" },
-          { label: "Volume aprovado", valor: brl(volumeAprovado), tone: "success" },
-          { label: "Tarefas", valor: int(tarefas.length), hint: `${int(tarefasAbertas)} abertas · ${int(tarefasAtrasadas)} atrasadas`, tone: tarefasAtrasadas > 0 ? "danger" : "neutral" },
-          { label: "Tarefas concluídas", valor: int(tarefasConcluidas), tone: "success" },
-          { label: "Demandas", valor: int(demandas.length), hint: `${int(demandasAbertas)} abertas · ${int(demandasSlaVencido)} SLA vencido`, tone: demandasSlaVencido > 0 ? "danger" : "neutral" },
-          { label: "Demandas concluídas", valor: int(demandasConcluidas), tone: "success" },
+          { label: "Simulações", valor: int(sims.length), hint: `${int(simuladas)} simuladas`, tone: "brand", filters: [{ key: "modulo", values: ["Simulação"] }] },
+          { label: "Aprovações", valor: int(aprovadas.length), hint: `Taxa ${pct(taxaAprov)}`, tone: "success", filters: [{ key: "modulo", values: ["Proposta"] }, { key: "status", values: ["Crédito aprovado", "Contrato emitido", "Registrado"] }] },
+          { label: "Volume aprovado", valor: brl(volumeAprovado), tone: "success", filters: [{ key: "modulo", values: ["Proposta"] }, { key: "status", values: ["Crédito aprovado", "Contrato emitido", "Registrado"] }] },
+          { label: "Tarefas", valor: int(tarefas.length), hint: `${int(tarefasAbertas)} abertas · ${int(tarefasAtrasadas)} atrasadas`, tone: tarefasAtrasadas > 0 ? "danger" : "neutral", filters: [{ key: "modulo", values: ["Tarefa"] }] },
+          { label: "Tarefas concluídas", valor: int(tarefasConcluidas), tone: "success", filters: [{ key: "modulo", values: ["Tarefa"] }, { key: "status", values: ["concluida", "Concluída"] }] },
+          { label: "Demandas", valor: int(demandas.length), hint: `${int(demandasAbertas)} abertas · ${int(demandasSlaVencido)} SLA vencido`, tone: demandasSlaVencido > 0 ? "danger" : "neutral", filters: [{ key: "modulo", values: ["Demanda"] }] },
+          { label: "Demandas concluídas", valor: int(demandasConcluidas), tone: "success", filters: [{ key: "modulo", values: ["Demanda"] }, { key: "status", values: ["concluida", "Concluída"] }] },
         ],
         charts: [
           { titulo: "Distribuição por módulo", tipo: "barh", dados: topN(modMap, 4) },
@@ -2423,12 +2435,14 @@ export const runReport = createServerFn({ method: "POST" })
             valor: brl(aReceber),
             tone: "success",
             hint: `${recAbertas.length} lançamento(s) em aberto`,
+            filters: [{ key: "tipo", values: ["Receber"] }, { key: "status", values: ["Aberta", "Parcial"] }],
           },
           {
             label: "A pagar",
             valor: brl(aPagar),
             tone: "warning",
             hint: `${pagAbertas.length} lançamento(s) em aberto`,
+            filters: [{ key: "tipo", values: ["Pagar"] }, { key: "status", values: ["Aberta", "Parcial"] }],
           },
           {
             label: "Saldo previsto",
@@ -2447,6 +2461,7 @@ export const runReport = createServerFn({ method: "POST" })
             valor: brl(vencido),
             tone: "danger",
             hint: `${vencidas.length} título(s) em atraso`,
+            filters: [{ key: "status", values: ["Atrasada"] }],
           },
           {
             label: "Cobertura",
