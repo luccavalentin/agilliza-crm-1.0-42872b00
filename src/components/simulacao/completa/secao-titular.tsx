@@ -91,11 +91,35 @@ export function SecaoTitular({ ctx }: { ctx: SimulacaoCompletaCtx }) {
           <Erro erros={erros} campo="cpf_cnpj" />
         </Campo>
         <Campo label={<>{f.sistema_amortizacao === "B" ? "Renda familiar — SAC (R$)" : "Renda total (R$)"} <Ast /></>}>
-          <CurrencyInput
-            value={f.renda_total}
-            onChange={(v) => set("renda_total", v)}
-            placeholder="Ex: 9.500,00"
-          />
+          <div className="flex gap-2">
+            <CurrencyInput
+              value={f.renda_total}
+              onChange={(v) => set("renda_total", v)}
+              placeholder="Ex: 9.500,00"
+              className="flex-1"
+            />
+            {f.valor_financiamento > 0 && f.prazo > 0 && (
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="h-10 w-10 shrink-0 border-primary/30 text-primary hover:bg-primary/5 hover:text-primary"
+                title="Preencher renda necessária SAC"
+                onClick={() => {
+                  const aval = avaliarRendaMinima({
+                    valor_financiamento: f.valor_financiamento,
+                    valor_imovel: f.valor_imovel,
+                    prazo_meses: f.prazo,
+                    taxa_ano: ctx.melhorTaxaAno,
+                    sistema: "S",
+                  });
+                  if (aval) set("renda_total", aval.rendaMinima);
+                }}
+              >
+                <Repeat className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
           <Erro erros={erros} campo="renda_total" />
           {f.valor_financiamento > 0 && (f.sistema_amortizacao === "S" || f.sistema_amortizacao === "B") && (
             <div className="pt-1">
@@ -128,13 +152,35 @@ export function SecaoTitular({ ctx }: { ctx: SimulacaoCompletaCtx }) {
         </Campo>
         {f.sistema_amortizacao === "B" && (
           <Campo label={<>Renda familiar — PRICE (R$) <Ast /></>}>
-            <div id="campo-renda-price">
+            <div id="campo-renda-price" className="flex gap-2">
               <CurrencyInput
                 value={f.renda_price ?? 0}
                 onChange={(v) => set("renda_price", v)}
                 placeholder="Ex: 12.000,00"
                 aria-invalid={!!erros.renda_price}
+                className="flex-1"
               />
+              {f.valor_financiamento > 0 && f.prazo > 0 && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="h-10 w-10 shrink-0 border-primary/30 text-primary hover:bg-primary/5 hover:text-primary"
+                  title="Preencher renda necessária PRICE"
+                  onClick={() => {
+                    const aval = avaliarRendaMinima({
+                      valor_financiamento: f.valor_financiamento,
+                      valor_imovel: f.valor_imovel,
+                      prazo_meses: f.prazo,
+                      taxa_ano: ctx.melhorTaxaAno,
+                      sistema: "P",
+                    });
+                    if (aval) set("renda_price", aval.rendaMinima);
+                  }}
+                >
+                  <Repeat className="h-4 w-4" />
+                </Button>
+              )}
             </div>
             <Erro erros={erros} campo="renda_price" />
             {f.valor_financiamento > 0 && (
