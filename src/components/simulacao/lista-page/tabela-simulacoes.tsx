@@ -129,10 +129,10 @@ export function TabelaSimulacoes({
                 <TableCell className="relative py-3 px-2 w-[100px]">
                   <span className="absolute inset-y-0 left-0 w-[3px] origin-top scale-y-0 rounded-r-full bg-[var(--banco)] transition-transform duration-200 group-hover/row:scale-y-100" />
                   <div className="flex flex-col gap-1">
-                    <span className="inline-flex w-fit items-center rounded-md bg-primary/5 px-1.5 py-0.5 font-mono text-[11px] font-bold text-primary ring-1 ring-inset ring-primary/10 transition-colors group-hover:bg-primary/10">
+                    <span className="inline-flex w-fit items-center rounded-md bg-primary/5 px-1.5 py-0.5 font-mono text-[13px] font-bold text-primary ring-1 ring-inset ring-primary/10 transition-colors group-hover:bg-primary/10">
                       {s.numero_simulacao}
                     </span>
-                    <span className="text-[9px] font-medium text-muted-foreground uppercase tracking-tight">
+                    <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-tight">
                       {formatDataHoraBR(s.created_at)}
                     </span>
                   </div>
