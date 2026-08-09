@@ -812,21 +812,32 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
 
   /** Inverte titular ⇄ cônjuge. */
   const inverterPrincipal = useCallback(() => {
+    // Validação prévia de CPFs iguais para mostrar o alerta antes de inverter se necessário,
+    // ou apenas garantir que a troca não resulte em duplicidade de CPF.
+    if (f.cpf_cnpj && f.cpf_cnpj === f.cpf_conjuge) {
+      toast.error("O titular e o cônjuge não podem ter o mesmo CPF.");
+      return;
+    }
+
     setF((prev) => {
       const next = patchInverterPrincipal(prev);
-      
-      // Validação de CPFs iguais após inversão
-      if (next.cpf_cnpj && next.cpf_cnpj === next.cpf_conjuge) {
-        toast.error("O titular e o cônjuge não podem ter o mesmo CPF.");
-        return prev; // Cancela inversão se forem iguais
+
+      // Verificação de segurança após a troca (embora o patch deva resolver, 
+      // garante que não estamos repetindo o mesmo titular se o cônjuge estivesse vazio)
+      if (next.cpf_cnpj === prev.cpf_cnpj && next.nome_cliente === prev.nome_cliente) {
+        // Se após inverter os dados principais continuam iguais, algo está errado no patch ou origem
+        if (!prev.nome_conjuge && !prev.cpf_conjuge) {
+          toast.error("Preencha os dados do cônjuge para realizar a inversão.");
+          return prev;
+        }
       }
-      
+
       return next;
     });
     setInvertido((v) => !v);
     setErros({});
     toast.success("Titular e cônjuge invertidos. Confira os dados obrigatórios.");
-  }, []);
+  }, [f.cpf_cnpj, f.cpf_conjuge, f.nome_cliente, f.nome_conjuge]);
 
   /** Seleciona o titular a partir de um cliente do CRM. */
   function selecionarClienteCRM(c: any) {
