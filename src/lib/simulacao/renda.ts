@@ -16,7 +16,7 @@
  * As parcelas do PRICE crescem ao longo do contrato (indexação TR + juros sobre
  * saldo). Para refletir a projeção interna do Bradesco e garantir aprovação em
  * APIs que não retornam valor, aplicamos comprometimento máximo de 18% sobre a
- * parcela inicial PRICE. Regra calibrada a partir de simulações oficiais.
+ * parcela inicial PRICE (equivalente a ~30% sobre o pico projetado da parcela).
  */
 
 
