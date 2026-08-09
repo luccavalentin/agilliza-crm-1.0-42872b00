@@ -762,7 +762,7 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
   // que existe no CRM (merge — nunca sobrescreve o que o usuário digitou).
   // Também atualiza os dados do titular e do cônjuge quando o cadastro no CRM muda.
   useEffect(() => {
-    if (!crmVinculado) return;
+    if (!crmVinculado || invertido) return;
     
     // 1. Atualiza dados do titular se houver mudanças no CRM
     setF((prev) => {
