@@ -257,30 +257,31 @@ export function GenericReportPage({
             </DialogTitle>
           </DialogHeader>
           <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-6">
-            <div className="space-y-3">
-              <p className="text-sm text-muted-foreground">
-                Valor no gráfico:{" "}
-                <span className="font-semibold text-foreground">
-                  {graficoAberto.valor.toLocaleString("pt-BR")}
-                </span>
-                {graficoAberto.rows.length > 0 && (
-                  <>
-                    {" · "}
-                    {graficoAberto.rows.length.toLocaleString("pt-BR")} registros
-                  </>
-                )}
-              </p>
-              {data && graficoAberto.rows.length > 0 ? (
-                <DrilldownTable columns={data.columns} rows={graficoAberto.rows} />
-              ) : (
+            {graficoAberto && (
+              <div className="space-y-3">
                 <p className="text-sm text-muted-foreground">
-                  Este indicador é calculado a partir de várias etapas e não possui
-                  registros diretamente vinculados ao rótulo selecionado.
+                  Valor no gráfico:{" "}
+                  <span className="font-semibold text-foreground">
+                    {graficoAberto.valor.toLocaleString("pt-BR")}
+                  </span>
+                  {graficoAberto.rows.length > 0 && (
+                    <>
+                      {" · "}
+                      {graficoAberto.rows.length.toLocaleString("pt-BR")} registros
+                    </>
+                  )}
                 </p>
-              )}
-            </div>
-          )}
-        </div>
+                {data && graficoAberto.rows.length > 0 ? (
+                  <DrilldownTable columns={data.columns} rows={graficoAberto.rows} />
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    Este indicador é calculado a partir de várias etapas e não possui
+                    registros diretamente vinculados ao rótulo selecionado.
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
 
