@@ -250,7 +250,7 @@ export function GenericReportPage({
       )}
 
       <Dialog open={!!graficoAberto} onOpenChange={(o) => !o && setGraficoAberto(null)}>
-        <DialogContent className="flex max-h-[90vh] max-w-6xl flex-col overflow-hidden p-0">
+        <DialogContent className="flex max-h-[90vh] max-w-6xl flex-col p-0">
           <DialogHeader className="shrink-0 border-b p-4 sm:px-6">
             <DialogTitle>
               {graficoAberto?.titulo} — {graficoAberto?.label}
@@ -286,7 +286,7 @@ export function GenericReportPage({
       </Dialog>
 
       <Dialog open={!!kpiAberto} onOpenChange={(o) => !o && setKpiAberto(null)}>
-        <DialogContent className="flex max-h-[90vh] max-w-6xl flex-col overflow-hidden p-0">
+        <DialogContent className="flex max-h-[90vh] max-w-6xl flex-col p-0">
           <DialogHeader className="shrink-0 border-b p-4 sm:px-6">
             <DialogTitle>
               {kpiAberto?.titulo ?? kpiAberto?.label} — {linhasKpi.length.toLocaleString("pt-BR")} registros
