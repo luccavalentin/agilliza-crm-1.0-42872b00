@@ -149,12 +149,12 @@ export function ListaDesktop({
                       const nb = numeroBancoParaExibir(p.numero_proposta_banco);
                       return nb ? (
                         <>
-                          <div className="text-base font-bold tabular-nums leading-tight text-[var(--banco)]">
+                          <div className="text-[17px] font-bold tabular-nums leading-tight text-[var(--banco)]">
                             Nº banco {nb}
                           </div>
-                          <div className="mt-1 flex flex-col gap-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                          <div className="mt-1 flex flex-col gap-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
                             <span>Interno <span className="tabular-nums">{p.numero_proposta}</span></span>
-                            <span className="text-[9px] lowercase tracking-tight">
+                            <span className="text-[10px] lowercase tracking-tight">
                               {formatDataHora(p.created_at)}
                             </span>
                           </div>
