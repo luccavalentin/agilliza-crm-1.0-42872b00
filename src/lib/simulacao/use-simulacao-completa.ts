@@ -798,7 +798,7 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
     }
 
     puxarConjugeDoCRM();
-  }, [f.estado_civil, crmVinculado, crmTemConjuge, f.nome_conjuge, puxarConjugeDoCRM]);
+  }, [f.estado_civil, crmVinculado, crmTemConjuge, f.nome_conjuge, puxarConjugeDoCRM, invertido]);
 
 
   const podeInverter = useMemo(() => {
