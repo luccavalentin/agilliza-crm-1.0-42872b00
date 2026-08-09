@@ -17,6 +17,7 @@ import { DicaRendaMinima } from "@/components/simulacao/dica-renda-minima";
 
 import { Campo, Ast, Erro } from "@/components/simulacao/completa/campo";
 import { maskCpfCnpj, maskCelular } from "@/lib/simulacao/format";
+import { avaliarRendaMinima } from "@/lib/simulacao/renda";
 import { ESTADOS_CIVIS } from "@/lib/simulacao/schemas";
 import type { SimulacaoCompletaCtx } from "@/lib/simulacao/use-simulacao-completa";
 
