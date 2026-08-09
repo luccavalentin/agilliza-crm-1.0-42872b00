@@ -44,6 +44,7 @@ export const Route = createFileRoute("/cliente/chat")({
 type Filtro = "todas" | "nao_lidas" | "arquivadas";
 
 function ChatPage() {
+  const qc = useQueryClient();
   const [busca, setBusca] = useState("");
   const [filtro, setFiltro] = useState<Filtro>("todas");
   const [selId, setSelId] = useState<string | null>(null);
