@@ -208,8 +208,9 @@ function RootComponent() {
       <InstallPrompt />
       <PropostaRetornoWatcher userId={userId} />
       <PropostaPopupHost />
-
-
+      <Suspense fallback={null}>
+        <FloatingChatHost />
+      </Suspense>
     </QueryClientProvider>
   );
 }
