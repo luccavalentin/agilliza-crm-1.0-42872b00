@@ -75,7 +75,8 @@ export function ContasKpiDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-4 sm:px-5">
+        <ScrollArea className="min-h-0 flex-1">
+          <div className="px-2 pb-4 sm:px-5">
           {isLoading ? (
             <div className="flex items-center justify-center gap-2 py-12 text-sm text-muted-foreground">
               <Loader2 className="size-4 animate-spin" /> Carregando…
@@ -122,7 +123,8 @@ export function ContasKpiDialog({
               </TableBody>
             </Table>
           )}
-        </div>
+          </div>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );

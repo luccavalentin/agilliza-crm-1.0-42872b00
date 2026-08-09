@@ -6,6 +6,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export type KpiItem = {
   id: string;
@@ -39,7 +40,9 @@ export function KpiDetalheDialog({
               </DialogTitle>
               <DialogDescription>Valor atual: {k.valor}</DialogDescription>
             </DialogHeader>
-            <div className="flex-1 overflow-y-auto min-h-0 p-6">{k.detalhe}</div>
+            <ScrollArea className="flex-1">
+              <div className="min-h-0 p-6">{k.detalhe}</div>
+            </ScrollArea>
           </>
         )}
       </DialogContent>
