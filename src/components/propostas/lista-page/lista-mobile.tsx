@@ -119,13 +119,21 @@ export function ListaMobile({
                       >
                         Nº banco {nb}
                       </div>
-                      <div className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-                        Interno <span className="tabular-nums">{p.numero_proposta}</span>
+                      <div className="mt-1 flex flex-col gap-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                        <span>Interno <span className="tabular-nums">{p.numero_proposta}</span></span>
+                        <span className="text-[9px] lowercase tracking-tight">
+                          {formatDataHora(p.created_at)}
+                        </span>
                       </div>
                     </>
                   ) : (
-                    <div className="text-base font-semibold tabular-nums tracking-tight text-foreground">
-                      {p.numero_proposta}
+                    <div className="flex flex-col gap-1">
+                      <div className="text-base font-semibold tabular-nums tracking-tight text-foreground">
+                        {p.numero_proposta}
+                      </div>
+                      <span className="text-[9px] font-medium text-muted-foreground uppercase tracking-tight">
+                        {formatDataHora(p.created_at)}
+                      </span>
                     </div>
                   );
                 })()}
