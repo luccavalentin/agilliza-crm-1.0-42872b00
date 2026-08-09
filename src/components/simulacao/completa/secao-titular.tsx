@@ -105,7 +105,7 @@ export function SecaoTitular({ ctx }: { ctx: SimulacaoCompletaCtx }) {
                 variant="outline"
                 size="icon"
                 className="h-10 w-10 shrink-0 border-primary/30 text-primary hover:bg-primary/5 hover:text-primary"
-                title="Preencher renda necessária SAC"
+                title="Preencher renda necessária (Qualificação)"
                 onClick={() => {
                   const aval = avaliarRendaMinima({
                     valor_financiamento: f.valor_financiamento,
@@ -167,7 +167,7 @@ export function SecaoTitular({ ctx }: { ctx: SimulacaoCompletaCtx }) {
                   variant="outline"
                   size="icon"
                   className="h-10 w-10 shrink-0 border-primary/30 text-primary hover:bg-primary/5 hover:text-primary"
-                  title="Preencher renda necessária PRICE"
+                  title="Preencher renda necessária (Qualificação)"
                   onClick={() => {
                     const aval = avaliarRendaMinima({
                       valor_financiamento: f.valor_financiamento,

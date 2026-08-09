@@ -12,11 +12,11 @@
  * A parcela incide sobre o VALOR FINANCIADO (preço − entrada − FGTS), nunca
  * sobre o valor cheio do imóvel. As APIs dos bancos aplicam o mesmo teto.
  *
- * SISTEMA PRICE — QUALIFICAÇÃO CONSERVADORA (regra Bradesco):
+ * SISTEMA PRICE — QUALIFICAÇÃO CONSERVADORA (regra Bradesco + Ajuste API):
  * As parcelas do PRICE crescem ao longo do contrato (indexação TR + juros sobre
- * saldo). Para refletir a projeção interna do Bradesco, aplicamos comprometimento
- * máximo de 15% sobre a parcela inicial PRICE (equivalente a ~30% sobre o pico
- * projetado da parcela). Regra calibrada a partir de simulações oficiais do banco.
+ * saldo). Para refletir a projeção interna do Bradesco e garantir aprovação em
+ * APIs que não retornam valor, aplicamos comprometimento máximo de 18% sobre a
+ * parcela inicial PRICE (equivalente a ~30% sobre o pico projetado da parcela).
  */
 
 
@@ -32,8 +32,8 @@ export const MARGEM_SEGURANCA_RENDA = 0.00; // Margem removida conforme Princíp
 
 /** Percentual máximo da renda que pode ser comprometido com a parcela. */
 export const COMPROMETIMENTO_MAX = 0.3;
-/** Comprometimento máx no PRICE (Bradesco projeta pico da parcela → ~15% da inicial). */
-export const COMPROMETIMENTO_MAX_PRICE = 0.15;
+/** Comprometimento máx no PRICE (Bradesco projeta pico da parcela → ~18% da inicial). */
+export const COMPROMETIMENTO_MAX_PRICE = 0.18;
 
 /**
  * Encargos mensais obrigatórios que os bancos SOMAM à parcela ao verificar o
@@ -128,7 +128,7 @@ export function parcelaExigidaPeloBanco(banco: BancoRendaApi): number | null {
 /**
  * Renda mínima exigida pelo banco, aplicando o teto correto por sistema:
  *   SAC   → parcela / 30%
- *   PRICE → parcela / 15%  (regra padrão para todas as IFs que ofertam PRICE)
+ *   PRICE → parcela / 18%  (regra padrão para todas as IFs que ofertam PRICE)
  *
  * Em PRICE a renda devolvida pela API do banco é ignorada (geralmente vem
  * calculada em SAC); sempre recomputamos com o teto de 15% sobre a parcela.
@@ -258,8 +258,8 @@ export function avaliarRendaMinima(params: {
 
   // Parcela usada para QUALIFICAÇÃO da renda:
   // - SAC: primeira parcela do próprio sistema (já é a maior) com teto 30%.
-  // - PRICE: primeira parcela PRICE com teto 15% (equivale à projeção do pico
-  //   pelo Bradesco: ~2,27x a inicial × 30% ≈ 15% da inicial).
+  // - PRICE: primeira parcela PRICE com teto 18% (equivale à projeção do pico
+  //   pelo Bradesco: ~2,27x a inicial × 30% ≈ 18% da inicial).
   const { primeira_parcela: parcelaSistema } = calcularSimulacao({
     valor_financiamento: base,
     prazo_meses,
@@ -312,7 +312,7 @@ export function rendaMinimaSugerida(params: {
 
   // 2. Estimativa local PRICE (se houver bancos que aceitem ou for o selecionado)
   const price = avaliarRendaMinima({ ...params, sistema: "P" });
-  if (price) fontes.push({ ...price, detalhe_fonte: "Estimativa local (PRICE 15%)" });
+  if (price) fontes.push({ ...price, detalhe_fonte: "Estimativa local (PRICE 18%)" });
 
   // 3 e 4. Retornos da API e Mensagens de recusa
   if (bancos_simulados && bancos_simulados.length > 0) {
