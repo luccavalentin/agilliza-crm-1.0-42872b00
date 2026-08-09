@@ -247,66 +247,67 @@ export function MonthlyComparison({ dados }: { dados: ComparativoMensal }) {
               {mesAberto !== null ? `Detalhes de ${meses[mesAberto]}` : ""}
             </DialogTitle>
           </DialogHeader>
-          <ScrollArea className="flex-1">
-            <div className="p-6 space-y-3 text-sm">
-              <div className="grid grid-cols-2 gap-3">
-                <div className="rounded-lg border border-border p-3">
-                  <p className="text-xs text-muted-foreground">Propostas</p>
-                  <p className="text-lg font-semibold tabular-nums">
-                    {intFmt(quantidade[mesAberto])}
-                  </p>
+          {mesAberto !== null && (
+            <ScrollArea className="flex-1">
+              <div className="p-6 space-y-3 text-sm">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="rounded-lg border border-border p-3">
+                    <p className="text-xs text-muted-foreground">Propostas</p>
+                    <p className="text-lg font-semibold tabular-nums">
+                      {intFmt(quantidade[mesAberto])}
+                    </p>
+                  </div>
+                  <div className="rounded-lg border border-border p-3">
+                    <p className="text-xs text-muted-foreground">Taxa de aprovação</p>
+                    <p className="text-lg font-semibold tabular-nums">
+                      {pctFmt(taxaAprovacao[mesAberto])}
+                    </p>
+                  </div>
                 </div>
-                <div className="rounded-lg border border-border p-3">
-                  <p className="text-xs text-muted-foreground">Taxa de aprovação</p>
-                  <p className="text-lg font-semibold tabular-nums">
-                    {pctFmt(taxaAprovacao[mesAberto])}
-                  </p>
+                <div className="rounded-lg border border-border">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-border bg-muted/40">
+                        <th className="px-3 py-2 text-left text-[11px] uppercase tracking-[0.1em] text-muted-foreground">
+                          Banco
+                        </th>
+                        <th className="px-3 py-2 text-right text-[11px] uppercase tracking-[0.1em] text-muted-foreground">
+                          Propostas
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {bancos
+                        .map((b) => ({ nome: b.nome, valor: b.valores[mesAberto] }))
+                        .sort((a, b) => b.valor - a.valor)
+                        .map((b) => (
+                          <tr key={b.nome} className="border-b border-border/60 last:border-0">
+                            <td className="px-3 py-2">
+                              <div className="flex items-center gap-2">
+                                <BancoLogo nome={b.nome} size="sm" />
+                                <span className="font-medium text-foreground">{b.nome}</span>
+                              </div>
+                            </td>
+                            <td className="px-3 py-2 text-right tabular-nums">
+                              {b.valor > 0 ? (
+                                intFmt(b.valor)
+                              ) : (
+                                <span className="text-muted-foreground/50">—</span>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                    </tbody>
+                    <tfoot>
+                      <tr className="bg-muted/50 font-semibold">
+                        <td className="px-3 py-2">Total</td>
+                        <td className="px-3 py-2 text-right tabular-nums">
+                          {intFmt(totalPorMes[mesAberto])}
+                        </td>
+                      </tr>
+                    </tfoot>
+                  </table>
                 </div>
-              </div>
-              <div className="rounded-lg border border-border">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-border bg-muted/40">
-                      <th className="px-3 py-2 text-left text-[11px] uppercase tracking-[0.1em] text-muted-foreground">
-                        Banco
-                      </th>
-                      <th className="px-3 py-2 text-right text-[11px] uppercase tracking-[0.1em] text-muted-foreground">
-                        Propostas
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {bancos
-                      .map((b) => ({ nome: b.nome, valor: b.valores[mesAberto] }))
-                      .sort((a, b) => b.valor - a.valor)
-                      .map((b) => (
-                        <tr key={b.nome} className="border-b border-border/60 last:border-0">
-                          <td className="px-3 py-2">
-                            <div className="flex items-center gap-2">
-                              <BancoLogo nome={b.nome} size="sm" />
-                              <span className="font-medium text-foreground">{b.nome}</span>
-                            </div>
-                          </td>
-                          <td className="px-3 py-2 text-right tabular-nums">
-                            {b.valor > 0 ? (
-                              intFmt(b.valor)
-                            ) : (
-                              <span className="text-muted-foreground/50">—</span>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                  </tbody>
-                  <tfoot>
-                    <tr className="bg-muted/50 font-semibold">
-                      <td className="px-3 py-2">Total</td>
-                      <td className="px-3 py-2 text-right tabular-nums">
-                        {intFmt(totalPorMes[mesAberto])}
-                      </td>
-                    </tr>
-                  </tfoot>
-                </table>
-              </div>
               </div>
             </ScrollArea>
           )}
