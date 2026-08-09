@@ -20,7 +20,7 @@ export function BancosSimulados({
   className?: string;
 }) {
   if (!bancos || bancos.length === 0) {
-    return <span className="text-xs text-muted-foreground">Nenhum banco</span>;
+    return <span className="text-[13px] text-muted-foreground">Nenhum banco</span>;
   }
 
   const grupos = agruparPorSistema(bancos);
