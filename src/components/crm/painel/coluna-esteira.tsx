@@ -62,9 +62,6 @@ export function ColunaEsteira({
         <div className="flex min-w-0 items-center gap-2.5">
           <span className="relative grid size-7 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary ring-1 ring-inset ring-primary/20">
             <Icone className="size-3.5" strokeWidth={2.25} />
-            <span className="absolute -right-1 -top-1 grid size-4 place-items-center rounded-full bg-primary text-[9px] font-bold leading-none text-primary-foreground shadow-sm">
-              {ordem}
-            </span>
           </span>
           <span className="min-w-0 truncate text-sm font-semibold tracking-tight text-foreground">
             {stage.nome}

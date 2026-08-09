@@ -493,7 +493,7 @@ function Pagina() {
 
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-        {COLUNAS.map((col) => {
+        {COLUNAS.map((col, idx) => {
           const cfg = statusProposta(col.destino);
           const cards = cardsPorColuna.get(col.destino) ?? [];
           const visiveis = cards.slice(0, MAX_VISIVEIS_POR_COLUNA);
@@ -507,11 +507,11 @@ function Pagina() {
             >
               <div className="shrink-0 overflow-hidden rounded-t-xl">
                 <div className={cn("h-[3px]", TONE_BAR[cfg.tone])} />
-                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2 px-3 py-2.5">
+                <div className="flex items-center justify-between gap-2 px-3 py-2.5">
                   <span className="min-w-0 text-xs font-semibold uppercase leading-snug text-muted-foreground">
                     {cfg.label}
                   </span>
-                  <span className="shrink-0 rounded-full bg-background px-1.5 text-xs text-muted-foreground">
+                  <span className="shrink-0 rounded-full bg-background px-2 py-0.5 text-xs font-bold text-primary shadow-sm ring-1 ring-primary/10">
                     {cards.length}
                   </span>
                 </div>
@@ -525,14 +525,16 @@ function Pagina() {
                   }}
                   className="group flex shrink-0 items-center justify-between gap-2 rounded-xl border border-dashed border-border bg-background/60 px-3 py-2.5 text-xs font-medium text-muted-foreground shadow-sm transition hover:border-primary/40 hover:bg-primary/5 hover:text-foreground"
                 >
-                  <span className="flex items-center gap-2">
-                    <FolderOpen className="h-4 w-4 text-primary" />
+                  <div className="flex items-center gap-2">
+                    <div className="relative">
+                      <FolderOpen className="h-4 w-4 text-primary" />
+                    </div>
                     {excedente > 0
                       ? `Ver mais ${excedente} ${excedente === 1 ? "proposta" : "propostas"}`
                       : cards.length > 0
                         ? "Abrir e pesquisar"
                         : "Pesquisar nesta etapa"}
-                  </span>
+                  </div>
                   <Search className="h-3.5 w-3.5 opacity-70 group-hover:opacity-100" />
                 </button>
 
