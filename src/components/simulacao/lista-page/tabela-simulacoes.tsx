@@ -139,15 +139,15 @@ export function TabelaSimulacoes({
                 </TableCell>
 
                 <TableCell className="py-3 px-2 font-medium text-foreground transition-colors group-hover/row:text-primary min-w-[150px]">
-                  <p className="truncate text-[12px] font-bold leading-tight">{s.nome_cliente ?? "—"}</p>
+                  <p className="truncate text-[13px] font-bold leading-tight">{s.nome_cliente ?? "—"}</p>
                   {escopo === "todas" && s.nome_responsavel && (
-                    <span className="mt-1 flex items-center gap-1 text-[10px] font-medium text-muted-foreground leading-none">
+                    <span className="mt-1 flex items-center gap-1 text-[11px] font-medium text-muted-foreground leading-none">
                       <UserIcon className="h-3 w-3 shrink-0" />
                       <span className="truncate">{s.nome_responsavel}</span>
                     </span>
                   )}
                   {verExcluidas && (
-                    <span className="mt-1 block text-[10px] font-normal text-destructive">
+                    <span className="mt-1 block text-[11px] font-normal text-destructive">
                       Excluída por {s.nome_excluidor ?? "—"} · {formatDataHoraBR(s.deleted_at)}
                     </span>
                   )}
