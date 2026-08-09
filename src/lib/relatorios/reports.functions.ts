@@ -1926,10 +1926,10 @@ export const runReport = createServerFn({ method: "POST" })
         descricao: "Base de clientes cadastrados no período.",
         modulo: "CRM",
         kpis: [
-          { label: "Novos", valor: int(novos), tone: "brand" },
-          { label: "Ativos", valor: int(ativos), tone: "success" },
-          { label: "App habilitado", valor: int(appOn), tone: "neutral" },
-          { label: "Sem responsável", valor: int(semResp), tone: "warning" },
+          { label: "Novos", valor: int(novos), tone: "brand", filters: [{ key: "ativo", values: ["Sim", "Não"] }] },
+          { label: "Ativos", valor: int(ativos), tone: "success", filters: [{ key: "ativo", values: ["Sim"] }] },
+          { label: "App habilitado", valor: int(appOn), tone: "neutral", filters: [{ key: "app", values: ["Habilitado"] }] },
+          { label: "Sem responsável", valor: int(semResp), tone: "warning", filters: [{ key: "ativo", values: ["Sim", "Não"] }] },
         ],
         charts: [
           { titulo: "Tipo de pessoa", tipo: "barh", dados: topN(pfPj, 4) },
