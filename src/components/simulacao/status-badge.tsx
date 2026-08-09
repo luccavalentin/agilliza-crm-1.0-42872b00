@@ -35,7 +35,7 @@ export function BancoStatusBadge({ status }: { status: string }) {
   return (
     <ToneBadge 
       tone={cfg.tone} 
-      className="whitespace-nowrap px-1 py-0.5 h-auto text-[11px] font-bold"
+      className="whitespace-nowrap px-1.5 py-0.5 h-auto text-[11px] font-bold"
     >
       {cfg.label}
     </ToneBadge>
