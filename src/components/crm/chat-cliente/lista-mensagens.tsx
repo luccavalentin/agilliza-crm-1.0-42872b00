@@ -120,15 +120,15 @@ export function ListaMensagens({
 
                 <div
                   className={cn(
-                    "chat-bubble min-w-0 max-w-[calc(100%-3.25rem)] overflow-hidden px-3 py-2 text-sm sm:max-w-[78%] sm:px-3.5",
+                    "chat-bubble relative min-w-0 max-w-[calc(100%-3.25rem)] overflow-hidden px-4 py-3 text-sm shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] transition-all sm:max-w-[78%] sm:px-4.5",
                     m.interna
-                      ? "rounded-2xl border border-amber-500/40 bg-amber-500/10 text-foreground"
+                      ? "rounded-2xl border border-amber-500/30 bg-gradient-to-br from-amber-50/50 to-amber-500/5 text-foreground shadow-amber-500/5"
                       : doTime
-                        ? "rounded-2xl rounded-br-md bg-primary text-primary-foreground"
-                        : "rounded-2xl rounded-bl-md border border-chat-them-border bg-chat-them text-chat-them-foreground",
+                        ? "rounded-2xl rounded-br-sm bg-gradient-to-br from-primary via-primary to-[var(--brand-azul-escuro)] text-primary-foreground"
+                        : "rounded-2xl rounded-bl-sm border border-border/50 bg-card text-foreground shadow-sm",
                     mesmoAutorAntes &&
                       !m.interna &&
-                      (doTime ? "rounded-tr-md" : "rounded-tl-md"),
+                      (doTime ? "rounded-tr-sm" : "rounded-tl-sm"),
                   )}
                 >
                   {m.interna && (

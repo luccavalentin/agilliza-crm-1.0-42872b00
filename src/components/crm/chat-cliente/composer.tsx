@@ -212,8 +212,8 @@ export function ChatComposer({
   return (
     <div
       className={cn(
-        "border-t bg-card transition-colors",
-        isNota ? "border-amber-500/40 bg-amber-500/[0.03]" : "border-border/60",
+        "border-t bg-gradient-to-b from-card to-muted/30 transition-all duration-300",
+        isNota ? "border-amber-500/50 bg-amber-500/[0.04]" : "border-border/60",
       )}
     >
       {/* Abas do compositor (só quando há mais de uma) */}

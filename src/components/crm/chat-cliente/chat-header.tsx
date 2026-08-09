@@ -63,22 +63,28 @@ export function ChatClienteHeader({
 
   return (
     <>
-      <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 border-b bg-card px-3 py-2.5 sm:gap-3 sm:px-4 sm:py-3">
-        <div className="relative flex size-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary/70 text-sm font-semibold text-primary-foreground shadow-sm ring-2 ring-background">
+      <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-4 border-b bg-gradient-to-r from-card to-muted/20 px-4 py-4 sm:gap-6 sm:px-6">
+        <div className="relative flex size-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-primary via-primary/80 to-[var(--brand-azul-escuro)] text-base font-bold text-primary-foreground shadow-[0_4px_12px_-4px_rgba(var(--primary),0.5)] ring-2 ring-background">
           {iniciais(info?.nome)}
+          <span className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500 ring-2 ring-background">
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" />
+          </span>
         </div>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold text-foreground">
-            {info?.nome ?? "Conversa com o cliente"}
-          </p>
-          <div className="flex min-w-0 items-center gap-2 overflow-hidden">
+          <div className="flex items-center gap-2">
+            <p className="truncate text-base font-bold tracking-tight text-foreground">
+              {info?.nome ?? "Consultoria Especializada"}
+            </p>
             <Badge
               variant="secondary"
-              className="h-5 rounded-full px-2 text-[10px] font-medium"
+              className="h-5 rounded-md border-primary/20 bg-primary/5 px-2 text-[9px] font-black uppercase tracking-wider text-primary shadow-sm"
             >
-              Cliente
+              VIP
             </Badge>
           </div>
+          <p className="mt-0.5 truncate text-[11px] font-medium uppercase tracking-widest text-muted-foreground/80">
+            Atendimento Exclusivo Agilliza
+          </p>
         </div>
 
         <div className="flex min-w-0 shrink-0 items-center justify-end gap-1 overflow-hidden sm:gap-1.5">
