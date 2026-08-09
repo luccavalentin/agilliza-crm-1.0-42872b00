@@ -250,49 +250,53 @@ export function GenericReportPage({
       )}
 
       <Dialog open={!!graficoAberto} onOpenChange={(o) => !o && setGraficoAberto(null)}>
-        <DialogContent className="max-h-[85vh] max-w-6xl overflow-y-auto">
-          <DialogHeader>
+        <DialogContent className="flex max-h-[90vh] max-w-6xl flex-col overflow-hidden p-0">
+          <DialogHeader className="shrink-0 border-b p-4 sm:px-6">
             <DialogTitle>
               {graficoAberto?.titulo} — {graficoAberto?.label}
             </DialogTitle>
           </DialogHeader>
-          {graficoAberto && (
-            <div className="space-y-3">
-              <p className="text-sm text-muted-foreground">
-                Valor no gráfico:{" "}
-                <span className="font-semibold text-foreground">
-                  {graficoAberto.valor.toLocaleString("pt-BR")}
-                </span>
-                {graficoAberto.rows.length > 0 && (
-                  <>
-                    {" · "}
-                    {graficoAberto.rows.length.toLocaleString("pt-BR")} registros
-                  </>
-                )}
-              </p>
-              {data && graficoAberto.rows.length > 0 ? (
-                <DrilldownTable columns={data.columns} rows={graficoAberto.rows} />
-              ) : (
+          <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-6">
+            {graficoAberto && (
+              <div className="space-y-3">
                 <p className="text-sm text-muted-foreground">
-                  Este indicador é calculado a partir de várias etapas e não possui
-                  registros diretamente vinculados ao rótulo selecionado.
+                  Valor no gráfico:{" "}
+                  <span className="font-semibold text-foreground">
+                    {graficoAberto.valor.toLocaleString("pt-BR")}
+                  </span>
+                  {graficoAberto.rows.length > 0 && (
+                    <>
+                      {" · "}
+                      {graficoAberto.rows.length.toLocaleString("pt-BR")} registros
+                    </>
+                  )}
                 </p>
-              )}
-            </div>
-          )}
+                {data && graficoAberto.rows.length > 0 ? (
+                  <DrilldownTable columns={data.columns} rows={graficoAberto.rows} />
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    Este indicador é calculado a partir de várias etapas e não possui
+                    registros diretamente vinculados ao rótulo selecionado.
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
 
       <Dialog open={!!kpiAberto} onOpenChange={(o) => !o && setKpiAberto(null)}>
-        <DialogContent className="max-h-[85vh] max-w-6xl overflow-y-auto">
-          <DialogHeader>
+        <DialogContent className="flex max-h-[90vh] max-w-6xl flex-col overflow-hidden p-0">
+          <DialogHeader className="shrink-0 border-b p-4 sm:px-6">
             <DialogTitle>
               {kpiAberto?.titulo ?? kpiAberto?.label} — {linhasKpi.length.toLocaleString("pt-BR")} registros
             </DialogTitle>
           </DialogHeader>
-          {data && kpiAberto && (
-            <DrilldownTable columns={data.columns} rows={linhasKpi} />
-          )}
+          <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-6">
+            {data && kpiAberto && (
+              <DrilldownTable columns={data.columns} rows={linhasKpi} />
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </ReportShell>
