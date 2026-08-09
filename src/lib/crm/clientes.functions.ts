@@ -3,6 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Database } from "@/integrations/supabase/types";
 import { mascararDocumento } from "@/lib/crm/documento";
+import { toTitleCase } from "@/lib/utils";
 
 type TipoPessoa = Database["public"]["Enums"]["tipo_pessoa"];
 type EstadoCivil = Database["public"]["Enums"]["cliente_estado_civil"];
@@ -328,24 +329,24 @@ export const criarCliente = createServerFn({ method: "POST" })
     // Campos comuns entre criação e atualização.
     const campos = {
       tipo_pessoa: data.tipo_pessoa,
-      nome: data.nome,
+      nome: toTitleCase(data.nome),
       documento: data.documento,
       documento_secundario: data.documento_secundario ?? null,
       data_nascimento: data.data_nascimento,
       estado_civil: data.estado_civil,
       regime_casamento: data.regime_casamento ?? null,
-      mae: data.mae ?? null,
-      pai: data.pai ?? null,
+      mae: toTitleCase(data.mae),
+      pai: toTitleCase(data.pai),
       sexo: data.sexo ?? null,
-      nacionalidade: data.nacionalidade ?? null,
+      nacionalidade: toTitleCase(data.nacionalidade),
       naturalidade: data.naturalidade ?? null,
       tipo_documento_identidade: data.tipo_documento_identidade ?? null,
       numero_documento: data.numero_documento ?? null,
       orgao_expedidor: data.orgao_expedidor ?? null,
       uf_expedicao: data.uf_expedicao ?? null,
       data_expedicao: data.data_expedicao || null,
-      profissao: data.profissao ?? null,
-      empresa: data.empresa ?? null,
+      profissao: toTitleCase(data.profissao),
+      empresa: toTitleCase(data.empresa),
       banco_conta: data.banco_conta ?? null,
       agencia: data.agencia ?? null,
       conta_corrente: data.conta_corrente ?? null,
@@ -357,19 +358,19 @@ export const criarCliente = createServerFn({ method: "POST" })
       utiliza_fgts: data.utiliza_fgts ?? false,
       fg_autorizacao_dados: data.fg_autorizacao_dados ?? false,
       origem: data.origem,
-      conjuge_nome: data.conjuge_nome ?? null,
+      conjuge_nome: toTitleCase(data.conjuge_nome),
       conjuge_cpf: data.conjuge_cpf ?? null,
       conjuge_data_nascimento: data.conjuge_data_nascimento || null,
-      conjuge_nome_mae: data.conjuge_nome_mae ?? null,
+      conjuge_nome_mae: toTitleCase(data.conjuge_nome_mae),
       conjuge_sexo: data.conjuge_sexo ?? null,
-      conjuge_nacionalidade: data.conjuge_nacionalidade ?? null,
+      conjuge_nacionalidade: toTitleCase(data.conjuge_nacionalidade),
       conjuge_tipo_documento_identidade: data.conjuge_tipo_documento_identidade ?? null,
       conjuge_numero_documento: data.conjuge_numero_documento ?? null,
       conjuge_orgao_expedidor: data.conjuge_orgao_expedidor ?? null,
       conjuge_uf_expedicao: data.conjuge_uf_expedicao ?? null,
       conjuge_data_expedicao: data.conjuge_data_expedicao || null,
-      conjuge_profissao: data.conjuge_profissao ?? null,
-      conjuge_empresa: data.conjuge_empresa ?? null,
+      conjuge_profissao: toTitleCase(data.conjuge_profissao),
+      conjuge_empresa: toTitleCase(data.conjuge_empresa),
       conjuge_renda: data.conjuge_renda ?? null,
       conjuge_email: data.conjuge_email ?? null,
       conjuge_celular: data.conjuge_celular ?? null,

@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { toTitleCase } from "@/lib/utils";
 
 export interface ParceiroItem {
   id: string;
@@ -29,10 +30,10 @@ export const listarParceiros = createServerFn({ method: "GET" })
     return (data ?? []).map((p: any) => ({
       id: p.id,
       profile_id: p.profile_id,
-      nome: p.profiles?.nome ?? null,
+      nome: toTitleCase(p.profiles?.nome),
       email: p.profiles?.email ?? null,
       telefone: p.profiles?.telefone ?? null,
-      razao_social: p.razao_social,
+      razao_social: toTitleCase(p.razao_social),
       creci: p.creci,
       tipo_pessoa: p.tipo_pessoa,
       percentual_comissao: p.percentual_comissao,

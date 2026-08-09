@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { getRequestHeader } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { toTitleCase } from "@/lib/utils";
 import {
   transicaoPermitida,
   STATUS_EDITAVEIS,
@@ -750,10 +751,10 @@ export const obterConjugeCliente = createServerFn({ method: "GET" })
     return {
       tipo_qualificacao: "TI",
       tipo_pessoa: "F",
-      nome: c.conjuge_nome,
+      nome: toTitleCase(c.conjuge_nome),
       cpf_cnpj: c.conjuge_cpf,
       data_nascimento: c.conjuge_data_nascimento,
-      nome_mae: c.conjuge_nome_mae,
+      nome_mae: toTitleCase(c.conjuge_nome_mae),
       tipo_sexo: c.conjuge_sexo ? String(c.conjuge_sexo).trim().charAt(0).toUpperCase() : c.conjuge_sexo,
       estado_civil: estadoCivilCrmParaCodigo(c.estado_civil) || null,
       regime_casamento: regimeCasamentoCrmParaCodigo(c.regime_casamento) || null,
@@ -762,8 +763,8 @@ export const obterConjugeCliente = createServerFn({ method: "GET" })
       orgao_expedidor: c.conjuge_orgao_expedidor,
       uf_expedicao: c.conjuge_uf_expedicao,
       data_expedicao: c.conjuge_data_expedicao,
-      profissao: c.conjuge_profissao,
-      empresa: c.conjuge_empresa,
+      profissao: toTitleCase(c.conjuge_profissao),
+      empresa: toTitleCase(c.conjuge_empresa),
       renda: c.conjuge_renda,
       email: c.conjuge_email,
       celular: c.conjuge_celular,
