@@ -588,28 +588,39 @@ export const runReport = createServerFn({ method: "POST" })
       const statusMap = new Map<string, number>();
       const bancoMap = new Map<string, number>();
       const produtoMap = new Map<string, number>();
+      const somaValorStatus = new Map<string, number>();
+      const somaValorBanco = new Map<string, number>();
+      const somaValorProduto = new Map<string, number>();
+
       sims.forEach((s) => {
+        const val = s.valor_financiamento ?? 0;
         const statusLabel = cfg?.statusComoModulo
           ? STATUS_SIMULACAO_LABEL[s.status] ?? s.status
           : STATUS_SIMULACAO_LABEL[s.status] ?? s.status;
         statusMap.set(statusLabel, (statusMap.get(statusLabel) ?? 0) + 1);
+        somaValorStatus.set(statusLabel, (somaValorStatus.get(statusLabel) ?? 0) + val);
+
         produtoMap.set(s.produto ?? "—", (produtoMap.get(s.produto ?? "—") ?? 0) + 1);
-        (s.nomes_bancos?.length ? s.nomes_bancos : ["—"]).forEach((b: string) =>
-          bancoMap.set(b, (bancoMap.get(b) ?? 0) + 1),
-        );
+        somaValorProduto.set(s.produto ?? "—", (somaValorProduto.get(s.produto ?? "—") ?? 0) + val);
+
+        (s.nomes_bancos?.length ? s.nomes_bancos : ["—"]).forEach((b: string) => {
+          bancoMap.set(b, (bancoMap.get(b) ?? 0) + 1);
+          somaValorBanco.set(b, (somaValorBanco.get(b) ?? 0) + val);
+        });
       });
+
       return {
         titulo: cfg?.titulo ?? "Relatório de simulações",
         descricao: cfg?.descricao ?? "Volume, tipo e conversão de simulações.",
         modulo: cfg?.modulo ?? "Simulações",
         kpis: [
-          { label: "Total", valor: int(sims.length), tone: "neutral" },
-          { label: "Rápidas", valor: int(rapidas), tone: "neutral" },
-          { label: "Completas", valor: int(completas), tone: "brand" },
-          { label: "Com erro", valor: int(erro), tone: "danger" },
-          { label: "Volume simulado", valor: brl(volumeSimulado), tone: "success" },
-          { label: "Conversão sim→prop", valor: pct(conv), tone: "success" },
-          { label: "Ticket médio", valor: brl(ticket), tone: "brand" },
+          { label: "Total", valor: int(sims.length), tone: "neutral", filters: [{ key: "status", values: [...statusMap.keys()] }] },
+          { label: "Rápidas", valor: int(rapidas), tone: "neutral", filters: [{ key: "tipo", values: ["simplificada"] }] },
+          { label: "Completas", valor: int(completas), tone: "brand", filters: [{ key: "tipo", values: ["completa"] }] },
+          { label: "Com erro", valor: int(erro), tone: "danger", filters: [{ key: "status", values: [STATUS_SIMULACAO_LABEL["erro_banco"] ?? "erro_banco"] }] },
+          { label: "Volume simulado", valor: brl(volumeSimulado), tone: "success", filters: [{ key: "status", values: ["Simulada", "Parcialmente simulada", "Promovida"] }] },
+          { label: "Conversão sim→prop", valor: pct(conv), tone: "success", filters: [{ key: "status", values: ["Promovida"] }] },
+          { label: "Ticket médio", valor: brl(ticket), tone: "brand", filters: [{ key: "status", values: ["Simulada", "Parcialmente simulada", "Promovida"] }] },
         ],
         charts: [
           { titulo: "Distribuição por status", tipo: "barh", dados: topN(statusMap, 8) },
@@ -1830,16 +1841,17 @@ export const runReport = createServerFn({ method: "POST" })
           "Status, bancos, produtos e volumes das propostas no período.",
         modulo: "Propostas",
         kpis: [
-          { label: "Total", valor: int(props.length), tone: "neutral" },
-          { label: "Em análise", valor: int(emAnalise.length), tone: "warning" },
-          { label: "Contratos", valor: int(contratos.length), tone: "success" },
-          { label: "Taxa de aprovação", valor: pct(taxaAprov), tone: "success" },
-          { label: "Ticket médio", valor: brl(ticket), tone: "brand" },
+          { label: "Total", valor: int(props.length), tone: "neutral", filters: [{ key: "status", values: [...statusMap.keys()] }] },
+          { label: "Em análise", valor: int(emAnalise.length), tone: "warning", filters: [{ key: "status", values: Array.from(STATUS_ENVIADAS).map(rotuloStatus) }] },
+          { label: "Contratos", valor: int(contratos.length), tone: "success", filters: [{ key: "status", values: Array.from(STATUS_APROVADAS).map(rotuloStatus) }] },
+          { label: "Taxa de aprovação", valor: pct(taxaAprov), tone: "success", filters: [{ key: "status", values: Array.from(STATUS_APROVADAS).map(rotuloStatus) }] },
+          { label: "Ticket médio", valor: brl(ticket), tone: "brand", filters: [{ key: "status", values: Array.from(STATUS_APROVADAS).map(rotuloStatus) }] },
           {
             label: "Volume contratado",
             valor: brl(volumeContratado),
             hint: `Enviado ${brl(volumeEnviado)}`,
             tone: "brand",
+            filters: [{ key: "status", values: Array.from(STATUS_APROVADAS).map(rotuloStatus) }],
           },
         ],
         charts: [
