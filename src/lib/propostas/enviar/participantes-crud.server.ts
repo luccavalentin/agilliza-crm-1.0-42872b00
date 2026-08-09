@@ -14,6 +14,7 @@ import {
   sanitizarMensagemErro,
 } from "@/lib/simulacao/homefin.server";
 import { soDigitosStr, sanitizarNumeroDocumento } from "./shared-utils";
+import { toTitleCase } from "@/lib/utils";
 
 export interface ParticipantePayload {
   nomeParticipante: string;
@@ -103,6 +104,16 @@ export async function adicionarParticipanteImpl({
     tipoQualificacao: participante.tipoQualificacao ?? "CO",
     tipoPessoa: participante.tipoPessoa ?? (cpfCnpj.length > 11 ? "J" : "F"),
     ...participante,
+    nomeParticipante: toTitleCase(participante.nomeParticipante),
+    nomeMae: toTitleCase(participante.nomeMae),
+    nomeProfissao: toTitleCase(participante.nomeProfissao),
+    nomeEmpresaProfissao: toTitleCase(participante.nomeEmpresaProfissao),
+    nomeConjuge: toTitleCase(participante.nomeConjuge),
+    nomeProfissaoConjuge: toTitleCase(participante.nomeProfissaoConjuge),
+    nomeEmpresaProfissaoConjuge: toTitleCase(participante.nomeEmpresaProfissaoConjuge),
+    logradouro: toTitleCase(participante.logradouro),
+    bairro: toTitleCase(participante.bairro),
+    municipio: toTitleCase(participante.municipio),
     cpfCnpj,
     numeroDocumento: sanitizarNumeroDocumento(participante.numeroDocumento),
     numeroDocumentoConjuge: sanitizarNumeroDocumento(participante.numeroDocumentoConjuge),
