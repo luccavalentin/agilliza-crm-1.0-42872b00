@@ -171,7 +171,7 @@ export function ListaDesktop({
                   </TableCell>
 
                   <TableCell className="font-medium text-foreground transition-colors group-hover/row:text-primary">
-                    {p.nome_cliente ?? "—"}
+                    <p className="text-[13px] font-bold">{p.nome_cliente ?? "—"}</p>
                     {escopo === "todas" && p.nome_responsavel && (
                       <span className="mt-0.5 flex items-center gap-1 text-[11px] font-normal text-muted-foreground">
                         <User className="h-3 w-3 shrink-0" />
