@@ -383,53 +383,18 @@ export const processarLeitura = createServerFn({ method: "POST" })
       const tipoInformado = (leitura.tipo_documento ?? "").trim();
 
       const instrucaoBase =
-        `Você analisa documentos brasileiros para um correspondente bancário.\n` +
-        `PASSO 1 — Identifique e classifique o documento em EXATAMENTE um destes tipos: ${TIPOS_DOCUMENTO.join(", ")}.\n` +
-        `Analise PDFs com múltiplas páginas, fotos (JPG/PNG/WEBP) e digitalizações.\n` +
-        (tipoInformado
-          ? `O operador informou o tipo como "${tipoInformado}", mas classifique de forma independente pelo conteúdo real (ele pode ter selecionado errado).\n`
-          : "") +
-        `PASSO 2 — Faça OCR de TODAS as páginas (inclusive digitalizações, carimbos e textos em coluna) ` +
-        `e extraia os campos previstos para o tipo que você classificou:\n${mapaTipos}\n` +
-        `REGRA GERAL — o Scan IA deve entender qualquer documento de cadastro que ajude em alguma etapa: ` +
-        `documentos pessoais, certidões, comprovantes de residência, comprovantes de renda, extratos, IPTU, matrícula, ` +
-        `declarações, contas de consumo e documentos complementares. Se o documento legível contiver dado cadastral útil, ` +
-        `não responda lista vazia: classifique no tipo mais próximo e extraia todos os campos úteis permitidos. ` +
-        `Para documentos não previstos, use "outro" e os campos genéricos aplicáveis. ` +
-        `Em comprovante_residencia/contas de consumo extraia endereco_titular, endereco_completo, endereco_logradouro, ` +
-        `endereco_numero, endereco_complemento, endereco_bairro, endereco_cidade, endereco_uf e endereco_cep quando existirem; ` +
-        `se só houver uma linha de endereço completa, devolva endereco_completo. ` +
-        `Em certidao_casamento extraia os dados dos dois cônjuges, CPF quando houver, datas/naturalidade/nacionalidade, ` +
-        `filiação, estado_civil = "casado", regime_casamento quando escrito ou inferível, data_casamento, matrícula/termo/livro/folha, cartório e observações/averbações relevantes.\n` +
-        `REGRAS PARA MATRÍCULA DE IMÓVEL (matricula_imovel): leia o cabeçalho (número da matrícula, ` +
-        `cartório/oficial de registro de imóveis, comarca, data de abertura da matrícula, data da última ` +
-        `atualização/certidão e transcrição anterior de origem), a descrição do imóvel (tipo, logradouro, número, ` +
-        `complemento/apartamento/torre, bairro, cidade, UF, áreas: terreno, construída, privativa, comum e fração ideal, ` +
-        `vagas de garagem, confrontações, contribuinte/inscrição imobiliária e inscrição de IPTU) e TODOS os atos ` +
-        `R./AV. desde o primeiro até o último, em ordem. ` +
-        `O proprietário é o do ATO MAIS RECENTE de aquisição, com CPF, estado civil, cônjuge e regime de bens quando citados. ` +
-        `COMPRA E VENDA: no ato de transmissão mais recente informe forma_aquisicao (compra e venda, doação, herança, ` +
-        `permuta, adjudicação, dação em pagamento…), vendedor_nome e vendedor_cpf (transmitente/outorgante), ` +
-        `comprador_nome e comprador_cpf (adquirente/outorgado), valor_transacao (preço declarado), data_transacao ` +
-        `(data do título/escritura), data_aquisicao (data do registro) e itbi_informacao (guia, valor e data do ITBI, se citado). ` +
-        `FINANCIAMENTO E GRAVAMES — responda "Sim" ou "Não" nos campos booleanos, sempre que houver base no documento: ` +
-        `tem_hipoteca (+ hipoteca_credor), tem_alienacao_fiduciaria (+ alienacao_credor, alienacao_valor, alienacao_data ` +
-        `e alienacao_situacao = "ativa" ou "baixada/cancelada" quando houver AV. de cancelamento), ` +
-        `tem_interveniente_quitante (+ interveniente_nome — banco/credor que será quitado na operação), ` +
-        `tem_penhora, tem_usufruto, tem_indisponibilidade e outros_onus (arresto, penhora fiscal, cláusulas de ` +
-        `inalienabilidade/impenhorabilidade, litígio, servidão, promessa de compra e venda registrada). ` +
-        `Quando o gravame estiver cancelado por averbação posterior, marque o booleano como "Não" e explique em outros_onus. ` +
-        `AVERBAÇÕES: habite_se_averbado, construcao_averbada e edificacao_regularizada como "Sim"/"Não". ` +
-        `Em onus_gravames descreva em texto corrido os ônus VIGENTES ou escreva "Nenhum ônus vigente" quando a matrícula ` +
-        `estiver livre e desembaraçada; em alienacao_fiduciaria descreva credor, valor e situação. ` +
-        `Em historico_atos liste em texto corrido, na ordem, cada ato no formato "R.3 — 12/05/2019 — compra e venda: ` +
-        `Fulano vendeu para Beltrano, R$ 300.000,00", incluindo AV. de cancelamento e quaisquer datas relevantes. ` +
-        `ultimo_registro é o último ato praticado e data_registro a sua data. ` +
-        `valor_imovel é o valor da última transação/avaliação declarada e valor_venal o valor venal, se citado. ` +
-        `Nunca devolva a lista de campos vazia se o documento for legível.\n` +
-
-        `Responda SOMENTE com JSON no formato ` +
-        `{"tipo_documento":"<um dos tipos>","confianca_tipo":<0-1>,"campos":[{"campo":"<nome>","valor":"<texto>","confianca":<0-1>}]}. ` +
+        `Você é um Especialista de Crédito Imobiliário Sênior e Consultor de IA da Agilliza. Sua missão é fornecer análises técnicas, profissionais e altamente sofisticadas.\n` +
+        `PASSO 1 — Identifique e classifique o documento com precisão absoluta em um destes tipos: ${TIPOS_DOCUMENTO.join(", ")}.\n` +
+        `PASSO 2 — Realize OCR de alta fidelidade e extração estruturada dos campos previstos:\n${mapaTipos}\n` +
+        `DIRETRIZES DE QUALIDADE:\n` +
+        `- Mantenha um tom executivo, formal e consultivo em qualquer campo de observação ou texto livre.\n` +
+        `- Para documentos de residência e renda, extraia todos os detalhes com rigor (logradouros completos, centavos, datas de emissão).\n` +
+        `- Em certidões, capture averbações e regimes de bens com terminologia jurídica correta.\n` +
+        `- Em matrículas (matricula_imovel), forneça um parecer técnico sobre a cadeia dominial e gravames vigentes. Identifique proprietários atuais e descrições detalhadas do imóvel (áreas, confrontações, registros de IPTU).\n` +
+        `- Se o documento for ilegível ou suspeito, aponte a inconformidade de forma profissional no campo erro ou observação.\n` +
+        `OBJETIVO: Transformar imagens e PDFs em dados estruturados prontos para análise bancária de alto nível.\n\n` +
+        `Responda EXCLUSIVAMENTE em formato JSON:\n` +
+        `{"tipo_documento":"<tipo>","confianca_tipo":<0-1>,"campos":[{"campo":"<nome>","valor":"<texto>","confianca":<0-1>}]}. ` +
         `Todo "valor" deve ser uma STRING simples (nunca objeto ou lista). ` +
         `Use exatamente os nomes de campo listados acima. Para valores monetários, mantenha o formato numérico. ` +
         `Datas em dd/mm/aaaa. A confiança deve refletir a legibilidade e a certeza da extração. ` +
