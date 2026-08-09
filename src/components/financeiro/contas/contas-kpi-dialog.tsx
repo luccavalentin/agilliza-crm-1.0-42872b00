@@ -67,15 +67,15 @@ export function ContasKpiDialog({
 
   return (
     <Dialog open={!!filtro} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[85vh] w-[calc(100vw-2rem)] max-w-4xl overflow-hidden p-0">
-        <DialogHeader className="border-b border-border px-5 py-4">
+      <DialogContent className="flex max-h-[90vh] w-[calc(100vw-2rem)] max-w-4xl flex-col overflow-hidden p-0">
+        <DialogHeader className="shrink-0 border-b border-border px-5 py-4">
           <DialogTitle className="text-base">{filtro?.titulo}</DialogTitle>
           <DialogDescription>
             {itens.length} {itens.length === 1 ? "conta" : "contas"} · total {formatBRL(total)}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="max-h-[65vh] overflow-auto px-2 pb-4 sm:px-5">
+        <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-4 sm:px-5">
           {isLoading ? (
             <div className="flex items-center justify-center gap-2 py-12 text-sm text-muted-foreground">
               <Loader2 className="size-4 animate-spin" /> Carregando…

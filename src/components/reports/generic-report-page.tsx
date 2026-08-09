@@ -250,13 +250,13 @@ export function GenericReportPage({
       )}
 
       <Dialog open={!!graficoAberto} onOpenChange={(o) => !o && setGraficoAberto(null)}>
-        <DialogContent className="max-h-[85vh] max-w-6xl overflow-y-auto">
-          <DialogHeader>
+        <DialogContent className="flex max-h-[90vh] max-w-6xl flex-col overflow-hidden p-0">
+          <DialogHeader className="shrink-0 border-b p-4 sm:px-6">
             <DialogTitle>
               {graficoAberto?.titulo} — {graficoAberto?.label}
             </DialogTitle>
           </DialogHeader>
-          {graficoAberto && (
+          <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-6">
             <div className="space-y-3">
               <p className="text-sm text-muted-foreground">
                 Valor no gráfico:{" "}
@@ -280,19 +280,22 @@ export function GenericReportPage({
               )}
             </div>
           )}
+        </div>
         </DialogContent>
       </Dialog>
 
       <Dialog open={!!kpiAberto} onOpenChange={(o) => !o && setKpiAberto(null)}>
-        <DialogContent className="max-h-[85vh] max-w-6xl overflow-y-auto">
-          <DialogHeader>
+        <DialogContent className="flex max-h-[90vh] max-w-6xl flex-col overflow-hidden p-0">
+          <DialogHeader className="shrink-0 border-b p-4 sm:px-6">
             <DialogTitle>
               {kpiAberto?.titulo ?? kpiAberto?.label} — {linhasKpi.length.toLocaleString("pt-BR")} registros
             </DialogTitle>
           </DialogHeader>
-          {data && kpiAberto && (
-            <DrilldownTable columns={data.columns} rows={linhasKpi} />
-          )}
+          <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-6">
+            {data && kpiAberto && (
+              <DrilldownTable columns={data.columns} rows={linhasKpi} />
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </ReportShell>
