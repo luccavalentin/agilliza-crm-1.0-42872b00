@@ -62,14 +62,14 @@ export function TabelaSimulacoes({
                 />
               </TableHead>
             )}
-            <TableHead className="h-10 w-[100px] text-[11px] font-bold uppercase tracking-wider text-muted-foreground px-2">Número</TableHead>
-            <TableHead className="h-10 min-w-[150px] text-[11px] font-bold uppercase tracking-wider text-muted-foreground px-2">Cliente</TableHead>
-            <TableHead className="h-10 w-[70px] text-[11px] font-bold uppercase tracking-wider text-muted-foreground px-2">Prod.</TableHead>
-            <TableHead className="h-10 min-w-[180px] text-[11px] font-bold uppercase tracking-wider text-muted-foreground px-2">Bancos simulados</TableHead>
-            <TableHead className="h-10 w-[120px] text-right text-[11px] font-bold uppercase tracking-wider text-muted-foreground px-2">Valor imóvel</TableHead>
-            <TableHead className="h-10 w-[80px] text-right text-[11px] font-bold uppercase tracking-wider text-muted-foreground px-2">Prazo</TableHead>
-            <TableHead className="h-10 w-[110px] text-[11px] font-bold uppercase tracking-wider text-muted-foreground px-2">Status</TableHead>
-            <TableHead className="h-10 w-[100px] text-right text-[11px] font-bold uppercase tracking-wider text-muted-foreground px-2">Ações</TableHead>
+            <TableHead className="h-10 w-[100px] text-[12px] font-bold uppercase tracking-wider text-muted-foreground px-2">Número</TableHead>
+            <TableHead className="h-10 min-w-[150px] text-[12px] font-bold uppercase tracking-wider text-muted-foreground px-2">Cliente</TableHead>
+            <TableHead className="h-10 w-[70px] text-[12px] font-bold uppercase tracking-wider text-muted-foreground px-2">Prod.</TableHead>
+            <TableHead className="h-10 min-w-[180px] text-[12px] font-bold uppercase tracking-wider text-muted-foreground px-2">Bancos simulados</TableHead>
+            <TableHead className="h-10 w-[120px] text-right text-[12px] font-bold uppercase tracking-wider text-muted-foreground px-2">Valor imóvel</TableHead>
+            <TableHead className="h-10 w-[80px] text-right text-[12px] font-bold uppercase tracking-wider text-muted-foreground px-2">Prazo</TableHead>
+            <TableHead className="h-10 w-[110px] text-[12px] font-bold uppercase tracking-wider text-muted-foreground px-2">Status</TableHead>
+            <TableHead className="h-10 w-[100px] text-right text-[12px] font-bold uppercase tracking-wider text-muted-foreground px-2">Ações</TableHead>
           </TableRow>
         </TableHeader>
 
@@ -129,25 +129,25 @@ export function TabelaSimulacoes({
                 <TableCell className="relative py-3 px-2 w-[100px]">
                   <span className="absolute inset-y-0 left-0 w-[3px] origin-top scale-y-0 rounded-r-full bg-[var(--banco)] transition-transform duration-200 group-hover/row:scale-y-100" />
                   <div className="flex flex-col gap-1">
-                    <span className="inline-flex w-fit items-center rounded-md bg-primary/5 px-1.5 py-0.5 font-mono text-[11px] font-bold text-primary ring-1 ring-inset ring-primary/10 transition-colors group-hover:bg-primary/10">
+                    <span className="inline-flex w-fit items-center rounded-md bg-primary/5 px-1.5 py-0.5 font-mono text-[13px] font-bold text-primary ring-1 ring-inset ring-primary/10 transition-colors group-hover:bg-primary/10">
                       {s.numero_simulacao}
                     </span>
-                    <span className="text-[9px] font-medium text-muted-foreground uppercase tracking-tight">
+                    <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-tight">
                       {formatDataHoraBR(s.created_at)}
                     </span>
                   </div>
                 </TableCell>
 
                 <TableCell className="py-3 px-2 font-medium text-foreground transition-colors group-hover/row:text-primary min-w-[150px]">
-                  <p className="truncate text-[12px] font-bold leading-tight">{s.nome_cliente ?? "—"}</p>
+                  <p className="truncate text-[13px] font-bold leading-tight">{s.nome_cliente ?? "—"}</p>
                   {escopo === "todas" && s.nome_responsavel && (
-                    <span className="mt-1 flex items-center gap-1 text-[10px] font-medium text-muted-foreground leading-none">
+                    <span className="mt-1 flex items-center gap-1 text-[11px] font-medium text-muted-foreground leading-none">
                       <UserIcon className="h-3 w-3 shrink-0" />
                       <span className="truncate">{s.nome_responsavel}</span>
                     </span>
                   )}
                   {verExcluidas && (
-                    <span className="mt-1 block text-[10px] font-normal text-destructive">
+                    <span className="mt-1 block text-[11px] font-normal text-destructive">
                       Excluída por {s.nome_excluidor ?? "—"} · {formatDataHoraBR(s.deleted_at)}
                     </span>
                   )}
@@ -158,10 +158,10 @@ export function TabelaSimulacoes({
                 <TableCell className="py-3 px-2 min-w-[180px]">
                   <BancosSimulados bancos={s.bancos} />
                 </TableCell>
-                <TableCell className="py-3 px-2 text-right font-bold tabular-nums text-foreground w-[120px] text-[11px]">
+                <TableCell className="py-3 px-2 text-right font-bold tabular-nums text-foreground w-[120px] text-[13px]">
                   {formatBRL(s.valor_imovel)}
                 </TableCell>
-                <TableCell className="py-3 px-2 text-right tabular-nums font-medium text-muted-foreground w-[80px] text-[11px]">
+                <TableCell className="py-3 px-2 text-right tabular-nums font-medium text-muted-foreground w-[80px] text-[13px]">
                   {s.prazo ? `${s.prazo}m` : "—"}
                 </TableCell>
                 <TableCell className="py-3 px-2 w-[110px] relative">

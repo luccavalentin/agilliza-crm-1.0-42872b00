@@ -20,7 +20,7 @@ export function BancosSimulados({
   className?: string;
 }) {
   if (!bancos || bancos.length === 0) {
-    return <span className="text-xs text-muted-foreground">Nenhum banco</span>;
+    return <span className="text-[13px] text-muted-foreground">Nenhum banco</span>;
   }
 
   const grupos = agruparPorSistema(bancos);
@@ -72,7 +72,7 @@ function SistemaTarget({ sistema }: { sistema: "SAC" | "PRICE" }) {
   return (
     <span
       className={cn(
-        "inline-flex h-4 items-center rounded-[3px] border border-primary/25 bg-primary/[0.08] px-1 text-[8.5px] font-black uppercase leading-none tracking-tight text-primary shadow-sm",
+        "inline-flex h-5 items-center rounded-[3px] border border-primary/25 bg-primary/[0.08] px-1.5 text-[11px] font-black uppercase leading-none tracking-tight text-primary shadow-sm",
       )}
       title={`Tabela ${sistema}`}
       aria-label={`Tabela ${sistema}`}

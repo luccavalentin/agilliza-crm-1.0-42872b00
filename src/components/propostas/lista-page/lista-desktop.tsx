@@ -68,22 +68,22 @@ export function ListaDesktop({
                 />
               </TableHead>
             )}
-            <TableHead className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+            <TableHead className="text-[12px] font-semibold uppercase tracking-wide text-muted-foreground">
               Número
             </TableHead>
-            <TableHead className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+            <TableHead className="text-[12px] font-semibold uppercase tracking-wide text-muted-foreground">
               Cliente
             </TableHead>
-            <TableHead className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+            <TableHead className="text-[12px] font-semibold uppercase tracking-wide text-muted-foreground">
               Bancos
             </TableHead>
-            <TableHead className="text-right text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+            <TableHead className="text-right text-[12px] font-semibold uppercase tracking-wide text-muted-foreground">
               R$ Financiamento
             </TableHead>
-            <TableHead className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+            <TableHead className="text-[12px] font-semibold uppercase tracking-wide text-muted-foreground">
               Status
             </TableHead>
-            <TableHead className="w-12 text-right text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+            <TableHead className="w-12 text-right text-[12px] font-semibold uppercase tracking-wide text-muted-foreground">
               Ações
             </TableHead>
           </TableRow>
@@ -149,20 +149,20 @@ export function ListaDesktop({
                       const nb = numeroBancoParaExibir(p.numero_proposta_banco);
                       return nb ? (
                         <>
-                          <div className="text-base font-bold tabular-nums leading-tight text-[var(--banco)]">
+                          <div className="text-[17px] font-bold tabular-nums leading-tight text-[var(--banco)]">
                             Nº banco {nb}
                           </div>
-                          <div className="mt-1 flex flex-col gap-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                          <div className="mt-1 flex flex-col gap-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
                             <span>Interno <span className="tabular-nums">{p.numero_proposta}</span></span>
-                            <span className="text-[9px] lowercase tracking-tight">
+                            <span className="text-[10px] lowercase tracking-tight">
                               {formatDataHora(p.created_at)}
                             </span>
                           </div>
                         </>
                       ) : (
-                        <div className="flex flex-col gap-1 font-medium tabular-nums text-foreground transition-colors group-hover/row:text-[var(--banco)]">
+                        <div className="flex flex-col gap-1 font-medium tabular-nums text-foreground transition-colors group-hover/row:text-[var(--banco)] text-[14px]">
                           <span>{p.numero_proposta}</span>
-                          <span className="text-[9px] font-medium text-muted-foreground uppercase tracking-tight">
+                          <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-tight">
                             {formatDataHora(p.created_at)}
                           </span>
                         </div>
@@ -171,7 +171,7 @@ export function ListaDesktop({
                   </TableCell>
 
                   <TableCell className="font-medium text-foreground transition-colors group-hover/row:text-primary">
-                    {p.nome_cliente ?? "—"}
+                    <p className="text-[13px] font-bold">{p.nome_cliente ?? "—"}</p>
                     {escopo === "todas" && p.nome_responsavel && (
                       <span className="mt-0.5 flex items-center gap-1 text-[11px] font-normal text-muted-foreground">
                         <User className="h-3 w-3 shrink-0" />
@@ -188,7 +188,7 @@ export function ListaDesktop({
                   <TableCell>
                     <BancosProposta bancos={p.bancos} />
                   </TableCell>
-                  <TableCell className="text-right font-medium tabular-nums text-foreground transition-colors group-hover/row:text-primary">
+                  <TableCell className="text-right font-medium tabular-nums text-foreground transition-colors group-hover/row:text-primary text-[13px]">
                     {formatBRL(p.valor_financiamento)}
                   </TableCell>
                   <TableCell>
