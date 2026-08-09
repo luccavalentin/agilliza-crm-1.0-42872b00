@@ -62,14 +62,14 @@ export function TabelaSimulacoes({
                 />
               </TableHead>
             )}
-            <TableHead className="h-10 w-[100px] text-[11px] font-bold uppercase tracking-wider text-muted-foreground px-2">Número</TableHead>
-            <TableHead className="h-10 min-w-[150px] text-[11px] font-bold uppercase tracking-wider text-muted-foreground px-2">Cliente</TableHead>
-            <TableHead className="h-10 w-[70px] text-[11px] font-bold uppercase tracking-wider text-muted-foreground px-2">Prod.</TableHead>
-            <TableHead className="h-10 min-w-[180px] text-[11px] font-bold uppercase tracking-wider text-muted-foreground px-2">Bancos simulados</TableHead>
-            <TableHead className="h-10 w-[120px] text-right text-[11px] font-bold uppercase tracking-wider text-muted-foreground px-2">Valor imóvel</TableHead>
-            <TableHead className="h-10 w-[80px] text-right text-[11px] font-bold uppercase tracking-wider text-muted-foreground px-2">Prazo</TableHead>
-            <TableHead className="h-10 w-[110px] text-[11px] font-bold uppercase tracking-wider text-muted-foreground px-2">Status</TableHead>
-            <TableHead className="h-10 w-[100px] text-right text-[11px] font-bold uppercase tracking-wider text-muted-foreground px-2">Ações</TableHead>
+            <TableHead className="h-10 w-[100px] text-[12px] font-bold uppercase tracking-wider text-muted-foreground px-2">Número</TableHead>
+            <TableHead className="h-10 min-w-[150px] text-[12px] font-bold uppercase tracking-wider text-muted-foreground px-2">Cliente</TableHead>
+            <TableHead className="h-10 w-[70px] text-[12px] font-bold uppercase tracking-wider text-muted-foreground px-2">Prod.</TableHead>
+            <TableHead className="h-10 min-w-[180px] text-[12px] font-bold uppercase tracking-wider text-muted-foreground px-2">Bancos simulados</TableHead>
+            <TableHead className="h-10 w-[120px] text-right text-[12px] font-bold uppercase tracking-wider text-muted-foreground px-2">Valor imóvel</TableHead>
+            <TableHead className="h-10 w-[80px] text-right text-[12px] font-bold uppercase tracking-wider text-muted-foreground px-2">Prazo</TableHead>
+            <TableHead className="h-10 w-[110px] text-[12px] font-bold uppercase tracking-wider text-muted-foreground px-2">Status</TableHead>
+            <TableHead className="h-10 w-[100px] text-right text-[12px] font-bold uppercase tracking-wider text-muted-foreground px-2">Ações</TableHead>
           </TableRow>
         </TableHeader>
 
