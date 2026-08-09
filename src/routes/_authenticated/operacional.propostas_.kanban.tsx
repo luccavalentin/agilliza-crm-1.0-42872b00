@@ -493,7 +493,7 @@ function Pagina() {
 
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-        {COLUNAS.map((col) => {
+        {COLUNAS.map((col, idx) => {
           const cfg = statusProposta(col.destino);
           const cards = cardsPorColuna.get(col.destino) ?? [];
           const visiveis = cards.slice(0, MAX_VISIVEIS_POR_COLUNA);
