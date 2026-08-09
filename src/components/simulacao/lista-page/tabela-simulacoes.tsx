@@ -158,10 +158,10 @@ export function TabelaSimulacoes({
                 <TableCell className="py-3 px-2 min-w-[180px]">
                   <BancosSimulados bancos={s.bancos} />
                 </TableCell>
-                <TableCell className="py-3 px-2 text-right font-bold tabular-nums text-foreground w-[120px] text-[11px]">
+                <TableCell className="py-3 px-2 text-right font-bold tabular-nums text-foreground w-[120px] text-[13px]">
                   {formatBRL(s.valor_imovel)}
                 </TableCell>
-                <TableCell className="py-3 px-2 text-right tabular-nums font-medium text-muted-foreground w-[80px] text-[11px]">
+                <TableCell className="py-3 px-2 text-right tabular-nums font-medium text-muted-foreground w-[80px] text-[13px]">
                   {s.prazo ? `${s.prazo}m` : "—"}
                 </TableCell>
                 <TableCell className="py-3 px-2 w-[110px] relative">
