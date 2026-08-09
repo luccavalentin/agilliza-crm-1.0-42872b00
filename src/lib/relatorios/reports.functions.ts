@@ -2435,12 +2435,14 @@ export const runReport = createServerFn({ method: "POST" })
             valor: brl(aReceber),
             tone: "success",
             hint: `${recAbertas.length} lançamento(s) em aberto`,
+            filters: [{ key: "tipo", values: ["Receber"] }, { key: "status", values: ["Aberta", "Parcial"] }],
           },
           {
             label: "A pagar",
             valor: brl(aPagar),
             tone: "warning",
             hint: `${pagAbertas.length} lançamento(s) em aberto`,
+            filters: [{ key: "tipo", values: ["Pagar"] }, { key: "status", values: ["Aberta", "Parcial"] }],
           },
           {
             label: "Saldo previsto",
@@ -2459,6 +2461,7 @@ export const runReport = createServerFn({ method: "POST" })
             valor: brl(vencido),
             tone: "danger",
             hint: `${vencidas.length} título(s) em atraso`,
+            filters: [{ key: "status", values: ["Atrasada"] }],
           },
           {
             label: "Cobertura",
