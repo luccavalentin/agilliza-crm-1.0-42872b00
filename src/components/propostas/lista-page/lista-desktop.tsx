@@ -68,22 +68,22 @@ export function ListaDesktop({
                 />
               </TableHead>
             )}
-            <TableHead className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+            <TableHead className="text-[12px] font-semibold uppercase tracking-wide text-muted-foreground">
               Número
             </TableHead>
-            <TableHead className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+            <TableHead className="text-[12px] font-semibold uppercase tracking-wide text-muted-foreground">
               Cliente
             </TableHead>
-            <TableHead className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+            <TableHead className="text-[12px] font-semibold uppercase tracking-wide text-muted-foreground">
               Bancos
             </TableHead>
-            <TableHead className="text-right text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+            <TableHead className="text-right text-[12px] font-semibold uppercase tracking-wide text-muted-foreground">
               R$ Financiamento
             </TableHead>
-            <TableHead className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+            <TableHead className="text-[12px] font-semibold uppercase tracking-wide text-muted-foreground">
               Status
             </TableHead>
-            <TableHead className="w-12 text-right text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+            <TableHead className="w-12 text-right text-[12px] font-semibold uppercase tracking-wide text-muted-foreground">
               Ações
             </TableHead>
           </TableRow>
