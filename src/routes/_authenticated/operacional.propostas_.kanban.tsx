@@ -525,14 +525,16 @@ function Pagina() {
                   }}
                   className="group flex shrink-0 items-center justify-between gap-2 rounded-xl border border-dashed border-border bg-background/60 px-3 py-2.5 text-xs font-medium text-muted-foreground shadow-sm transition hover:border-primary/40 hover:bg-primary/5 hover:text-foreground"
                 >
-                  <span className="flex items-center gap-2">
-                    <FolderOpen className="h-4 w-4 text-primary" />
+                  <div className="flex items-center gap-2">
+                    <div className="relative">
+                      <FolderOpen className="h-4 w-4 text-primary" />
+                    </div>
                     {excedente > 0
                       ? `Ver mais ${excedente} ${excedente === 1 ? "proposta" : "propostas"}`
                       : cards.length > 0
                         ? "Abrir e pesquisar"
                         : "Pesquisar nesta etapa"}
-                  </span>
+                  </div>
                   <Search className="h-3.5 w-3.5 opacity-70 group-hover:opacity-100" />
                 </button>
 
