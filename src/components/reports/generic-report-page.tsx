@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { ReportShell, ReportSection } from "@/components/reports/report-shell";
 import { ReportFiltersBar, VisionSelector } from "@/components/reports/report-filters-bar";
 import { ReportKpiCard, ChartCard } from "@/components/reports/report-kpi-card";
@@ -256,7 +257,8 @@ export function GenericReportPage({
               {graficoAberto?.titulo} — {graficoAberto?.label}
             </DialogTitle>
           </DialogHeader>
-          <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-6">
+          <ScrollArea className="min-h-0 flex-1">
+            <div className="p-4 sm:p-6">
             {graficoAberto && (
               <div className="space-y-3">
                 <p className="text-sm text-muted-foreground">
@@ -281,7 +283,8 @@ export function GenericReportPage({
                 )}
               </div>
             )}
-          </div>
+            </div>
+          </ScrollArea>
         </DialogContent>
       </Dialog>
 
@@ -292,11 +295,13 @@ export function GenericReportPage({
               {kpiAberto?.titulo ?? kpiAberto?.label} — {linhasKpi.length.toLocaleString("pt-BR")} registros
             </DialogTitle>
           </DialogHeader>
-          <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-6">
+          <ScrollArea className="min-h-0 flex-1">
+            <div className="p-4 sm:p-6">
             {data && kpiAberto && (
               <DrilldownTable columns={data.columns} rows={linhasKpi} />
             )}
-          </div>
+            </div>
+          </ScrollArea>
         </DialogContent>
       </Dialog>
     </ReportShell>
