@@ -116,14 +116,14 @@ export function StatusBancosProposta({
             className="inline-flex items-center gap-1.5 whitespace-nowrap"
           >
             <span
-              className="inline-flex items-center gap-1.5 text-xs font-medium"
+              className="inline-flex items-center gap-1.5 text-[13px] font-semibold"
               style={{ color: cor }}
             >
               <BancoLogo nome={b.nome_banco} size="xs" />
               {b.nome_banco ?? "—"}
             </span>
             <span
-              className={`inline-flex items-center rounded-md border px-1.5 py-0.5 text-[11px] font-medium ${toneClasses[cfg.tone]}`}
+              className={`inline-flex items-center rounded-md border px-2 py-0.5 text-[11px] font-bold ${toneClasses[cfg.tone]}`}
             >
               {cfg.label}
             </span>
