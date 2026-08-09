@@ -48,7 +48,7 @@ export function statusLabel(status: string): string {
 export function ProdutoBadge({ produto }: { produto: string | null | undefined }) {
   if (produto === "home_equity") {
     return (
-      <span className="inline-flex items-center rounded-full border border-warning/30 bg-warning/10 px-1.5 py-0.5 text-[11px] font-bold text-warning whitespace-nowrap shadow-sm">
+      <span className="inline-flex items-center rounded-full border border-warning/30 bg-warning/10 px-2 py-0.5 text-[11px] font-bold text-warning whitespace-nowrap shadow-sm">
         HE
       </span>
     );
