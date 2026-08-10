@@ -1056,7 +1056,7 @@ function Pagina() {
           const principal = p.envolvidos?.find((e: any) => e.id === participanteModal.id);
           if (!principal || principal.tipo_qualificacao === 'CJ') return null;
           
-          const conj = p.envolvidos.find((e: any) => e.conjuge_de === principal.id || (principal.conjuge_id && e.id === principal.conjuge_id));
+          const conj = p.envolvidos?.find((e: any) => e.id !== principal.id && (e.conjuge_de === principal.id || (principal.conjuge_id && e.id === principal.conjuge_id)));
           return conj?.nome || null;
         }, [p?.envolvidos, participanteModal?.id])}
         onSalvar={async (principal, conjuge, opcoes) => {
