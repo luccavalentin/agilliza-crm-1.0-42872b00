@@ -315,7 +315,7 @@ function BibliotecaPage() {
               </h1>
               <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
                 Pesquise por palavra-chave e encontre verbetes curados — ordenados por
-                relevância ou data. É esse acervo que fundamenta o Consultor IA.
+                relevância ou data. É esse acervo que fundamenta a inteligência moderna.
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
