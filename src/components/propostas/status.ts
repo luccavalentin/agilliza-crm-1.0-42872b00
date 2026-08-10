@@ -4,6 +4,7 @@ import type { PropostaStatus } from "@/lib/propostas/state-machine";
 /** Mapa oficial de status da proposta -> tom + rótulo (00b-tons-cores). */
 export const STATUS_PROPOSTA: Record<PropostaStatus, { tone: Tone; label: string }> = {
   rascunho: { tone: "muted", label: "Simulação" },
+  aguardando_envio: { tone: "info", label: "Aguardando envio" },
   enviada_banco: { tone: "info", label: "Enviado p/ aprovação de crédito" },
   em_analise_credito: { tone: "info", label: "Enviado p/ aprovação de crédito" },
   credito_aprovado: { tone: "success", label: "Crédito aprovado" },

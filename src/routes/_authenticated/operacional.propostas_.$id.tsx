@@ -1,9 +1,10 @@
+import * as React from "react";
 import { createFileRoute, useRouter, Link } from "@tanstack/react-router";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { corDoBanco } from "@/lib/bancos/cores";
 import { numeroBancoParaExibir } from "@/lib/propostas/numero-banco-display";
 import { BancoLogo } from "@/components/bancos/banco-logo";
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -146,7 +147,7 @@ const RestaurarBotao = ({ id }: { id: string }) => {
   const router = useRouter();
   const qc = useQueryClient();
   const restaurarFn = useServerFn(restaurarProposta);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = React.useState(false);
 
   const handleRestaurar = async () => {
     try {
@@ -173,8 +174,8 @@ const RestaurarBotao = ({ id }: { id: string }) => {
 const ExcluirDefinitivoBotao = ({ id }: { id: string }) => {
   const router = useRouter();
   const excluirDefinitivoFn = useServerFn(excluirPropostaDefinitivamente);
-  const [loading, setLoading] = useState(false);
-  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = React.useState(false);
+  const [open, setOpen] = React.useState(false);
 
   const handleExcluir = async () => {
     try {
@@ -429,7 +430,7 @@ function Pagina() {
       const st = q.state.data?.proposta?.status as string | undefined;
       if (!st) return 30_000;
       const terminais = ["contrato_emitido", "cancelada", "credito_recusado"];
-      return terminais.includes(st) ? false : 30_000;
+      return terminais.includes(st) ? false : 15_000;
     },
     refetchOnWindowFocus: true,
   });
@@ -470,14 +471,14 @@ function Pagina() {
   const envolvidos = data?.envolvidos ?? [];
   const p = data?.proposta as any;
 
-  const [tab, setTab] = useState<Tab>("RESUMO");
-  const [enviandoAuto, setEnviandoAuto] = useState(false);
-  const [destacarObrigatorios, setDestacarObrigatorios] = useState(false);
-  const [participanteModal, setParticipanteModal] = useState<any>(null);
+  const [tab, setTab] = React.useState<Tab>("RESUMO");
+  const [enviandoAuto, setEnviandoAuto] = React.useState(false);
+  const [destacarObrigatorios, setDestacarObrigatorios] = React.useState(false);
+  const [participanteModal, setParticipanteModal] = React.useState<any>(null);
   const { abrir_cadastro } = Route.useSearch();
-  const [indiceParticipante, setIndiceParticipante] = useState(0);
+  const [indiceParticipante, setIndiceParticipante] = React.useState(0);
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (abrir_cadastro && envolvidos.length > 0) {
       const env = envolvidos.find((e: any) => e.id === abrir_cadastro);
       if (env) {
@@ -499,7 +500,42 @@ function Pagina() {
     }
   }, [abrir_cadastro, envolvidos, id, router]);
 
-  const pendentes = useMemo(() => {
+  const onCadastroIncompleto = React.useCallback((envolvidoPendente: any) => {
+    setTab("COMPRADORES");
+    setDestacarObrigatorios(true);
+    if (envolvidoPendente && envolvidoPendente.id) {
+      setParticipanteModal(envolvidoPendente);
+      const idx = envolvidos.findIndex((e: any) => e.id === envolvidoPendente.id);
+      setIndiceParticipante(idx + 1);
+    } else {
+      // Se não passou envolvido, procura o primeiro com faltantes
+      const pendente = envolvidos.find((e: any) => faltantesEnvolvido(e).length > 0);
+      if (pendente) {
+        setParticipanteModal(pendente);
+        const idx = envolvidos.findIndex((e: any) => e.id === pendente.id);
+        setIndiceParticipante(idx + 1);
+      }
+    }
+  }, [envolvidos]);
+
+  const onCadastroIncompletoSemArgs = React.useCallback(() => {
+    onCadastroIncompleto(null);
+  }, [onCadastroIncompleto]);
+
+  const handleEnviarAposCadastro = React.useCallback(async () => {
+    // Reenviar para todos os bancos pendentes após fechar o modal de cadastro
+    const bancosPendentes = (bancos ?? []).filter((b: any) => b.selecionado && !bancoJaEnviado(b));
+    if (bancosPendentes.length > 0) {
+      await handleEnviarHook({
+        propostaId: id,
+        bancoId: "todos",
+        envolvidos,
+        onCadastroIncompleto: onCadastroIncompletoSemArgs
+      });
+    }
+  }, [bancos, envolvidos, id, handleEnviarHook, onCadastroIncompleto]);
+
+  const pendentes = React.useMemo(() => {
     return (envolvidos ?? []).map((env, index) => ({
       env,
       faltantes: faltantesEnvolvido(env || {}),
@@ -510,11 +546,11 @@ function Pagina() {
   const totalPendentes = (envolvidos ?? []).length;
   const proximoPendente = pendentes[0];
 
-  const inicialParticipante = useMemo(
+  const inicialParticipante = React.useMemo(
     () => (participanteModal ? envolvidoParaForm(participanteModal) : undefined),
     [participanteModal?.id]
   );
-  const conjugeInicialParticipante = useMemo(() => {
+  const conjugeInicialParticipante = React.useMemo(() => {
     if (!participanteModal?.id) return undefined;
     const conjuge = envolvidos.find(
       (env: any) =>
@@ -529,9 +565,6 @@ function Pagina() {
     setParticipanteModal(proximoPendente.env);
     setIndiceParticipante(proximoPendente.index);
   };
-  const onCadastroIncompleto = () => {
-    abrirCadastroPendente();
-  };
 
   // Polling automático silencioso da API do banco (Itaú, Santander, Bradesco…).
   // Enquanto a proposta estiver em análise ativa, dispara sincronização a cada 60s
@@ -544,7 +577,7 @@ function Pagina() {
   const temProtocoloBanco = (data?.bancos ?? []).some(
     (b: any) => !!(b.numero_proposta_banco || b.homefin_id_proposta || b.codigo_oportunidade_homefin),
   );
-  useEffect(() => {
+  React.useEffect(() => {
     const terminais = ["contrato_emitido", "cancelada", "credito_recusado", "rascunho"];
     if (!propostaStatus || terminais.includes(propostaStatus)) return;
     if (!temProtocoloBanco) return;
@@ -631,7 +664,7 @@ function Pagina() {
 
   // Ao chegar de "Criar proposta", tenta o envio direto. A integração bancária
   // passa a ser a fonte de verdade para validar campos faltantes.
-  useEffect(() => {
+  React.useEffect(() => {
     if (complementar !== 1) return;
     if (enviouAutoRef.current) return;
     router.navigate({
@@ -649,7 +682,7 @@ function Pagina() {
 
   // realtime na proposta, nos bancos e no histórico — qualquer mudança dispara
   // uma reconsulta da proposta para refletir o retorno do banco em tempo real.
-  useEffect(() => {
+  React.useEffect(() => {
     const invalidar = () => qc.invalidateQueries({ queryKey: ["proposta", id] });
     const channel = supabase
       .channel(`proposta-${id}`)
@@ -720,7 +753,7 @@ function Pagina() {
                 : `Ativa há ${diasDesde} dia(s)`}
             </p>
           </div>
-          <AcoesTopo proposta={p} propostaId={id} bancos={data.bancos} envolvidos={data.envolvidos} documentos={data.documentos} followups={data.followups} onCadastroIncompleto={() => abrirCadastroPendente()} />
+          <AcoesTopo proposta={p} propostaId={id} bancos={data.bancos} envolvidos={data.envolvidos} documentos={data.documentos} followups={data.followups} onCadastroIncompleto={onCadastroIncompletoSemArgs} />
         </div>
 
         {/* KPIs */}
@@ -1017,7 +1050,7 @@ function Pagina() {
         conjugeInicial={conjugeInicialParticipante}
         participanteId={participanteModal?.id}
         focarPendencias={true}
-        nomeConjugeExistente={useMemo(() => {
+        nomeConjugeExistente={React.useMemo(() => {
           if (!participanteModal?.id) return null;
           // Se o participante atual é titular e tem um cônjuge que já está na lista de envolvidos
           const principal = p.envolvidos.find((e: any) => e.id === participanteModal.id);
@@ -1088,7 +1121,7 @@ function Pagina() {
               propostaId: id,
               bancoId,
               envolvidos: envolvidosAtualizados,
-              onCadastroIncompleto: (env: any) => setParticipanteModal(env),
+              onCadastroIncompleto: onCadastroIncompleto,
             });
             
             // 2. O MODAL NÃO FECHA APÓS ENVIAR (CORREÇÃO)

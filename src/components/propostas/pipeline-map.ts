@@ -20,6 +20,7 @@ export type StepperCodigo = (typeof ETAPAS_STEPPER)[number]["codigo"];
 /** propostas.status -> etapa do stepper. */
 const MAPA: Record<PropostaStatus, StepperCodigo> = {
   rascunho: "simulacao",
+  aguardando_envio: "simulacao",
   erro_envio: "simulacao",
   cancelada: "simulacao",
   enviada_banco: "credito_enviado",

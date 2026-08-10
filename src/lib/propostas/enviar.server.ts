@@ -80,11 +80,21 @@ export async function recalcularStatusGlobalProposta(
   if (algumEmAnalise) return "em_analise_credito";
   if (algumRecusado) return "credito_recusado";
   if (algumErroEnvio) return "erro_envio";
-  if (algumEmAnalise) return "em_analise_credito";
 
   return "enviada_banco";
 }
 
+
+export interface IntegracaoErroEstruturado {
+  codigo: "CADASTRO_INCOMPLETO" | "TIMEOUT" | "FALHA_CONEXAO" | "ERRO_BANCO";
+  mensagem: string;
+  campos?: {
+    envolvido_id: string;
+    campo: string;
+    rotulo: string;
+    secao?: string;
+  }[];
+}
 
 interface EnviarArgs {
   propostaId: string;
@@ -103,6 +113,7 @@ interface EnviarResultado {
     status: string;
     numero_proposta_banco?: string | null;
     mensagem?: string;
+    erro_estruturado?: IntegracaoErroEstruturado;
   }[];
 }
 
@@ -850,7 +861,7 @@ async function enviarPropostaImplInner({
     }
   }
 
-  const statusAtual = prop.status as PropostaStatus;
+  let statusAtual = prop.status as PropostaStatus;
   
   // Limpa mensagens de erro e protocolos de tentativas anteriores para garantir
   // que a mensagem exibida reflita a causa real desta tentativa.
@@ -946,7 +957,8 @@ async function enviarPropostaImplInner({
     primeiroEnvio ||
     prop.status === "erro_envio" ||
     prop.status === "credito_recusado" ||
-    prop.status === "rascunho"
+    prop.status === "rascunho" ||
+    prop.status === "aguardando_envio"
   ) {
     patchProposta.status = "enviada_banco";
   }
@@ -1182,6 +1194,11 @@ async function enviarPropostaImplInner({
   for (const r of enviados) {
     resultados.push(r);
     if (r.status !== "erro") sucesso++;
+    else if (r.erro_estruturado?.codigo === "CADASTRO_INCOMPLETO") {
+      // Se parou por cadastro incompleto, garante que o status global não vire "erro_envio"
+      // Se já estava em erro_envio, volta para aguardando_envio
+      if (statusAtual === "erro_envio") statusAtual = "aguardando_envio";
+    }
   }
 
 
