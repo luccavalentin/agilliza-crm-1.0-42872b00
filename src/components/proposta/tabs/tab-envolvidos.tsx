@@ -29,7 +29,7 @@ import {
 export function TabEnvolvidos({
   tipo,
   propostaId,
-  envolvidos,
+  envolvidos = [],
   autoAbrir,
   onAutoAbriu,
   onFechouAposSalvar,
@@ -37,7 +37,7 @@ export function TabEnvolvidos({
 }: {
   tipo: "CO" | "VD";
   propostaId: string;
-  envolvidos: any[];
+  envolvidos?: any[];
   autoAbrir?: boolean;
   onAutoAbriu?: () => void;
   onFechouAposSalvar?: () => void;
@@ -58,7 +58,7 @@ export function TabEnvolvidos({
 
   // Compradores: mostra CO e TI, mas oculta o cônjuge já vinculado a um titular
   // (ele é editado dentro do formulário do titular).
-  const lista = envolvidos.filter((e) =>
+  const lista = (envolvidos ?? []).filter((e) =>
     tipo === "CO"
       ? (e.tipo_qualificacao === "CO" || e.tipo_qualificacao === "TI") && !e.conjuge_de
       : e.tipo_qualificacao === tipo,
