@@ -194,6 +194,7 @@ function Pagina() {
     setRespFiltro("todos");
     setCorretorFiltro("todos");
     setImobFiltro("todos");
+    setComercialFiltro("todos");
   }
 
 
