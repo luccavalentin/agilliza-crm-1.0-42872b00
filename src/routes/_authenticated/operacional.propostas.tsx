@@ -159,6 +159,9 @@ function Pagina() {
           pagina: 1,
           porPagina: 100,
           apenas_excluidas: verExcluidas,
+          corretor_nome: corretorFiltro !== "todos" ? corretorFiltro : undefined,
+          imobiliaria_nome: imobFiltro !== "todos" ? imobFiltro : undefined,
+          comercial_nome: comercialFiltro !== "todos" ? comercialFiltro : undefined,
         },
       }),
   });
