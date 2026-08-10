@@ -857,7 +857,23 @@ export const listarSimulacoes = createServerFn({ method: "GET" })
         bancos: [...bancosPrincipal, ...bancosExtras],
       };
     }) as SimulacaoListaItem[];
-    return { itens, total };
+    // Carrega estatísticas totais (Volume e Prazo Médio) do banco de dados baseadas nos mesmos filtros,
+    // já que itens.reduce() só pega os itens da página atual (limit 50).
+    const { data: stats } = await query.select("valor_financiamento, prazo");
+    const totalVolume = (stats ?? []).reduce((acc, s) => acc + (Number(s.valor_financiamento) || 0), 0);
+    const validPrazos = (stats ?? []).map(s => Number(s.prazo)).filter(n => n > 0);
+    const totalPrazoMedio = validPrazos.length 
+      ? Math.round(validPrazos.reduce((a, b) => a + b, 0) / validPrazos.length) 
+      : 0;
+
+    return { 
+      itens, 
+      total, 
+      stats: {
+        volumeTotal: totalVolume,
+        prazoMedio: totalPrazoMedio
+      }
+    };
   });
 
 /** ===== Duplicar simulação =====
