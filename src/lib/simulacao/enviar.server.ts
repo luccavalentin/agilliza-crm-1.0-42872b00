@@ -792,6 +792,13 @@ export async function enviarSimulacaoImpl({
     // bancos falharem ("erro no envio") enquanto outros passam. Cada banco
     // mantém seu próprio try/catch — a falha de um não impede os demais.
     const enviarBanco = async (b: any): Promise<EnviarResultado["bancos"][number]> => {
+      // Registrar início do envio para este banco
+      await supabase.from("simulacao_bancos").update({ 
+        status_banco: "enviando", 
+        mensagem_banco: null,
+        simulado_em: new Date().toISOString()
+      }).eq("id", b.id);
+
       let timeoutId: any;
       const timeoutPromise = new Promise((_, reject) => {
         timeoutId = setTimeout(() => {

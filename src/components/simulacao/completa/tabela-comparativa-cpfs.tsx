@@ -50,20 +50,41 @@ export function TabelaComparativaCPFs({ simulacaoIdA, simulacaoIdB }: Props) {
     );
   }
 
-  const nomeA = resA.simulacao?.nome_cliente?.split(" ")[0] ?? "Titular A";
-  const nomeB = resB.simulacao?.nome_cliente?.split(" ")[0] ?? "Titular B";
+  const simA = resA.simulacao;
+  const simB = resB.simulacao;
+  
+  const nomeA = simA?.nome_cliente ?? "Titular A";
+  const cpfA = simA?.cpf_cnpj ?? "";
+  const rendaA = simA?.renda_total ?? 0;
+
+  const nomeB = simB?.nome_cliente ?? "Titular B";
+  const cpfB = simB?.cpf_cnpj ?? "";
+  const rendaB = simB?.renda_total ?? 0;
 
   const bancosA = (resA.bancos as any[]) ?? [];
   const bancosB = (resB.bancos as any[]) ?? [];
 
   // Flatten all combinations
   const todasLinhas = [
-    ...bancosA.map(b => ({ ...b, cenario: `Cenário A — ${nomeA} como titular`, titular: nomeA, sim: resA.simulacao })),
-    ...bancosB.map(b => ({ ...b, cenario: `Cenário B — ${nomeB} como titular`, titular: nomeB, sim: resB.simulacao }))
+    ...bancosA.map(b => ({ 
+      ...b, 
+      cenario: `${nomeA.split(" ")[0]} (Titular)`, 
+      titular: nomeA, 
+      cpf: cpfA,
+      renda: rendaA,
+      sim: simA 
+    })),
+    ...bancosB.map(b => ({ 
+      ...b, 
+      cenario: `${nomeB.split(" ")[0]} (Titular)`, 
+      titular: nomeB, 
+      cpf: cpfB,
+      renda: rendaB,
+      sim: simB 
+    }))
   ];
 
   // Identificar vencedora
-  // Critérios: 1. Menor taxa, 2. Menor parcela, 3. Maior financiamento
   const simuladas = todasLinhas.filter(l => l.status_banco === "simulada" && l.taxa_juros_ano);
   const vencedora = [...simuladas].sort((a, b) => {
     if (a.taxa_juros_ano !== b.taxa_juros_ano) return a.taxa_juros_ano - b.taxa_juros_ano;

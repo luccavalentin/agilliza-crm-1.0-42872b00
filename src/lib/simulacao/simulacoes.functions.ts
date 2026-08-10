@@ -539,6 +539,7 @@ export const criarSimulacao = createServerFn({ method: "POST" })
       Number(dd.renda_conjuge ?? 0) > 0;
 
     if (testarAmbos && conjugeAptoTitular) {
+      const rendaTotalSoma = (dd.renda_total ?? 0) + (dd.renda_conjuge ?? 0);
       const insertInvertido = {
         ...insert,
         // Inverte titular ⇄ cônjuge
@@ -548,7 +549,7 @@ export const criarSimulacao = createServerFn({ method: "POST" })
         email: dd.email_conjuge || null,
         celular: dd.celular_conjuge || null,
         data_nascimento: dd.data_nascimento_conjuge || null,
-        renda_total: dd.renda_conjuge || null,
+        renda_total: dd.renda_total ?? 0, // Ambos usam a mesma renda individual (ajustado para soma na integração)
         estado_civil: dd.estado_civil_conjuge || dd.estado_civil,
 
         nome_conjuge: dd.nome_cliente || null,
@@ -562,6 +563,13 @@ export const criarSimulacao = createServerFn({ method: "POST" })
         // Mantém vínculo via agrupador para que a UI saiba que são parte da mesma "comparação"
         agrupador_id: insert.agrupador_id || sim.id,
       };
+
+      // Se composição de renda ativa, garante que ambos levem a MESMA renda somada
+      if (dd.compoe_renda) {
+        insert.renda_total = rendaTotalSoma;
+        // O cônjuge na simulação 1 mantém sua renda original para registro
+        insertInvertido.renda_total = rendaTotalSoma;
+      }
 
       const { data: simSec, error: errorSec } = await supabaseAdmin
         .from("simulacoes")
