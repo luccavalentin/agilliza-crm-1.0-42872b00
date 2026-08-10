@@ -538,43 +538,49 @@ function ConsultorIaPage() {
             <div ref={fimRef} />
           </div>
 
-          <div className="border-t border-border/40 bg-card/60 p-6 backdrop-blur-md">
+          <footer className="relative z-20 border-t border-primary/5 bg-card/40 px-6 py-8 backdrop-blur-xl">
             <div className="mx-auto max-w-4xl">
-              <div className="group relative flex items-end gap-3 rounded-[2rem] border border-border/50 bg-background/50 p-2 shadow-2xl transition-all focus-within:border-primary/50 focus-within:ring-4 focus-within:ring-primary/5">
-                <Textarea
-                  ref={inputRef}
-                  value={pergunta}
-                  onChange={(e) => setPergunta(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      enviar();
-                    }
-                  }}
-                  rows={1}
-                  placeholder="Envie sua dúvida para a inteligência Agilliza..."
-                  disabled={streaming}
-                  className="max-h-60 min-h-[48px] flex-1 resize-none border-0 bg-transparent px-4 py-3 text-base font-medium shadow-none focus-visible:ring-0"
-                />
-                <Button
-                  size="icon"
-                  onClick={() => enviar()}
-                  disabled={streaming || !pergunta.trim()}
-                  className="mb-1 mr-1 size-10 shrink-0 rounded-2xl shadow-xl shadow-primary/20 transition-transform active:scale-95 disabled:opacity-50"
-                >
-                  <ArrowUp className="size-5" />
-                </Button>
-              </div>
-              <div className="mt-3 flex items-center justify-center gap-4 text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">
-                <div className="flex items-center gap-1.5">
-                  <Command className="size-3" />
-                  <span>Enter envia</span>
+              <div className="relative group">
+                {/* Glow de foco no input */}
+                <div className="absolute -inset-1.5 rounded-[1.8rem] bg-primary/5 opacity-0 blur-xl transition duration-500 group-focus-within:opacity-100" />
+                
+                <div className="relative flex flex-col items-center gap-3 overflow-hidden rounded-[1.5rem] border border-primary/10 bg-card p-2 shadow-[0_10px_40px_-15px_rgba(0,15,159,0.08)] transition-all group-focus-within:border-primary/30 group-focus-within:shadow-[0_20px_50px_-15px_rgba(0,15,159,0.12)] sm:flex-row">
+                  <Textarea
+                    ref={inputRef}
+                    value={pergunta}
+                    onChange={(e) => setPergunta(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        enviar();
+                      }
+                    }}
+                    rows={1}
+                    placeholder="Sua pergunta técnica aqui..."
+                    disabled={streaming}
+                    className="max-h-60 min-h-[48px] flex-1 resize-none border-0 bg-transparent px-4 py-3 text-base font-semibold text-brand-azul-noite focus-visible:ring-0 placeholder:text-muted-foreground/40 shadow-none"
+                  />
+                  <div className="flex w-full items-center justify-between gap-3 px-2 pb-1 sm:w-auto sm:pb-0">
+                    <Button
+                      size="icon"
+                      onClick={() => enviar()}
+                      disabled={!pergunta.trim() || streaming}
+                      className="size-11 shrink-0 rounded-2xl bg-primary shadow-lg shadow-primary/25 transition-all hover:scale-105 hover:bg-brand-azul-escuro disabled:scale-100 disabled:bg-muted/60 disabled:shadow-none"
+                    >
+                      {streaming ? (
+                        <Zap className="size-5 animate-pulse text-white/50" />
+                      ) : (
+                        <ArrowUp className="size-5 text-white" />
+                      )}
+                    </Button>
+                  </div>
                 </div>
-                <div className="size-1 rounded-full bg-border" />
-                <span>Shift + Enter para nova linha</span>
               </div>
+              <p className="mt-3 text-center text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/40">
+                Poderosa Inteligência Agilliza &middot; Mercado Imobiliário Elite
+              </p>
             </div>
-          </div>
+          </footer>
         </section>
       </div>
 
