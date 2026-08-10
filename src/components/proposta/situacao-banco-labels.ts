@@ -4,7 +4,7 @@ export type SituacaoBanco = (typeof SITUACOES_BANCO)[number];
 
 export const SITUACAO_BANCO_LABEL: Record<SituacaoBanco, string> = {
   nao_enviado: "Não enviado",
-  em_analise: "Em análise de crédito",
+  em_analise: "Enviado p/ aprovação de crédito",
   condicionado: "Aprovado com condições",
   aprovado: "Crédito aprovado",
   recusado: "Crédito recusado",
