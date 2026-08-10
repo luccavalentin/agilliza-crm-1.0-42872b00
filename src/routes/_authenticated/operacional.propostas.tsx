@@ -71,6 +71,36 @@ function Pagina() {
     staleTime: 5 * 60_000,
   });
 
+  const { data: parceirosCadastrados } = useQuery({
+    queryKey: ["parceiros-cadastrados"],
+    queryFn: () => listarParceiros(),
+    staleTime: 5 * 60_000,
+  });
+
+  const corretores = useMemo(() => {
+    const s = new Set<string>();
+    (parceirosCadastrados ?? [])
+      .filter((p) => (p.tipo_pessoa ?? "").toLowerCase() === "corretor")
+      .forEach((p) => p.nome && s.add(p.nome));
+    return Array.from(s).sort((a, b) => a.localeCompare(b, "pt-BR"));
+  }, [parceirosCadastrados]);
+
+  const imobiliarias = useMemo(() => {
+    const s = new Set<string>();
+    (parceirosCadastrados ?? [])
+      .filter((p) => (p.tipo_pessoa ?? "").toLowerCase() === "imobiliaria")
+      .forEach((p) => p.nome && s.add(p.nome));
+    return Array.from(s).sort((a, b) => a.localeCompare(b, "pt-BR"));
+  }, [parceirosCadastrados]);
+
+  const comerciais = useMemo(() => {
+    const s = new Set<string>();
+    (parceirosCadastrados ?? [])
+      .filter((p) => (p.tipo_pessoa ?? "").toLowerCase() === "comercial")
+      .forEach((p) => p.nome && s.add(p.nome));
+    return Array.from(s).sort((a, b) => a.localeCompare(b, "pt-BR"));
+  }, [parceirosCadastrados]);
+
   useEffect(() => {
     const t = setTimeout(() => setBusca(q.trim()), 300);
     return () => clearTimeout(t);
