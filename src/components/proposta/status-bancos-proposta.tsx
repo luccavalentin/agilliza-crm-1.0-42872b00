@@ -11,8 +11,8 @@ export interface BancoStatusItem {
 export const STATUS_BANCO: Record<string, { label: string; tone: Tone }> = {
   aguardando: { label: "Aguardando envio", tone: "muted" },
   nao_enviado: { label: "Não enviado", tone: "muted" },
-  enviada: { label: "Enviada ao banco", tone: "info" },
-  em_analise: { label: "Em análise no banco", tone: "info" },
+  enviada: { label: "Enviado p/ aprovação de crédito", tone: "info" },
+  em_analise: { label: "Enviado p/ aprovação de crédito", tone: "info" },
   condicionado: { label: "Aprovado com condições", tone: "warning" },
   aprovada: { label: "Aprovada", tone: "success" },
   aprovado: { label: "Aprovada", tone: "success" },
@@ -115,7 +115,7 @@ export function StatusBancosProposta({
 
         const temProtocolo = Boolean((b as any).numero_proposta_banco);
         if (temProtocolo) {
-           cfg = { label: "Em análise no banco", tone: "info" };
+           cfg = { label: "Enviado p/ aprovação de crédito", tone: "info" };
         } else if (efetivo === "enviada" && !temProtocolo) {
            cfg = STATUS_BANCO["aguardando"];
         } else if (efetivo === "erro" && !temProtocolo) {
