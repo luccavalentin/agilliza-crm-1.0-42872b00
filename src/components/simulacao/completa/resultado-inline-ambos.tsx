@@ -349,7 +349,7 @@ export function ResultadoInlineAmbos({ simulacaoIdSac, simulacaoIdPrice, onFecha
                           rotulo="Taxa a.a."
                           valor={b.taxa_juros_ano != null ? formatTaxa(b.taxa_juros_ano) : "—"}
                         />
-                        <MobileStat rotulo="Prazo" valor={`${l.simulacao.prazo}m`} />
+                        <MobileStat rotulo="Prazo" valor={b.prazo_pagamento_max != null ? `${b.prazo_pagamento_max}m` : l.simulacao.prazo != null ? `${l.simulacao.prazo}m` : "—"} />
                         <MobileStat rotulo="Total fin. (banco)" valor={totalBancoTexto(b)} />
                         <MobileStat rotulo="IOF (banco)" valor={b.valor_iof != null ? formatBRL(b.valor_iof) : "—"} />
 
@@ -471,7 +471,7 @@ export function ResultadoInlineAmbos({ simulacaoIdSac, simulacaoIdPrice, onFecha
                           {b.taxa_juros_ano != null ? formatTaxa(b.taxa_juros_ano) : "—"}
                         </TableCell>
                         <TableCell className="py-3 text-right text-sm tabular-nums whitespace-nowrap">
-                          {l.simulacao.prazo}m
+                          {b.prazo_pagamento_max ?? l.simulacao.prazo ?? "—"}{b.prazo_pagamento_max || l.simulacao.prazo ? "m" : ""}
                         </TableCell>
                         <TableCell className="py-3 text-right text-sm font-medium tabular-nums whitespace-nowrap">
                           {totalBancoTexto(b)}
