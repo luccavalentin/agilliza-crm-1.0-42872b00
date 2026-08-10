@@ -672,7 +672,14 @@ function Pagina() {
               });
             } else if (conjuge) {
               await adicionarEnvolvido({
-                data: { proposta_id: id, dados: conjuge },
+                data: {
+                  proposta_id: id,
+                  dados: {
+                    ...conjuge,
+                    tipo_qualificacao: "TI",
+                    conjuge_de: participanteModal.id,
+                  },
+                },
               });
             }
             // Lê a proposta novamente sem invalidar/remontar o formulário. A
