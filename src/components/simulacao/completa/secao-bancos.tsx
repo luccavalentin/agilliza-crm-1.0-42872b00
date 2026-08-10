@@ -1,4 +1,4 @@
-import { Check } from "lucide-react";
+import { Check, Landmark } from "lucide-react";
 import { BancoLogo } from "@/components/bancos/banco-logo";
 import { corDoBanco } from "@/lib/bancos/cores";
 import { Erro } from "@/components/simulacao/completa/campo";
@@ -98,9 +98,14 @@ export function SecaoBancos({ ctx }: { ctx: SimulacaoCompletaCtx }) {
     return (
       <section className="space-y-6">
         {restricaoEspecial.ativo && (
-          <div className="rounded-lg border-l-4 border-amber-600 border-y border-r border-y-amber-600/50 border-r-amber-600/50 bg-amber-100 p-3 text-sm text-amber-950 dark:bg-amber-950/60 dark:text-amber-50 dark:border-amber-400 dark:border-y-amber-400/60 dark:border-r-amber-400/60">
-            {restricaoEspecial.motivo}: LTV máx. 70%, prazo máx. 240 meses
-            {restricaoEspecial.apenasBradesco ? " — apenas Bradesco opera." : "."}
+          <div className="flex items-center gap-3 rounded-xl border border-primary/20 bg-primary/5 p-4 text-sm font-medium text-primary shadow-sm ring-1 ring-primary/5">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+              <Landmark className="h-4 w-4" />
+            </div>
+            <span>
+              {restricaoEspecial.motivo}: LTV máx. 70%, prazo máx. 240 meses
+              {restricaoEspecial.apenasBradesco ? " — apenas Bradesco opera." : "."}
+            </span>
           </div>
         )}
 
@@ -144,9 +149,14 @@ export function SecaoBancos({ ctx }: { ctx: SimulacaoCompletaCtx }) {
       </p>
 
       {restricaoEspecial.ativo && (
-        <div className="rounded-lg border-l-4 border-amber-600 border-y border-r border-y-amber-600/50 border-r-amber-600/50 bg-amber-100 p-3 text-sm text-amber-950 dark:bg-amber-950/60 dark:text-amber-50 dark:border-amber-400 dark:border-y-amber-400/60 dark:border-r-amber-400/60">
-          {restricaoEspecial.motivo}: LTV máx. 70%, prazo máx. 240 meses
-          {restricaoEspecial.apenasBradesco ? " — apenas Bradesco opera." : "."}
+        <div className="flex items-center gap-3 rounded-xl border border-primary/20 bg-primary/5 p-4 text-sm font-medium text-primary shadow-sm ring-1 ring-primary/5">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+            <Landmark className="h-4 w-4" />
+          </div>
+          <span>
+            {restricaoEspecial.motivo}: LTV máx. 70%, prazo máx. 240 meses
+            {restricaoEspecial.apenasBradesco ? " — apenas Bradesco opera." : "."}
+          </span>
         </div>
       )}
 
