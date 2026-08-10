@@ -1214,8 +1214,8 @@ async function enviarPropostaImplInner({
 
   await supabase.from("proposta_historico").insert({
     proposta_id: propostaId,
-    tipo_evento: sucesso > 0 ? "enviada_ao_banco" : "erro_envio",
-    descricao: sucesso > 0 ? "Proposta enviada ao banco" : "Falha ao enviar proposta ao banco",
+    tipo_evento: sucesso > 0 ? "enviada_ao_banco" : (patchFinal.status === "enviada_banco" ? "sincronizacao" : "erro_envio"),
+    descricao: sucesso > 0 ? "Proposta enviada ao banco" : (patchFinal.status === "enviada_banco" ? "Envio iniciado (timeout na leitura)" : "Falha ao enviar proposta ao banco"),
     status_novo: novoStatusGlobal,
     ator_id: userId,
   });

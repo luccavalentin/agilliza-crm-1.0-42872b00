@@ -488,8 +488,15 @@ export function escolherSimulacaoBanco(pb: any, simulacoes: any[]): any | null {
       sim,
       exata: idPb.length > 0 && String(sim?.idSimulacao) === idPb,
     }))
-    .filter(({ sim, exata }) => exata || mesmoBanco(pb, sim));
-  if (!candidatas.length) return null;
+    .filter(({ sim, exata }) => exata); // 2. Casar pelo idSimulacao da PRÓPRIA proposta
+
+  if (!candidatas.length) {
+    // Fallback apenas se não achou pelo ID exato, tenta pelo banco
+    const porBanco = simulacoes.filter(sim => mesmoBanco(pb, sim));
+    if (!porBanco.length) return null;
+    return porBanco.sort((a, b) => prioridadeSimulacao(b, false) - prioridadeSimulacao(a, false))[0];
+  }
+
   return candidatas
     .sort((a, b) => prioridadeSimulacao(b.sim, b.exata) - prioridadeSimulacao(a.sim, a.exata))[0]
     .sim;
