@@ -845,16 +845,13 @@ async function enviarPropostaImplInner({
         // CORREÇÃO: Em vez de apenas travar, tentamos criar uma oportunidade NOVA
         // para reaproveitar os dados e não bloquear o usuário.
         try {
-          const { originarOportunidade } = await import("../simulacao/homefin.server");
-          const { id: novoIdOp } = await originarOportunidade({
-            cliente_id: prop.cliente_id,
-            imovel_id: prop.imovel_id,
-            corretor_id: prop.corretor_id,
-            imobiliaria_id: prop.imobiliaria_id,
-            parceiro_id: prop.parceiro_id,
-            unidade_id: prop.unidade_id,
-            correspondente_id: prop.correspondente_id,
+          const { enviarSimulacaoImpl } = await import("../simulacao/enviar.server");
+          const { oportunidade_id: novoIdOp } = await enviarSimulacaoImpl({
+            simulacaoId: prop.simulacao_id,
+            userId,
+            ip: "127.0.0.1",
             supabase,
+            bancoIds: [prop.banco_id],
           });
 
           if (novoIdOp) {
