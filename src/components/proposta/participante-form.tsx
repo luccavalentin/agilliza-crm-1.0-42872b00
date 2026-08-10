@@ -46,6 +46,7 @@ export function ParticipanteDialog({
   totalParticipantes,
   participanteId,
   nomeConjugeExistente,
+  destacarObrigatorios = false,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
@@ -66,6 +67,7 @@ export function ParticipanteDialog({
   totalParticipantes?: number;
   participanteId?: string;
   nomeConjugeExistente?: string | null;
+  destacarObrigatorios?: boolean;
 }) {
   const [salvandoInterno, setSalvandoInterno] = useState(false);
 
@@ -77,7 +79,11 @@ export function ParticipanteDialog({
   const [buscandoCepC, setBuscandoCepC] = useState(false);
   const [erros, setErros] = useState<Set<string>>(new Set());
   const [errosC, setErrosC] = useState<Set<string>>(new Set());
-  const [tentouEnviar, setTentouEnviar] = useState(false);
+  const [tentouEnviar, setTentouEnviar] = useState(destacarObrigatorios);
+
+  useEffect(() => {
+    if (destacarObrigatorios) setTentouEnviar(true);
+  }, [destacarObrigatorios]);
   const corpoRef = useRef<HTMLDivElement>(null);
   const jaFocou = useRef(false);
 

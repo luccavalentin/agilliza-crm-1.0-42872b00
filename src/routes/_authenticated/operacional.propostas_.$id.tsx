@@ -561,9 +561,6 @@ function Pagina() {
     setParticipanteModal(proximoPendente.env);
     setIndiceParticipante(proximoPendente.index);
   };
-  const onCadastroIncompleto = () => {
-    abrirCadastroPendente();
-  };
 
   // Polling automático silencioso da API do banco (Itaú, Santander, Bradesco…).
   // Enquanto a proposta estiver em análise ativa, dispara sincronização a cada 60s
