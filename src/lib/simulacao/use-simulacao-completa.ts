@@ -822,21 +822,44 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
     setF((prev) => {
       const next = patchInverterPrincipal(prev);
 
-      // Verificação de segurança após a troca (embora o patch deva resolver, 
-      // garante que não estamos repetindo o mesmo titular se o cônjuge estivesse vazio)
+      // Verificação de segurança após a troca
       if (next.cpf_cnpj === prev.cpf_cnpj && next.nome_cliente === prev.nome_cliente) {
-        // Se após inverter os dados principais continuam iguais, algo está errado no patch ou origem
         if (!prev.nome_conjuge && !prev.cpf_conjuge) {
           toast.error("Preencha os dados do cônjuge para realizar a inversão.");
           return prev;
         }
       }
 
+      // Preenchimento automático da renda necessária após inverter
+      if (next.valor_financiamento > 0 && next.prazo > 0) {
+        // SAC
+        const avalSac = avaliarRendaMinima({
+          valor_financiamento: next.valor_financiamento,
+          valor_imovel: next.valor_imovel,
+          prazo_meses: next.prazo,
+          taxa_ano: melhorTaxaAno,
+          sistema: "S",
+        });
+        if (avalSac) next.renda_total = avalSac.rendaMinima;
+
+        // PRICE (apenas se estiver em modo Ambos/PRICE)
+        if (next.sistema_amortizacao === "B" || next.sistema_amortizacao === "P") {
+          const avalPrice = avaliarRendaMinima({
+            valor_financiamento: next.valor_financiamento,
+            valor_imovel: next.valor_imovel,
+            prazo_meses: next.prazo,
+            taxa_ano: melhorTaxaAno,
+            sistema: "P",
+          });
+          if (avalPrice) next.renda_price = avalPrice.rendaMinima;
+        }
+      }
+
       return next;
     });
-    setInvertido(true); // Mantém marcado que houve uma inversão para evitar o re-sync do CRM reverter os dados
+    setInvertido(true);
     setErros({});
-    toast.success("Titular e cônjuge invertidos. Confira os dados obrigatórios.");
+    toast.success("Titular e cônjuge invertidos com rendas sugeridas.");
   }, [f.cpf_cnpj, f.cpf_conjuge, f.nome_cliente, f.nome_conjuge]);
 
   /** Seleciona o titular a partir de um cliente do CRM. */
