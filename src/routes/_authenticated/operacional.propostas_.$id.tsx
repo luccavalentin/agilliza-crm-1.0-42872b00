@@ -32,10 +32,14 @@ export const Route = createFileRoute("/_authenticated/operacional/propostas_/$id
     }),
   component: PropostaRoute,
   errorComponent: (props) => {
-    const { id } = Route.useParams();
-    return <PropostaErro {...props} id={id} />;
+    return <PropostaErroWrapper {...props} />;
   },
 });
+
+function PropostaErroWrapper(props: any) {
+  const { id } = Route.useParams();
+  return <PropostaErro {...props} id={id} />;
+}
 
 function PropostaRoute() {
   const { id } = Route.useParams();
