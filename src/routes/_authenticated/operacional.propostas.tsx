@@ -29,6 +29,7 @@ import { ListaMobile } from "@/components/propostas/lista-page/lista-mobile";
 import { ListaDesktop } from "@/components/propostas/lista-page/lista-desktop";
 import { BarraSelecao } from "@/components/shared/barra-selecao";
 
+import { listarParceiros } from "@/lib/crm/parceiros.functions";
 import {
   intervaloMesAtual,
   type Escopo,
