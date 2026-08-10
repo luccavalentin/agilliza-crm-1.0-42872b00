@@ -395,10 +395,17 @@ function protocoloValido(valor: string | null): string | null {
  *  - `numeroPropostaBanco` / `numeroProposta` / `proposalNumber` / `codigoPropostaBanco`
  *  - `codigoOportunidadeBanco` quando o retorno está em análise/aprovado
  *
- * Só aceita valores presentes no retorno DAQUELA simulação/banco (busca rasa) e
- * filtra IDs internos (UUIDs) que não são protocolos reais do banco.
+ * 2. PROTOCOLO GRAVADO SEM ENVIO DE PROPOSTA
+ * Só gravar numero_proposta_banco quando a proposta tiver sido de fato enviada:
+ * exigimos que a simulação tenha tipoSituacao ∈ {N, A, R} (já em esteira de proposta)
+ * ou que o objeto venha de uma chamada de inclusão confirmada.
+ * IDs internos (UUIDs) que não são protocolos reais do banco são filtrados.
  */
 export function numeroPropostaBancoReal(sim: any): string | null {
+  const tipo = String(sim?.tipoSituacao ?? "").toUpperCase().charAt(0);
+  // Se ainda for 'S' (Sem integração de proposta), o código é apenas da simulação.
+  if (tipo === "S") return null;
+
   return protocoloValido(
     buscarCampoRaso(sim, [
       "numeroPropostaBanco",
@@ -481,8 +488,15 @@ export function escolherSimulacaoBanco(pb: any, simulacoes: any[]): any | null {
       sim,
       exata: idPb.length > 0 && String(sim?.idSimulacao) === idPb,
     }))
-    .filter(({ sim, exata }) => exata || mesmoBanco(pb, sim));
-  if (!candidatas.length) return null;
+    .filter(({ sim, exata }) => exata); // 2. Casar pelo idSimulacao da PRÓPRIA proposta
+
+  if (!candidatas.length) {
+    // Fallback apenas se não achou pelo ID exato, tenta pelo banco
+    const porBanco = simulacoes.filter(sim => mesmoBanco(pb, sim));
+    if (!porBanco.length) return null;
+    return porBanco.sort((a, b) => prioridadeSimulacao(b, false) - prioridadeSimulacao(a, false))[0];
+  }
+
   return candidatas
     .sort((a, b) => prioridadeSimulacao(b.sim, b.exata) - prioridadeSimulacao(a.sim, a.exata))[0]
     .sim;

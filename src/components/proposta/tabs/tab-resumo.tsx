@@ -41,13 +41,14 @@ import type { PropostaStatus } from "@/lib/propostas/state-machine";
 import { formatBRL, formatTaxa } from "@/lib/simulacao/format";
 import { cn } from "@/lib/utils";
 
-function MetricaBanco({ label, valor }: { label: string; valor: string }) {
+function MetricaBanco({ label, valor, subtitulo }: { label: string; valor: string; subtitulo?: string }) {
   return (
     <div className="rounded-md border border-border/60 bg-muted/30 px-2.5 py-2">
       <div className="text-[10px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
         {label}
       </div>
       <div className="mt-0.5 text-sm font-semibold tabular-nums text-foreground">{valor}</div>
+      {subtitulo && <div className="mt-1 text-[9px] text-destructive font-bold leading-tight">{subtitulo}</div>}
     </div>
   );
 }
@@ -193,11 +194,16 @@ export function TabResumo({
 
               <div className="grid grid-cols-2 gap-2.5">
                 <MetricaBanco label="R$ Financiamento" valor={formatBRL(b.valor_financiamento_max)} />
-                <MetricaBanco label="Parcela" valor={formatBRL(b.valor_parcela)} />
+                <MetricaBanco 
+                  label="Parcela" 
+                  valor={formatBRL(b.valor_parcela)} 
+                  subtitulo={(b.situacao_banco === 'recusado' || b.situacao_banco === 'nao_enviado') ? "Condições simuladas (não ofertadas)" : undefined}
+                />
                 <MetricaBanco label="Prazo" valor={String(b.prazo_pagamento_max ?? "—")} />
                 <MetricaBanco
                   label="Taxa/ano"
                   valor={formatTaxa(b.taxa_juros_ano)}
+                  subtitulo={(b.situacao_banco === 'recusado' || b.situacao_banco === 'nao_enviado') ? "Condições simuladas (não ofertadas)" : undefined}
                 />
               </div>
 
@@ -309,13 +315,23 @@ export function TabResumo({
                     {formatBRL(b.valor_financiamento_max)}
                   </TableCell>
                   <TableCell className="text-right tabular-nums">
-                    {formatBRL(b.valor_parcela)}
+                    <div className="flex flex-col items-end">
+                      <span>{formatBRL(b.valor_parcela)}</span>
+                      {(b.situacao_banco === 'recusado' || b.situacao_banco === 'nao_enviado') && (
+                        <span className="text-[9px] text-destructive font-bold uppercase leading-tight">Simulada</span>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell className="text-right tabular-nums">
                     {b.prazo_pagamento_max ?? "—"}
                   </TableCell>
                   <TableCell className="text-right tabular-nums">
-                    {formatTaxa(b.taxa_juros_ano)}
+                    <div className="flex flex-col items-end">
+                      <span>{formatTaxa(b.taxa_juros_ano)}</span>
+                      {(b.situacao_banco === 'recusado' || b.situacao_banco === 'nao_enviado') && (
+                        <span className="text-[9px] text-destructive font-bold uppercase leading-tight">Simulada</span>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell>
                     <ToneBadge tone={statusBancoConfig(b.status_banco).tone}>
