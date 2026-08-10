@@ -450,8 +450,8 @@ export function ResultadoInlineCompleta({ simulacaoId, onFechar, isSecundaria }:
                             {totalBancoTexto(b)}
                           </TableCell>
 
-                          <TableCell className="px-2 py-2 text-right tabular-nums whitespace-nowrap">
-                            {formatBRL(b.valor_iof)}
+                          <TableCell className="px-2 py-2 text-right tabular-nums whitespace-nowrap text-muted-foreground">
+                            {b.valor_iof != null ? formatBRL(b.valor_iof) : "—"}
                           </TableCell>
                           <TableCell className="px-2 py-2 text-right font-semibold tabular-nums whitespace-nowrap text-primary">
                             {formatBRL(rendaMinimaDoBanco(b))}

@@ -473,12 +473,12 @@ export function ResultadoInlineAmbos({ simulacaoIdSac, simulacaoIdPrice, onFecha
                         <TableCell className="py-3 text-right text-sm tabular-nums whitespace-nowrap">
                           {l.simulacao.prazo}m
                         </TableCell>
-                        <TableCell className="py-3 text-right text-sm font-semibold tabular-nums whitespace-nowrap">
+                        <TableCell className="py-3 text-right text-sm font-medium tabular-nums whitespace-nowrap">
                           {totalBancoTexto(b)}
                         </TableCell>
 
-                        <TableCell className="py-3 text-right text-sm tabular-nums whitespace-nowrap">
-                          {formatBRL(b.valor_iof)}
+                        <TableCell className="py-3 text-right text-sm tabular-nums whitespace-nowrap text-muted-foreground">
+                          {b.valor_iof != null ? formatBRL(b.valor_iof) : "—"}
                         </TableCell>
                         <TableCell className="py-3 text-right text-sm font-semibold tabular-nums whitespace-nowrap text-primary">
                           {formatBRL(rendaMinimaDoBanco(b))}
