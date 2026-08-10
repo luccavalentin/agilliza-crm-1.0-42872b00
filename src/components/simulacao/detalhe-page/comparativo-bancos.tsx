@@ -43,7 +43,7 @@ type Props = {
   criandoBanco: string | null;
   onEditar: () => void;
   onReenviarBanco: (bancoId: string) => void;
-  onCriar: (simulacaoBancoId: string) => void;
+  onCriar: (simulacaoBancoId: string, bancoId?: string) => void;
 };
 
 export function ComparativoBancos({
