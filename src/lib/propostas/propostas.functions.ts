@@ -233,6 +233,7 @@ export const listarPropostas = createServerFn({ method: "GET" })
         nome_responsavel: responsavel_id ? (nomesPerfis.get(responsavel_id) ?? null) : null,
         imobiliaria_nome: imobId ? (nomesPerfis.get(imobId) ?? null) : null,
         corretor_nome: corrId ? (nomesPerfis.get(corrId) ?? null) : null,
+        comercial_nome: comId ? (nomesPerfis.get(comId) ?? null) : null,
         nome_excluidor: r.deleted_by ? (nomesPerfis.get(r.deleted_by) ?? null) : null,
         bancos: bancosPorProp.get(r.id) ?? [],
       };
