@@ -74,7 +74,7 @@ export function ErroBancoDetalhe({ mensagem, rendaEstimada, nomeBanco, linhas = 
             </DialogDescription>
           </DialogHeader>
 
-          <div className="max-h-[50vh] overflow-y-auto rounded-lg border border-destructive/30 bg-destructive/5 p-4">
+          <div className="brand-scroll max-h-[50vh] overflow-y-auto rounded-lg border border-destructive/30 bg-destructive/5 p-4">
             <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-foreground">
               {isRendaErro ? "A renda informada não atingiu o mínimo exigido pelo banco para esta operação." : mensagem}
             </p>

@@ -109,7 +109,7 @@ export function AplicarCadastroDialog({
 
   return (
     <Dialog open={aberto} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
+      <DialogContent className="max-w-3xl">
         <DialogHeader>
           <DialogTitle>Aplicar ao cadastro</DialogTitle>
           <DialogDescription>
