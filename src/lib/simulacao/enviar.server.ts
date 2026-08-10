@@ -804,14 +804,14 @@ export async function enviarSimulacaoImpl({
     // REGRA 3: A simulação só sai de "enviando" quando todos os bancos tiverem desfecho.
     // O loop de bancos é SEQUENCIAL para evitar condições de corrida na oportunidade.
     const resultados: EnviarResultado["bancos"] = [];
-    for (const b of bancos as any[]) {
-      const enviarBanco = async (b: any): Promise<EnviarResultado["bancos"][number]> => {
-        // Registrar início do envio para este banco
-        await supabase.from("simulacao_bancos").update({ 
-          status_banco: "enviando", 
-          mensagem_banco: null,
-          simulado_em: new Date().toISOString()
-        }).eq("id", b.id);
+    const enviarBanco = async (b: any): Promise<EnviarResultado["bancos"][number]> => {
+      // Registrar início do envio para este banco
+      await supabase.from("simulacao_bancos").update({ 
+        status_banco: "enviando", 
+        mensagem_banco: null,
+        simulado_em: new Date().toISOString()
+      }).eq("id", b.id);
+
 
       let timeoutId: any;
       const timeoutPromise = new Promise((_, reject) => {
@@ -1239,23 +1239,8 @@ export async function enviarSimulacaoImpl({
       payloadNovo: { status: novoStatus, bancos: resultados.length },
     });
 
-    // Sincroniza os dados atualizados de volta para a tabela de simulações,
-    // garantindo que o que foi enviado ao banco (com dados novos do CRM) fique registrado.
-    await supabase.from("simulacoes").update({
-      nome_cliente: sim.nome_cliente,
-      renda_total: sim.renda_total,
-      email: sim.email,
-      celular: sim.celular,
-      data_nascimento: sim.data_nascimento,
-      estado_civil: sim.estado_civil,
-      nome_conjuge: sim.nome_conjuge,
-      cpf_conjuge: sim.cpf_conjuge,
-      renda_conjuge: sim.renda_conjuge,
-      data_nascimento_conjuge: sim.data_nascimento_conjuge,
-      email_conjuge: sim.email_conjuge,
-      celular_conjuge: sim.celular_conjuge,
-    })
-    .eq("id", simulacaoId);
+    // REGRA 2: Remoção de sincronização retroativa.
+    // O registro da simulação mantém os dados do momento da criação.
 
 
     return { oportunidade_id: idOportunidade, status: novoStatus, bancos: resultados };
