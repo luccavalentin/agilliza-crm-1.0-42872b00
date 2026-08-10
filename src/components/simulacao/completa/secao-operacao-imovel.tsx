@@ -337,13 +337,13 @@ export function SecaoOperacaoImovel({ ctx }: { ctx: SimulacaoCompletaCtx }) {
                 <>
                   Financiamento + despesas não pode passar de {Math.round(ltvMax * 100)}% do
                   imóvel ({formatBRL(financiamentoMaximo)}). Informe uma entrada de pelo menos{" "}
-                  {formatBRL(entradaMinimaEfetiva + 1)}.
+                  {formatBRL(entradaMinimaEfetiva)}.
                 </>
               ) : (
                 <>
                   O banco financia no máximo {Math.round(ltvMax * 100)}% do imóvel (
                   {formatBRL(financiamentoMaximo)}). Informe uma entrada de pelo menos{" "}
-                  {formatBRL(entradaMinima + 1)}.
+                  {formatBRL(entradaMinima)}.
                 </>
               )}
             </p>
@@ -384,26 +384,36 @@ export function SecaoOperacaoImovel({ ctx }: { ctx: SimulacaoCompletaCtx }) {
             onWheel={(e) => (e.target as HTMLInputElement).blur()}
             aria-invalid={!!erros.prazo}
           />
-          {restricaoEspecial.ativo && (
-            <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">
-              {restricaoEspecial.motivo}: máx. {restricaoEspecial.prazoMax} meses.
-            </p>
-          )}
-          {prazoMinOperacional > 0 && (
-            <p className="mt-1 text-xs text-muted-foreground">
-              Este banco já exigiu no mínimo {prazoMinOperacional} meses nesta modalidade.
-            </p>
-          )}
-          {mensagemPrazoInviavel && (
-            <p className="mt-1 text-xs font-medium text-amber-700 dark:text-amber-300">
-              {mensagemPrazoInviavel}
-            </p>
-          )}
-          {maxPrazoIdade != null && (
-            <p className="mt-1 text-xs text-muted-foreground">
-              Máximo para a idade: {maxPrazoIdade} meses ({formatarMeses(maxPrazoIdade)})
-            </p>
-          )}
+          {(() => {
+            const limites = [];
+            if (restricaoEspecial.ativo) limites.push({ val: restricaoEspecial.prazoMax, label: restricaoEspecial.motivo });
+            if (isHomeEquity) limites.push({ val: 240, label: "Home Equity" });
+            if (maxPrazoIdade != null) limites.push({ val: maxPrazoIdade, label: "idade" });
+            
+            if (limites.length === 0) return null;
+            
+            const ordenados = limites.sort((a, b) => a.val - b.val);
+            const efetivo = ordenados[0];
+            const outros = ordenados.slice(1);
+
+            return (
+              <div className="mt-1 space-y-1">
+                <p className="text-xs font-medium text-amber-700 dark:text-amber-300">
+                  Prazo máximo: {efetivo.val} meses (limite para {efetivo.label}).
+                  {outros.length > 0 && (
+                    <span className="ml-1 font-normal text-muted-foreground">
+                      {outros.map(o => `${o.label === 'idade' ? 'A idade' : o.label} permitiria até ${o.val}`).join("; ")}.
+                    </span>
+                  )}
+                </p>
+                {prazoMinOperacional > 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    Este banco já exigiu no mínimo {prazoMinOperacional} meses nesta modalidade.
+                  </p>
+                )}
+              </div>
+            );
+          })()}
           <Erro erros={erros} campo="prazo" />
         </Campo>
         <Campo label={<>Utiliza FGTS? <Ast /></>}>
