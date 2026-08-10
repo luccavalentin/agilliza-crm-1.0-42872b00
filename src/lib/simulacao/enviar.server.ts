@@ -265,6 +265,12 @@ async function garantirDadosParticipantesSimulacao({
     const ehTitular = !ehConjuge && (!cpf || !cpfTitular || cpf === cpfTitular);
     if (!ehTitular && !ehConjuge) continue;
 
+    // REGRA 1: A renda enviada ao banco é SEMPRE a renda declarada para o participante.
+    // O sistema NUNCA substitui esse valor.
+    const rendaDeclarada = ehConjuge 
+      ? num(sim.renda_conjuge) 
+      : num(sim.renda_total);
+
     const payload: Record<string, unknown> = {
       tipoSituacao: part?.tipoSituacao ?? "A",
       nomeParticipante: part?.nomeParticipante ?? (ehConjuge ? sim.nome_conjuge : sim.nome_cliente),
@@ -297,7 +303,7 @@ async function garantirDadosParticipantesSimulacao({
         textoLivreParaBanco(part?.nomeEmpresaProfissao) ||
         "Não informado",
       nomeMae: part?.nomeMae ?? cliente?.mae ?? undefined,
-      renda: part?.renda ?? (ehConjuge ? sim.renda_conjuge : sim.renda_total) ?? cliente?.renda_total_declarada,
+      renda: rendaDeclarada, // Garantia da Regra 1: Usa o valor extraído da simulação, sem alterações.
       email: part?.email ?? (ehConjuge ? sim.email_conjuge : sim.email) ?? cliente?.email,
       celular: part?.celular ?? soDigitos(ehConjuge ? sim.celular_conjuge : sim.celular),
       utilizaFgts: part?.utilizaFgts ?? sim.utiliza_fgts ?? "N",
@@ -310,7 +316,7 @@ async function garantirDadosParticipantesSimulacao({
               part?.dataNascimentoConjuge ?? sim.data_nascimento_conjuge ?? undefined,
             tipoEstadoCivilConjuge:
               part?.tipoEstadoCivilConjuge ?? sim.estado_civil_conjuge ?? sim.estado_civil ?? undefined,
-            rendaConjuge: part?.rendaConjuge ?? sim.renda_conjuge ?? undefined,
+            rendaConjuge: part?.rendaConjuge ?? num(sim.renda_conjuge) ?? undefined,
           }
         : {}),
       ...endereco,
@@ -412,25 +418,10 @@ export async function enviarSimulacaoImpl({
   if (!sim) throw new Error("Simulação não encontrada.");
 
   const cliente = { ...(sim.cliente ?? {}) };
-  if (cliente) {
-    // Sincronização automática dos dados do cliente do CRM para a simulação antes do envio.
-    // Isso garante que se o usuário alterou o cadastro (nome, renda, etc.), a proposta use os dados novos.
-    sim.nome_cliente = cliente.nome ?? sim.nome_cliente;
-    sim.renda_total = cliente.renda_total_declarada ?? sim.renda_total;
-    sim.email = cliente.email ?? sim.email;
-    sim.celular = cliente.telefone_celular ?? sim.celular;
-    sim.data_nascimento = cliente.data_nascimento ?? sim.data_nascimento;
-    sim.estado_civil = (cliente as any).estado_civil ?? sim.estado_civil;
-    
-    if (sim.possui_conjuge) {
-      sim.nome_conjuge = (cliente as any).conjuge_nome ?? sim.nome_conjuge;
-      sim.cpf_conjuge = (cliente as any).conjuge_cpf ?? sim.cpf_conjuge;
-      sim.renda_conjuge = (cliente as any).conjuge_renda ?? sim.renda_conjuge;
-      sim.data_nascimento_conjuge = (cliente as any).conjuge_data_nascimento ?? sim.data_nascimento_conjuge;
-      sim.email_conjuge = (cliente as any).conjuge_email ?? sim.email_conjuge;
-      sim.celular_conjuge = (cliente as any).conjuge_celular ?? sim.celular_conjuge;
-    }
-  }
+  // REGRA 2: Simulação é registro histórico. Sincronização automática removida para evitar
+  // reescrita retroativa de renda e outros dados usados no envio original.
+  // Se o usuário deseja novos dados, deve gerar uma nova simulação.
+  // sim.nome_cliente = cliente.nome ?? sim.nome_cliente; ... removido.
 
   // Trava anti-duplicidade: agora verificamos apenas por simulação ID.
   // Se já estiver "enviando", permitimos novas tentativas apenas se o último envio
@@ -810,17 +801,17 @@ export async function enviarSimulacaoImpl({
 
 
     // 2 + 3) Simulação + integração por banco.
-    // Enviamos um banco de cada vez (SEQUENCIAL): disparar as chamadas em
-    // paralelo na mesma oportunidade gera condição de corrida e faz alguns
-    // bancos falharem ("erro no envio") enquanto outros passam. Cada banco
-    // mantém seu próprio try/catch — a falha de um não impede os demais.
-    const enviarBanco = async (b: any): Promise<EnviarResultado["bancos"][number]> => {
-      // Registrar início do envio para este banco
-      await supabase.from("simulacao_bancos").update({ 
-        status_banco: "enviando", 
-        mensagem_banco: null,
-        simulado_em: new Date().toISOString()
-      }).eq("id", b.id);
+    // REGRA 3: A simulação só sai de "enviando" quando todos os bancos tiverem desfecho.
+    // O loop de bancos é SEQUENCIAL para evitar condições de corrida na oportunidade.
+    const resultados: EnviarResultado["bancos"] = [];
+    for (const b of bancos as any[]) {
+      const enviarBanco = async (b: any): Promise<EnviarResultado["bancos"][number]> => {
+        // Registrar início do envio para este banco
+        await supabase.from("simulacao_bancos").update({ 
+          status_banco: "enviando", 
+          mensagem_banco: null,
+          simulado_em: new Date().toISOString()
+        }).eq("id", b.id);
 
       let timeoutId: any;
       const timeoutPromise = new Promise((_, reject) => {
@@ -1177,9 +1168,25 @@ export async function enviarSimulacaoImpl({
     };
 
 
-    const resultados: EnviarResultado["bancos"] = [];
     for (const b of bancos as any[]) {
       resultados.push(await enviarBanco(b));
+    }
+
+    // REGRA 3d: Marcar como erro bancos que ficaram sem homefin_id_simulacao_banco
+    const { data: bancosFinais } = await supabase
+      .from("simulacao_bancos")
+      .select("*")
+      .eq("simulacao_id", simulacaoId)
+      .eq("selecionado", true);
+
+    for (const b of bancosFinais ?? []) {
+      if (b.status_banco === "aguardando" && !b.homefin_id_simulacao_banco) {
+        const msg = "Não foi possível iniciar a simulação neste banco. Nenhum dado foi enviado ao banco. Clique em reenviar.";
+        await supabase.from("simulacao_bancos").update({
+          status_banco: "erro",
+          mensagem_banco: msg
+        }).eq("id", b.id);
+      }
     }
 
     // O comparativo de CPFs (Problema 3) foi removido daqui para evitar conflitos com a lógica de agrupador_id.

@@ -663,7 +663,8 @@ export const obterSimulacao = createServerFn({ method: "GET" })
       const { data: pares } = await supabase
         .from("simulacoes")
         .select("*")
-        .eq("agrupador_id", agrupador);
+        .eq("agrupador_id", agrupador)
+        .eq("cliente_id", simulacao.cliente_id); // REGRA 4a: Filtra irmãs também por cliente_id
       irmas = pares ?? [];
       simIds = Array.from(new Set(irmas.map((p: any) => p.id)));
       if (!simIds.includes(data.id)) simIds.push(data.id);
