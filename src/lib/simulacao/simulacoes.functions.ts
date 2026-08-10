@@ -258,18 +258,7 @@ export const criarSimulacao = createServerFn({ method: "POST" })
     const dd = data.dados;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    // Se estivermos em modo completa e for casado, verificamos se o usuário pediu
-    // explicitamente para testar ambos os CPFs.
-    const possuiConjugeDados = Boolean(dd.possui_conjuge) && Boolean(dd.nome_conjuge) && Boolean(dd.cpf_conjuge) && Boolean(dd.data_nascimento_conjuge);
-    
-    // O teste de ambos os CPFs é automático se houver dados mínimos do cônjuge (Nome, CPF e Nascimento).
-    // Isso garante isonomia no teste bancário para proponentes casados.
-    const possuiConjugeMinimo = Boolean(dd.nome_conjuge) && 
-                                Boolean(dd.cpf_conjuge) && 
-                                Boolean(dd.data_nascimento_conjuge);
-    
-    // A flag `testarAmbos` dispara a criação da simulação invertida.
-    const testarAmbos = data.modo === "completa" && possuiConjugeMinimo;
+    const limparDocumento = (v?: string | null) => (v ?? "").replace(/\D/g, "");
 
 
 
@@ -279,23 +268,18 @@ export const criarSimulacao = createServerFn({ method: "POST" })
       .select("correspondente_id")
       .eq("id", userId)
       .maybeSingle();
+    
     const correspondente_id = prof?.correspondente_id;
-    if (!correspondente_id) throw new Error("Sua conta ainda não está vinculada a um correspondente. Solicite ao administrador que conclua o vínculo antes de usar este módulo.");
+    if (!correspondente_id) throw new Error("Correspondente não vinculado.");
 
-    if (data.modo === "completa" && !dd.email_verificado_em) {
-      // permite quando cliente do CRM já verificado; senão exige OTP
-      // (validação de bloqueio ocorre no enviarSimulacaoBanco)
-    }
-
-    // Resolve/insere cliente — grava direto no CRM, mesmo que o usuário não
-    // tenha permissão crm.clientes:create (usa client admin com escopo do correspondente).
-    // Importante: quando o titular é invertido na tela, `cliente_id` ainda pode
-    // apontar para o titular original. Por isso a referência da simulação deve
-    // ser recalculada pelo CPF/CNPJ atual e o cônjuge também deve virar cliente.
+    const casado = dd.estado_civil === "CA" || dd.estado_civil === "UE";
+    const possuiConjugeMinimo = Boolean(dd.nome_conjuge) && 
+                                Boolean(dd.cpf_conjuge) && 
+                                Boolean(dd.data_nascimento_conjuge);
+    
+    const testarAmbos = data.modo === "completa" && casado && possuiConjugeMinimo;
     let cliente_id = dd.cliente_id ?? null;
     const clienteOrigemId = cliente_id;
-    const casado = Boolean(dd.possui_conjuge);
-    const limparDocumento = (v?: string | null) => (v ?? "").replace(/\D/g, "");
 
     const upsertClienteCRM = async (params: {
       nome?: string | null;
@@ -546,15 +530,24 @@ export const criarSimulacao = createServerFn({ method: "POST" })
 
     let id_secundario: string | undefined;
 
-    // Só cria a simulação invertida quando o cônjuge tem dados mínimos para
-    // ser titular (CPF, nascimento e renda > 0). Sem isso a secundária nascia
-    // inválida e ficava presa em "rascunho" sem nunca ser enviada.
+    // O comparativo de CPF agora roda SEMPRE para casados com dados mínimos do cônjuge.
+    // A simulação secundária é criada apenas se o cônjuge tiver dados aptos a ser titular.
     const conjugeAptoTitular =
       !!dd.cpf_conjuge &&
       !!dd.data_nascimento_conjuge &&
       Number(dd.renda_conjuge ?? 0) > 0;
 
+    if (testarAmbos && !conjugeAptoTitular) {
+      await supabaseAdmin.from("simulacao_historico").insert({
+        simulacao_id: sim.id,
+        tipo: "info",
+        descricao: "Comparativo de CPF não executado: faltam nome, CPF, data de nascimento ou renda do cônjuge.",
+        ator_id: userId,
+      });
+    }
+
     if (testarAmbos && conjugeAptoTitular) {
+      const rendaTotalSoma = (dd.renda_total ?? 0) + (dd.renda_conjuge ?? 0);
       const insertInvertido = {
         ...insert,
         // Inverte titular ⇄ cônjuge
@@ -564,7 +557,7 @@ export const criarSimulacao = createServerFn({ method: "POST" })
         email: dd.email_conjuge || null,
         celular: dd.celular_conjuge || null,
         data_nascimento: dd.data_nascimento_conjuge || null,
-        renda_total: dd.renda_conjuge || null,
+        renda_total: dd.renda_total ?? 0, // Ambos usam a mesma renda individual (ajustado para soma na integração)
         estado_civil: dd.estado_civil_conjuge || dd.estado_civil,
 
         nome_conjuge: dd.nome_cliente || null,
@@ -578,6 +571,13 @@ export const criarSimulacao = createServerFn({ method: "POST" })
         // Mantém vínculo via agrupador para que a UI saiba que são parte da mesma "comparação"
         agrupador_id: insert.agrupador_id || sim.id,
       };
+
+      // Se composição de renda ativa, garante que ambos levem a MESMA renda somada
+      if (dd.compoe_renda) {
+        insert.renda_total = rendaTotalSoma;
+        // O cônjuge na simulação 1 mantém sua renda original para registro
+        insertInvertido.renda_total = rendaTotalSoma;
+      }
 
       const { data: simSec, error: errorSec } = await supabaseAdmin
         .from("simulacoes")
@@ -946,24 +946,59 @@ export const duplicarSimulacao = createServerFn({ method: "POST" })
 export const enviarSimulacaoBanco = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
-    z
-      .object({
-        simulacao_id: z.string().uuid(),
-        banco_ids: z.array(z.string().uuid()).optional(),
-      })
-      .parse(d),
+    z.object({
+      simulacao_id: z.string().uuid(),
+      banco_ids: z.array(z.string().uuid()).optional(),
+    }).parse(d)
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const ip = getRequestHeader("x-forwarded-for") ?? null;
     const { enviarSimulacaoImpl } = await import("./enviar.server");
-    return enviarSimulacaoImpl({
-      simulacaoId: data.simulacao_id,
-      userId,
-      ip,
-      supabase,
-      bancoIds: data.banco_ids,
-    });
+
+    // Identifica se há uma simulação secundária vinculada (comparativo de CPF)
+    const { data: sim } = await supabase
+      .from("simulacoes")
+      .select("id, agrupador_id")
+      .eq("id", data.simulacao_id)
+      .maybeSingle();
+
+    if (!sim) throw new Error("Simulação não encontrada.");
+
+    // Se tiver agrupador_id, buscamos o par para enviar ambos de forma atômica
+    const idsParaEnviar = [sim.id];
+    if (sim.agrupador_id) {
+      const { data: par } = await supabase
+        .from("simulacoes")
+        .select("id")
+        .eq("agrupador_id", sim.agrupador_id)
+        .neq("id", sim.id)
+        .is("deleted_at", null)
+        .maybeSingle();
+      if (par) idsParaEnviar.push(par.id);
+    }
+
+    const resultados = [];
+    for (const sid of idsParaEnviar) {
+      try {
+        const res = await enviarSimulacaoImpl({
+          simulacaoId: sid,
+          userId,
+          ip,
+          supabase,
+          bancoIds: data.banco_ids,
+        });
+        resultados.push({ id: sid, ...res });
+      } catch (e) {
+        console.error(`[enviarSimulacaoBanco] Falha atômica no ID ${sid}:`, e);
+        // Se for a simulação principal disparada pelo usuário, estoura o erro.
+        // Se for a secundária, o log de erro já foi gravado no banco pelo enviarSimulacaoImpl.
+        if (sid === data.simulacao_id) throw e;
+        resultados.push({ id: sid, status: "erro_banco", erro: String(e) });
+      }
+    }
+
+    return resultados.find(r => r.id === data.simulacao_id);
   });
 
 export const reenviarSimulacaoBanco = enviarSimulacaoBanco;

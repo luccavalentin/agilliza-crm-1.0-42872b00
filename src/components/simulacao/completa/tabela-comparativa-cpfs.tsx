@@ -50,20 +50,41 @@ export function TabelaComparativaCPFs({ simulacaoIdA, simulacaoIdB }: Props) {
     );
   }
 
-  const nomeA = resA.simulacao?.nome_cliente?.split(" ")[0] ?? "Titular A";
-  const nomeB = resB.simulacao?.nome_cliente?.split(" ")[0] ?? "Titular B";
+  const simA = resA.simulacao;
+  const simB = resB.simulacao;
+  
+  const nomeA = simA?.nome_cliente ?? "Titular A";
+  const cpfA = simA?.cpf_cnpj ?? "";
+  const rendaA = simA?.renda_total ?? 0;
+
+  const nomeB = simB?.nome_cliente ?? "Titular B";
+  const cpfB = simB?.cpf_cnpj ?? "";
+  const rendaB = simB?.renda_total ?? 0;
 
   const bancosA = (resA.bancos as any[]) ?? [];
   const bancosB = (resB.bancos as any[]) ?? [];
 
   // Flatten all combinations
   const todasLinhas = [
-    ...bancosA.map(b => ({ ...b, cenario: `Cenário A — ${nomeA} como titular`, titular: nomeA, sim: resA.simulacao })),
-    ...bancosB.map(b => ({ ...b, cenario: `Cenário B — ${nomeB} como titular`, titular: nomeB, sim: resB.simulacao }))
+    ...bancosA.map(b => ({ 
+      ...b, 
+      cenario: `${nomeA.split(" ")[0]} (Titular)`, 
+      titular: nomeA, 
+      cpf: cpfA,
+      renda: rendaA,
+      sim: simA 
+    })),
+    ...bancosB.map(b => ({ 
+      ...b, 
+      cenario: `${nomeB.split(" ")[0]} (Titular)`, 
+      titular: nomeB, 
+      cpf: cpfB,
+      renda: rendaB,
+      sim: simB 
+    }))
   ];
 
   // Identificar vencedora
-  // Critérios: 1. Menor taxa, 2. Menor parcela, 3. Maior financiamento
   const simuladas = todasLinhas.filter(l => l.status_banco === "simulada" && l.taxa_juros_ano);
   const vencedora = [...simuladas].sort((a, b) => {
     if (a.taxa_juros_ano !== b.taxa_juros_ano) return a.taxa_juros_ano - b.taxa_juros_ano;
@@ -90,18 +111,22 @@ export function TabelaComparativaCPFs({ simulacaoIdA, simulacaoIdB }: Props) {
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/50">
-              <TableHead className="w-[200px] text-[10px] font-bold uppercase tracking-wider">Cenário</TableHead>
+              <TableHead className="w-[200px] text-[10px] font-bold uppercase tracking-wider">Titular</TableHead>
               <TableHead className="text-[10px] font-bold uppercase tracking-wider">Banco</TableHead>
+              <TableHead className="text-[10px] font-bold uppercase tracking-wider text-right">Renda Aplicada</TableHead>
               <TableHead className="text-[10px] font-bold uppercase tracking-wider">Situação</TableHead>
               <TableHead className="text-right text-[10px] font-bold uppercase tracking-wider">Parcela</TableHead>
               <TableHead className="text-right text-[10px] font-bold uppercase tracking-wider">Taxa a.a.</TableHead>
               <TableHead className="text-right text-[10px] font-bold uppercase tracking-wider">Total fin. (banco)</TableHead>
-
             </TableRow>
           </TableHeader>
           <TableBody>
             {todasLinhas.map((linha, idx) => {
               const isWinner = vencedora && linha.id === vencedora.id;
+              // Verifica se há empate de taxas no mesmo banco entre cenários
+              const outrasLinhasMesmoBanco = todasLinhas.filter(l => l.nome_banco === linha.nome_banco && l.id !== linha.id);
+              const empatouTaxa = outrasLinhasMesmoBanco.some(l => l.taxa_juros_ano === linha.taxa_juros_ano && l.status_banco === "simulada" && linha.status_banco === "simulada");
+
               return (
                 <TableRow 
                   key={`${linha.simulacao_id}-${linha.id}-${idx}`}
@@ -113,10 +138,11 @@ export function TabelaComparativaCPFs({ simulacaoIdA, simulacaoIdB }: Props) {
                   <TableCell className="py-3">
                     <div className="flex flex-col gap-0.5">
                       <span className={cn("text-[10.5px] font-bold", isWinner ? "text-primary" : "text-foreground")}>
-                        {linha.cenario}
+                        {linha.titular}
                       </span>
+                      <span className="text-[9px] text-muted-foreground font-mono">{linha.cpf}</span>
                       {isWinner && (
-                        <span className="flex items-center gap-1 text-[9px] font-black uppercase text-primary">
+                        <span className="flex items-center gap-1 text-[9px] font-black uppercase text-primary mt-1">
                           <CheckCircle2 className="h-2.5 w-2.5" /> Melhor Opção
                         </span>
                       )}
@@ -130,12 +156,20 @@ export function TabelaComparativaCPFs({ simulacaoIdA, simulacaoIdB }: Props) {
                       </span>
                     </div>
                   </TableCell>
+                  <TableCell className="text-right text-[10.5px] font-medium tabular-nums">
+                    {formatBRL(linha.renda)}
+                  </TableCell>
                   <TableCell>
                     <BancoStatusBadge status={linha.status_banco} />
                     {linha.status_banco === "erro" && (
                        <div className="mt-1">
                          <DetalheBancoDialog banco={linha} simulacao={linha.sim} />
                        </div>
+                    )}
+                    {empatouTaxa && linha.status_banco === "simulada" && (
+                      <div className="mt-1 flex items-center gap-1 text-[9px] text-muted-foreground italic">
+                        <Info className="h-2.5 w-2.5" /> Taxa idêntica em ambos
+                      </div>
                     )}
                   </TableCell>
                   <TableCell className="text-right font-bold tabular-nums">
