@@ -597,12 +597,9 @@ export async function enviarSimulacaoImpl({
     // Santander em Home Equity usa a rota operacional Somahome; oportunidades
     // antigas criadas como Home Equity comum ficam sem retorno. Para reenvio,
     // criamos uma nova oportunidade na operação correta.
-    let idOportunidade = usaRotaSantanderHomeEquity
-      ? null
-      : (sim.homefin_id_oportunidade as string | null);
+    let idOportunidade = sim.homefin_id_oportunidade as string | null;
 
-    // Requisito 2 e 3: Não reusar oportunidade cancelada.
-    if (idOportunidade && !usaRotaSantanderHomeEquity) {
+    if (idOportunidade) {
       try {
         const checkOp = await chamarIntegracao<any>(
           `/oportunidade/${idOportunidade}`,
@@ -613,11 +610,9 @@ export async function enviarSimulacaoImpl({
         const opData = checkOp?.oportunidade ?? checkOp ?? {};
         const situacao = String(opData?.tipoSituacao ?? "").toUpperCase().charAt(0);
         
-        // C = Cancelada, T = Contrato Emitido
         if (situacao === "C" || situacao === "T") {
           console.log(`[HomeFin] Oportunidade ${idOportunidade} está em estado terminal (${situacao}). Criando uma nova.`);
           idOportunidade = null;
-          // Se for cancelada, avisamos no histórico para transparência (Requisito 3)
           if (situacao === "C") {
             await supabase.from("simulacao_historico").insert({
               simulacao_id: simulacaoId,
@@ -629,7 +624,6 @@ export async function enviarSimulacaoImpl({
         }
       } catch (e) {
         console.warn(`[HomeFin] Falha ao validar estado da oportunidade ${idOportunidade}:`, e);
-        // Em caso de erro 404 ou falha crítica de leitura, melhor criar uma nova
         idOportunidade = null;
       }
     }
