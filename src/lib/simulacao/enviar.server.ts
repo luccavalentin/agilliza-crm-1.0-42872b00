@@ -1012,13 +1012,20 @@ export async function enviarSimulacaoImpl({
         // capturar o retorno assim que ele chegar. Aumentamos o polling para o
         // Itaú (20 tentativas a cada 10s) para garantir o retorno.
         if (vazio(dadosApi)) {
-          const isItau = String(b.nome_banco ?? "").toLowerCase().includes("itaú") ||
-                         String(b.nome_banco ?? "").toLowerCase().includes("itau");
-          const maxTentativas = isItau ? 20 : 12;
-          const delay = isItau ? 10000 : 8000;
+          // Backoff progressivo (3s, 6s, 12s, 24s… teto 30s) com orçamento
+          // total de tempo. Encerra imediatamente em desfecho definitivo
+          // (situação diferente de "em processamento") para não gastar os
+          // ~100s que o laço fixo consumia.
+          const ORCAMENTO_MS = 60_000;
+          const iniciouPolling = Date.now();
+          let espera = 3_000;
+          let tentativas = 0;
+          let motivoFim = "orcamento_esgotado";
 
-          for (let tentativa = 0; tentativa < maxTentativas && vazio(dadosApi); tentativa++) {
-            await new Promise((r) => setTimeout(r, delay));
+          while (vazio(dadosApi) && Date.now() - iniciouPolling < ORCAMENTO_MS) {
+            await new Promise((r) => setTimeout(r, espera));
+            espera = Math.min(espera * 2, 30_000);
+            tentativas++;
             try {
               const op = await chamarIntegracao<any>(
                 `/oportunidade/${idOportunidade}`,
@@ -1034,8 +1041,20 @@ export async function enviarSimulacaoImpl({
               if (achado && !vazio(achado)) {
                 dados = achado;
                 dadosApi = achado;
+                motivoFim = "retorno_recebido";
+                break;
+              }
+              // Desfecho definitivo sem valores: o banco já concluiu e não vai
+              // devolver nada. Continuar consultando é desperdício.
+              const situacao = String(
+                achado?.tipoSituacao ?? achado?.situacao ?? "",
+              ).toUpperCase();
+              if (situacao && situacao !== "P" && situacao !== "A") {
+                motivoFim = `situacao_definitiva_${situacao}`;
+                break;
               }
             } catch (e) {
+              motivoFim = "falha_consulta";
               console.warn(
                 "Falha ao consultar retorno da simulação (polling).",
                 e instanceof Error ? e.message : String(e),
@@ -1043,7 +1062,17 @@ export async function enviarSimulacaoImpl({
               break;
             }
           }
+
+          const duracao = Math.round((Date.now() - iniciouPolling) / 1000);
+          try {
+            await supabase.from("simulacao_historico").insert({
+              simulacao_id: simulacaoId,
+              tipo: "info",
+              descricao: `Consulta de retorno (${String(b.nome_banco ?? "banco")}): ${tentativas} tentativa(s) em ${duracao}s — ${motivoFim}.`,
+            } as any);
+          } catch {}
         }
+
 
         const semParcela = vazio(dadosApi);
         const semTaxa = semParcela;

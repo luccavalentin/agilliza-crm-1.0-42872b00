@@ -546,8 +546,15 @@ export const criarSimulacao = createServerFn({ method: "POST" })
 
     let id_secundario: string | undefined;
 
-    // Se testarAmbos estiver ativo, cria uma segunda simulação com os papéis invertidos
-    if (testarAmbos) {
+    // Só cria a simulação invertida quando o cônjuge tem dados mínimos para
+    // ser titular (CPF, nascimento e renda > 0). Sem isso a secundária nascia
+    // inválida e ficava presa em "rascunho" sem nunca ser enviada.
+    const conjugeAptoTitular =
+      !!dd.cpf_conjuge &&
+      !!dd.data_nascimento_conjuge &&
+      Number(dd.renda_conjuge ?? 0) > 0;
+
+    if (testarAmbos && conjugeAptoTitular) {
       const insertInvertido = {
         ...insert,
         // Inverte titular ⇄ cônjuge
