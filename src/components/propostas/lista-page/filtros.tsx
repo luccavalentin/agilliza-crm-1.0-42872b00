@@ -24,6 +24,15 @@ type Props = {
   onLimpar: () => void;
   verExcluidas: boolean;
   setVerExcluidas: (u: (v: boolean) => boolean) => void;
+  corretorFiltro: string;
+  setCorretorFiltro: (v: string) => void;
+  corretores: string[];
+  imobFiltro: string;
+  setImobFiltro: (v: string) => void;
+  imobiliarias: string[];
+  comercialFiltro: string;
+  setComercialFiltro: (v: string) => void;
+  comerciais: string[];
 };
 
 export function FiltrosPropostas({
