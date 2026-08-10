@@ -429,7 +429,7 @@ function Pagina() {
       const st = q.state.data?.proposta?.status as string | undefined;
       if (!st) return 30_000;
       const terminais = ["contrato_emitido", "cancelada", "credito_recusado"];
-      return terminais.includes(st) ? false : 30_000;
+      return terminais.includes(st) ? false : 15_000;
     },
     refetchOnWindowFocus: true,
   });
@@ -498,6 +498,37 @@ function Pagina() {
       }
     }
   }, [abrir_cadastro, envolvidos, id, router]);
+
+  const onCadastroIncompleto = useCallback((envolvidoPendente: any) => {
+    setTab("COMPRADORES");
+    setDestacarObrigatorios(true);
+    if (envolvidoPendente) {
+      setParticipanteModal(envolvidoPendente);
+      const idx = envolvidos.findIndex((e: any) => e.id === envolvidoPendente.id);
+      setIndiceParticipante(idx + 1);
+    } else {
+      // Se não passou envolvido, procura o primeiro com faltantes
+      const pendente = envolvidos.find((e: any) => faltantesEnvolvido(e).length > 0);
+      if (pendente) {
+        setParticipanteModal(pendente);
+        const idx = envolvidos.findIndex((e: any) => e.id === pendente.id);
+        setIndiceParticipante(idx + 1);
+      }
+    }
+  }, [envolvidos]);
+
+  const handleEnviarAposCadastro = useCallback(async () => {
+    // Reenviar para todos os bancos pendentes após fechar o modal de cadastro
+    const bancosPendentes = (bancos ?? []).filter((b: any) => b.selecionado && !bancoJaEnviado(b));
+    if (bancosPendentes.length > 0) {
+      await handleEnviarHook({
+        propostaId: id,
+        bancoId: "todos",
+        envolvidos,
+        onCadastroIncompleto
+      });
+    }
+  }, [bancos, envolvidos, id, handleEnviarHook, onCadastroIncompleto]);
 
   const pendentes = useMemo(() => {
     return (envolvidos ?? []).map((env, index) => ({

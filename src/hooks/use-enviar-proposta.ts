@@ -121,7 +121,7 @@ export function useEnviarProposta() {
 
       const pendencias = (currentEnvolvidos ?? []).map(env => ({
         env,
-        faltantes: faltantesEnvolvido(env || {})
+        faltantes: env ? faltantesEnvolvido(env) : []
       })).filter(p => p.faltantes && p.faltantes.length > 0);
 
       if (pendencias.length > 0) {

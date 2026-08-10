@@ -81,7 +81,9 @@ export const ORDEM_STATUS: PropostaStatus[] = [
 ];
 
 export function transicaoPermitida(de: PropostaStatus, para: PropostaStatus): boolean {
-  return (TRANSICOES[de] ?? []).includes(para);
+  if (!de) return false;
+  const validas = TRANSICOES[de] ?? [];
+  return validas.includes(para);
 }
 
 /** Status que ainda aceitam edição dos dados da proposta. */
