@@ -223,10 +223,6 @@ export const Route = createFileRoute("/_authenticated/operacional/propostas_/$id
       );
     }
 
-    // ... (rest of the component)
-  },
-});
-
 function RestaurarBotao({ id }: { id: string }) {
   const router = useRouter();
   const qc = useQueryClient();
