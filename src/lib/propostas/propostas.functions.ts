@@ -86,6 +86,7 @@ export const listarPropostas = createServerFn({ method: "GET" })
         responsavel_nome: z.string().optional(),
         corretor_nome: z.string().optional(),
         imobiliaria_nome: z.string().optional(),
+        comercial_nome: z.string().optional(),
         q: z.string().optional(),
         data_inicio: z.string().optional(),
         data_fim: z.string().optional(),
