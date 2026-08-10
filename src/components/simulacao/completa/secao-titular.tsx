@@ -130,7 +130,7 @@ export function SecaoTitular({ ctx }: { ctx: SimulacaoCompletaCtx }) {
                 prazoMeses={f.prazo}
                 taxaAno={ctx.melhorTaxaAno}
                 sistema="S"
-                rendaInformada={ctx.rendaConsiderada}
+                rendaInformada={0}
                 compoeRendaConjuge={f.compoe_renda && f.compoe_renda_conjuge}
               />
             </div>
@@ -144,7 +144,7 @@ export function SecaoTitular({ ctx }: { ctx: SimulacaoCompletaCtx }) {
                 prazoMeses={f.prazo}
                 taxaAno={ctx.melhorTaxaAno}
                 sistema="P"
-                rendaInformada={ctx.rendaConsiderada}
+                rendaInformada={0}
                 compoeRendaConjuge={f.compoe_renda && f.compoe_renda_conjuge}
               />
             </div>
@@ -192,7 +192,7 @@ export function SecaoTitular({ ctx }: { ctx: SimulacaoCompletaCtx }) {
                   prazoMeses={f.prazo}
                   taxaAno={ctx.melhorTaxaAno}
                   sistema="P"
-                  rendaInformada={f.renda_price}
+                  rendaInformada={0}
                 />
               </div>
             )}

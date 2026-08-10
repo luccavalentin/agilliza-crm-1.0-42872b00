@@ -420,17 +420,23 @@ export async function enviarSimulacaoImpl({
   const cliente = { ...(sim.cliente ?? {}) };
   // REGRA 2: Simulação é registro histórico. Sincronização automática removida para evitar
   // reescrita retroativa de renda e outros dados usados no envio original.
-  // Se o usuário deseja novos dados, deve gerar uma nova simulação.
-  // sim.nome_cliente = cliente.nome ?? sim.nome_cliente; ... removido.
+  // Uma simulação enviada tem seu estado CONGELADO.
 
-  // Trava anti-duplicidade: agora verificamos apenas por simulação ID.
-  // Se já estiver "enviando", permitimos novas tentativas apenas se o último envio
-  // falhou por timeout ou erro, ou se passaram mais de 60s (safety gap).
-  if (sim.status === "enviando" && sim.ultimo_envio_em) {
-    const inicio = new Date(sim.ultimo_envio_em).getTime();
-    if (Number.isFinite(inicio) && Date.now() - inicio < 60_000) {
-      throw new Error("Um envio ao banco já está em andamento. Aguarde a conclusão.");
-    }
+  // Trava anti-duplicidade e proteção de registro histórico
+  if (sim.status !== "rascunho" && sim.status !== "erro") {
+     // Se não for rascunho nem erro, a simulação já teve um ciclo de vida iniciado.
+     // Se estiver "enviando" há menos de 60s, bloqueia.
+     if (sim.status === "enviando" && sim.ultimo_envio_em) {
+       const inicio = new Date(sim.ultimo_envio_em).getTime();
+       if (Number.isFinite(inicio) && Date.now() - inicio < 60_000) {
+         throw new Error("Um envio ao banco já está em andamento. Aguarde a conclusão.");
+       }
+     }
+     
+     // Se já foi finalizada (simulada/recusada), não permite re-envio que altere dados.
+     if (sim.status === "simulada" || sim.status === "recusada" || sim.status === "aprovada") {
+        throw new Error("Esta simulação já foi concluída e não pode ser alterada. Gere uma nova simulação para atualizar os dados.");
+     }
   }
 
 
