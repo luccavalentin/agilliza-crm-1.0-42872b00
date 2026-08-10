@@ -197,7 +197,7 @@ export function EnviarPropostaDialog({
                                </span>
                              </div>
                              <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-                               Processando...
+                               {status.mensagem?.includes("Aguardando") ? "Processando..." : "Aguarde"}
                              </span>
                           </div>
                         ) : (
@@ -221,17 +221,23 @@ export function EnviarPropostaDialog({
                             {status.mensagem}
                           </span>
                           <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">
-                            Etapa {status.etapaNumero} de 5
+                            Etapa {status.etapaNumero} de 6
                           </span>
                         </div>
                         <div className="h-1.5 w-full overflow-hidden rounded-full bg-primary/10">
                           <div 
                             className="h-full bg-primary transition-all duration-500 ease-out" 
-                            style={{ width: `${(status.etapaNumero || 1) * 20}%` }}
+                            style={{ width: `${(status.etapaNumero || 1) * 16.66}%` }}
                           />
                         </div>
+                        {Number(status.tempoDecorrido) > 20 && (
+                          <p className="mt-2 text-[10px] font-bold text-amber-600 flex items-center gap-1">
+                            <Info className="h-3 w-3" /> O banco pode levar até 2 minutos para responder.
+                          </p>
+                        )}
                       </div>
                     )}
+
 
                     {isError && status.mensagem && (
                       <div className="mt-2 flex items-start gap-2 rounded-md bg-destructive/10 p-2.5">
