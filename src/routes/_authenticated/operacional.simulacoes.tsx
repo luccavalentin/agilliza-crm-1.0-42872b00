@@ -114,6 +114,7 @@ function Pagina() {
   const [propostasCriadas, setPropostasCriadas] = useState<
     Array<{ simulacao_banco_id: string; banco_id: string; nome_banco: string; proposta_id: string; numero: string }>
   >([]);
+  const { enviar: handleEnviarHook, statusPorBanco, limparStatus } = useEnviarProposta();
 
   // Encaminhamento: e-mail ou whatsapp
   const [encaminhamento, setEncaminhamento] = useState<{
@@ -249,6 +250,7 @@ function Pagina() {
 
   async function handleEnviarProposta(id: string, numero: string) {
     setEnvio({ id, numero, bancos: [] });
+    limparStatus();
     setPropostasCriadas([]);
     setEnviandoBancoId(null);
     setEnvioCarregando(true);

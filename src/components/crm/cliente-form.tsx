@@ -359,7 +359,8 @@ export function ClienteForm({
           await qc.invalidateQueries({ queryKey: ["proposta", vincularPropostaId] });
           if (enviarBancoAposVincular) {
             await handleEnviarHook({ 
-              propostaId: vincularPropostaId 
+              propostaId: vincularPropostaId,
+              bancoId: "todos"
             });
             await qc.invalidateQueries({ queryKey: ["proposta", vincularPropostaId] });
             

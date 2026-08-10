@@ -252,6 +252,7 @@ export function AbaEnviarBanco({
     if (bloqueado) {
       handleEnviar({
         propostaId,
+        bancoId: "todos",
         envolvidos,
         onCadastroIncompleto: (primeiro) => onCompletar?.(primeiro)
       });

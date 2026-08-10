@@ -103,6 +103,7 @@ export function AcoesTopo({
     try {
       await handleEnviar({
         propostaId,
+        bancoId: "todos",
         envolvidos,
         onCadastroIncompleto: () => onCadastroIncompleto?.()
       });

@@ -359,6 +359,7 @@ function Pagina() {
       // obrigatórios e, se faltar algo, abre o cadastro em vez de enviar.
       const r = await handleEnviarHook({
         propostaId: id,
+        bancoId: "todos", // Na tela de detalhe, envia todos os selecionados
         envolvidos,
         onCadastroIncompleto,
       });
