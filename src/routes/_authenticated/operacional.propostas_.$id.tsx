@@ -784,9 +784,15 @@ function Pagina() {
               envolvidos: envolvidosAtualizados,
               onCadastroIncompleto: (env: any) => setParticipanteModal(env),
             });
-            // Só fecha quando o envio realmente concluiu (o gate devolve
-            // undefined quando bloqueou por cadastro incompleto).
-            if (r) setParticipanteModal(null);
+            
+            // 2. MODAL NÃO FECHA APÓS ENVIAR (CORREÇÃO)
+            // Se houve tentativa de envio (r != null), fechamos o modal e voltamos
+            // para a tela da proposta. O resultado já é tratado pelo hook e pela
+            // invalidação de queries que acontece lá.
+            if (r) {
+              setParticipanteModal(null);
+              setTab("RESUMO"); // Garante que volta para a visão geral
+            }
           } catch (e: any) {
             // O gate de envio já mostra o motivo real retornado pelo banco.
             if (!enviandoAoBanco) {

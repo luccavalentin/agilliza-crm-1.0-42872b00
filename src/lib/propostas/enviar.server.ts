@@ -832,25 +832,34 @@ async function enviarPropostaImplInner({
 
   // Bancos a enviar: por linha (bancoId) ou todos os selecionados ainda não enviados.
   let query = supabase.from("proposta_bancos").select("*").eq("proposta_id", propostaId);
+  
   if (bancoId) {
+    // Chamadores podem passar o ID da linha (uuid) ou o banco_id (string curta ex: 'itau').
+    // Tentamos ambos para máxima compatibilidade.
     query = query.or(`banco_id.eq.${bancoId},id.eq.${bancoId}`);
   } else {
     query = query.eq("selecionado", true);
   }
+  
   const { data: bancosSel } = await query;
 
   if (bancoId && (!bancosSel || bancosSel.length === 0)) {
     throw new Error("Banco não encontrado nesta proposta.");
   }
 
+  // Se passou um banco específico, e ele já foi enviado, mensagem clara.
+  if (bancoId && bancosSel && bancosSel.length > 0) {
+    if (bancoJaEnviado(bancosSel[0] as any)) {
+      throw new Error("Este banco já foi enviado.");
+    }
+  }
+
   const bancos = (bancosSel ?? []).filter((b: any) => !bancoJaEnviado(b));
   if (bancos.length === 0) {
     throw new Error(
-      bancoId
-        ? "Este banco já foi enviado."
-        : primeiroEnvio
-          ? "Selecione ao menos um banco antes de enviar."
-          : "Nenhum banco novo selecionado. Selecione outro banco para enviar.",
+      primeiroEnvio
+        ? "Selecione ao menos um banco antes de enviar."
+        : "Nenhum banco novo selecionado. Selecione outro banco para enviar.",
     );
   }
 
@@ -1066,17 +1075,31 @@ async function enviarPropostaImplInner({
         mensagem: "Enviado. Aguardando atualização do banco.",
       };
     } catch (e) {
-      const msg = sanitizarMensagemErro(
-        e instanceof Error ? e.message : "Falha ao enviar ao banco.",
-      );
+      const originalMsg = e instanceof Error ? e.message : "Falha ao enviar ao banco.";
+      const msg = sanitizarMensagemErro(originalMsg);
+      
+      // Detecção de erro de limite do Santander (INT-SANTANDER-RANGE)
+      const ehErroLimiteSantander = b.banco_id === TIPO_BANCO_SANTANDER && 
+        (originalMsg.includes("INT-SANTANDER-RANGE") || originalMsg.includes("financingAmount"));
+
+      // Se for erro de limite, não classificamos como erro_envio para não sugerir reenvio sem ajuste.
+      // Tratamos como crédito recusado por regra do banco.
+      const statusFinalBanco = ehErroLimiteSantander ? "recusada" : "erro";
+      const situacaoFinalBanco = ehErroLimiteSantander ? "recusado" : "nao_enviado";
+
       await supabase
         .from("proposta_bancos")
-        .update({ status_banco: "erro", mensagem_banco: msg })
+        .update({ 
+          status_banco: statusFinalBanco, 
+          mensagem_banco: msg,
+          situacao_banco: situacaoFinalBanco
+        } as any)
         .eq("id", b.id);
+
       return {
         banco_id: b.banco_id,
         nome_banco: b.nome_banco,
-        status: "erro",
+        status: statusFinalBanco,
         mensagem: msg,
       };
     }
