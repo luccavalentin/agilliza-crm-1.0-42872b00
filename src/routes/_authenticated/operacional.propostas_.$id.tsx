@@ -530,7 +530,7 @@ function Pagina() {
         propostaId: id,
         bancoId: "todos",
         envolvidos,
-        onCadastroIncompleto
+        onCadastroIncompleto: onCadastroIncompletoSemArgs
       });
     }
   }, [bancos, envolvidos, id, handleEnviarHook, onCadastroIncompleto]);
@@ -1121,7 +1121,7 @@ function Pagina() {
               propostaId: id,
               bancoId,
               envolvidos: envolvidosAtualizados,
-              onCadastroIncompleto: (env: any) => setParticipanteModal(env),
+              onCadastroIncompleto: onCadastroIncompleto,
             });
             
             // 2. O MODAL NÃO FECHA APÓS ENVIAR (CORREÇÃO)
