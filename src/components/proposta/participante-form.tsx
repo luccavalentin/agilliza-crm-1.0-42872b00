@@ -95,11 +95,7 @@ export function ParticipanteDialog({
     setErros(new Set());
     setErrosC(new Set());
     setTentouEnviar(Boolean(focarPendencias));
-    // Resetamos o foco para que o efeito de auto-foco abaixo execute uma vez para este participante
     jaFocou.current = false;
-    // `inicial` e `conjugeInicial` são snapshots. Enquanto este participante
-    // estiver aberto, o estado digitado no formulário é a fonte de verdade.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, participanteId]);
 
   // Após a primeira tentativa, revalida ao vivo para o vermelho sumir conforme preenche.

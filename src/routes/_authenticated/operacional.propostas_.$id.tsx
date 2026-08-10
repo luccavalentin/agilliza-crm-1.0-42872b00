@@ -263,9 +263,7 @@ function Pagina() {
 
   const inicialParticipante = useMemo(
     () => (participanteModal ? envolvidoParaForm(participanteModal) : undefined),
-    // O snapshot só deve mudar quando muda a pessoa editada.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [participanteModal?.id],
+    [participanteModal?.id]
   );
   const conjugeInicialParticipante = useMemo(() => {
     if (!participanteModal?.id) return undefined;
@@ -275,8 +273,6 @@ function Pagina() {
         (participanteModal.conjuge_id && env.id === participanteModal.conjuge_id),
     );
     return conjuge ? envolvidoParaForm(conjuge) : undefined;
-    // Mantém o snapshot estável durante a edição, inclusive em refetches.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [participanteModal?.id, participanteModal?.conjuge_id]);
 
   const abrirCadastroPendente = () => {
