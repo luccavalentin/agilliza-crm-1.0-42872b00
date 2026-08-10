@@ -600,8 +600,8 @@ function Pagina() {
                       </p>
                       <Button 
                         size="sm" 
-                        variant="warning" 
-                        className="h-8 gap-1.5 text-[11px] font-bold uppercase tracking-wider"
+                        variant="outline" 
+                        className="h-8 gap-1.5 text-[11px] font-bold uppercase tracking-wider border-warning/50 text-warning-foreground hover:bg-warning/10"
                         onClick={async () => {
                           const tid = toast.loading("Ajustando valor e reenviando...");
                           try {
