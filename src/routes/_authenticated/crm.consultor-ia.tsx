@@ -274,7 +274,7 @@ function ConsultorIaPage() {
             <h1 className="bg-gradient-to-b from-primary to-brand-azul-noite bg-clip-text text-2xl font-extrabold tracking-tight text-transparent sm:text-3xl">
               Consultor IA
             </h1>
-            <p className="mx-auto max-w-2xl text-base font-medium text-muted-foreground/80">
+            <p className="mx-auto max-w-2xl text-sm font-medium text-muted-foreground/80">
               A inteligência moderna da Agilliza para o mercado imobiliário.
             </p>
           </div>
