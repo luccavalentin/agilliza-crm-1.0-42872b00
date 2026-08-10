@@ -132,6 +132,7 @@ function Pagina() {
   const [respFiltro, setRespFiltro] = useState("todos");
   const [corretorFiltro, setCorretorFiltro] = useState("todos");
   const [imobFiltro, setImobFiltro] = useState("todos");
+  const [comercialFiltro, setComercialFiltro] = useState("todos");
 
 
   // Busca ao vivo: filtra conforme o usuário digita (com debounce).
