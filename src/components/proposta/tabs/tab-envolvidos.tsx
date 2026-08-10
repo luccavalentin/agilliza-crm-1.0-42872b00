@@ -29,7 +29,7 @@ import {
 export function TabEnvolvidos({
   tipo,
   propostaId,
-  envolvidos,
+  envolvidos = [],
   autoAbrir,
   onAutoAbriu,
   onFechouAposSalvar,
@@ -37,7 +37,7 @@ export function TabEnvolvidos({
 }: {
   tipo: "CO" | "VD";
   propostaId: string;
-  envolvidos: any[];
+  envolvidos?: any[];
   autoAbrir?: boolean;
   onAutoAbriu?: () => void;
   onFechouAposSalvar?: () => void;
