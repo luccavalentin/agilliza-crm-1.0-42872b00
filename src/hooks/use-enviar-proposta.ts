@@ -37,15 +37,16 @@ export function useEnviarProposta() {
     try {
       // 1. Ressincronizar (Server-side CRM -> Proposta)
       const res = await ressincronizarFn({ data: { proposta_id: propostaId } });
-      if (res.alterados > 0) {
-        await qc.invalidateQueries({ queryKey: ["proposta", propostaId] });
-      }
 
       // 2. Buscar envolvidos atualizados se não foram passados ou se houve alteração
       let currentEnvolvidos = envolvidos;
       if (!currentEnvolvidos || res.alterados > 0) {
-        // Se res.alterados > 0, os envolvidos passados estão defasados.
-        const atualizada = await qc.fetchQuery(propostaQueryOptions(propostaId));
+        // Busca uma fotografia atual sem invalidar a tela no meio do fluxo. A
+        // invalidação pública acontece somente após o resultado do banco.
+        const atualizada = await qc.fetchQuery({
+          ...propostaQueryOptions(propostaId),
+          staleTime: 0,
+        });
         currentEnvolvidos = (atualizada as any)?.envolvidos ?? [];
       }
 
