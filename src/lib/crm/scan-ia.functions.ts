@@ -383,7 +383,7 @@ export const processarLeitura = createServerFn({ method: "POST" })
       const tipoInformado = (leitura.tipo_documento ?? "").trim();
 
       const instrucaoBase =
-        `Você é um Especialista de Crédito Imobiliário Sênior e Consultor de IA da Agilliza. Sua missão é fornecer análises técnicas, profissionais e altamente sofisticadas.\n` +
+        `Você é um Especialista de Crédito Imobiliário Sênior da Agilliza. Sua missão é fornecer análises técnicas, profissionais e altamente sofisticadas.\n` +
         `PASSO 1 — Identifique e classifique o documento com precisão absoluta em um destes tipos: ${TIPOS_DOCUMENTO.join(", ")}.\n` +
         `PASSO 2 — Realize OCR de alta fidelidade e extração estruturada dos campos previstos:\n${mapaTipos}\n` +
         `DIRETRIZES DE QUALIDADE:\n` +
