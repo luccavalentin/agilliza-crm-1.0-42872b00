@@ -260,7 +260,7 @@ function ConsultorIaPage() {
         style={{ backgroundImage: 'radial-gradient(var(--primary) 1px, transparent 1px)', backgroundSize: '32px 32px' }} 
       />
 
-      <header className="relative z-10 mx-auto w-full max-w-5xl">
+      <header className="relative z-10 mx-auto w-full max-w-5xl py-4">
         <div className="flex flex-col items-center gap-6 text-center">
           <div className="group relative">
             <div className="absolute -inset-2 rounded-[2rem] bg-gradient-to-tr from-primary/30 to-primary/5 opacity-0 blur-2xl transition duration-700 group-hover:opacity-100" />
