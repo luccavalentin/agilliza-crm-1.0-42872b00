@@ -725,33 +725,15 @@ export async function enviarSimulacaoImpl({
       // POST da simulação logo abaixo. Abortar aqui deixaria os bancos presos
       // em "aguardando" para sempre.
       try {
-        const conjugeBloco =
-          possuiConjuge
-            ? {
-                nomeConjuge: sim.nome_conjuge ?? undefined,
-                cpfConjuge: (sim.cpf_conjuge ?? "").replace(/\D/g, "") || undefined,
-                emailConjuge: sim.email_conjuge ?? undefined,
-                celularConjuge: (sim.celular_conjuge ?? "").replace(/\D/g, "") || undefined,
-                rendaConjuge: num(sim.renda_conjuge),
-                dataNascimentoConjuge: sim.data_nascimento_conjuge ?? undefined,
-                tipoEstadoCivilConjuge: sim.estado_civil_conjuge
-                  ? { id: sim.estado_civil_conjuge }
-                  : sim.estado_civil
-                    ? { id: sim.estado_civil }
-                    : undefined,
-              }
-            : {};
-
-        const updatePayload = {
-          ...dadosOportunidade,
-          tipoEstadoCivil: sim.estado_civil ? { id: sim.estado_civil } : undefined,
-          fgCompoeRenda: compoeRenda,
-          ...conjugeBloco,
-        };
-
-        // Remove campos undefined para evitar que a API receba "undefined" como string ou falhe no parsing
+        // O PUT /oportunidade aceita EXCLUSIVAMENTE estes três campos.
+        // Estado civil, cônjuge e composição de renda são enviados no
+        // PUT /participante (garantirDadosParticipantesSimulacao).
         const cleanedPayload = Object.fromEntries(
-          Object.entries(updatePayload).filter(([_, v]) => v !== undefined)
+          Object.entries({
+            valorImovel: num(sim.valor_imovel),
+            valorFinanciamento: num(sim.valor_financiamento),
+            prazo: num(sim.prazo),
+          }).filter(([, v]) => v !== undefined && Number(v) > 0),
         );
 
         await chamarIntegracao<any>(

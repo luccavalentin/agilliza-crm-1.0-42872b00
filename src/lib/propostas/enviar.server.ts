@@ -253,15 +253,14 @@ async function renovarSimulacaoSeConsumida({
     valorTotalFinanciamento: valorFinanciamento + valorDespesasFinanciadas,
     fgAutorizacaoDados: true,
   };
+  // O PUT /oportunidade aceita EXCLUSIVAMENTE valorImovel, valorFinanciamento
+  // e prazo. Qualquer outro campo (estado civil, regime de casamento, cônjuge,
+  // dados do imóvel) provoca HTTP 500 no provedor e mascara a mensagem real do
+  // banco. Estado civil/cônjuge vão no PUT /participante.
   const payloadOportunidadeAtual: Record<string, unknown> = {
     valorImovel,
     valorFinanciamento,
     prazo,
-    tipoEstadoCivil: familiaAtual.estadoCivil ? { id: familiaAtual.estadoCivil } : undefined,
-    regimeCasamento: prop.regime_casamento ? { id: prop.regime_casamento } : undefined,
-    fgCompoeRenda: familiaAtual.compoeRenda,
-
-    fgAutorizacaoDados: true,
   };
   // A oportunidade pode ter sido criada quando o cliente ainda estava casado e
   // depois o cadastro foi corrigido para solteiro. Se não sincronizarmos esse
@@ -769,6 +768,45 @@ async function enviarPropostaImplInner({
     throw new Error(
       "Proposta sem oportunidade vinculada. Origine a partir de uma simulação enviada ao banco.",
     );
+  }
+
+  // Uma oportunidade cancelada no banco (tipoSituacao "C") não aceita novas
+  // propostas: o provedor devolve erro genérico e a proposta fica "enviada"
+  // sem nunca chegar ao banco. Verificamos ANTES de qualquer envio.
+  {
+    const ctxCheck = {
+      simulacao_id: prop.simulacao_id,
+      proposta_id: propostaId,
+      correspondente_id: prop.correspondente_id,
+    };
+    try {
+      const resp = await chamarIntegracao<any>(
+        `/oportunidade/${prop.homefin_id_oportunidade}`,
+        "GET",
+        undefined,
+        ctxCheck,
+      );
+      const op = resp?.oportunidade ?? resp?.data ?? resp ?? {};
+      const situacao = String(
+        op?.tipoSituacao?.id ?? op?.tipoSituacao ?? op?.situacao ?? "",
+      ).toUpperCase();
+      if (situacao === "C") {
+        await supabase
+          .from("propostas")
+          .update({
+            ultimo_erro:
+              "A oportunidade bancária desta proposta foi cancelada no banco. Gere uma nova simulação para criar uma oportunidade válida.",
+          } as any)
+          .eq("id", propostaId);
+        throw new IntegracaoBancariaError(
+          "A oportunidade bancária desta proposta foi cancelada no banco e não pode mais receber envios. Gere uma nova simulação para criar uma oportunidade válida.",
+        );
+      }
+    } catch (e) {
+      // Só bloqueia quando a checagem CONFIRMOU o cancelamento; indisponibilidade
+      // da consulta nunca pode travar o envio.
+      if (e instanceof IntegracaoBancariaError) throw e;
+    }
   }
 
   const statusAtual = prop.status as PropostaStatus;
