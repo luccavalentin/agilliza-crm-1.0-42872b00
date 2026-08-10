@@ -342,23 +342,25 @@ function Pagina() {
     if (enviouAutoRef.current) return;
     enviouAutoRef.current = true;
     setEnviandoAuto(true);
-    const tid = toast.loading("Enviando proposta ao banco…");
     try {
-      const r = await enviarAutoFn({ data: { proposta_id: id } });
+      // Passa pelo gate único: ressincroniza CRM → proposta, valida os campos
+      // obrigatórios e, se faltar algo, abre o cadastro em vez de enviar.
+      const r = await handleEnviarHook({
+        propostaId: id,
+        envolvidos,
+        onCadastroIncompleto,
+      });
+      if (!r) {
+        // Bloqueado por cadastro incompleto — libera nova tentativa.
+        enviouAutoRef.current = false;
+        return;
+      }
       const numero =
         r?.bancos?.find((x: any) => x?.numero_proposta_banco)?.numero_proposta_banco ?? null;
-      toast.success(
-        numero
-          ? `Proposta enviada ao banco. Nº do banco: ${numero}`
-          : "Proposta enviada ao banco. O número será atualizado em instantes.",
-        { id: tid },
-      );
-      await qc.invalidateQueries({ queryKey: ["proposta", id] });
+      if (numero) toast.success(`Nº do banco: ${numero}`);
       setTab("RESUMO");
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Falha ao enviar ao banco.", { id: tid });
-      // Se o envio falhar (ex.: cadastro incompleto detectado no servidor),
-      // permite nova tentativa.
+    } catch {
+      // Mensagem já exibida pelo gate; permite nova tentativa.
       enviouAutoRef.current = false;
     } finally {
       setEnviandoAuto(false);
