@@ -551,29 +551,76 @@ function Pagina() {
           const erroMsg = b.mensagem_banco || b.mensagem;
           if (!erroMsg && !b.retorno_integracao) return null;
 
+          // 3. APROVEITAR O LIMITE QUE O SANTANDER DEVOLVE
+          const originalMsg = String(b.retorno_integracao || "");
+          const santanderRangeMatch = originalMsg.match(/"max":\s*(\d+)/);
+          const valorMax = santanderRangeMatch ? Number(santanderRangeMatch[1]) : null;
+          const valorInformadoMatch = originalMsg.match(/"valueProvided":\s*(\d+)/);
+          const valorInformado = valorInformadoMatch ? Number(valorInformadoMatch[1]) : null;
+          const diferenca = valorInformado && valorMax ? valorInformado - valorMax : 0;
+
           return (
             <div
               key={b.id}
               className={cn(
-                "mt-4 flex flex-col gap-3 rounded-xl border p-4 mx-5 mb-5",
+                "mt-4 flex flex-col gap-3 rounded-xl border p-4 mx-5 mb-5 shadow-sm",
                 b.status_banco === "erro"
                   ? "border-destructive/20 bg-destructive/5"
+                  : b.status_banco === "recusada" && valorMax
+                  ? "border-warning/30 bg-warning/5"
                   : "border-primary/20 bg-primary/5",
               )}
             >
               <div className="flex items-start gap-3">
                 {b.status_banco === "erro" ? (
                   <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-destructive" />
+                ) : b.status_banco === "recusada" && valorMax ? (
+                  <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-warning" />
                 ) : (
                   <Info className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
                 )}
                 <div className="flex-1 space-y-1">
-                  <p className="text-sm font-semibold text-foreground">
-                    Retorno do {b.nome_banco}
-                  </p>
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-semibold text-foreground">
+                      Retorno do {b.nome_banco}
+                    </p>
+                    {b.status_banco === "recusada" && valorMax && (
+                       <span className="text-[10px] font-bold uppercase tracking-wider text-warning">Regra de limite</span>
+                    )}
+                  </div>
+                  
                   <p className="text-sm leading-relaxed text-muted-foreground">
                     {erroMsg || "O banco não informou o motivo detalhado."}
                   </p>
+
+                  {b.status_banco === "recusada" && valorMax && (
+                    <div className="mt-2 space-y-2 border-t border-warning/20 pt-2">
+                      <p className="text-xs font-medium text-warning-foreground">
+                        Diferença: <span className="font-bold">{formatBRL(diferenca)}</span> acima do limite deste banco.
+                      </p>
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="h-8 gap-1.5 text-[11px] font-bold uppercase tracking-wider border-warning/50 text-warning-foreground hover:bg-warning/10"
+                        onClick={async () => {
+                          const tid = toast.loading("Ajustando valor e reenviando...");
+                          try {
+                            const { error: updErr } = await supabase
+                              .from("propostas")
+                              .update({ valor_financiamento: valorMax } as any)
+                              .eq("id", id);
+                            if (updErr) throw updErr;
+                            await handleEnviarHook({ propostaId: id, bancoId: b.banco_id });
+                            toast.success(`Proposta ajustada para ${formatBRL(valorMax)} e reenviada!`, { id: tid });
+                          } catch (e: any) {
+                            toast.error(e.message || "Falha ao ajustar e reenviar.", { id: tid });
+                          }
+                        }}
+                      >
+                         Ajustar para {formatBRL(valorMax)} e reenviar
+                      </Button>
+                    </div>
+                  )}
                   
                   {(b.retorno_integracao || b.codigo_situacao_banco) && (
                     <div className="mt-3">
@@ -784,9 +831,13 @@ function Pagina() {
               envolvidos: envolvidosAtualizados,
               onCadastroIncompleto: (env: any) => setParticipanteModal(env),
             });
-            // Só fecha quando o envio realmente concluiu (o gate devolve
-            // undefined quando bloqueou por cadastro incompleto).
-            if (r) setParticipanteModal(null);
+            
+            // 2. O MODAL NÃO FECHA APÓS ENVIAR (CORREÇÃO)
+            // Fechamos o modal e voltamos para o Resumo para exibir o resultado.
+            if (r) {
+              setParticipanteModal(null);
+              setTab("RESUMO");
+            }
           } catch (e: any) {
             // O gate de envio já mostra o motivo real retornado pelo banco.
             if (!enviandoAoBanco) {
