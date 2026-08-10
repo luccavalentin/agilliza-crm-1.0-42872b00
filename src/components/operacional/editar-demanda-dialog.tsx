@@ -115,7 +115,7 @@ export function EditarDemandaDialog({
             Atualize as informações e, se necessário, reconfigure o prazo (SLA).
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-4">
+        <div className="brand-scroll scroll-shadow-bottom flex-1 space-y-4 overflow-y-auto px-6 py-4">
           <div className="space-y-1.5">
             <Label>Título</Label>
             <Input value={titulo} onChange={(e) => setTitulo(e.target.value)} />
