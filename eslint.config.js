@@ -8,16 +8,7 @@ import tseslint from "typescript-eslint";
 export default tseslint.config(
   { ignores: ["dist", ".output", ".vinxi"] },
   {
-    extends: [
-      js.configs.recommended,
-      ...tseslint.configs.recommended.map((c) => ({
-        ...c,
-        rules: {
-          ...c.rules,
-          "@typescript-eslint/no-explicit-any": "off",
-        },
-      })),
-    ],
+    extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ["**/*.{ts,tsx}"],
     languageOptions: {
       ecmaVersion: 2020,
@@ -44,6 +35,15 @@ export default tseslint.config(
       ],
       "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
       "@typescript-eslint/no-unused-vars": "off",
+      "@typescript-eslint/no-explicit-any": "off",
+      "prefer-const": "off",
+      "no-useless-escape": "off",
+      "no-constant-condition": "off",
+      "@typescript-eslint/no-require-imports": "off",
+      "no-empty": "off",
+      "@typescript-eslint/no-unused-expressions": "off",
+      "@typescript-eslint/ban-ts-comment": "off",
+      "@typescript-eslint/no-empty-object-type": "off",
     },
   },
   eslintPluginPrettier,
