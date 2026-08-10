@@ -946,24 +946,59 @@ export const duplicarSimulacao = createServerFn({ method: "POST" })
 export const enviarSimulacaoBanco = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
-    z
-      .object({
-        simulacao_id: z.string().uuid(),
-        banco_ids: z.array(z.string().uuid()).optional(),
-      })
-      .parse(d),
+    z.object({
+      simulacao_id: z.string().uuid(),
+      banco_ids: z.array(z.string().uuid()).optional(),
+    }).parse(d)
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const ip = getRequestHeader("x-forwarded-for") ?? null;
     const { enviarSimulacaoImpl } = await import("./enviar.server");
-    return enviarSimulacaoImpl({
-      simulacaoId: data.simulacao_id,
-      userId,
-      ip,
-      supabase,
-      bancoIds: data.banco_ids,
-    });
+
+    // Identifica se há uma simulação secundária vinculada (comparativo de CPF)
+    const { data: sim } = await supabase
+      .from("simulacoes")
+      .select("id, agrupador_id")
+      .eq("id", data.simulacao_id)
+      .maybeSingle();
+
+    if (!sim) throw new Error("Simulação não encontrada.");
+
+    // Se tiver agrupador_id, buscamos o par para enviar ambos de forma atômica
+    const idsParaEnviar = [sim.id];
+    if (sim.agrupador_id) {
+      const { data: par } = await supabase
+        .from("simulacoes")
+        .select("id")
+        .eq("agrupador_id", sim.agrupador_id)
+        .neq("id", sim.id)
+        .is("deleted_at", null)
+        .maybeSingle();
+      if (par) idsParaEnviar.push(par.id);
+    }
+
+    const resultados = [];
+    for (const sid of idsParaEnviar) {
+      try {
+        const res = await enviarSimulacaoImpl({
+          simulacaoId: sid,
+          userId,
+          ip,
+          supabase,
+          bancoIds: data.banco_ids,
+        });
+        resultados.push({ id: sid, ...res });
+      } catch (e) {
+        console.error(`[enviarSimulacaoBanco] Falha atômica no ID ${sid}:`, e);
+        // Se for a simulação principal disparada pelo usuário, estoura o erro.
+        // Se for a secundária, o log de erro já foi gravado no banco pelo enviarSimulacaoImpl.
+        if (sid === data.simulacao_id) throw e;
+        resultados.push({ id: sid, status: "erro_banco", erro: String(e) });
+      }
+    }
+
+    return resultados.find(r => r.id === data.simulacao_id);
   });
 
 export const reenviarSimulacaoBanco = enviarSimulacaoBanco;
