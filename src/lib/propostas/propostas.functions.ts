@@ -193,6 +193,7 @@ export const listarPropostas = createServerFn({ method: "GET" })
     );
     const imobPorCliente = new Map<string, string>();
     const corrPorCliente = new Map<string, string>();
+    const comPorCliente = new Map<string, string>();
     const parceiroIds = new Set<string>();
     if (clienteIds.length) {
       const { data: vinc } = await supabase
