@@ -274,27 +274,21 @@ export const criarSimulacao = createServerFn({ method: "POST" })
 
 
 
-    const { data: prof } = await supabase
+    const { correspondente_id } = await supabase
       .from("profiles")
       .select("correspondente_id")
       .eq("id", userId)
-      .maybeSingle();
-    const correspondente_id = prof?.correspondente_id;
-    if (!correspondente_id) throw new Error("Sua conta ainda não está vinculada a um correspondente. Solicite ao administrador que conclua o vínculo antes de usar este módulo.");
+      .single()
+      .then(r => r.data ?? {});
+    
+    if (!correspondente_id) throw new Error("Correspondente não vinculado.");
 
-    if (data.modo === "completa" && !dd.email_verificado_em) {
-      // permite quando cliente do CRM já verificado; senão exige OTP
-      // (validação de bloqueio ocorre no enviarSimulacaoBanco)
-    }
-
-    // Resolve/insere cliente — grava direto no CRM, mesmo que o usuário não
-    // tenha permissão crm.clientes:create (usa client admin com escopo do correspondente).
-    // Importante: quando o titular é invertido na tela, `cliente_id` ainda pode
-    // apontar para o titular original. Por isso a referência da simulação deve
-    // ser recalculada pelo CPF/CNPJ atual e o cônjuge também deve virar cliente.
-    let cliente_id = dd.cliente_id ?? null;
-    const clienteOrigemId = cliente_id;
-    const casado = Boolean(dd.possui_conjuge);
+    const casado = dd.estado_civil === "CA" || dd.estado_civil === "UE";
+    const possuiConjugeMinimo = Boolean(dd.nome_conjuge) && 
+                                Boolean(dd.cpf_conjuge) && 
+                                Boolean(dd.data_nascimento_conjuge);
+    
+    const testarAmbos = data.modo === "completa" && casado && possuiConjugeMinimo;
     const limparDocumento = (v?: string | null) => (v ?? "").replace(/\D/g, "");
 
     const upsertClienteCRM = async (params: {
