@@ -126,8 +126,9 @@ function Pagina() {
   const [escopo, setEscopo] = useState<"todas" | "minhas">("minhas");
   const [q, setQ] = useState("");
   const [busca, setBusca] = useState("");
-  const [dataInicio, setDataInicio] = useState("");
-  const [dataFim, setDataFim] = useState("");
+  const [dataInicio, setDataInicio] = useState(padrao.inicio);
+  const [dataFim, setDataFim] = useState(padrao.fim);
+
   const [respFiltro, setRespFiltro] = useState("todos");
   const [corretorFiltro, setCorretorFiltro] = useState("todos");
   const [imobFiltro, setImobFiltro] = useState("todos");
@@ -184,8 +185,9 @@ function Pagina() {
   function limparFiltros() {
     setQ("");
     setBusca("");
-    setDataInicio("");
-    setDataFim("");
+    setDataInicio(padrao.inicio);
+    setDataFim(padrao.fim);
+
     setEscopo("minhas");
     setRespFiltro("todos");
     setCorretorFiltro("todos");
