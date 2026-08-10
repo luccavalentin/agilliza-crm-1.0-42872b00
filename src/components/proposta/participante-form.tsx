@@ -288,7 +288,15 @@ export function ParticipanteDialog({
                   mostrarIdentificacaoExtra={false}
                   idBanco={idBanco}
                 />
+              </div>
+            </div>
+          )}
 
+          {!ehConjuge && nomeConjugeExistente && ESTADO_CIVIL_COM_REGIME.has(f.estado_civil) && (
+            <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 sm:p-4">
+              <div className="flex items-center gap-2 text-sm text-primary font-medium">
+                <CheckCircle2 className="h-4 w-4" />
+                Cônjuge cadastrado como participante: {nomeConjugeExistente}
               </div>
             </div>
           )}
