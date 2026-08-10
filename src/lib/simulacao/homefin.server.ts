@@ -169,16 +169,14 @@ interface TokenInfo {
 }
 
 /**
- * Cache do token em memória do worker.
- * TTL conservador (25 min) porque o banco pode expirar o JWT antes de 1h.
- * A obtenção é "single-flight": chamadas concorrentes compartilham a MESMA
- * requisição de token. Sem isso, o polling paralelo de propostas disparava
- * vários `/auth/token` ao mesmo tempo e o banco invalidava os tokens
- * anteriores, gerando 401 "Token JWT expirado" em cascata.
+ * Cache do token em memória do worker (L1).
+ * Em Cloudflare Workers, a memória do módulo é efêmera e isolada por requisição.
+ * O cache real (L2) reside na tabela `homefin_auth_cache` no Supabase.
  */
 let _tokenCache: { info: TokenInfo; expiresAt: number } | null = null;
 let _tokenEmVoo: Promise<TokenInfo> | null = null;
-const _pollingQueue = Promise.resolve();
+const CACHE_ID = '00000000-0000-0000-0000-000000000000'; // Linha única de cache
+
 
 async function solicitarToken(): Promise<TokenInfo> {
   const { base, secretId, secretKey } = config();
