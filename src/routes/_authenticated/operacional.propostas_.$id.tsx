@@ -225,42 +225,6 @@ export const Route = createFileRoute("/_authenticated/operacional/propostas_/$id
       );
     }
 
-      return (
-        <div className="p-8 max-w-2xl mx-auto space-y-6">
-          <div className="flex items-center gap-3 text-destructive">
-            <Trash2 className="h-8 w-8" />
-            <h1 className="text-2xl font-bold">Esta proposta foi excluída</h1>
-          </div>
-          
-          <div className="bg-muted p-6 rounded-lg space-y-4 text-sm border shadow-sm">
-            <div className="grid grid-cols-[120px_1fr] gap-2">
-              <span className="font-semibold text-muted-foreground text-right">Data:</span>
-              <span>{formatarDataHora(prop.deleted_at)}</span>
-              
-              <span className="font-semibold text-muted-foreground text-right">Usuário:</span>
-              <span>{prop.nome_excluidor || prop.deleted_by || "Não identificado"}</span>
-              
-              {prop.deleted_motivo && (
-                <>
-                  <span className="font-semibold text-muted-foreground text-right">Motivo:</span>
-                  <span className="italic">"{prop.deleted_motivo}"</span>
-                </>
-              )}
-            </div>
-          </div>
-
-          <div className="flex flex-wrap gap-3 pt-4">
-            <Button variant="outline" onClick={() => router.navigate({ to: "/operacional/propostas" })}>
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Voltar para a lista
-            </Button>
-            
-            <RestaurarBotao id={id} />
-            <ExcluirDefinitivoBotao id={id} />
-          </div>
-        </div>
-      );
-    }
 
     function RestaurarBotao({ id }: { id: string }) {
       const router = useRouter();
