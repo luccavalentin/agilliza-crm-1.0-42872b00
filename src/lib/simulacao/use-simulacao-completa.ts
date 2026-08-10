@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { mensagemCamposPendentes } from "@/lib/simulacao/rotulos-campos";
 import { toast } from "sonner";
-import { avaliarRendaMinima, TAXA_MIP_MES, TAXA_DFI_MES, TAXA_ADMIN_MES } from "@/lib/simulacao/renda";
+import { avaliarRendaMinima, TAXA_MIP_MES, TAXA_DFI_MES, TAXA_ADMIN_MES, limitesLtv } from "@/lib/simulacao/renda";
 import { taxaAnoDeBanco } from "@/lib/simulacao/simulacao-rapida";
 import { completaSchema } from "@/lib/simulacao/schemas";
 import { formatBRL, maskCpfCnpj, maskCelular } from "@/lib/simulacao/format";
@@ -331,19 +331,21 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
   useEffect(() => {
     const imovel = Number(f.valor_imovel) || 0;
     if (imovel <= 0) return;
-    const finMax = Math.floor(imovel * ltvMax);
+    const { financiamentoMaximo, entradaMinima } = limitesLtv(imovel, ltvMax);
     const finAtual = Number(f.valor_financiamento) || 0;
 
     // Se o financiamento atual exceder o máximo permitido pelo LTV,
     // ajustamos a entrada para cobrir a diferença.
-    // Usamos uma margem de segurança de 1 real para evitar erros de ponto flutuante/centavos no banco.
-    if (finAtual > finMax) {
-      const novaEntrada = imovel - finMax + 1;
+    // Usamos comparação em centavos para evitar resíduos de float.
+    const finAtualCentavos = Math.round(finAtual * 100);
+    const finMaxCentavos = Math.round(financiamentoMaximo * 100);
+
+    if (finAtualCentavos > finMaxCentavos) {
       setEntradaTocada(true);
       setF((prev) => ({
         ...prev,
-        valor_entrada: novaEntrada,
-        valor_financiamento: imovel - novaEntrada,
+        valor_entrada: entradaMinima,
+        valor_financiamento: financiamentoMaximo,
       }));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
