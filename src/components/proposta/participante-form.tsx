@@ -188,9 +188,9 @@ export function ParticipanteDialog({
     }
   }
 
-  async function submit() {
+  async function submit(enviar: boolean) {
     setTentouEnviar(true);
-    
+
     // 1. Ressincroniza antes de qualquer validação (P1.g)
     if (propostaId && !salvandoInterno) {
       setSalvandoInterno(true);
@@ -210,15 +210,7 @@ export function ParticipanteDialog({
     const faltando = camposFaltantes(f);
     setErros(faltando);
 
-    const c: ParticipanteForm | null = (precisaConjuge && conjugeTemDados)
-      ? {
-          ...conjuge,
-          tipo_qualificacao: "TI",
-          tipo_pessoa: "F",
-          estado_civil: f.estado_civil,
-          regime_casamento: f.regime_casamento,
-        }
-      : null;
+    const c: ParticipanteForm | null = conjugeParaSalvar;
     const faltandoC = c ? camposFaltantes(c) : new Set<string>();
     setErrosC(faltandoC);
 
@@ -230,12 +222,13 @@ export function ParticipanteDialog({
     }
 
     const conjugePayload = c ? formParaEnvolvido(c) : null;
-    await onSalvar(formParaEnvolvido(f), conjugePayload);
-    
+    await onSalvar(formParaEnvolvido(f), conjugePayload, { enviar });
+
     // Após salvar, revalida para atualizar o estado visual se permanecer no modal
     setTentouEnviar(true);
     onSalvoPermanecer?.();
   }
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
