@@ -65,7 +65,7 @@ export function ResultadoInlineCompleta({ simulacaoId, onFechar, isSecundaria }:
   const qc = useQueryClient();
   const [reenviandoBanco, setReenviandoBanco] = useState<string | null>(null);
   const [criandoBanco, setCriandoBanco] = useState<string | null>(null);
-  const { enviar: handleEnviarHook, busy: enviandoBanco } = useEnviarProposta();
+  const { enviar: handleEnviarHook, busy: enviandoBanco, busyBancoId } = useEnviarProposta();
   const enviarPropostaFn = useServerFn(enviarPropostaHomeFin);
   const jaBaixou = useRef(false);
 
@@ -375,8 +375,8 @@ export function ResultadoInlineCompleta({ simulacaoId, onFechar, isSecundaria }:
                             disabled={b.status_banco !== "simulada" || criandoBanco !== null || enviandoBanco}
                             onClick={() => enviarAprovacao(b.banco_id)}
                           >
-                            {criandoBanco === b.banco_id || (enviandoBanco && criandoBanco === b.banco_id) ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Send className="mr-1 h-4 w-4" />}
-                            {criandoBanco === b.banco_id || (enviandoBanco && criandoBanco === b.banco_id) ? "Enviando…" : "Enviar Aprovação"}
+                            {criandoBanco === b.banco_id || (enviandoBanco && busyBancoId === b.banco_id) ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Send className="mr-1 h-4 w-4" />}
+                            {criandoBanco === b.banco_id || (enviandoBanco && busyBancoId === b.banco_id) ? "Enviando…" : "Enviar Aprovação"}
                           </Button>
                         )}
                       </div>

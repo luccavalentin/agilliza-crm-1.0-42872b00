@@ -123,7 +123,7 @@ export function ResultadoInlineAmbos({ simulacaoIdSac, simulacaoIdPrice, onFecha
   const qc = useQueryClient();
   const [reenviandoBanco, setReenviandoBanco] = useState<string | null>(null);
   const [criandoBanco, setCriandoBanco] = useState<string | null>(null);
-  const { enviar: handleEnviarHook } = useEnviarProposta();
+  const { enviar: handleEnviarHook, busy: enviandoBanco, busyBancoId } = useEnviarProposta();
   const jaBaixou = useRef(false);
 
   const qSac = useSimQuery(simulacaoIdSac);
@@ -382,11 +382,11 @@ export function ResultadoInlineAmbos({ simulacaoIdSac, simulacaoIdPrice, onFecha
                           <Button
                             size="sm"
                             className="bg-gradient-to-b from-primary to-primary/90 shadow-sm"
-                            disabled={b.status_banco !== "simulada" || criandoBanco !== null}
+                            disabled={b.status_banco !== "simulada" || criandoBanco !== null || enviandoBanco}
                             onClick={() => enviarAprovacao(l.simId, b.banco_id)}
                           >
-                            <Send className="mr-1 h-4 w-4" />
-                            {criandoBanco === b.banco_id ? "Enviando…" : "Enviar Aprovação"}
+                            {criandoBanco === b.banco_id || (enviandoBanco && busyBancoId === b.banco_id) ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Send className="mr-1 h-4 w-4" />}
+                            {criandoBanco === b.banco_id || (enviandoBanco && busyBancoId === b.banco_id) ? "Enviando…" : "Enviar Aprovação"}
                           </Button>
                         )}
                       </div>

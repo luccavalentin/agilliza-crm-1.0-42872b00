@@ -29,6 +29,7 @@ export function useEnviarProposta() {
   const navigate = router.navigate;
   const qc = useQueryClient();
   const [statusPorBanco, setStatusPorBanco] = useState<Record<string, StatusEnvioBanco>>({});
+  const [busyBancoId, setBusyBancoId] = useState<string | null>(null);
   const [tempoInicio, setTempoInicio] = useState<number | null>(null);
   
   const enviarFnDefault = useServerFn(enviarPropostaHomeFin);
@@ -60,6 +61,7 @@ export function useEnviarProposta() {
   }) => {
     const fnParaUsar = customEnviarFn || enviarFnDefault;
     
+    setBusyBancoId(bancoId);
     atualizarStatus(bancoId, { 
       status: "loading", 
       etapa: "preparando", 
@@ -96,6 +98,7 @@ export function useEnviarProposta() {
 
       if (pendencias.length > 0) {
         clearInterval(interval);
+        setBusyBancoId(null);
         atualizarStatus(bancoId, { 
           status: "error", 
           mensagem: "Cadastro incompleto" 
@@ -116,6 +119,7 @@ export function useEnviarProposta() {
       atualizarStatus(bancoId, { etapa: "aguardando", etapaNumero: 5, mensagem: "Aguardando retorno final..." });
 
       clearInterval(interval);
+      setBusyBancoId(null);
       
       const protocolo = r?.bancos?.find((b: any) => b.banco_id === bancoId)?.numero_proposta_banco;
       
@@ -131,6 +135,7 @@ export function useEnviarProposta() {
       return r;
     } catch (e) {
       clearInterval(interval);
+      setBusyBancoId(null);
       const msg = e instanceof Error ? e.message : "Falha ao enviar proposta.";
       atualizarStatus(bancoId, { 
         status: "error", 
@@ -142,5 +147,5 @@ export function useEnviarProposta() {
 
   const limparStatus = useCallback(() => setStatusPorBanco({}), []);
 
-  return { enviar, busy, statusPorBanco, limparStatus };
+  return { enviar, busy, busyBancoId, statusPorBanco, limparStatus };
 }
