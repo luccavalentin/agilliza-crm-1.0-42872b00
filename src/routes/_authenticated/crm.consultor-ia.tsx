@@ -264,7 +264,7 @@ function ConsultorIaPage() {
         <div className="flex flex-col items-center gap-4 text-center">
           <div className="group relative">
             <div className="absolute -inset-2 rounded-[2rem] bg-gradient-to-tr from-primary/30 to-primary/5 opacity-0 blur-2xl transition duration-700 group-hover:opacity-100" />
-            <div className="relative flex size-20 items-center justify-center rounded-[1.5rem] bg-card shadow-[0_20px_50px_-12px_rgba(0,15,159,0.15)] ring-1 ring-primary/10 transition-transform duration-500 group-hover:scale-105">
+            <div className="relative flex size-16 items-center justify-center rounded-[1.2rem] bg-card shadow-[0_15px_40px_-12px_rgba(0,15,159,0.15)] ring-1 ring-primary/10 transition-transform duration-500 group-hover:scale-105">
               <Bot className="size-10 text-primary" />
               <div className="absolute -bottom-1 -right-1 size-5 rounded-full border-[3px] border-card bg-emerald-500 shadow-lg" />
             </div>
