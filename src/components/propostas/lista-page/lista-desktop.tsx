@@ -131,7 +131,7 @@ export function ListaDesktop({
                   }
                   className={cn(
                     "group/row relative cursor-pointer transition-all duration-300 ease-out hover:z-10 hover:scale-[1.005] hover:bg-[var(--banco-tint)] hover:shadow-[inset_3px_0_0_0_var(--banco),0_12px_28px_-8px_rgba(0,0,0,0.12)]",
-                    p.deleted_at && "opacity-75 grayscale-[0.5] hover:grayscale-0 hover:opacity-100"
+                    p.deleted_at && "opacity-60 grayscale bg-muted/20 hover:grayscale-0 hover:opacity-100"
                   )}
                   onClick={() =>
                     router.navigate({ to: "/operacional/propostas/$id", params: { id: p.id } })
