@@ -311,11 +311,11 @@ export function ComparativoBancos({
                     <TableCell className="py-3 text-right text-sm tabular-nums whitespace-nowrap">
                       {b.taxa_juros_ano != null ? formatPercent(b.taxa_juros_ano / 100) : "—"}
                     </TableCell>
-                    <TableCell className="py-3 text-right text-sm font-semibold tabular-nums whitespace-nowrap">
+                    <TableCell className="py-3 text-right text-sm font-medium tabular-nums whitespace-nowrap">
                       {totalBancoTexto(b)}
                     </TableCell>
 
-                    <TableCell className="py-3 text-right text-sm tabular-nums whitespace-nowrap">
+                    <TableCell className="py-3 text-right text-sm tabular-nums whitespace-nowrap text-muted-foreground">
                       {b.valor_iof != null ? formatBRL(b.valor_iof) : "—"}
                     </TableCell>
                     <TableCell className="text-right">
