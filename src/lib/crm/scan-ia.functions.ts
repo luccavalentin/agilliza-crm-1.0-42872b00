@@ -302,7 +302,7 @@ export const processarLeitura = createServerFn({ method: "POST" })
 
     const { data: leitura } = await supabase
       .from("scan_ia_leituras")
-      .select("id, arquivo_url, tipo_documento, correspondente_id")
+      .select("id, arquivo_url, tipo_documento, tipo_confirmado, correspondente_id")
       .eq("id", data.id)
       .maybeSingle();
     if (!leitura || leitura.correspondente_id !== corr) throw new Error("Leitura não encontrada.");
