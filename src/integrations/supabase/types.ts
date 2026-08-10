@@ -6539,6 +6539,7 @@ export type Database = {
           nome_cliente: string | null
           nome_conjuge: string | null
           numero_simulacao: string
+          oportunidade_lock_em: string | null
           parceiro_id: string | null
           percentual_despesas: number | null
           possui_conjuge: boolean
@@ -6604,6 +6605,7 @@ export type Database = {
           nome_cliente?: string | null
           nome_conjuge?: string | null
           numero_simulacao: string
+          oportunidade_lock_em?: string | null
           parceiro_id?: string | null
           percentual_despesas?: number | null
           possui_conjuge?: boolean
@@ -6669,6 +6671,7 @@ export type Database = {
           nome_cliente?: string | null
           nome_conjuge?: string | null
           numero_simulacao?: string
+          oportunidade_lock_em?: string | null
           parceiro_id?: string | null
           percentual_despesas?: number | null
           possui_conjuge?: boolean
