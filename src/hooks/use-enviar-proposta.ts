@@ -1,7 +1,7 @@
-import { useState, useCallback, useMemo } from "react";
-import { useServerFn } from "@tanstack/react-start";
+import { useState, useCallback, useMemo, useRef } from "react";
 import { useRouter } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { 
   enviarPropostaHomeFin, 
@@ -9,8 +9,9 @@ import {
 } from "@/lib/propostas/propostas.functions";
 import { faltantesEnvolvido } from "@/lib/propostas/campos-obrigatorios";
 import { propostaQueryOptions } from "@/lib/propostas/queries";
+import { playChatSound } from "@/lib/chat-sound";
 
-export type EtapaEnvio = "preparando" | "participantes" | "simulacao" | "enviando" | "aguardando";
+export type EtapaEnvio = "criando" | "preparando" | "participantes" | "simulacao" | "enviando" | "aguardando";
 
 export interface StatusEnvioBanco {
   bancoId: string;
@@ -22,15 +23,15 @@ export interface StatusEnvioBanco {
   propostaId?: string;
   numeroProposta?: string;
   tempoDecorrido?: number;
+  tipoStatus?: string;
 }
 
 export function useEnviarProposta() {
   const router = useRouter();
-  const navigate = router.navigate;
   const qc = useQueryClient();
   const [statusPorBanco, setStatusPorBanco] = useState<Record<string, StatusEnvioBanco>>({});
   const [busyBancoId, setBusyBancoId] = useState<string | null>(null);
-  const [tempoInicio, setTempoInicio] = useState<number | null>(null);
+  const clickLock = useRef<Record<string, boolean>>({});
   
   const enviarFnDefault = useServerFn(enviarPropostaHomeFin);
   const ressincronizarFn = useServerFn(ressincronizarDadosParticipantes);
@@ -46,46 +47,70 @@ export function useEnviarProposta() {
     }));
   }, []);
 
+  const iniciarStatus = useCallback((bancoId: string) => {
+    atualizarStatus(bancoId, { 
+      status: "loading", 
+      etapa: "criando", 
+      etapaNumero: 1, 
+      mensagem: "Criando proposta...",
+      tempoDecorrido: 0
+    });
+  }, [atualizarStatus]);
+
   const enviar = useCallback(async ({ 
-    propostaId, 
+    propostaId: propIdExistente, 
     bancoId,
     envolvidos,
     onCadastroIncompleto,
-    enviarFn: customEnviarFn
+    enviarFn: customEnviarFn,
+    criarPropostaFn
   }: { 
-    propostaId: string; 
-    bancoId: string | "todos";
+    propostaId?: string; 
+    bancoId: string;
     envolvidos?: any[];
     onCadastroIncompleto?: (primeiroPendente: any) => void;
     enviarFn?: (args: { data: { proposta_id: string; banco_id?: string } }) => Promise<any>;
+    criarPropostaFn?: () => Promise<{ proposta_id: string }>;
   }) => {
+    // 5. TRAVA CONTRA CLIQUE DUPLO
+    if (clickLock.current[bancoId]) return;
+    clickLock.current[bancoId] = true;
+
     const fnParaUsar = customEnviarFn || enviarFnDefault;
-    
     setBusyBancoId(bancoId);
-    atualizarStatus(bancoId, { 
-      status: "loading", 
-      etapa: "preparando", 
-      etapaNumero: 1, 
-      mensagem: "Preparando dados...",
-      tempoDecorrido: 0
-    });
+    
+    // Inicia status se ainda não foi iniciado manualmente
+    if (!statusPorBanco[bancoId] || statusPorBanco[bancoId].status !== "loading") {
+      iniciarStatus(bancoId);
+    }
 
     const startTime = Date.now();
     const interval = setInterval(() => {
       atualizarStatus(bancoId, { tempoDecorrido: Math.round((Date.now() - startTime) / 1000) });
     }, 1000);
 
-    try {
-      // 1. Ressincronizar (etapa 1 de 5)
-      atualizarStatus(bancoId, { etapa: "preparando", etapaNumero: 1, mensagem: "Sincronizando participantes..." });
-      const res = await ressincronizarFn({ data: { proposta_id: propostaId } });
+    let currentPropostaId = propIdExistente;
 
-      // 2. Validar (etapa 2 de 5)
-      atualizarStatus(bancoId, { etapa: "participantes", etapaNumero: 2, mensagem: "Validando dados obrigatórios..." });
+    try {
+      // 1. Criar proposta se necessário (etapa 1 de 6)
+      if (!currentPropostaId && criarPropostaFn) {
+        atualizarStatus(bancoId, { etapa: "criando", etapaNumero: 1, mensagem: "Criando proposta no sistema..." });
+        const { proposta_id } = await criarPropostaFn();
+        currentPropostaId = proposta_id;
+      }
+
+      if (!currentPropostaId) throw new Error("ID da proposta não definido.");
+
+      // 2. Ressincronizar (etapa 2 de 6)
+      atualizarStatus(bancoId, { etapa: "preparando", etapaNumero: 2, mensagem: "Sincronizando participantes..." });
+      const res = await ressincronizarFn({ data: { proposta_id: currentPropostaId } });
+
+      // 3. Validar (etapa 3 de 6)
+      atualizarStatus(bancoId, { etapa: "participantes", etapaNumero: 3, mensagem: "Validando dados obrigatórios..." });
       let currentEnvolvidos = envolvidos;
       if (!currentEnvolvidos || res.alterados > 0) {
         const atualizada = await qc.fetchQuery({
-          ...propostaQueryOptions(propostaId),
+          ...propostaQueryOptions(currentPropostaId),
           staleTime: 0,
         });
         currentEnvolvidos = (atualizada as any)?.envolvidos ?? [];
@@ -99,6 +124,7 @@ export function useEnviarProposta() {
       if (pendencias.length > 0) {
         clearInterval(interval);
         setBusyBancoId(null);
+        clickLock.current[bancoId] = false;
         atualizarStatus(bancoId, { 
           status: "error", 
           mensagem: "Cadastro incompleto" 
@@ -108,44 +134,55 @@ export function useEnviarProposta() {
         return;
       }
 
-      // 3. Simulação (etapa 3 de 5)
-      atualizarStatus(bancoId, { etapa: "simulacao", etapaNumero: 3, mensagem: "Sincronizando simulação bancária..." });
+      // 4. Simulação (etapa 4 de 6)
+      atualizarStatus(bancoId, { etapa: "simulacao", etapaNumero: 4, mensagem: "Sincronizando simulação bancária..." });
 
-      // 4. Enviar (etapa 4 de 5)
-      atualizarStatus(bancoId, { etapa: "enviando", etapaNumero: 4, mensagem: "Enviando ao banco..." });
-      const r = await fnParaUsar({ data: { proposta_id: propostaId, banco_id: bancoId } });
+      // 5. Enviar (etapa 5 de 6)
+      atualizarStatus(bancoId, { etapa: "enviando", etapaNumero: 5, mensagem: "Enviando ao banco..." });
+      const r = await fnParaUsar({ data: { proposta_id: currentPropostaId, banco_id: bancoId } });
 
-      // 5. Aguardar (etapa 5 de 5)
-      atualizarStatus(bancoId, { etapa: "aguardando", etapaNumero: 5, mensagem: "Aguardando retorno final..." });
+      // 6. Aguardar (etapa 6 de 6)
+      atualizarStatus(bancoId, { etapa: "aguardando", etapaNumero: 6, mensagem: "Aguardando retorno final..." });
 
       clearInterval(interval);
       setBusyBancoId(null);
+      clickLock.current[bancoId] = false;
       
-      const protocolo = r?.bancos?.find((b: any) => b.banco_id === bancoId)?.numero_proposta_banco;
+      const bancoInfo = r?.bancos?.find((b: any) => b.banco_id === bancoId);
+      const protocolo = bancoInfo?.numero_proposta_banco;
+      const tipoStatus = bancoInfo?.status;
       
       atualizarStatus(bancoId, { 
         status: "success", 
         protocolo,
+        tipoStatus,
         propostaId: r?.proposta_id,
         numeroProposta: r?.numero_proposta,
         mensagem: protocolo ? "Enviada com sucesso" : "Aguardando confirmação"
       });
       
-      await qc.invalidateQueries({ queryKey: ["proposta", propostaId] });
+      playChatSound(); // Som ao finalizar com sucesso
+      await qc.invalidateQueries({ queryKey: ["proposta", currentPropostaId] });
       return r;
     } catch (e) {
       clearInterval(interval);
       setBusyBancoId(null);
+      clickLock.current[bancoId] = false;
       const msg = e instanceof Error ? e.message : "Falha ao enviar proposta.";
       atualizarStatus(bancoId, { 
         status: "error", 
         mensagem: msg 
       });
+      playChatSound(); // Som também no erro
       throw e;
     }
-  }, [enviarFnDefault, ressincronizarFn, qc, atualizarStatus]);
+  }, [enviarFnDefault, ressincronizarFn, qc, atualizarStatus, iniciarStatus, statusPorBanco]);
 
-  const limparStatus = useCallback(() => setStatusPorBanco({}), []);
+  const limparStatus = useCallback(() => {
+    setStatusPorBanco({});
+    clickLock.current = {};
+  }, []);
 
-  return { enviar, busy, busyBancoId, statusPorBanco, limparStatus };
+  return { enviar, busy, busyBancoId, statusPorBanco, iniciarStatus, limparStatus };
 }
+
