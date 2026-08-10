@@ -651,7 +651,7 @@ function Pagina() {
         return;
       }
       const numero =
-        r?.bancos?.find((x: any) => x?.numero_proposta_banco)?.numero_proposta_banco ?? null;
+        (r?.bancos || [])?.find((x: any) => x?.numero_proposta_banco)?.numero_proposta_banco ?? null;
       if (numero) toast.success(`Nº do banco: ${numero}`);
       setTab("RESUMO");
     } catch {
