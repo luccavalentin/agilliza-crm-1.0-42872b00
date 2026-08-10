@@ -353,16 +353,18 @@ async function executarChamada<T = unknown>(
 
   let resp: Response;
   try {
-    let tokenAtual = (await obterToken()).token;
+    let tokenInfo = await obterToken();
+    let tokenAtual = tokenInfo.token;
     resp = await executar(tokenAtual);
 
     // Token expirado/invalidado (401): renova e repete até 2 vezes.
     // A renovação é single-flight, então chamadas concorrentes reaproveitam
     // o mesmo token novo em vez de invalidarem umas às outras.
     for (let tentativa = 0; tentativa < 2 && resp.status === 401; tentativa++) {
-      const cacheado = _tokenCache?.info.token;
-      const novo =
-        cacheado && cacheado !== tokenAtual ? cacheado : (await obterToken(true)).token;
+      // Tenta reler cache L1/L2 primeiro (outro isolate pode ter renovado)
+      tokenInfo = await obterToken(true); 
+      const novo = tokenInfo.token;
+      
       if (novo === tokenAtual) break;
       tokenAtual = novo;
       resp = await executar(tokenAtual);
