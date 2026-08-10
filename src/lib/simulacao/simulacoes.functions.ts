@@ -530,13 +530,21 @@ export const criarSimulacao = createServerFn({ method: "POST" })
 
     let id_secundario: string | undefined;
 
-    // Só cria a simulação invertida quando o cônjuge tem dados mínimos para
-    // ser titular (CPF, nascimento e renda > 0). Sem isso a secundária nascia
-    // inválida e ficava presa em "rascunho" sem nunca ser enviada.
+    // O comparativo de CPF agora roda SEMPRE para casados com dados mínimos do cônjuge.
+    // A simulação secundária é criada apenas se o cônjuge tiver dados aptos a ser titular.
     const conjugeAptoTitular =
       !!dd.cpf_conjuge &&
       !!dd.data_nascimento_conjuge &&
       Number(dd.renda_conjuge ?? 0) > 0;
+
+    if (testarAmbos && !conjugeAptoTitular) {
+      await supabaseAdmin.from("simulacao_historico").insert({
+        simulacao_id: sim.id,
+        tipo: "info",
+        descricao: "Comparativo de CPF não executado: faltam nome, CPF, data de nascimento ou renda do cônjuge.",
+        ator_id: userId,
+      });
+    }
 
     if (testarAmbos && conjugeAptoTitular) {
       const rendaTotalSoma = (dd.renda_total ?? 0) + (dd.renda_conjuge ?? 0);
