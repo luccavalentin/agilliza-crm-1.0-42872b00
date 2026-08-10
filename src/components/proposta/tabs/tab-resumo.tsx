@@ -86,10 +86,10 @@ export function TabResumo({
   }
 
   const status = proposta.status as PropostaStatus;
-  const houveEnvio = (bancos ?? []).some((b) => bancoJaEnviado(b));
+  const houveEnvio = (bancos || []).some((b) => bancoJaEnviado(b));
   const bancosVisiveis = houveEnvio
-    ? (bancos ?? []).filter((b) => bancoJaEnviado(b) || b.status_banco === "erro")
-    : (bancos ?? []);
+    ? (bancos || []).filter((b) => bancoJaEnviado(b) || b.status_banco === "erro")
+    : (bancos || []);
   const podeEnviarBanco =
     Boolean(proposta.homefin_id_oportunidade) &&
     !["cancelada", "registrado", "credito_recusado", "contrato_emitido"].includes(status);
