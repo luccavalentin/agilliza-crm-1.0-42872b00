@@ -723,42 +723,8 @@ export async function enviarSimulacaoImpl({
           codigo_oportunidade_homefin: op.codigoOportunidade ?? null,
         })
         .eq("id", simulacaoId);
-    } else {
-      // Reenvio: sincroniza os dados da oportunidade (inclui fgFinanciarDespesas)
-      // antes de rodar as simulações, para o banco receber os valores atuais.
-      //
-      // IMPORTANTE: essa sincronização é "best-effort". Se a integração retornar
-      // erro aqui (ex.: HTTP 500 intermitente no PUT da oportunidade), NÃO
-      // abortamos todo o envio — cada banco reenvia seus próprios valores no
-      // POST da simulação logo abaixo. Abortar aqui deixaria os bancos presos
-      // em "aguardando" para sempre.
-      try {
-        // O PUT /oportunidade aceita EXCLUSIVAMENTE estes três campos.
-        // Estado civil, cônjuge e composição de renda são enviados no
-        // PUT /participante (garantirDadosParticipantesSimulacao).
-        const cleanedPayload = Object.fromEntries(
-          Object.entries({
-            valorImovel: num(sim.valor_imovel),
-            valorFinanciamento: num(sim.valor_financiamento),
-            prazo: num(sim.prazo),
-          }).filter(([, v]) => v !== undefined && Number(v) > 0),
-        );
-
-        await chamarIntegracao<any>(
-          `/oportunidade/${idOportunidade}`,
-          "PUT",
-          cleanedPayload,
-          ctx,
-        );
-      } catch (e) {
-        console.warn(
-          "Falha ao sincronizar oportunidade (PUT). Prosseguindo com o envio por banco.",
-          e instanceof Error ? e.message : String(e),
-        );
-      }
-
-
     }
+
 
     if (idOportunidade) {
       await garantirDadosParticipantesSimulacao({ sim, cliente: clienteCompleto, endPrincipal: end, idOportunidade, ctx });
@@ -1194,6 +1160,7 @@ export async function enviarSimulacaoImpl({
 
 
 
+
     // Status geral considerando TODOS os bancos selecionados (não só os desta
     // chamada), pois o envio pode ser feito banco a banco para dar progresso.
     const { data: todosBancos } = await supabase
@@ -1201,6 +1168,7 @@ export async function enviarSimulacaoImpl({
       .select("status_banco")
       .eq("simulacao_id", simulacaoId)
       .eq("selecionado", true);
+
     const listaStatus = (todosBancos ?? []) as { status_banco: string | null }[];
     const sucesso = listaStatus.filter((r) => r.status_banco === "simulada").length;
     const pendentes = listaStatus.filter(
