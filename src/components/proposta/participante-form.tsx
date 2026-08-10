@@ -37,7 +37,6 @@ export function ParticipanteDialog({
   open,
   onOpenChange,
   titulo,
-  onEnviarAgora,
   inicial,
   conjugeInicial,
   tipoQualificacaoFixo,
@@ -45,7 +44,6 @@ export function ParticipanteDialog({
   onSalvar,
   idBanco,
   focarPendencias,
-  rodapeExtra,
   avisoTopo,
   participanteIndex,
   totalParticipantes,
@@ -62,14 +60,12 @@ export function ParticipanteDialog({
   onSalvar: (
     principal: ReturnType<typeof formParaEnvolvido>,
     conjuge: ReturnType<typeof formParaEnvolvido> | null,
+    opcoes?: { enviar?: boolean },
   ) => Promise<void> | void;
-  /** Callback para disparar o envio ao banco diretamente do modal após validar/salvar. */
-  onEnviarAgora?: () => void;
   idBanco?: number;
   /** Abre já destacando (e rolando até) o primeiro campo obrigatório pendente. */
   focarPendencias?: boolean;
-  /** Conteúdo extra no rodapé (ex.: "Enviar ao banco agora"). */
-  rodapeExtra?: React.ReactNode;
+
   /** Faixa informativa no topo do formulário. */
   avisoTopo?: React.ReactNode;
   /** Índice do participante atual para exibição de progresso. */
