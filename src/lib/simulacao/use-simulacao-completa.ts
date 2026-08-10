@@ -386,27 +386,48 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
   const mensagemPrazoInviavel = terrenoInviavelPorIdade
     ? `Em operações anteriores este banco exigiu no mínimo ${prazoMinOperacional} meses, mas a idade dos proponentes permite no máximo ${maxPrazoIdade}. O banco pode recusar.`
     : null;
-  const financiamentoMaximo = useMemo(
-    () => Math.floor((Number(f.valor_imovel) || 0) * ltvMax),
-    [f.valor_imovel, ltvMax],
-  );
-  const despesasNoTeto = f.fg_financiar_despesas
-    ? Number(f.valor_despesas_financiadas) || 0
-    : 0;
+  const financiamentoMaximo = useMemo(() => {
+    const imovel = Number(f.valor_imovel) || 0;
+    const { financiamentoMaximo } = limitesLtv(imovel, ltvMax);
+    return financiamentoMaximo;
+  }, [f.valor_imovel, ltvMax]);
+
+  const despesasNoTeto = f.fg_financiar_despesas ? (Number(f.valor_despesas_financiadas) || 0) : 0;
   const financiamentoImovelMaximo = Math.max(0, financiamentoMaximo - despesasNoTeto);
+  
   /** Valor a financiar exibido: parcela do imóvel + despesas financiadas. */
   const financiamentoTotalExibido = (Number(f.valor_financiamento) || 0) + despesasNoTeto;
-  const entradaMinima = useMemo(
-    () => Math.max(0, (Number(f.valor_imovel) || 0) - financiamentoMaximo + 1),
-    [f.valor_imovel, financiamentoMaximo],
-  );
-  const entradaMinimaEfetiva = Math.max(
-    0,
-    (Number(f.valor_imovel) || 0) - financiamentoImovelMaximo + 1,
-  );
-  const financiamentoExcedido =
-    (Number(f.valor_imovel) || 0) > 0 &&
-    (Number(f.valor_financiamento) || 0) > financiamentoImovelMaximo;
+
+  const entradaMinima = useMemo(() => {
+    const imovel = Number(f.valor_imovel) || 0;
+    const { entradaMinima } = limitesLtv(imovel, ltvMax);
+    return entradaMinima;
+  }, [f.valor_imovel, ltvMax]);
+
+  const entradaMinimaEfetiva = useMemo(() => {
+    const imovel = Number(f.valor_imovel) || 0;
+    const { entradaMinima } = limitesLtv(imovel, ltvMax);
+    // Se o financiamento máximo é reduzido pelas despesas, a entrada mínima sobe
+    return Math.max(0, imovel - financiamentoImovelMaximo);
+  }, [f.valor_imovel, financiamentoImovelMaximo, ltvMax]);
+
+  const financiamentoExcedido = useMemo(() => {
+    const imovel = Number(f.valor_imovel) || 0;
+    if (imovel <= 0) return false;
+    const atual = Number(f.valor_financiamento) || 0;
+    const atualCentavos = Math.round(atual * 100);
+    const maxCentavos = Math.round(financiamentoImovelMaximo * 100);
+    return atualCentavos > maxCentavos;
+  }, [f.valor_imovel, f.valor_financiamento, financiamentoImovelMaximo]);
+
+  const entradaInsuficiente = useMemo(() => {
+    const imovel = Number(f.valor_imovel) || 0;
+    if (imovel <= 0) return false;
+    const atual = Number(f.valor_entrada) || 0;
+    const atualCentavos = Math.round(atual * 100);
+    const minCentavos = Math.round(entradaMinimaEfetiva * 100);
+    return atualCentavos < minCentavos;
+  }, [f.valor_entrada, entradaMinimaEfetiva, f.valor_imovel]);
 
   /** Aplica o prazo digitado, ajustando pela idade e pelo teto da operação. */
   function definirPrazo(valor: number) {
