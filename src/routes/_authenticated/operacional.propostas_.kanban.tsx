@@ -142,7 +142,7 @@ function Pagina() {
   }, [q]);
 
   const { data } = useQuery({
-    queryKey: ["propostas", "kanban", escopo, busca, dataInicio, dataFim, respFiltro, corretorFiltro, imobFiltro],
+    queryKey: ["propostas", "kanban", escopo, busca, dataInicio, dataFim, respFiltro, corretorFiltro, imobFiltro, comercialFiltro],
     queryFn: () =>
       listarPropostas({
         data: {
