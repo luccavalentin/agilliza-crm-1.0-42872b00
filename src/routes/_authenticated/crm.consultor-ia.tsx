@@ -57,7 +57,7 @@ export const Route = createFileRoute("/_authenticated/crm/consultor-ia")({
       { property: "og:title", content: "Consultor IA — Agilliza" },
       {
         property: "og:description",
-        content: "Inteligência aplicada ao crédito imobiliário, com fontes rastreáveis.",
+        content: "Inteligência especialista em crédito imobiliário, com sofisticação Agilliza.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
