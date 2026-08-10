@@ -201,6 +201,9 @@ function Pagina() {
     setQ("");
     setBusca("");
     setResponsavel("todos");
+    setCorretorFiltro("todos");
+    setImobFiltro("todos");
+    setComercialFiltro("todos");
     setDataInicio("");
     setDataFim("");
     setEscopo("minhas");
