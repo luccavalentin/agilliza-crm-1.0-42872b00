@@ -156,6 +156,8 @@ export const Route = createFileRoute("/_authenticated/operacional/propostas_/$id
   errorComponent: ({ error, reset }: { error: any; reset: () => void }) => {
     const router = useRouter();
     const e = error as any;
+    // O ID da proposta pode vir do router ou do próprio erro se injetado no throw
+    const { id } = Route.useParams();
     
     // Identificação de erro de permissão
     const isPermissionError = e?.message?.includes("permissão") || e?.status === 403;
