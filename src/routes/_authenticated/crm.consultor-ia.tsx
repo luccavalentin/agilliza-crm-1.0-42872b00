@@ -240,52 +240,41 @@ function ConsultorIaPage() {
   }
 
   return (
-    <div className="relative flex min-h-full flex-col gap-5">
-      {/* Aura tecnológica de fundo */}
+    <div className="relative flex min-h-full flex-col gap-6 p-4 sm:p-6 lg:p-8">
+      {/* Background futurista premium */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 -top-10 h-64 opacity-70 blur-3xl"
+        className="pointer-events-none absolute inset-0 opacity-40 blur-[120px]"
         style={{
           background:
-            "radial-gradient(45% 60% at 15% 0%, color-mix(in oklab, var(--primary) 22%, transparent) 0%, transparent 70%), radial-gradient(35% 55% at 85% 10%, color-mix(in oklab, var(--primary) 14%, transparent) 0%, transparent 70%)",
+            "radial-gradient(circle at 0% 0%, color-mix(in oklab, var(--primary) 15%, transparent) 0%, transparent 50%), radial-gradient(circle at 100% 100%, color-mix(in oklab, var(--primary) 10%, transparent) 0%, transparent 50%)",
         }}
       />
 
-      <header className="relative overflow-hidden rounded-2xl border border-border/60 bg-card/80 p-5 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-card/60">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 opacity-[0.35]"
-          style={{
-            backgroundImage:
-              "linear-gradient(to right, color-mix(in oklab, var(--primary) 12%, transparent) 1px, transparent 1px), linear-gradient(to bottom, color-mix(in oklab, var(--primary) 12%, transparent) 1px, transparent 1px)",
-            backgroundSize: "38px 38px",
-            maskImage: "radial-gradient(70% 100% at 20% 0%, black, transparent)",
-          }}
-        />
-        <div className="relative flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-start gap-3.5">
-            <span className="relative grid size-11 shrink-0 place-items-center rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/25">
-              <Bot className="size-5" />
-              <span className="absolute -bottom-0.5 -right-0.5 size-3 rounded-full border-2 border-card bg-emerald-500" />
-            </span>
-            <div className="min-w-0">
-              <h1 className="flex flex-wrap items-center gap-2 text-xl font-semibold tracking-tight">
-                Consultor IA
-                <Badge
-                  variant="secondary"
-                  className="gap-1 rounded-full border border-primary/20 bg-primary/10 text-[10px] font-medium uppercase tracking-wider text-primary"
-                >
-                  <Sparkles className="size-3" />
-                  RAG · fontes rastreáveis
-                </Badge>
-              </h1>
-              <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-                Inteligência especialista em crédito imobiliário brasileiro — respostas
-                fundamentadas na base mantida pela equipe, com citação de origem.
-              </p>
+      <header className="relative z-10 mx-auto w-full max-w-5xl text-center">
+        <div className="flex flex-col items-center gap-6">
+          <div className="group relative">
+            <div className="absolute -inset-1 rounded-2xl bg-gradient-to-tr from-primary/40 to-primary/10 opacity-75 blur transition duration-500 group-hover:opacity-100" />
+            <div className="relative flex size-16 items-center justify-center rounded-2xl bg-card shadow-2xl ring-1 ring-border/50">
+              <Bot className="size-8 text-primary" />
+              <div className="absolute -bottom-1 -right-1 size-4 rounded-full border-2 border-card bg-emerald-500 shadow-sm" />
             </div>
           </div>
-          <Button onClick={novaConversa} className="gap-2 rounded-xl shadow-sm">
+          
+          <div className="space-y-2">
+            <h1 className="bg-gradient-to-b from-foreground to-foreground/70 bg-clip-text text-4xl font-bold tracking-tight text-transparent sm:text-5xl">
+              Consultor IA
+            </h1>
+            <p className="mx-auto max-w-2xl text-lg font-medium text-muted-foreground/90">
+              A inteligência moderna da Agilliza para o mercado imobiliário.
+            </p>
+          </div>
+
+          <Button 
+            onClick={novaConversa} 
+            variant="outline"
+            className="h-11 gap-2 rounded-full border-primary/20 bg-primary/5 px-6 transition-all hover:bg-primary/10 hover:shadow-lg hover:shadow-primary/5"
+          >
             <MessageSquarePlus className="size-4" />
             Nova conversa
           </Button>
