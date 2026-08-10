@@ -83,7 +83,7 @@ export function PipelineStepper({
 
       {/* Trilho de etapas — padding vertical evita corte do anel */}
       <div className="brand-scroll w-full overflow-x-auto px-1 pb-2 pt-3">
-        <ol className="flex min-w-max items-start">
+        <ol className="flex w-full items-start justify-between">
           {ETAPAS_STEPPER.map((etapa, i) => {
             const concluida = i < atual;
             const isAtual = i === atual;
