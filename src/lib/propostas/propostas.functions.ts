@@ -1769,6 +1769,53 @@ export const excluirProposta = createServerFn({ method: "POST" })
   });
 
 /** Restaura uma proposta excluída logicamente. */
+
+export const excluirPropostaDefinitivamente = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }): Promise<{ ok: true }> => {
+    const { supabase, userId } = context;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    // Verifica se já está excluída (soft delete) e se o usuário tem permissão
+    const { data: prop, error: fetchErr } = await supabase
+      .from("propostas")
+      .select("id, numero_proposta, correspondente_id")
+      .eq("id", data.id)
+      .maybeSingle();
+
+    if (fetchErr) throw fetchErr;
+    if (!prop) throw new Error("Proposta não encontrada.");
+
+    // Auditoria antes de sumir com tudo
+    try {
+      const { registrarAuditoria } = await import("@/lib/admin/audit.server");
+      await registrarAuditoria({
+        supabase,
+        userId,
+        correspondenteId: prop.correspondente_id,
+        acao: "proposta.excluir_definitivamente",
+        entidade: "propostas",
+        entidadeId: data.id,
+        payloadAnterior: { numero_proposta: prop.numero_proposta },
+        payloadNovo: null,
+      });
+    } catch (e) {
+      console.error("Erro na auditoria de exclusão definitiva:", e);
+    }
+
+    // Exclui em cascata usando o client admin para garantir a limpeza total 
+    // se houver restrições de RLS no delete.
+    const { error: deleteErr } = await supabaseAdmin
+      .from("propostas")
+      .delete()
+      .eq("id", data.id);
+
+    if (deleteErr) throw deleteErr;
+
+    return { ok: true };
+  });
+
 export const restaurarProposta = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))

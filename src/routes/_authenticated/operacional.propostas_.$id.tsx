@@ -56,6 +56,8 @@ import {
   salvarIq,
   definirSituacaoBanco,
   SITUACOES_BANCO,
+  excluirPropostaDefinitivamente,
+  restaurarProposta,
 } from "@/lib/propostas/propostas.functions";
 import { 
   faltantesEnvolvido, 
@@ -208,16 +210,99 @@ export const Route = createFileRoute("/_authenticated/operacional/propostas_/$id
             </div>
           </div>
 
-          <div className="flex gap-3 pt-4">
+          <div className="flex flex-wrap gap-3 pt-4">
             <Button variant="outline" onClick={() => router.navigate({ to: "/operacional/propostas" })}>
               <ArrowLeft className="mr-2 h-4 w-4" />
               Voltar para a lista
             </Button>
-            {/* O botão Restaurar depende de uma Server Function de restauração */}
+            
+            <RestaurarBotao id={id} />
+            <ExcluirDefinitivoBotao id={id} />
           </div>
         </div>
       );
     }
+
+    // ... (rest of the component)
+  },
+});
+
+function RestaurarBotao({ id }: { id: string }) {
+  const router = useRouter();
+  const qc = useQueryClient();
+  const restaurarFn = useServerFn(restaurarProposta);
+  const [loading, setLoading] = useState(false);
+
+  const handleRestaurar = async () => {
+    try {
+      setLoading(true);
+      await restaurarFn({ data: { id } });
+      toast.success("Proposta restaurada com sucesso!");
+      qc.invalidateQueries({ queryKey: ["proposta", id] });
+      router.invalidate();
+    } catch (error: any) {
+      toast.error(error.message || "Erro ao restaurar proposta");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Button variant="default" onClick={handleRestaurar} disabled={loading}>
+      {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
+      Restaurar Proposta
+    </Button>
+  );
+}
+
+function ExcluirDefinitivoBotao({ id }: { id: string }) {
+  const router = useRouter();
+  const excluirDefinitivoFn = useServerFn(excluirPropostaDefinitivamente);
+  const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false);
+
+  const handleExcluir = async () => {
+    try {
+      setLoading(true);
+      await excluirDefinitivoFn({ data: { id } });
+      toast.success("Proposta excluída definitivamente!");
+      router.navigate({ to: "/operacional/propostas", replace: true });
+    } catch (error: any) {
+      toast.error(error.message || "Erro ao excluir definitivamente");
+    } finally {
+      setLoading(false);
+      setOpen(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="destructive" disabled={loading}>
+          <Trash2 className="mr-2 h-4 w-4" />
+          Excluir Definitivamente
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Excluir permanentemente?</DialogTitle>
+          <DialogDescription>
+            Esta ação não pode ser desfeita. A proposta e todos os seus registros relacionados (bancos, documentos, histórico) serão apagados para sempre.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setOpen(false)} disabled={loading}>
+            Cancelar
+          </Button>
+          <Button variant="destructive" onClick={handleExcluir} disabled={loading}>
+            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Confirmar Exclusão Definitiva
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
     if (e?.message === "Proposta não encontrada.") {
       return (
