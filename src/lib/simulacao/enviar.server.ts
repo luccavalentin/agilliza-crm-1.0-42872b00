@@ -759,7 +759,8 @@ export async function enviarSimulacaoImpl({
         .update({
           homefin_id_oportunidade: idOportunidade,
           codigo_oportunidade_homefin: op.codigoOportunidade ?? null,
-        })
+          oportunidade_lock_em: null, // Limpa o lock para permitir reenvios futuros
+        } as any)
         .eq("id", simulacaoId);
     }
 
