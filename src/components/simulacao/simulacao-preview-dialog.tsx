@@ -95,7 +95,7 @@ export function SimulacaoPreviewDialog({ simulacaoId, open, onOpenChange }: Prop
             <Loader2 className="mr-2 size-4 animate-spin" /> Carregando…
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="brand-scroll scroll-shadow-bottom flex-1 space-y-4 overflow-y-auto px-6 py-4">
             {/* Resumo da operação */}
             <div className="grid grid-cols-2 gap-3 rounded-lg border border-border bg-muted/30 p-3 text-sm sm:grid-cols-4">
               <Linha rotulo="Produto" valor={produtoLabel(sim.produto)} />
@@ -128,7 +128,7 @@ export function SimulacaoPreviewDialog({ simulacaoId, open, onOpenChange }: Prop
                   Nenhum banco foi simulado ainda.
                 </p>
               ) : (
-                <div className="max-h-[320px] overflow-y-auto">
+                <div className="brand-scroll max-h-[320px] overflow-y-auto">
                   <table className="w-full text-sm">
                     <thead className="sticky top-0 bg-card text-[11px] uppercase tracking-wide text-muted-foreground">
                       <tr className="border-b border-border">
