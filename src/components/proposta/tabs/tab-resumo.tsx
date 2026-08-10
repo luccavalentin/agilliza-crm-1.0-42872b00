@@ -123,11 +123,11 @@ export function TabResumo({
   }
 
   const bancoReprovado =
-    (bancos ?? []).find(
+    (bancos || []).find(
       (b: any) => b.situacao_credito === "reprovado" || b.status_banco === "credito_recusado",
     )?.nome_banco ??
     (status === "credito_recusado"
-      ? ((bancos ?? []).find((b: any) => bancoJaEnviado(b))?.nome_banco ?? null)
+      ? ((bancos || [])?.find((b: any) => bancoJaEnviado(b))?.nome_banco ?? null)
       : null);
 
   return (
