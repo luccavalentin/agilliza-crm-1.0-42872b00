@@ -237,7 +237,7 @@ export function PropostaPopupHost() {
                   {atual.dados_adicionais.banco_row.prazo_pagamento > 0 && (
                     <div className="bg-muted/50 p-2 rounded border border-border/40">
                       <p className="text-muted-foreground font-medium uppercase tracking-tighter">Prazo</p>
-                      <p className="font-bold text-foreground">{atual.dados_adicionais.banco_row.prazo_pagamento} meses</p>
+                      <p className="font-bold text-foreground">{atual.dados_adicionais.banco_row.prazo_pagamento_max || atual.dados_adicionais.banco_row.prazo_pagamento} meses</p>
                     </div>
                   )}
                   {atual.dados_adicionais.banco_row.protocolo && (
