@@ -57,7 +57,7 @@ export const Route = createFileRoute("/_authenticated/crm/consultor-ia")({
       { property: "og:title", content: "Consultor IA — Agilliza" },
       {
         property: "og:description",
-        content: "Inteligência aplicada ao crédito imobiliário, com fontes rastreáveis.",
+        content: "Inteligência especialista em crédito imobiliário, com sofisticação Agilliza.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -240,96 +240,83 @@ function ConsultorIaPage() {
   }
 
   return (
-    <div className="relative flex min-h-full flex-col gap-5">
-      {/* Aura tecnológica de fundo */}
+    <div className="relative flex min-h-full flex-col gap-6 p-4 sm:p-6 lg:p-8">
+      {/* Background futurista premium */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 -top-10 h-64 opacity-70 blur-3xl"
+        className="pointer-events-none absolute inset-0 opacity-40 blur-[120px]"
         style={{
           background:
-            "radial-gradient(45% 60% at 15% 0%, color-mix(in oklab, var(--primary) 22%, transparent) 0%, transparent 70%), radial-gradient(35% 55% at 85% 10%, color-mix(in oklab, var(--primary) 14%, transparent) 0%, transparent 70%)",
+            "radial-gradient(circle at 0% 0%, color-mix(in oklab, var(--primary) 15%, transparent) 0%, transparent 50%), radial-gradient(circle at 100% 100%, color-mix(in oklab, var(--primary) 10%, transparent) 0%, transparent 50%)",
         }}
       />
 
-      <header className="relative overflow-hidden rounded-2xl border border-border/60 bg-card/80 p-5 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-card/60">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 opacity-[0.35]"
-          style={{
-            backgroundImage:
-              "linear-gradient(to right, color-mix(in oklab, var(--primary) 12%, transparent) 1px, transparent 1px), linear-gradient(to bottom, color-mix(in oklab, var(--primary) 12%, transparent) 1px, transparent 1px)",
-            backgroundSize: "38px 38px",
-            maskImage: "radial-gradient(70% 100% at 20% 0%, black, transparent)",
-          }}
-        />
-        <div className="relative flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-start gap-3.5">
-            <span className="relative grid size-11 shrink-0 place-items-center rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/25">
-              <Bot className="size-5" />
-              <span className="absolute -bottom-0.5 -right-0.5 size-3 rounded-full border-2 border-card bg-emerald-500" />
-            </span>
-            <div className="min-w-0">
-              <h1 className="flex flex-wrap items-center gap-2 text-xl font-semibold tracking-tight">
-                Consultor IA
-                <Badge
-                  variant="secondary"
-                  className="gap-1 rounded-full border border-primary/20 bg-primary/10 text-[10px] font-medium uppercase tracking-wider text-primary"
-                >
-                  <Sparkles className="size-3" />
-                  RAG · fontes rastreáveis
-                </Badge>
-              </h1>
-              <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-                Inteligência especialista em crédito imobiliário brasileiro — respostas
-                fundamentadas na base mantida pela equipe, com citação de origem.
-              </p>
+      <header className="relative z-10 mx-auto w-full max-w-5xl text-center">
+        <div className="flex flex-col items-center gap-6">
+          <div className="group relative">
+            <div className="absolute -inset-1 rounded-2xl bg-gradient-to-tr from-primary/40 to-primary/10 opacity-75 blur transition duration-500 group-hover:opacity-100" />
+            <div className="relative flex size-16 items-center justify-center rounded-2xl bg-card shadow-2xl ring-1 ring-border/50">
+              <Bot className="size-8 text-primary" />
+              <div className="absolute -bottom-1 -right-1 size-4 rounded-full border-2 border-card bg-emerald-500 shadow-sm" />
             </div>
           </div>
-          <Button onClick={novaConversa} className="gap-2 rounded-xl shadow-sm">
+          
+          <div className="space-y-2">
+            <h1 className="bg-gradient-to-b from-foreground to-foreground/70 bg-clip-text text-4xl font-bold tracking-tight text-transparent sm:text-5xl">
+              Consultor IA
+            </h1>
+            <p className="mx-auto max-w-2xl text-lg font-medium text-muted-foreground/90">
+              A inteligência moderna da Agilliza para o mercado imobiliário.
+            </p>
+          </div>
+
+          <Button 
+            onClick={novaConversa} 
+            variant="outline"
+            className="h-11 gap-2 rounded-full border-primary/20 bg-primary/5 px-6 transition-all hover:bg-primary/10 hover:shadow-lg hover:shadow-primary/5"
+          >
             <MessageSquarePlus className="size-4" />
             Nova conversa
           </Button>
         </div>
       </header>
 
-      <div className="relative grid min-h-[560px] flex-1 gap-4 lg:grid-cols-[280px_minmax(0,1fr)]">
-        <aside className="hidden min-h-0 flex-col overflow-hidden rounded-2xl border border-border/60 bg-card/80 shadow-sm backdrop-blur lg:flex">
-          <div className="space-y-2.5 border-b border-border/60 p-3">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+      <div className="relative z-10 grid min-h-[600px] flex-1 gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
+        <aside className="hidden flex-col overflow-hidden rounded-3xl border border-border/40 bg-card/40 shadow-xl backdrop-blur-xl lg:flex">
+          <div className="space-y-3 border-b border-border/40 p-5">
+            <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground/70">
               Histórico
-            </p>
-            <div className="relative">
-              <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+            </h3>
+            <div className="relative group">
+              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground/50 transition-colors group-focus-within:text-primary" />
               <Input
                 value={busca}
                 onChange={(e) => setBusca(e.target.value)}
-                placeholder="Buscar conversa"
-                className="h-8 rounded-lg pl-8 text-xs"
+                placeholder="Buscar conversa..."
+                className="h-10 rounded-xl border-border/40 bg-background/50 pl-9 text-sm focus-visible:ring-1 focus-visible:ring-primary/30"
               />
             </div>
           </div>
-          <div className="min-h-0 flex-1 space-y-1 overflow-y-auto p-2">
+          <div className="flex-1 space-y-1 overflow-y-auto p-3 custom-scrollbar">
             {conversasFiltradas.length === 0 ? (
-              <p className="px-2 py-6 text-center text-xs text-muted-foreground">
-                {busca ? "Nada encontrado." : "Nenhuma conversa ainda."}
-              </p>
+              <div className="flex flex-col items-center justify-center py-12 text-center text-muted-foreground/60">
+                <MessageSquarePlus className="mb-2 size-6 opacity-20" />
+                <p className="text-xs font-medium">
+                  {busca ? "Nada encontrado." : "Nenhuma conversa ainda."}
+                </p>
+              </div>
             ) : (
               conversasFiltradas.map((c) => {
                 const ativa = conversaId === c.id;
                 return (
                   <div
                     key={c.id}
-                    className={`group relative flex items-center gap-1 rounded-xl px-2.5 py-2 text-sm transition-all ${
+                    className={`group relative flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${
                       ativa
-                        ? "bg-primary/10 text-primary shadow-[inset_0_0_0_1px_color-mix(in_oklab,var(--primary)_25%,transparent)]"
-                        : "hover:bg-muted/70"
+                        ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
+                        : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
                     }`}
                   >
-                    <span
-                      className={`absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-primary transition-opacity ${
-                        ativa ? "opacity-100" : "opacity-0"
-                      }`}
-                    />
                     <button
                       type="button"
                       className="min-w-0 flex-1 truncate text-left"
@@ -340,10 +327,10 @@ function ConsultorIaPage() {
                     <button
                       type="button"
                       aria-label="Excluir conversa"
-                      className="opacity-0 transition-opacity group-hover:opacity-100"
+                      className={`transition-opacity ${ativa ? "opacity-80 hover:opacity-100" : "opacity-0 group-hover:opacity-100"}`}
                       onClick={() => excluir.mutate(c.id)}
                     >
-                      <Trash2 className="size-3.5 text-muted-foreground hover:text-destructive" />
+                      <Trash2 className={`size-3.5 ${ativa ? "text-primary-foreground" : "text-muted-foreground/60 hover:text-destructive"}`} />
                     </button>
                   </div>
                 );
@@ -352,19 +339,25 @@ function ConsultorIaPage() {
           </div>
         </aside>
 
-        <section className="relative flex min-h-0 flex-col overflow-hidden rounded-2xl border border-border/60 bg-card/80 shadow-sm backdrop-blur">
-          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-5 sm:px-6">
+        <section className="relative flex flex-col overflow-hidden rounded-3xl border border-border/40 bg-card/40 shadow-2xl backdrop-blur-xl">
+          <div className="flex-1 space-y-6 overflow-y-auto px-6 py-8 custom-scrollbar">
             {!conversaId && !streaming ? (
-              <div className="mx-auto max-w-2xl py-10 text-center">
-                <span className="mx-auto mb-4 grid size-14 place-items-center rounded-2xl border border-primary/20 bg-primary/10 text-primary">
-                  <Sparkles className="size-6" />
-                </span>
-                <h2 className="text-lg font-semibold tracking-tight">Como posso ajudar hoje?</h2>
-                <p className="mx-auto mt-1.5 max-w-md text-sm text-muted-foreground">
-                  Regras de bancos, FGTS, SFH/SFI, documentação, engenharia, jurídico e etapas da
-                  esteira — com fonte citada em cada resposta.
+              <div className="mx-auto flex max-w-2xl flex-col items-center py-12 text-center">
+                <div className="relative mb-8">
+                  <div className="absolute -inset-4 rounded-full bg-primary/20 blur-2xl" />
+                  <div className="relative flex size-20 items-center justify-center rounded-3xl bg-card shadow-2xl ring-1 ring-border/50">
+                    <Sparkles className="size-10 text-primary" />
+                  </div>
+                </div>
+                
+                <h2 className="text-3xl font-bold tracking-tight">
+                  Como posso potencializar seus negócios hoje?
+                </h2>
+                <p className="mt-4 text-base font-medium text-muted-foreground/80">
+                  Especialista em regras bancárias, FGTS, documentação e toda a jornada do crédito imobiliário Agilliza.
                 </p>
-                <div className="mt-6 grid gap-2.5 text-left sm:grid-cols-2">
+
+                <div className="mt-12 grid w-full gap-4 sm:grid-cols-2">
                   {SUGESTOES.map((s) => {
                     const Icone = s.icone;
                     return (
@@ -372,17 +365,19 @@ function ConsultorIaPage() {
                         key={s.prompt}
                         type="button"
                         onClick={() => enviar(s.prompt)}
-                        className="group flex items-start gap-3 rounded-xl border border-border/60 bg-background/60 p-3 text-left transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:bg-primary/[0.05] hover:shadow-md"
+                        className="group relative flex flex-col items-start gap-4 rounded-2xl border border-border/40 bg-background/50 p-5 text-left transition-all hover:border-primary/40 hover:bg-card hover:shadow-2xl hover:shadow-primary/5"
                       >
-                        <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
-                          <Icone className="size-4" />
-                        </span>
-                        <span className="min-w-0">
-                          <span className="block text-xs font-semibold">{s.titulo}</span>
-                          <span className="mt-0.5 block text-xs text-muted-foreground">
+                        <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary transition-transform group-hover:scale-110">
+                          <Icone className="size-5" />
+                        </div>
+                        <div className="space-y-1">
+                          <h4 className="text-sm font-bold uppercase tracking-wider text-primary/80 transition-colors group-hover:text-primary">
+                            {s.titulo}
+                          </h4>
+                          <p className="text-sm font-medium text-muted-foreground transition-colors group-hover:text-foreground">
                             {s.prompt}
-                          </span>
-                        </span>
+                          </p>
+                        </div>
                       </button>
                     );
                   })}
@@ -399,27 +394,29 @@ function ConsultorIaPage() {
 
             {lista.map((m) =>
               m.papel === "usuario" ? (
-                <div key={m.id} className="flex justify-end">
-                  <div className="max-w-[80%] rounded-2xl rounded-br-md bg-primary px-4 py-2.5 text-sm leading-relaxed text-primary-foreground shadow-sm shadow-primary/20">
+                <div key={m.id} className="mb-6 flex justify-end">
+                  <div className="max-w-[85%] rounded-[2rem] rounded-br-lg bg-primary px-6 py-4 text-base font-medium leading-relaxed text-primary-foreground shadow-xl shadow-primary/10">
                     {m.conteudo}
                   </div>
                 </div>
               ) : (
-                <div key={m.id} className="flex items-start gap-3">
-                  <span className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-lg border border-primary/20 bg-primary/10 text-primary">
-                    <Bot className="size-4" />
-                  </span>
-                  <div className="min-w-0 max-w-[92%] flex-1">
+                <div key={m.id} className="mb-8 flex items-start gap-5">
+                  <div className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-card shadow-lg ring-1 ring-border/50">
+                    <Bot className="size-5 text-primary" />
+                  </div>
+                  <div className="min-w-0 flex-1 space-y-4">
                     {m.sem_resposta ? (
-                      <p className="mb-2 inline-flex items-center gap-1.5 rounded-full border border-amber-500/40 bg-amber-500/10 px-2.5 py-1 text-[11px] font-medium text-amber-700 dark:text-amber-400">
+                      <div className="inline-flex items-center gap-2 rounded-xl border border-amber-500/20 bg-amber-500/5 px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
                         <TriangleAlert className="size-3.5" />
-                        Conhecimento geral da IA — não consta na base da empresa
-                      </p>
+                        Conhecimento Geral
+                      </div>
                     ) : null}
-                    <Markdown
-                      conteudo={m.conteudo}
-                      className="text-sm leading-relaxed text-foreground"
-                    />
+                    <div className="rounded-3xl border border-border/30 bg-card/30 p-6 shadow-sm backdrop-blur-sm">
+                      <Markdown
+                        conteudo={m.conteudo}
+                        className="text-[15px] leading-relaxed text-foreground/90"
+                      />
+                    </div>
 
                     {m.fontes_usadas.length > 0 ? (
                       <div className="mt-3 flex flex-wrap items-center gap-1.5">
@@ -532,37 +529,42 @@ function ConsultorIaPage() {
             <div ref={fimRef} />
           </div>
 
-          <div className="border-t border-border/60 bg-background/40 p-3 sm:p-4">
-            <div className="group relative rounded-2xl border border-border/70 bg-card shadow-sm transition-all focus-within:border-primary/50 focus-within:shadow-lg focus-within:shadow-primary/10">
-              <Textarea
-                ref={inputRef}
-                value={pergunta}
-                onChange={(e) => setPergunta(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    enviar();
-                  }
-                }}
-                rows={2}
-                placeholder="Pergunte ao consultor sobre bancos, FGTS, documentação, esteira…"
-                disabled={streaming}
-                className="max-h-40 min-h-[56px] resize-none border-0 bg-transparent pr-14 text-sm shadow-none focus-visible:ring-0"
-              />
-              <Button
-                size="icon"
-                onClick={() => enviar()}
-                disabled={streaming || !pergunta.trim()}
-                aria-label="Enviar pergunta"
-                className="absolute bottom-2.5 right-2.5 size-9 rounded-xl shadow-md shadow-primary/25"
-              >
-                <ArrowUp className="size-4" />
-              </Button>
+          <div className="border-t border-border/40 bg-card/60 p-6 backdrop-blur-md">
+            <div className="mx-auto max-w-4xl">
+              <div className="group relative flex items-end gap-3 rounded-[2rem] border border-border/50 bg-background/50 p-2 shadow-2xl transition-all focus-within:border-primary/50 focus-within:ring-4 focus-within:ring-primary/5">
+                <Textarea
+                  ref={inputRef}
+                  value={pergunta}
+                  onChange={(e) => setPergunta(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      enviar();
+                    }
+                  }}
+                  rows={1}
+                  placeholder="Envie sua dúvida para a inteligência Agilliza..."
+                  disabled={streaming}
+                  className="max-h-60 min-h-[48px] flex-1 resize-none border-0 bg-transparent px-4 py-3 text-base font-medium shadow-none focus-visible:ring-0"
+                />
+                <Button
+                  size="icon"
+                  onClick={() => enviar()}
+                  disabled={streaming || !pergunta.trim()}
+                  className="mb-1 mr-1 size-10 shrink-0 rounded-2xl shadow-xl shadow-primary/20 transition-transform active:scale-95 disabled:opacity-50"
+                >
+                  <ArrowUp className="size-5" />
+                </Button>
+              </div>
+              <div className="mt-3 flex items-center justify-center gap-4 text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">
+                <div className="flex items-center gap-1.5">
+                  <Command className="size-3" />
+                  <span>Enter envia</span>
+                </div>
+                <div className="size-1 rounded-full bg-border" />
+                <span>Shift + Enter para nova linha</span>
+              </div>
             </div>
-            <p className="mt-2 flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground">
-              <Command className="size-3" />
-              Enter envia · Shift + Enter quebra linha · respostas podem citar fontes internas
-            </p>
           </div>
         </section>
       </div>

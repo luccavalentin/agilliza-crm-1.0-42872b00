@@ -62,7 +62,7 @@ export const Route = createFileRoute("/_authenticated/admin/consultor-ia-base")(
       {
         name: "description",
         content:
-          "Biblioteca de crédito imobiliário da Agilliza: pesquise por palavra-chave e consulte verbetes curados que fundamentam o Consultor IA.",
+          "Biblioteca de crédito imobiliário da Agilliza: pesquise por palavra-chave e consulte verbetes curados que fundamentam a inteligência moderna.",
       },
       { property: "og:title", content: "Biblioteca de conhecimento — Agilliza" },
       {
@@ -315,7 +315,7 @@ function BibliotecaPage() {
               </h1>
               <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
                 Pesquise por palavra-chave e encontre verbetes curados — ordenados por
-                relevância ou data. É esse acervo que fundamenta o Consultor IA.
+                relevância ou data. É esse acervo que fundamenta a inteligência moderna.
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -674,7 +674,7 @@ function BibliotecaPage() {
           <DialogHeader>
             <DialogTitle>{editando?.id ? "Editar verbete" : "Novo verbete"}</DialogTitle>
             <DialogDescription>
-              O texto abaixo entra na biblioteca e é usado como referência pelo Consultor IA.
+              O texto abaixo entra na biblioteca e é usado como referência pela inteligência.
             </DialogDescription>
           </DialogHeader>
 
