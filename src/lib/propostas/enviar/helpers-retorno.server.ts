@@ -201,9 +201,10 @@ export function extrairErroRetorno(
       const erroVazio = typeof obj?.error === "object" && obj?.error !== null && Object.keys(obj.error).length === 0;
       
       if (erroVazio) {
-        return `O banco não informou o motivo detalhado (código ${c}). Por favor, acione o suporte técnico da plataforma para diagnóstico com o número desta proposta.`;
+        return `O banco não informou o motivo detalhado (código ${c}). Por favor, acione o suporte técnico com o número desta proposta.`;
       }
-      return `A proposta não foi efetivada no banco (falha na integração - código ${c}). Verifique os detalhes técnicos ou acione o suporte.`;
+      return `A proposta não foi efetivada no banco (falha na integração - código ${c}).`;
+
     }
 
   }

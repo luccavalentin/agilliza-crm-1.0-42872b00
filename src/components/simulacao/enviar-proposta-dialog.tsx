@@ -1,4 +1,4 @@
-import { Send } from "lucide-react";
+import { Send, CheckCircle2, XCircle, Loader2, Info, Trophy } from "lucide-react";
 import { useRouter } from "@tanstack/react-router";
 import {
   Dialog,
@@ -12,7 +12,8 @@ import { Button } from "@/components/ui/button";
 import { BancoLogo } from "@/components/bancos/banco-logo";
 import { corDoBanco } from "@/lib/bancos/cores";
 import { cn } from "@/lib/utils";
-import { formatBRL } from "@/lib/simulacao/format";
+import { formatBRL, formatPercent } from "@/lib/simulacao/format";
+import type { StatusEnvioBanco } from "@/hooks/use-enviar-proposta";
 
 export type PropostaCriada = {
   simulacao_banco_id: string;
@@ -32,145 +33,233 @@ export function EnviarPropostaDialog({
   envio,
   onClose,
   carregando,
-  enviandoBancoId,
-  propostasCriadas,
+  statusPorBanco,
   onEnviarBanco,
+  onEnviarTodos,
 }: {
   envio: EnvioEstado | null;
   onClose: () => void;
   carregando: boolean;
-  enviandoBancoId: string | null;
-  propostasCriadas: PropostaCriada[];
+  statusPorBanco: Record<string, StatusEnvioBanco>;
   onEnviarBanco: (banco: any) => void;
+  onEnviarTodos: (bancos: any[]) => void;
 }) {
   const router = useRouter();
 
+  const bancosComId = (envio?.bancos ?? []).filter((b: any) => b.banco_id);
+  const simulados = bancosComId.filter((b: any) => b.status_banco === "simulada");
+  
+  const enviandoQualquer = Object.values(statusPorBanco).some(s => s.status === "loading");
+  const concluidos = Object.values(statusPorBanco).filter(s => s.status === "success" || s.status === "error");
+  const todosConcluidos = simulados.length > 0 && simulados.every(b => statusPorBanco[b.id]?.status === "success" || statusPorBanco[b.id]?.status === "error");
+
+  // Identificar melhor taxa
+  const melhorTaxa = useMemo(() => {
+    const taxas = simulados.map(b => b.taxa_juros_ano).filter(t => t != null && t > 0);
+    return taxas.length > 0 ? Math.min(...taxas) : null;
+  }, [simulados]);
+
+  const resumo = useMemo(() => {
+    const ok = Object.values(statusPorBanco).filter(s => s.status === "success").length;
+    const erro = Object.values(statusPorBanco).filter(s => s.status === "error").length;
+    return { ok, erro };
+  }, [statusPorBanco]);
+
   return (
-    <Dialog open={!!envio} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-md">
+    <Dialog open={!!envio} onOpenChange={(o) => {
+      if (enviandoQualquer) return; // Não fecha se estiver enviando
+      if (!o) onClose();
+    }}>
+      <DialogContent className="max-w-xl">
         <DialogHeader>
           <DialogTitle>Enviar proposta</DialogTitle>
           <DialogDescription>
-            Envie a proposta{" "}
-            {envio?.numero ? `da simulação ${envio.numero}` : ""} para cada banco individualmente.
+            {todosConcluidos 
+              ? `Envio finalizado: ${resumo.ok} enviadas, ${resumo.erro} falhou.`
+              : `Selecione os bancos para enviar a proposta da simulação ${envio?.numero ?? ""}.`}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-2">
+        <div className="space-y-3 py-2">
           {carregando ? (
-            <p className="py-6 text-center text-sm text-muted-foreground">Carregando bancos…</p>
-          ) : (() => {
-            const bancosComId = (envio?.bancos ?? []).filter((b: any) => b.banco_id);
-            const simulados = bancosComId.filter((b: any) => b.status_banco === "simulada");
-            
-            if (bancosComId.length === 0) {
-              return (
-                <div className="py-8 text-center">
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Nenhum banco foi selecionado para esta simulação. 
-                    Por favor, selecione os bancos e tente novamente.
-                  </p>
-                  <Button variant="outline" size="sm" onClick={onClose}>
-                    Fechar
-                  </Button>
-                </div>
-              );
-            }
+            <div className="flex flex-col items-center justify-center py-12 gap-3">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <p className="text-sm text-muted-foreground font-medium">Carregando bancos…</p>
+            </div>
+          ) : simulados.length === 0 ? (
+            <div className="py-8 text-center bg-muted/30 rounded-lg border border-dashed">
+              <p className="text-sm text-muted-foreground px-6">
+                Não há bancos com status "Simulada" disponíveis para envio.
+              </p>
+            </div>
+          ) : (
+            <div className="grid gap-2.5">
+              {simulados.map((b: any) => {
+                const status = statusPorBanco[b.id];
+                const isLoading = status?.status === "loading";
+                const isSuccess = status?.status === "success";
+                const isError = status?.status === "error";
+                const isWinner = melhorTaxa && b.taxa_juros_ano === melhorTaxa;
+                const cor = corDoBanco(b.nome_banco);
 
-            if (simulados.length === 0) {
-              return (
-                <div className="py-8 text-center">
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Não há bancos com status "Simulada" disponíveis. 
-                    Gere os resultados primeiro clicando em "Gerar Simulação".
-                  </p>
-                  <Button variant="outline" size="sm" onClick={onClose}>
-                    Voltar e Gerar Resultados
-                  </Button>
-                </div>
-              );
-            }
-
-            return simulados.map((b: any) => {
-              const criada = propostasCriadas.find((p) => p.simulacao_banco_id === b.id);
-              const esteEnviando = enviandoBancoId === b.id;
-              const cor = corDoBanco(b.nome_banco);
-              const req = String(b.sistema_amortizacao ?? "").toUpperCase();
-              const api = String(b.sistema_amortizacao_banco ?? "").toUpperCase();
-              const sis =
-                req === "P" || req.includes("PRICE")
-                  ? "PRICE"
-                  : req === "S" || req.includes("SAC")
-                    ? "SAC"
-                    : api === "P" || api.includes("PRICE")
-                      ? "PRICE"
-                      : api === "S" || api.includes("SAC")
-                        ? "SAC"
-                        : null;
-              return (
-                <div
-                  key={b.id}
-                  style={criada ? { borderColor: cor } : undefined}
-                  className={cn(
-                    "flex items-center gap-3 rounded-lg border bg-card p-3 transition-colors",
-                    criada ? "border-2" : "border-border",
-                  )}
-                >
-                  <BancoLogo nome={b.nome_banco} size="lg" className="shrink-0" />
-                  <span className="min-w-0 flex-1">
-                    <span className="flex items-center gap-1.5">
-                      <span className="min-w-0 truncate text-sm font-semibold text-foreground">
-                        {b.nome_banco}
-                      </span>
-                      {sis && (
-                        <span className="inline-flex h-5 shrink-0 items-center rounded-[5px] border border-primary/25 bg-primary/[0.08] px-1.5 text-[9px] font-semibold uppercase leading-none tracking-wide text-primary">
-                          {sis}
-                        </span>
-                      )}
-                    </span>
-                    {b.valor_parcela != null && (
-                      <span className="block text-xs text-muted-foreground">
-                        Parcela {formatBRL(b.valor_parcela)}
-                      </span>
+                return (
+                  <div
+                    key={b.id}
+                    className={cn(
+                      "relative flex flex-col gap-2 rounded-xl border bg-card p-3.5 transition-all duration-200",
+                      isSuccess ? "border-success/30 bg-success/5 shadow-sm" : 
+                      isError ? "border-destructive/30 bg-destructive/5" : 
+                      isLoading ? "border-primary/30 ring-1 ring-primary/20 shadow-md" : 
+                      "border-border hover:border-primary/40 hover:bg-primary/[0.02]"
                     )}
-                  </span>
-                  {criada ? (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        onClose();
-                        router.navigate({
-                          to: "/operacional/propostas/$id",
-                          params: { id: criada.proposta_id },
-                          search: { complementar: 1 },
-                        });
-                      }}
-                    >
-                      Abrir {criada.numero}
-                    </Button>
-                  ) : (
-                    <Button
-                      size="sm"
-                      onClick={() => onEnviarBanco(b)}
-                      disabled={!!enviandoBancoId}
-                    >
-                      <Send className="mr-1.5 h-3.5 w-3.5" />
-                      {esteEnviando ? "Enviando…" : "Enviar"}
-                    </Button>
-                  )}
-                </div>
-              );
-            });
-          })()}
+                  >
+                    <div className="flex items-center gap-4">
+                      <BancoLogo nome={b.nome_banco} size="lg" className="shrink-0 shadow-sm" />
+                      
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <span className="truncate text-sm font-bold text-foreground">
+                            {b.nome_banco}
+                          </span>
+                          {isWinner && (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-warning/15 px-2 py-0.5 text-[10px] font-bold text-warning border border-warning/20">
+                              <Trophy className="h-2.5 w-2.5" /> Melhor taxa
+                            </span>
+                          )}
+                        </div>
+                        
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] font-medium text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            Parcela <span className="text-foreground">{formatBRL(b.valor_parcela)}</span>
+                          </span>
+                          <span className="flex items-center gap-1">
+                            Taxa <span className="text-foreground">{formatPercent(b.taxa_juros_ano)} a.a.</span>
+                          </span>
+                          <span className="flex items-center gap-1">
+                            Prazo <span className="text-foreground">{b.prazo_pagamento_banco ?? b.prazo}m</span>
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="shrink-0 ml-auto">
+                        {isSuccess ? (
+                          <div className="flex flex-col items-end gap-1">
+                            <span className="flex items-center gap-1.5 text-xs font-bold text-success">
+                              <CheckCircle2 className="h-4 w-4" /> Enviada
+                            </span>
+                            {status.protocolo && (
+                              <Button 
+                                variant="link" 
+                                size="sm" 
+                                className="h-auto p-0 text-[11px] font-semibold text-primary underline decoration-primary/30 underline-offset-2"
+                                onClick={() => {
+                                  onClose();
+                                  router.navigate({
+                                    to: "/operacional/propostas/$id",
+                                    params: { id: status.propostaId! },
+                                  });
+                                }}
+                              >
+                                Protocolo {status.protocolo}
+                              </Button>
+                            )}
+                          </div>
+                        ) : isError ? (
+                          <div className="flex flex-col items-end gap-1">
+                            <span className="flex items-center gap-1.5 text-xs font-bold text-destructive">
+                              <XCircle className="h-4 w-4" /> Falhou
+                            </span>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-7 px-2 text-[10px] font-bold uppercase tracking-wider hover:bg-destructive/10 hover:text-destructive"
+                              onClick={() => onEnviarBanco(b)}
+                            >
+                              Tentar novamente
+                            </Button>
+                          </div>
+                        ) : isLoading ? (
+                          <div className="flex flex-col items-end gap-1.5">
+                             <div className="flex items-center gap-2">
+                               <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
+                               <span className="text-xs font-bold text-primary tabular-nums">
+                                 {status.tempoDecorrido}s
+                               </span>
+                             </div>
+                             <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                               Processando...
+                             </span>
+                          </div>
+                        ) : (
+                          <Button
+                            size="sm"
+                            className="h-9 px-4 font-bold shadow-sm"
+                            onClick={() => onEnviarBanco(b)}
+                            disabled={enviandoQualquer}
+                          >
+                            <Send className="mr-1.5 h-3.5 w-3.5" /> Enviar
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Barra de progresso interna */}
+                    {isLoading && (
+                      <div className="mt-2.5">
+                        <div className="flex justify-between items-center mb-1.5 px-0.5">
+                          <span className="text-[10px] font-bold text-primary uppercase tracking-wide">
+                            {status.mensagem}
+                          </span>
+                          <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">
+                            Etapa {status.etapaNumero} de 5
+                          </span>
+                        </div>
+                        <div className="h-1.5 w-full overflow-hidden rounded-full bg-primary/10">
+                          <div 
+                            className="h-full bg-primary transition-all duration-500 ease-out" 
+                            style={{ width: `${(status.etapaNumero || 1) * 20}%` }}
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {isError && status.mensagem && (
+                      <div className="mt-2 flex items-start gap-2 rounded-md bg-destructive/10 p-2.5">
+                        <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-destructive" />
+                        <p className="text-[11px] font-medium leading-relaxed text-destructive/90">
+                          {status.mensagem}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose} disabled={!!enviandoBancoId}>
-            Fechar
-          </Button>
+        <DialogFooter className="flex flex-col gap-2 sm:flex-row sm:justify-between items-center mt-2 border-t pt-4">
+          <div className="flex-1">
+             {!enviandoQualquer && !todosConcluidos && simulados.length > 1 && (
+               <Button 
+                variant="outline" 
+                size="sm" 
+                className="font-bold border-primary/20 text-primary hover:bg-primary/5"
+                onClick={() => onEnviarTodos(simulados)}
+               >
+                 Enviar a todos ({simulados.length})
+               </Button>
+             )}
+          </div>
+          <div className="flex gap-2">
+            <Button variant="ghost" onClick={onClose} disabled={enviandoQualquer}>
+              {todosConcluidos ? "Concluir" : "Fechar"}
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 }
+
+import { useMemo } from "react";
