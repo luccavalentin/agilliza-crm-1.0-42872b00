@@ -159,6 +159,34 @@ export function ParticipanteDialog({
     conjuge.uf,
   ].some((valor) => String(valor ?? "").trim().length > 0) || conjuge.renda > 0;
 
+  /** Cônjuge normalizado que será salvo junto com o titular (quando houver). */
+  const conjugeParaSalvar: ParticipanteForm | null = useMemo(
+    () =>
+      precisaConjuge && conjugeTemDados
+        ? {
+            ...conjuge,
+            tipo_qualificacao: "TI",
+            tipo_pessoa: "F",
+            estado_civil: f.estado_civil,
+            regime_casamento: f.regime_casamento,
+          }
+        : null,
+    [precisaConjuge, conjugeTemDados, conjuge, f.estado_civil, f.regime_casamento],
+  );
+
+  // Validade calculada EM TEMPO REAL a partir do formulário (nunca a partir do
+  // estado de erro, que só é preenchido após a primeira tentativa).
+  const pendentesAgora = useMemo(() => {
+    const chaves = [
+      ...camposFaltantes(f),
+      ...(conjugeParaSalvar ? camposFaltantes(conjugeParaSalvar) : []),
+    ];
+    return Array.from(new Set(chaves)).map((k) => LABEL_POR_CHAVE[k] ?? k);
+  }, [f, conjugeParaSalvar]);
+
+  const podeEnviar = pendentesAgora.length === 0;
+
+
   async function buscarCep(
     cepRaw: string,
     aplicar: (patch: Partial<ParticipanteForm>) => void,
