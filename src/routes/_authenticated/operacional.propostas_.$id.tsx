@@ -226,7 +226,7 @@ export const Route = createFileRoute("/_authenticated/operacional/propostas_/$id
     }
 
 
-    function RestaurarBotao({ id }: { id: string }) {
+    const RestaurarBotao = ({ id }: { id: string }) => {
       const router = useRouter();
       const qc = useQueryClient();
       const restaurarFn = useServerFn(restaurarProposta);
@@ -245,6 +245,7 @@ export const Route = createFileRoute("/_authenticated/operacional/propostas_/$id
           setLoading(false);
         }
       };
+
 
       return (
         <Button variant="default" onClick={handleRestaurar} disabled={loading}>
