@@ -34,6 +34,7 @@ import {
   MessageSquare,
   ChevronDown,
   AlertTriangle,
+  FileText,
 } from "lucide-react";
 import { assertModuloPermitido } from "@/lib/route-guards";
 import { propostaQueryOptions } from "@/lib/propostas/queries";
