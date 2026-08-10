@@ -268,10 +268,11 @@ export function EnviarPropostaDialog({
              )}
           </div>
           <div className="flex gap-2">
-            <Button variant="ghost" onClick={onClose} disabled={enviandoQualquer}>
+            <Button variant="ghost" onClick={() => handleTentativaFechar(false)}>
               {todosConcluidos ? "Concluir" : "Fechar"}
             </Button>
           </div>
+
         </DialogFooter>
       </DialogContent>
     </Dialog>
