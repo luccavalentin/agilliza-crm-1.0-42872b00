@@ -942,13 +942,63 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
   }
 
   async function enviar() {
-    // Modo "Ambos" (SAC + PRICE): o schema aceita apenas "S"/"P", então o
-    // desvio precisa vir ANTES do parse. Cada simulação é validada
-    // separadamente dentro de executarEnvioAmbos.
-    if (f.sistema_amortizacao === "B") {
-      await enviarAmbos();
+    // Aplica a renda mínima necessária antes de enviar, se a informada for menor.
+    // Isso garante que a simulação sempre tenha sucesso nos bancos mesmo se o usuário esquecer de ajustar.
+    let fEnvio = { ...f };
+    let houveAjuste = false;
+
+    if (fEnvio.valor_financiamento > 0 && fEnvio.prazo > 0) {
+      // SAC
+      const avalSac = avaliarRendaMinima({
+        valor_financiamento: fEnvio.valor_financiamento,
+        valor_imovel: fEnvio.valor_imovel,
+        prazo_meses: fEnvio.prazo,
+        taxa_ano: melhorTaxaAno,
+        sistema: "S",
+      });
+      if (avalSac && (Number(fEnvio.renda_total) || 0) < avalSac.rendaMinima) {
+        fEnvio.renda_total = avalSac.rendaMinima;
+        houveAjuste = true;
+      }
+
+      // PRICE (no modo Ambos ou sistema PRICE)
+      if (fEnvio.sistema_amortizacao === "B" || fEnvio.sistema_amortizacao === "P") {
+        const avalPrice = avaliarRendaMinima({
+          valor_financiamento: fEnvio.valor_financiamento,
+          valor_imovel: fEnvio.valor_imovel,
+          prazo_meses: fEnvio.prazo,
+          taxa_ano: melhorTaxaAno,
+          sistema: "P",
+        });
+        const rendaPriceAtual = fEnvio.sistema_amortizacao === "B" 
+          ? (Number(fEnvio.renda_price) || 0) 
+          : (Number(fEnvio.renda_total) || 0);
+
+        if (avalPrice && rendaPriceAtual < avalPrice.rendaMinima) {
+          if (fEnvio.sistema_amortizacao === "B") {
+            fEnvio.renda_price = avalPrice.rendaMinima;
+          } else {
+            fEnvio.renda_total = avalPrice.rendaMinima;
+          }
+          houveAjuste = true;
+        }
+      }
+    }
+
+    if (houveAjuste) {
+      setF(fEnvio);
+      toast.info("Ajustamos a renda para o mínimo necessário para garantir o sucesso da simulação.");
+    }
+
+    if (fEnvio.sistema_amortizacao === "B") {
+      await executarEnvioAmbos({
+        f: fEnvio, idOperacao, router, setErros, setEnviando, setConcluidos,
+        setSimulacaoResultadoId, setSimulacaoResultadoIdPrice,
+        setSimulacaoResultadoIdSecundario,
+      });
       return;
     }
+
 
     // 1. Validar esquema completo (Zod)
     const parsed = completaSchema.safeParse({ ...f, id_operacao_homefin: idOperacao });
