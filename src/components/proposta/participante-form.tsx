@@ -125,7 +125,7 @@ export function ParticipanteDialog({
       }
     }, 150);
     return () => clearTimeout(t);
-  }, [open, focarPendencias, erros]);
+  }, [open, focarPendencias]);
 
 
 
