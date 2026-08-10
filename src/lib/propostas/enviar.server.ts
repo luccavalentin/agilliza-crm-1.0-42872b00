@@ -46,6 +46,45 @@ const ORDEM_STATUS: PropostaStatus[] = [
 
 // statusDaEtapa foi extraído para ./enviar/helpers-retorno.server.ts
 
+/**
+ * Função única e centralizada para derivar o status global da proposta
+ * a partir do estado das suas linhas de banco (proposta_bancos).
+ * Garante que propostas.status nunca divirja do desfecho dos bancos.
+ */
+export async function recalcularStatusGlobalProposta(
+  supabase: SupabaseClient<any, any, any>,
+  propostaId: string,
+): Promise<PropostaStatus | null> {
+  const { data: bancos } = await supabase
+    .from("proposta_bancos")
+    .select("situacao_banco")
+    .eq("proposta_id", propostaId);
+
+  if (!bancos || bancos.length === 0) return null;
+
+  let algumAprovado = false;
+  let algumEmAnalise = false;
+  let algumRecusado = false;
+  let algumErroEnvio = false;
+
+  for (const b of bancos) {
+    const s = String(b.situacao_banco);
+    if (s === "aprovado" || s === "condicionado") algumAprovado = true;
+    else if (s === "em_analise") algumEmAnalise = true;
+    else if (s === "recusado") algumRecusado = true;
+    else if (s === "erro") algumErroEnvio = true;
+  }
+
+  // Hierarquia de relevância para o cabeçalho
+  if (algumAprovado) return "credito_aprovado";
+  if (algumEmAnalise) return "em_analise_credito";
+  if (algumRecusado) return "credito_recusado";
+  if (algumErroEnvio) return "erro_envio";
+
+  return "enviada_banco";
+}
+
+
 interface EnviarArgs {
   propostaId: string;
   userId: string;
@@ -1130,29 +1169,14 @@ async function enviarPropostaImplInner({
 
 
   // ---- 3) Recálculo do status global (propostas.status) a partir dos bancos ----
-  // Garante uma fonte única de verdade: propostas.status deve ser derivado de
-  // proposta_bancos, e nunca divergir dele.
-  let algumAprovado = false;
-  let algumEmAnalise = false;
-  let algumRecusado = false;
+  // FONTE ÚNICA DE VERDADE: propostas.status é DERIVADO do estado atual de
+  // proposta_bancos através da função centralizada.
+  const novoStatusGlobal = (await recalcularStatusGlobalProposta(supabase, propostaId)) || statusAtual;
 
-  const { data: todosBancos } = await supabase
-    .from("proposta_bancos")
-    .select("situacao_banco")
-    .eq("proposta_id", propostaId);
-
-  for (const tb of (todosBancos ?? []) as any[]) {
-    const s = String(tb.situacao_banco);
-    if (s === "aprovado" || s === "condicionado") algumAprovado = true;
-    else if (s === "em_analise") algumEmAnalise = true;
-    else if (s === "recusado") algumRecusado = true;
+  // Verificação de integridade (Log de divergência)
+  if (sucesso > 0 && novoStatusGlobal === "credito_recusado") {
+    console.warn(`[proposta] Divergência detectada no envio: PRO-${propostaId} marcada como recusada mesmo com ${sucesso} bancos em processamento.`);
   }
-
-  let novoStatusGlobal: PropostaStatus = statusAtual;
-  if (algumAprovado) novoStatusGlobal = "credito_aprovado";
-  else if (algumEmAnalise) novoStatusGlobal = "em_analise_credito";
-  else if (algumRecusado) novoStatusGlobal = "credito_recusado";
-  else if (sucesso === 0 && primeiroEnvio) novoStatusGlobal = "erro_envio";
 
   // `propostas.ultimo_erro` é apenas o espelho das linhas de banco desta
   // tentativa — nunca resíduo de tentativas anteriores. Isso elimina as
@@ -1396,13 +1420,9 @@ export async function sincronizarPropostaImpl({
 
 
   // ---- 1.5) Recálculo do status global (propostas.status) a partir dos bancos ----
-  // Garante uma fonte única de verdade: propostas.status deve ser derivado de
-  // proposta_bancos, e nunca divergir dele.
-  let statusBancos: PropostaStatus | null = null;
-  if (algumAprovado) statusBancos = "credito_aprovado";
-  else if (algumEmAnalise) statusBancos = "em_analise_credito";
-  else if (algumRecusado) statusBancos = "credito_recusado";
-  else if (algumErro) statusBancos = "erro_envio";
+  // FONTE ÚNICA DE VERDADE: propostas.status é DERIVADO do estado atual de
+  // proposta_bancos através da função centralizada.
+  const statusBancos = await recalcularStatusGlobalProposta(supabase, propostaId);
 
   // ---- 2) Situação da oportunidade / etapa do funil ----
   const situacao = String(op?.tipoSituacao ?? "")
@@ -1419,10 +1439,13 @@ export async function sincronizarPropostaImpl({
     novoStatus = "cancelada";
   } else {
     // FONTE ÚNICA DE VERDADE: `propostas.status` é DERIVADO do estado atual de
-    // `proposta_bancos` (statusBancos). Nunca fica resíduo de uma tentativa
-    // anterior — se os bancos estão "em análise", a proposta é "em análise",
-    // mesmo que antes estivesse recusada, e vice-versa.
+    // `proposta_bancos` (statusBancos) através da função centralizada.
     let derivado: PropostaStatus | null = statusBancos;
+
+    // Verificação de integridade (Log de divergência pós-polling)
+    if (derivado === "credito_recusado" && (algumAprovado || algumEmAnalise)) {
+      console.warn(`[proposta] Divergência detectada no polling: PRO-${propostaId} derivou 'recusado' mas possui bancos aprovados/em análise.`);
+    }
 
     // Funil/atividades só podem AVANÇAR além do desfecho de crédito
     // (documentos → engenharia → jurídica → contrato). Nunca contradizem os
