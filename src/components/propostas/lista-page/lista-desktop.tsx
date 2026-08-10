@@ -166,7 +166,7 @@ export function ListaDesktop({
                       ) : (
                         <div className="flex flex-col gap-1 font-medium tabular-nums text-foreground transition-colors group-hover/row:text-[var(--banco)] text-[14px]">
                           <div className="flex items-center gap-2">
-                            {p.deleted_at && <Trash2 className="h-3.5 w-3.5 text-destructive" title="Proposta Excluída" />}
+                            {p.deleted_at && <Trash2 className="h-3.5 w-3.5 text-destructive" />}
                             <span>{p.numero_proposta}</span>
                           </div>
                           <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-tight">

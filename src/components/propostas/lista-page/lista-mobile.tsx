@@ -1,5 +1,6 @@
 import { Link, useRouter } from "@tanstack/react-router";
 import { ChevronRight, FileText, Undo2, User, Trash2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
