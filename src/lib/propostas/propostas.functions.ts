@@ -226,6 +226,7 @@ export const listarPropostas = createServerFn({ method: "GET" })
       const responsavel_id = r.usuario_responsavel_id ?? r.usuario_criador_id ?? null;
       const imobId = r.cliente_id ? imobPorCliente.get(r.cliente_id) ?? null : null;
       const corrId = r.cliente_id ? corrPorCliente.get(r.cliente_id) ?? null : null;
+      const comId = r.cliente_id ? comPorCliente.get(r.cliente_id) ?? null : null;
       return {
         ...r,
         responsavel_id,
