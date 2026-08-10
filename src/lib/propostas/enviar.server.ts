@@ -833,7 +833,7 @@ async function enviarPropostaImplInner({
   // Bancos a enviar: por linha (bancoId) ou todos os selecionados ainda não enviados.
   let query = supabase.from("proposta_bancos").select("*").eq("proposta_id", propostaId);
   
-  if (bancoId) {
+  if (bancoId && bancoId !== "todos") {
     // 1. CRÍTICO — O BOTÃO AINDA NÃO ENVIA (CORREÇÃO)
     // Os chamadores passam banco_id (ex: 'itau', 'santander') ou o ID da linha (uuid).
     // Filtramos corretamente para evitar o falso positivo "bancos.length === 0".
