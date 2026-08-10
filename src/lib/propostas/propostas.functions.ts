@@ -145,7 +145,15 @@ export const listarPropostas = createServerFn({ method: "GET" })
     }
 
     const from = (data.pagina - 1) * data.porPagina;
-    query = query.order("created_at", { ascending: false }).range(from, from + data.porPagina - 1);
+    const to = from + data.porPagina - 1;
+
+    // Se houver filtros de nome de parceiro, precisamos buscar uma gama maior no banco
+    // para compensar o filtro manual em memória feito logo abaixo.
+    const temFiltroNome = data.responsavel_nome || data.corretor_nome || data.imobiliaria_nome || data.comercial_nome;
+    const finalTo = temFiltroNome ? Math.max(to, 2000) : to;
+
+    query = query.order("created_at", { ascending: false }).range(from, finalTo);
+
 
     const { data: itens, count, error } = await query;
     if (error) throw new Error(error.message);
