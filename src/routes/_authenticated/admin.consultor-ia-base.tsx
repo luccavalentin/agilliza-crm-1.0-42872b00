@@ -674,7 +674,7 @@ function BibliotecaPage() {
           <DialogHeader>
             <DialogTitle>{editando?.id ? "Editar verbete" : "Novo verbete"}</DialogTitle>
             <DialogDescription>
-              O texto abaixo entra na biblioteca e é usado como referência pelo Consultor IA.
+              O texto abaixo entra na biblioteca e é usado como referência pela inteligência.
             </DialogDescription>
           </DialogHeader>
 
