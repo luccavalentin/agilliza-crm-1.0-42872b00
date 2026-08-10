@@ -833,16 +833,21 @@ async function enviarPropostaImplInner({
   // Bancos a enviar: por linha (bancoId) ou todos os selecionados ainda não enviados.
   let query = supabase.from("proposta_bancos").select("*").eq("proposta_id", propostaId);
   if (bancoId) {
-    query = query.eq("id", bancoId);
+    query = query.or(`banco_id.eq.${bancoId},id.eq.${bancoId}`);
   } else {
     query = query.eq("selecionado", true);
   }
   const { data: bancosSel } = await query;
+
+  if (bancoId && (!bancosSel || bancosSel.length === 0)) {
+    throw new Error("Banco não encontrado nesta proposta.");
+  }
+
   const bancos = (bancosSel ?? []).filter((b: any) => !bancoJaEnviado(b));
   if (bancos.length === 0) {
     throw new Error(
       bancoId
-        ? "Este banco já foi enviado ou não está disponível para envio."
+        ? "Este banco já foi enviado."
         : primeiroEnvio
           ? "Selecione ao menos um banco antes de enviar."
           : "Nenhum banco novo selecionado. Selecione outro banco para enviar.",
