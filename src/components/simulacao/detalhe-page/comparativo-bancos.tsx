@@ -185,6 +185,10 @@ export function ComparativoBancos({
                     }
                   />
                   <MobileStat
+                    rotulo="Prazo"
+                    valor={b.prazo_pagamento_max != null ? `${b.prazo_pagamento_max}m` : s.prazo != null ? `${s.prazo}m` : "—"}
+                  />
+                  <MobileStat
                     rotulo="Total fin. (banco)"
                     valor={totalBancoTexto(b)}
                   />
@@ -250,6 +254,9 @@ export function ComparativoBancos({
                 Taxa a.a.
               </TableHead>
               <TableHead className="text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Prazo
+              </TableHead>
+              <TableHead className="text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 Total fin. (banco)
               </TableHead>
               <TableHead className="text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -310,6 +317,9 @@ export function ComparativoBancos({
                     </TableCell>
                     <TableCell className="py-3 text-right text-sm tabular-nums whitespace-nowrap">
                       {b.taxa_juros_ano != null ? formatTaxa(b.taxa_juros_ano) : "—"}
+                    </TableCell>
+                    <TableCell className="py-3 text-right text-sm tabular-nums whitespace-nowrap">
+                      {b.prazo_pagamento_max ?? s.prazo ?? "—"}{b.prazo_pagamento_max || s.prazo ? "m" : ""}
                     </TableCell>
                     <TableCell className="py-3 text-right text-sm font-medium tabular-nums whitespace-nowrap">
                       {totalBancoTexto(b)}
