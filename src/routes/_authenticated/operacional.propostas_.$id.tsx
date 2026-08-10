@@ -14,7 +14,8 @@ import {
   faltantesEnvolvido, 
 } from "@/lib/propostas/campos-obrigatorios";
 import { supabase } from "@/integrations/supabase/client";
-import { envolvidoParaForm, bancoJaEnviado } from "@/components/proposta/participante-form";
+import { envolvidoParaForm } from "@/components/proposta/participante-form";
+import { bancoJaEnviado } from "@/components/proposta/status-bancos-proposta";
 import { useEnviarProposta } from "@/hooks/use-enviar-proposta";
 
 // Novos componentes de visualização
