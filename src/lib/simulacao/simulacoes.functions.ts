@@ -733,7 +733,7 @@ const listarSchema = z.object({
 export const listarSimulacoes = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => listarSchema.parse(d))
-  .handler(async ({ data, context }): Promise<{ itens: SimulacaoListaItem[]; total: number }> => {
+  .handler(async ({ data, context }): Promise<{ itens: SimulacaoListaItem[]; total: number; stats?: { volumeTotal: number; prazoMedio: number } }> => {
     const { supabase, userId } = context;
     const from = (data.pagina - 1) * data.porPagina;
     const to = from + data.porPagina - 1;
