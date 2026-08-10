@@ -143,7 +143,7 @@ export const listarClientes = createServerFn({ method: "GET" })
         (r: any): ClienteListaItem => ({
           id: r.id,
           numero_cliente: r.numero_cliente,
-          nome: r.nome,
+          nome: toTitleCase(r.nome),
           documento: podePii ? r.documento : mascararDocumento(r.documento ?? ""),
           documento_masc: !podePii,
           telefone_celular: r.telefone_celular,
@@ -531,24 +531,24 @@ export const atualizarCliente = createServerFn({ method: "POST" })
       .from("clientes")
       .update({
         tipo_pessoa: campos.tipo_pessoa,
-        nome: campos.nome,
+        nome: toTitleCase(campos.nome),
         documento: campos.documento,
         documento_secundario: campos.documento_secundario ?? null,
         data_nascimento: campos.data_nascimento,
         estado_civil: campos.estado_civil,
         regime_casamento: campos.regime_casamento ?? null,
-        mae: campos.mae ?? null,
-        pai: campos.pai ?? null,
+        mae: toTitleCase(campos.mae) || null,
+        pai: toTitleCase(campos.pai) || null,
         sexo: campos.sexo ?? null,
-        nacionalidade: campos.nacionalidade ?? null,
+        nacionalidade: toTitleCase(campos.nacionalidade) || null,
         naturalidade: campos.naturalidade ?? null,
         tipo_documento_identidade: campos.tipo_documento_identidade ?? null,
         numero_documento: campos.numero_documento ?? null,
         orgao_expedidor: campos.orgao_expedidor ?? null,
         uf_expedicao: campos.uf_expedicao ?? null,
         data_expedicao: campos.data_expedicao || null,
-        profissao: campos.profissao ?? null,
-        empresa: campos.empresa ?? null,
+        profissao: toTitleCase(campos.profissao) || null,
+        empresa: toTitleCase(campos.empresa) || null,
         banco_conta: campos.banco_conta ?? null,
         agencia: campos.agencia ?? null,
         conta_corrente: campos.conta_corrente ?? null,
@@ -560,19 +560,19 @@ export const atualizarCliente = createServerFn({ method: "POST" })
         utiliza_fgts: campos.utiliza_fgts ?? false,
         fg_autorizacao_dados: campos.fg_autorizacao_dados ?? false,
         origem: campos.origem,
-        conjuge_nome: campos.conjuge_nome ?? null,
+        conjuge_nome: toTitleCase(campos.conjuge_nome) || null,
         conjuge_cpf: campos.conjuge_cpf ?? null,
         conjuge_data_nascimento: campos.conjuge_data_nascimento || null,
-        conjuge_nome_mae: campos.conjuge_nome_mae ?? null,
+        conjuge_nome_mae: toTitleCase(campos.conjuge_nome_mae) || null,
         conjuge_sexo: campos.conjuge_sexo ?? null,
-        conjuge_nacionalidade: campos.conjuge_nacionalidade ?? null,
+        conjuge_nacionalidade: toTitleCase(campos.conjuge_nacionalidade) || null,
         conjuge_tipo_documento_identidade: campos.conjuge_tipo_documento_identidade ?? null,
         conjuge_numero_documento: campos.conjuge_numero_documento ?? null,
         conjuge_orgao_expedidor: campos.conjuge_orgao_expedidor ?? null,
         conjuge_uf_expedicao: campos.conjuge_uf_expedicao ?? null,
         conjuge_data_expedicao: campos.conjuge_data_expedicao || null,
-        conjuge_profissao: campos.conjuge_profissao ?? null,
-        conjuge_empresa: campos.conjuge_empresa ?? null,
+        conjuge_profissao: toTitleCase(campos.conjuge_profissao) || null,
+        conjuge_empresa: toTitleCase(campos.conjuge_empresa) || null,
         conjuge_renda: campos.conjuge_renda ?? null,
         conjuge_email: campos.conjuge_email ?? null,
         conjuge_celular: campos.conjuge_celular ?? null,
@@ -626,11 +626,20 @@ export const getCliente = createServerFn({ method: "GET" })
       if (c.documento_secundario)
         c.documento_secundario = mascararDocumento(c.documento_secundario);
     }
+    // Cadastros antigos (gravados em CAIXA ALTA) são exibidos já no padrão do sistema.
+    const c2 = cliente as any;
+    for (const campo of [
+      "nome", "mae", "pai", "nacionalidade", "profissao", "empresa",
+      "conjuge_nome", "conjuge_nome_mae", "conjuge_nacionalidade",
+      "conjuge_profissao", "conjuge_empresa",
+    ]) {
+      if (typeof c2[campo] === "string" && c2[campo]) c2[campo] = toTitleCase(c2[campo]);
+    }
     return {
-      cliente: cliente as any,
+      cliente: c2,
       podePii,
-      etapa_codigo: (cliente as any).cliente_pipeline?.pipeline_stages?.codigo ?? null,
-      responsavel_nome: (cliente as any).responsavel?.nome ?? null,
+      etapa_codigo: c2.cliente_pipeline?.pipeline_stages?.codigo ?? null,
+      responsavel_nome: toTitleCase(c2.responsavel?.nome) || null,
     };
   });
 
@@ -763,7 +772,7 @@ export const listarPainel = createServerFn({ method: "GET" })
           const corr = parceiros.find((v) => v.tipo_vinculo === "corretor");
           return {
             id: r.id,
-            nome: r.nome,
+            nome: toTitleCase(r.nome),
             numero_cliente: r.numero_cliente,
             vistoria_agendada_em: r.vistoria_agendada_em ?? null,
             vistoria_concluida_em: r.vistoria_concluida_em ?? null,
@@ -950,7 +959,7 @@ export const salvarVendedor = createServerFn({ method: "POST" })
     const payload: Record<string, unknown> = {
       cliente_id,
       tipo_pessoa: data.tipo_pessoa,
-      nome: data.nome.trim(),
+      nome: toTitleCase(data.nome),
       renda_total_declarada:
         renda_total_declarada != null && String(renda_total_declarada).trim() !== ""
           ? Number(String(renda_total_declarada).replace(/\./g, "").replace(",", "."))
