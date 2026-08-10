@@ -327,7 +327,10 @@ export function ResultadoInlineCompleta({ simulacaoId, onFechar, isSecundaria }:
                           rotulo="Total fin. (banco)"
                           valor={totalBancoTexto(b)}
                         />
-                        <MobileStat rotulo="IOF (banco)" valor={formatBRL(b.valor_iof)} />
+                        <MobileStat 
+                          rotulo="IOF (banco)" 
+                          valor={b.valor_iof != null ? formatBRL(b.valor_iof) : "—"} 
+                        />
 
                         <MobileStat
                           rotulo="Renda estimada"
@@ -447,8 +450,8 @@ export function ResultadoInlineCompleta({ simulacaoId, onFechar, isSecundaria }:
                             {totalBancoTexto(b)}
                           </TableCell>
 
-                          <TableCell className="px-2 py-2 text-right tabular-nums whitespace-nowrap">
-                            {formatBRL(b.valor_iof)}
+                          <TableCell className="px-2 py-2 text-right tabular-nums whitespace-nowrap text-muted-foreground">
+                            {b.valor_iof != null ? formatBRL(b.valor_iof) : "—"}
                           </TableCell>
                           <TableCell className="px-2 py-2 text-right font-semibold tabular-nums whitespace-nowrap text-primary">
                             {formatBRL(rendaMinimaDoBanco(b))}
