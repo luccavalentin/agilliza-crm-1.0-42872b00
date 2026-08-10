@@ -80,6 +80,7 @@ export async function recalcularStatusGlobalProposta(
   if (algumEmAnalise) return "em_analise_credito";
   if (algumRecusado) return "credito_recusado";
   if (algumErroEnvio) return "erro_envio";
+  if (algumEmAnalise) return "em_analise_credito";
 
   return "enviada_banco";
 }
