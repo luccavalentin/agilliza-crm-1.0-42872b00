@@ -626,18 +626,6 @@ function Pagina() {
         open={Boolean(participanteModal)}
         onOpenChange={(v) => !v && setParticipanteModal(null)}
         titulo="Completar dados do participante"
-        onEnviarAgora={() => {
-            const bancosProp = data?.bancos ?? [];
-            const bancosPendentes = bancosProp.filter((b: any) => b.selecionado && !bancoJaEnviado(b));
-            const bancoId = bancosPendentes.length === 1 ? bancosPendentes[0].banco_id : undefined;
-            
-            setParticipanteModal(null);
-            handleEnviarHook({
-                propostaId: id,
-                bancoId,
-                envolvidos: data?.envolvidos
-            });
-        }}
         avisoTopo={
           participanteModal && (
             <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive font-medium leading-relaxed">
@@ -652,75 +640,64 @@ function Pagina() {
         inicial={participanteModal ? envolvidoParaForm(participanteModal) : undefined}
         propostaId={id}
         focarPendencias={true}
-        onSalvar={async (principal, conjuge) => {
+        onSalvar={async (principal, conjuge, opcoes) => {
           if (!participanteModal?.id) return;
           try {
             await atualizarEnvolvido({
-              data: {
-                id: participanteModal.id,
-                ...principal,
-                proposta_id: id,
-              },
+              data: { id: participanteModal.id, dados: principal },
             });
             if (conjuge && participanteModal.conjuge_id) {
               await atualizarEnvolvido({
-                data: {
-                  id: participanteModal.conjuge_id,
-                  ...conjuge,
-                  proposta_id: id,
-                },
+                data: { id: participanteModal.conjuge_id, dados: conjuge },
               });
             } else if (conjuge) {
               await adicionarEnvolvido({
-                data: {
-                  ...conjuge,
-                  proposta_id: id,
-                },
+                data: { proposta_id: id, dados: conjuge },
               });
             }
             toast.success("Dados do participante atualizados.");
             await qc.invalidateQueries({ queryKey: ["proposta", id] });
-            
-            // Avança para o próximo pendente ou habilita o botão
-            const novosPendentes = pendentes.filter((item: any) => item.env.id !== participanteModal.id);
+
+            // Avança para o próximo pendente; quando não houver mais, envia.
+            const novosPendentes = pendentes.filter(
+              (item: any) => item.env.id !== participanteModal.id,
+            );
             if (novosPendentes.length > 0) {
               setParticipanteModal(novosPendentes[0].env);
               setIndiceParticipante(novosPendentes[0].index);
-            } else {
-              setParticipanteModal(null);
+              return;
             }
+
+            if (!opcoes?.enviar) {
+              setParticipanteModal(null);
+              return;
+            }
+
+            const bancosProp = data?.bancos ?? [];
+            const bancosPendentes = bancosProp.filter(
+              (b: any) => b.selecionado && !bancoJaEnviado(b),
+            );
+            const bancoId =
+              bancosPendentes.length === 1 ? bancosPendentes[0].banco_id : undefined;
+            const atualizada: any = await qc.fetchQuery(propostaQueryOptions(id));
+            const r = await handleEnviarHook({
+              propostaId: id,
+              bancoId,
+              envolvidos: atualizada?.envolvidos ?? data?.envolvidos,
+              onCadastroIncompleto: (env: any) => setParticipanteModal(env),
+            });
+            // Só fecha quando o envio realmente concluiu (o gate devolve
+            // undefined quando bloqueou por cadastro incompleto).
+            if (r) setParticipanteModal(null);
           } catch (e: any) {
             toast.error(e?.message ?? "Falha ao salvar participante.");
           }
         }}
         onSalvoPermanecer={() => {
-           // O modal fecha no onSalvar. Se quisermos que fique aberto:
-           // setParticipanteModal(null);
+          /* mantém o modal aberto; o fechamento é decidido no onSalvar */
         }}
-        rodapeExtra={
-          <Button
-            variant="default"
-            className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5"
-            onClick={async () => {
-               // Dispara o evento de clique no botão "Salvar" do próprio Dialog
-               // para garantir que a validação e o onSalvar ocorram.
-               // E depois dispara o envio.
-               const tid = toast.loading("Salvando e preparando envio...");
-               try {
-                  // Como não temos acesso fácil à função de submit interna sem mudar muita coisa,
-                  // vamos simular o clique ou chamar as funções em sequência.
-                  // Mas o submit do Dialog já chama onSalvar.
-                  // Uma forma limpa é ter uma flag 'enviarAposSalvar'
-                  toast.info("Clique em 'Salvar' para atualizar os dados e depois 'Enviar ao Banco' na aba de resumo.");
-               } finally {
-                  toast.dismiss(tid);
-               }
-            }}
-          >
-            <Send className="h-4 w-4" /> Enviar ao banco agora
-          </Button>
-        }
       />
+
 
     </div>
   );
