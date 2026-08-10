@@ -7,7 +7,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Table,
   TableBody,
@@ -123,7 +122,6 @@ export function ContasKpiDialog({
               </TableBody>
             </Table>
           )}
-          </div>
         </div>
       </DialogContent>
     </Dialog>

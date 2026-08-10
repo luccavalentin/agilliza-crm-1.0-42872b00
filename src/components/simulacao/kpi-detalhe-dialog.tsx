@@ -40,9 +40,9 @@ export function KpiDetalheDialog({
               </DialogTitle>
               <DialogDescription>Valor atual: {k.valor}</DialogDescription>
             </DialogHeader>
-            <ScrollArea className="flex-1">
-              <div className="min-h-0 p-6">{k.detalhe}</div>
-            </ScrollArea>
+            <div className="brand-scroll scroll-shadow-bottom flex-1 overflow-y-auto px-6 py-4">
+              {k.detalhe}
+            </div>
           </>
         )}
       </DialogContent>
