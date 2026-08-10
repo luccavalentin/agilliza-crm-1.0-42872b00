@@ -581,6 +581,8 @@ export const criarProposta = createServerFn({ method: "POST" })
         homefin_id_simulacao_banco: b.homefin_id_simulacao_banco,
         selecionado: true,
         status_banco: "aguardando",
+        mensagem_banco:
+          "Proposta criada, ainda NÃO enviada ao banco. Complete o cadastro dos participantes e clique em “Enviar ao banco”.",
         valor_parcela: b.valor_parcela,
         taxa_juros_ano: b.taxa_juros_ano,
         prazo_pagamento_max: b.prazo_pagamento_max,

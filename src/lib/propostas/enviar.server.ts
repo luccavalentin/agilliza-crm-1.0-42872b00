@@ -1079,9 +1079,17 @@ async function enviarPropostaImplInner({
   else if (algumRecusado) novoStatusGlobal = "credito_recusado";
   else if (sucesso === 0 && primeiroEnvio) novoStatusGlobal = "erro_envio";
 
-  if (novoStatusGlobal !== statusAtual) {
-    await supabase.from("propostas").update({ status: novoStatusGlobal }).eq("id", propostaId);
-  }
+  // `propostas.ultimo_erro` é apenas o espelho das linhas de banco desta
+  // tentativa — nunca resíduo de tentativas anteriores. Isso elimina as
+  // mensagens contraditórias (cabeçalho com erro antigo x banco OK).
+  const errosDestaTentativa = resultados
+    .filter((r) => r.status === "erro")
+    .map((r) => `${r.nome_banco ?? "Banco"}: ${r.mensagem ?? "falha ao enviar"}`);
+  const patchFinal: Record<string, any> = {
+    ultimo_erro: errosDestaTentativa.length > 0 ? errosDestaTentativa.join(" | ") : null,
+  };
+  if (novoStatusGlobal !== statusAtual) patchFinal.status = novoStatusGlobal;
+  await supabase.from("propostas").update(patchFinal as any).eq("id", propostaId);
 
   await supabase.from("proposta_historico").insert({
     proposta_id: propostaId,

@@ -277,29 +277,42 @@ function Pagina() {
   // para trazer o retorno do banco sem depender do clique manual em "Sincronizar".
   const sincronizarAutoFn = useServerFn(sincronizarProposta);
   const propostaStatus = data?.proposta?.status as string | undefined;
+  // Só faz sentido consultar o banco quando a proposta já foi efetivamente
+  // enviada (existe protocolo/numero do banco em alguma linha). Sem isso o
+  // polling gerava autenticação e chamadas contínuas sem nada para ler.
+  const temProtocoloBanco = (data?.bancos ?? []).some(
+    (b: any) => !!(b.numero_proposta_banco || b.homefin_id_proposta || b.codigo_oportunidade_homefin),
+  );
   useEffect(() => {
     const terminais = ["contrato_emitido", "cancelada", "credito_recusado", "rascunho"];
     if (!propostaStatus || terminais.includes(propostaStatus)) return;
+    if (!temProtocoloBanco) return;
     let cancelado = false;
     let falhasSeguidas = 0;
     let avisouFalha = false;
-    let iv: ReturnType<typeof setInterval> | null = null;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    // Intervalo base de 5 minutos, com backoff progressivo (até 20 min) para
+    // não manter a integração sob consulta contínua.
+    const BASE = 5 * 60_000;
+    let intervalo = BASE;
+    const agendar = () => {
+      if (cancelado) return;
+      timer = setTimeout(tick, intervalo);
+    };
     const tick = async () => {
       if (cancelado) return;
       try {
         const r = await sincronizarAutoFn({ data: { proposta_id: id } });
         falhasSeguidas = 0;
+        intervalo = BASE;
         if (!cancelado && r?.atualizado) {
           qc.invalidateQueries({ queryKey: ["proposta", id] });
         }
       } catch {
         falhasSeguidas++;
+        intervalo = Math.min(intervalo * 2, 20 * 60_000);
         // Após 3 falhas seguidas, para de tentar e avisa uma única vez.
-        // Evita spam de requests contra integração indisponível e dá
-        // sinal visível ao usuário para usar o botão manual como fallback.
-        if (falhasSeguidas >= 3 && iv) {
-          clearInterval(iv);
-          iv = null;
+        if (falhasSeguidas >= 3) {
           if (!avisouFalha) {
             avisouFalha = true;
             toast.warning(
@@ -307,20 +320,19 @@ function Pagina() {
               { duration: 8_000 },
             );
           }
+          return;
         }
       }
+      agendar();
     };
-    // Espera 30s antes do primeiro poll: bancos como Itaú/Santander levam
-    // alguns segundos para propagar a inclusão da proposta; ler antes disso
-    // devolve estado transitório e faria a UI piscar "erro de envio".
-    const t0 = setTimeout(tick, 30_000);
-    iv = setInterval(tick, 10_000);
+    // Espera 60s antes do primeiro poll: bancos levam alguns segundos para
+    // propagar a inclusão da proposta.
+    timer = setTimeout(tick, 60_000);
     return () => {
       cancelado = true;
-      clearTimeout(t0);
-      if (iv) clearInterval(iv);
+      if (timer) clearTimeout(timer);
     };
-  }, [id, propostaStatus, sincronizarAutoFn, qc]);
+  }, [id, propostaStatus, temProtocoloBanco, sincronizarAutoFn, qc]);
 
 
   // Envia a proposta ao banco de forma automática (usado tanto após salvar o
