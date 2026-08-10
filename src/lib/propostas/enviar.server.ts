@@ -1241,7 +1241,8 @@ async function enviarPropostaImplInner({
     }
   }
 
-  return recalcularStatusGlobalProposta(supabase, propostaId);
+  const finalStatus = await recalcularStatusGlobalProposta(supabase, propostaId);
+  return { status: finalStatus ?? novoStatusGlobal, bancos: resultados };
 }
 
 /**
@@ -1776,5 +1777,6 @@ export { ehFalhaIntegracaoBanco, bancoJaEnviado } from "./enviar/helpers-retorno
 export {
   cancelarPropostaHomefinImpl,
   cancelarOportunidadeHomefinGenerico,
+  enviarFollowupHomefinImpl,
 } from "./enviar/lifecycle.server";
 
