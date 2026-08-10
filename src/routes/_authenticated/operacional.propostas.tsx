@@ -365,22 +365,31 @@ function Pagina() {
         <VolumeCard volume={volumeTotal} loading={isLoading} />
       </div>
 
-      <FiltrosPropostas
-        escopo={escopo}
-        setEscopo={setEscopo}
-        q={q}
-        setQ={setQ}
-        responsavel={responsavel}
-        setResponsavel={setResponsavel}
-        colegas={colegas}
-        dataInicio={dataInicio}
-        setDataInicio={setDataInicio}
-        dataFim={dataFim}
-        setDataFim={setDataFim}
-        onLimpar={limparFiltros}
-        verExcluidas={verExcluidas}
-        setVerExcluidas={setVerExcluidas}
-      />
+        <FiltrosPropostas
+          escopo={escopo}
+          setEscopo={setEscopo}
+          q={q}
+          setQ={setQ}
+          responsavel={responsavel}
+          setResponsavel={setResponsavel}
+          colegas={colegas}
+          dataInicio={dataInicio}
+          setDataInicio={setDataInicio}
+          dataFim={dataFim}
+          setDataFim={setDataFim}
+          onLimpar={limparFiltros}
+          verExcluidas={verExcluidas}
+          setVerExcluidas={setVerExcluidas}
+          corretorFiltro={corretorFiltro}
+          setCorretorFiltro={setCorretorFiltro}
+          corretores={corretores}
+          imobFiltro={imobFiltro}
+          setImobFiltro={setImobFiltro}
+          imobiliarias={imobiliarias}
+          comercialFiltro={comercialFiltro}
+          setComercialFiltro={setComercialFiltro}
+          comerciais={comerciais}
+        />
 
       <ListaMobile
         isLoading={isLoading}
