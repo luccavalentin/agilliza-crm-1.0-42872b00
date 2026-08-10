@@ -8,6 +8,7 @@ import {
   ressincronizarDadosParticipantes 
 } from "@/lib/propostas/propostas.functions";
 import { faltantesEnvolvido } from "@/lib/propostas/campos-obrigatorios";
+import { propostaQueryOptions } from "@/lib/propostas/queries";
 
 export function useEnviarProposta() {
   const router = useRouter();
@@ -43,12 +44,9 @@ export function useEnviarProposta() {
       // 2. Buscar envolvidos atualizados se não foram passados ou se houve alteração
       let currentEnvolvidos = envolvidos;
       if (!currentEnvolvidos || res.alterados > 0) {
-        // Se res.alterados > 0, os envolvidos passados estão defasados
-        const { data: updatedData } = await qc.fetchQuery({
-            queryKey: ["proposta", propostaId],
-            // A queryFn padrão do TanStack query carregará obterProposta
-        }) as any;
-        currentEnvolvidos = updatedData?.envolvidos || [];
+        // Se res.alterados > 0, os envolvidos passados estão defasados.
+        const atualizada = await qc.fetchQuery(propostaQueryOptions(propostaId));
+        currentEnvolvidos = (atualizada as any)?.envolvidos ?? [];
       }
 
       // 3. Validar pendências
