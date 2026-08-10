@@ -277,9 +277,16 @@ function Pagina() {
   // para trazer o retorno do banco sem depender do clique manual em "Sincronizar".
   const sincronizarAutoFn = useServerFn(sincronizarProposta);
   const propostaStatus = data?.proposta?.status as string | undefined;
+  // Só faz sentido consultar o banco quando a proposta já foi efetivamente
+  // enviada (existe protocolo/numero do banco em alguma linha). Sem isso o
+  // polling gerava autenticação e chamadas contínuas sem nada para ler.
+  const temProtocoloBanco = (data?.bancos ?? []).some(
+    (b: any) => !!(b.numero_proposta_banco || b.homefin_id_proposta || b.codigo_oportunidade_homefin),
+  );
   useEffect(() => {
     const terminais = ["contrato_emitido", "cancelada", "credito_recusado", "rascunho"];
     if (!propostaStatus || terminais.includes(propostaStatus)) return;
+    if (!temProtocoloBanco) return;
     let cancelado = false;
     let falhasSeguidas = 0;
     let avisouFalha = false;
