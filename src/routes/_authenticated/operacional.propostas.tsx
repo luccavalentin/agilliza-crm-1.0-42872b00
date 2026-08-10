@@ -62,6 +62,7 @@ function Pagina() {
   const [responsavel, setResponsavel] = useState<string>("todos");
   const [dataInicio, setDataInicio] = useState("");
   const [dataFim, setDataFim] = useState("");
+
   const [corretorFiltro, setCorretorFiltro] = useState("todos");
   const [imobFiltro, setImobFiltro] = useState("todos");
   const [comercialFiltro, setComercialFiltro] = useState("todos");
@@ -199,7 +200,7 @@ function Pagina() {
       }),
   });
 
-  const todosItens = data?.itens ?? [];
+  const todosItens = useMemo(() => (data?.itens ?? []).filter(i => !i.deleted_at || verExcluidas), [data?.itens, verExcluidas]);
 
   const estatisticasGrupo = useMemo(() => {
     const base: Record<GrupoProposta, { count: number; volume: number }> = {
