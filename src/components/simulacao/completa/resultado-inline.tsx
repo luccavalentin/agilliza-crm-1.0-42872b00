@@ -138,7 +138,7 @@ export function ResultadoInlineCompleta({ simulacaoId, onFechar, isSecundaria }:
       
       await handleEnviarHook({
         propostaId: proposta_id,
-        bancoId,
+        bancoId: bancoId,
         enviarFn: enviarPropostaFn
       });
 

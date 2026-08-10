@@ -185,7 +185,7 @@ function Pagina() {
     }
   }
 
-  async function criar(simulacaoBancoId: string) {
+  async function criar(simulacaoBancoId: string, bancoId?: string) {
     setCriandoBanco(simulacaoBancoId);
     try {
       const { proposta_id } = await criarProposta({
@@ -195,7 +195,10 @@ function Pagina() {
       // (useEnviarProposta), que ressincroniza o cadastro, valida os campos
       // obrigatórios e abre o formulário quando faltar algo.
       try {
-        await handleEnviarHook({ propostaId: proposta_id });
+        await handleEnviarHook({ 
+          propostaId: proposta_id,
+          bancoId // Passa o ID do banco (UUID da tabela bancos)
+        });
       } catch {
         /* mensagem já exibida pelo gate */
       }
