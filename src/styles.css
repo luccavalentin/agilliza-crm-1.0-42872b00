@@ -361,32 +361,39 @@
   scrollbar-color: color-mix(in oklab, var(--primary) 55%, transparent) transparent;
 }
 .brand-scroll::-webkit-scrollbar {
+  width: 8px;
   height: 8px;
 }
 .brand-scroll::-webkit-scrollbar-track {
-  background: color-mix(in oklab, var(--primary) 8%, transparent);
+  background: color-mix(in oklab, var(--primary) 5%, transparent);
   border-radius: 9999px;
-  margin: 0 4px;
+  margin: 2px;
 }
 .brand-scroll::-webkit-scrollbar-thumb {
   border-radius: 9999px;
-  background: linear-gradient(
-    90deg,
-    color-mix(in oklab, var(--primary) 65%, transparent),
-    var(--primary)
-  );
+  background: var(--primary);
   border: 2px solid transparent;
   background-clip: padding-box;
   transition: background 0.2s ease;
 }
 .brand-scroll::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(
-    90deg,
-    color-mix(in oklab, var(--primary) 80%, transparent),
-    var(--primary)
-  );
+  background: color-mix(in oklab, var(--primary) 85%, #000);
   background-clip: padding-box;
 }
+
+/* Indicadores de rolagem para modais (sombra/degradê) */
+.scroll-shadow-bottom {
+  background-image: linear-gradient(var(--background), var(--background)),
+    linear-gradient(var(--background), var(--background)),
+    linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0)),
+    linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.1));
+  background-position: 0 0, 0 100%, 0 0, 0 100%;
+  background-repeat: no-repeat;
+  background-color: var(--background);
+  background-size: 100% 40px, 100% 40px, 100% 14px, 100% 14px;
+  background-attachment: local, local, scroll, scroll;
+}
+
 
 /* ===================== Hub Operacional (Tarefas & Demandas) ===================== */
 /* Cabeçalho editorial com wash sutil da marca e halo lateral. */

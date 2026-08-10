@@ -561,7 +561,7 @@ function Pagina() {
             ))
           : kpis.map((k) => (
               <button
-                key={k.label}
+                key={k.id}
                 type="button"
                 onClick={() => setKpiAberto(k.id)}
                 className="group relative flex flex-col items-start gap-2 overflow-hidden rounded-xl border border-border/60 bg-card px-2.5 py-2.5 text-left shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 sm:flex-row sm:items-center sm:gap-3"

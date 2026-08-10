@@ -81,7 +81,7 @@ export function VincularClienteDialog({ propostaId }: { propostaId: string }) {
           />
         </div>
 
-        <div className="max-h-72 space-y-1 overflow-y-auto">
+        <div className="brand-scroll scroll-shadow-bottom flex-1 space-y-1 overflow-y-auto px-6 py-4">
           {termoBusca.length < 2 ? (
             <p className="px-1 py-6 text-center text-sm text-muted-foreground">
               Digite ao menos 2 caracteres para buscar.

@@ -245,7 +245,7 @@ export function NovaDemandaDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-3">
+        <div className="brand-scroll scroll-shadow-bottom flex-1 space-y-3 overflow-y-auto px-6 py-4">
           <div className="space-y-1.5">
             <Label>Título</Label>
             <Input

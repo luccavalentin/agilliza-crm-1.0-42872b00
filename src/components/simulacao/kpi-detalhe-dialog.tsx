@@ -28,7 +28,7 @@ export function KpiDetalheDialog({
   const k = kpis.find((x) => x.id === aberto);
   return (
     <Dialog open={!!aberto} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-h-[90vh] sm:max-w-xl flex flex-col p-0 overflow-hidden">
+      <DialogContent className="sm:max-w-xl">
         {k && (
           <>
             <DialogHeader className="p-6 pb-0">
@@ -40,9 +40,9 @@ export function KpiDetalheDialog({
               </DialogTitle>
               <DialogDescription>Valor atual: {k.valor}</DialogDescription>
             </DialogHeader>
-            <ScrollArea className="flex-1">
-              <div className="min-h-0 p-6">{k.detalhe}</div>
-            </ScrollArea>
+            <div className="brand-scroll scroll-shadow-bottom flex-1 overflow-y-auto px-6 py-4">
+              {k.detalhe}
+            </div>
           </>
         )}
       </DialogContent>

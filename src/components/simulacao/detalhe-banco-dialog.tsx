@@ -139,7 +139,7 @@ export function DetalheBancoDialog({
           <FileText className="h-4 w-4" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-h-[92vh] max-w-4xl overflow-hidden p-0">
+      <DialogContent className="max-w-4xl">
         {/* Barra de cor do banco */}
         <div className="h-1 w-full shrink-0" style={{ backgroundColor: cor }} aria-hidden />
 
@@ -170,7 +170,7 @@ export function DetalheBancoDialog({
           </div>
         </DialogHeader>
 
-        <div className="max-h-[calc(92vh-5rem)] space-y-5 overflow-y-auto bg-muted/20 p-5">
+        <div className="brand-scroll scroll-shadow-bottom flex-1 space-y-5 overflow-y-auto bg-muted/20 p-5">
           {bancoNaoFinanciouDespesas && (
             <div className="flex items-start gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3">
               <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />

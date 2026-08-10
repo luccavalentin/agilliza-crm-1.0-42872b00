@@ -70,7 +70,7 @@ export function EncaminharSimulacaoDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid gap-4 py-4">
+        <div className="brand-scroll scroll-shadow-bottom flex-1 grid gap-4 overflow-y-auto px-6 py-4">
           {!isPdf ? (
             <>
               <div className="grid gap-2">

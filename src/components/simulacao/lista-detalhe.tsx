@@ -90,7 +90,7 @@ export function DetalheSimulacoes({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="brand-scroll scroll-shadow-bottom flex-1 overflow-y-auto space-y-4 px-6 py-4">
       <p className="text-sm text-muted-foreground">{descricao}</p>
 
       {resumo.length > 0 && (

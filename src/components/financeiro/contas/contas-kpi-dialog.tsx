@@ -7,7 +7,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Table,
   TableBody,
@@ -68,16 +67,15 @@ export function ContasKpiDialog({
 
   return (
     <Dialog open={!!filtro} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[90vh] w-[calc(100vw-2rem)] max-w-4xl flex-col overflow-hidden p-0">
-        <DialogHeader className="shrink-0 border-b border-border px-5 py-4">
+      <DialogContent className="max-w-4xl">
+        <DialogHeader className="border-b border-border">
           <DialogTitle className="text-base">{filtro?.titulo}</DialogTitle>
           <DialogDescription>
             {itens.length} {itens.length === 1 ? "conta" : "contas"} · total {formatBRL(total)}
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="min-h-0 flex-1">
-          <div className="px-2 pb-4 sm:px-5">
+        <div className="brand-scroll scroll-shadow-bottom min-h-0 flex-1 overflow-y-auto px-6 py-4">
           {isLoading ? (
             <div className="flex items-center justify-center gap-2 py-12 text-sm text-muted-foreground">
               <Loader2 className="size-4 animate-spin" /> Carregando…
@@ -124,8 +122,7 @@ export function ContasKpiDialog({
               </TableBody>
             </Table>
           )}
-          </div>
-        </ScrollArea>
+        </div>
       </DialogContent>
     </Dialog>
   );

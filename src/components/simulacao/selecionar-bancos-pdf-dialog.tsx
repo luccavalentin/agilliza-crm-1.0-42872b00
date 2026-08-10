@@ -114,7 +114,7 @@ export function SelecionarBancosPdfDialog({
           <DialogDescription>{descricao}</DialogDescription>
         </DialogHeader>
 
-        <div className="max-h-80 space-y-1 overflow-y-auto">
+        <div className="brand-scroll scroll-shadow-bottom flex-1 space-y-1 overflow-y-auto px-6 py-4">
           <label className="flex cursor-pointer items-center gap-3 rounded-md border border-border px-3 py-2">
             <Checkbox checked={todosMarcados} onCheckedChange={alternarTodos} />
             <span className="text-sm font-medium text-foreground">Selecionar todos</span>

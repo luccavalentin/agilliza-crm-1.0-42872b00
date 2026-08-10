@@ -76,7 +76,7 @@ export function TransferirDialog({
         <DialogHeader>
           <DialogTitle>Transferir demanda</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4">
+        <div className="brand-scroll scroll-shadow-bottom flex-1 space-y-4 overflow-y-auto px-6 py-4">
           <div className="space-y-1.5">
             <Label>Novo responsável</Label>
             <Select value={novo} onValueChange={setNovo}>

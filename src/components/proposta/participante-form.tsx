@@ -241,7 +241,7 @@ export function ParticipanteDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] w-[95vw] max-w-2xl overflow-y-auto">
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
           <div className="flex items-center justify-between gap-4">
             <DialogTitle>{titulo}</DialogTitle>
@@ -256,7 +256,7 @@ export function ParticipanteDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-5" ref={corpoRef}>
+        <div className="brand-scroll scroll-shadow-bottom flex-1 space-y-5 overflow-y-auto px-6 py-4" ref={corpoRef}>
           {avisoTopo}
           <CamposParticipante
             f={f}
