@@ -225,44 +225,42 @@ export const Route = createFileRoute("/_authenticated/operacional/propostas_/$id
       );
     }
 
-function RestaurarBotao({ id }: { id: string }) {
-  const router = useRouter();
-  const qc = useQueryClient();
-  const restaurarFn = useServerFn(restaurarProposta);
-  const [loading, setLoading] = useState(false);
-
-  const handleRestaurar = async () => {
-    try {
-      setLoading(true);
-      await restaurarFn({ data: { id } });
-      toast.success("Proposta restaurada com sucesso!");
-      qc.invalidateQueries({ queryKey: ["proposta", id] });
-      router.invalidate();
-    } catch (error: any) {
-      toast.error(error.message || "Erro ao restaurar proposta");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
-    <Button variant="default" onClick={handleRestaurar} disabled={loading}>
-      {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
-      Restaurar Proposta
-    </Button>
+    <div className="flex flex-wrap gap-3 pt-4">
+      <Button variant="outline" onClick={() => router.navigate({ to: "/operacional/propostas" })}>
+        <ArrowLeft className="mr-2 h-4 w-4" />
+        Voltar para a lista
+      </Button>
+      
+      <Button 
+        variant="default" 
+        onClick={async () => {
+          try {
+            await restaurarProposta({ data: { id } });
+            toast.success("Proposta restaurada com sucesso!");
+            router.navigate({ to: "/operacional/propostas/$id", params: { id } });
+          } catch (err: any) {
+            toast.error(err.message || "Erro ao restaurar");
+          }
+        }}
+      >
+        <RefreshCw className="mr-2 h-4 w-4" />
+        Restaurar Proposta
+      </Button>
+      <ExcluirDefinitivoBotao id={id} />
+    </div>
   );
 }
 
 function ExcluirDefinitivoBotao({ id }: { id: string }) {
   const router = useRouter();
-  const excluirDefinitivoFn = useServerFn(excluirPropostaDefinitivamente);
-  const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const handleExcluir = async () => {
     try {
       setLoading(true);
-      await excluirDefinitivoFn({ data: { id } });
+      await excluirPropostaDefinitivamente({ data: { id } });
       toast.success("Proposta excluída definitivamente!");
       router.navigate({ to: "/operacional/propostas", replace: true });
     } catch (error: any) {
@@ -272,6 +270,7 @@ function ExcluirDefinitivoBotao({ id }: { id: string }) {
       setOpen(false);
     }
   };
+
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
