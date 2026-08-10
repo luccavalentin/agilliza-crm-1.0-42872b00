@@ -315,35 +315,42 @@ export function ParticipanteDialog({
 
         <DialogFooter className="flex-col gap-2 sm:flex-row sm:items-center">
           <div className="flex-1">
-            {tentouEnviar && (erros.size === 0 && errosC.size === 0) && (
-              <div className="flex items-center gap-3">
-                <p className="text-[11px] font-bold text-emerald-600 flex items-center gap-1 uppercase tracking-wider">
-                  <CheckCircle2 className="h-3.5 w-3.5" /> Tudo pronto para enviar
-                </p>
-                {onEnviarAgora && (
-                  <Button 
-                    variant="link" 
-                    size="sm" 
-                    className="h-auto p-0 text-primary font-bold animate-pulse" 
-                    onClick={onEnviarAgora}
-                  >
-                    Enviar proposta agora →
-                  </Button>
-                )}
-              </div>
+            {podeEnviar ? (
+              <p className="flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider text-success">
+                <CheckCircle2 className="h-3.5 w-3.5" /> Tudo pronto para enviar
+              </p>
+            ) : (
+              <p className="text-[11px] font-medium text-muted-foreground">
+                Faltam {pendentesAgora.length} dado(s) obrigatório(s): {pendentesAgora.join(", ")}
+              </p>
             )}
           </div>
-          <div className="flex gap-2">
-            {rodapeExtra}
+          <div className="flex flex-wrap gap-2">
             <Button variant="outline" onClick={() => onOpenChange(false)} disabled={salvando}>
               Cancelar
             </Button>
-            <Button onClick={submit} disabled={salvando}>
+            <Button
+              variant="ghost"
+              onClick={() => submit(false)}
+              disabled={salvando || !podeEnviar}
+            >
+              Salvar sem enviar
+            </Button>
+            <Button
+              onClick={() => submit(true)}
+              disabled={salvando || !podeEnviar}
+              title={
+                podeEnviar
+                  ? "Salva o cadastro e envia a proposta ao banco"
+                  : `Faltam: ${pendentesAgora.join(", ")}`
+              }
+            >
               {salvando && <Loader2 className="mr-1 h-4 w-4 animate-spin" />}
-              Salvar
+              Salvar e enviar ao banco
             </Button>
           </div>
         </DialogFooter>
+
 
       </DialogContent>
     </Dialog>
