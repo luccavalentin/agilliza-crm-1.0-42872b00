@@ -83,14 +83,20 @@ export function ParticipanteDialog({
   const [errosC, setErrosC] = useState<Set<string>>(new Set());
   const [tentouEnviar, setTentouEnviar] = useState(false);
   const corpoRef = useRef<HTMLDivElement>(null);
+  const jaFocou = useRef(false);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      jaFocou.current = false;
+      return;
+    }
     setF(inicial ?? { ...VAZIO, tipo_qualificacao: tipoQualificacaoFixo ?? "CO" });
     setConjuge(conjugeInicial ?? { ...VAZIO, tipo_qualificacao: "TI" });
     setErros(new Set());
     setErrosC(new Set());
     setTentouEnviar(Boolean(focarPendencias));
+    // Resetamos o foco para que o efeito de auto-foco abaixo execute uma vez para este participante
+    jaFocou.current = false;
     // `inicial` e `conjugeInicial` são snapshots. Enquanto este participante
     // estiver aberto, o estado digitado no formulário é a fonte de verdade.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -107,12 +113,17 @@ export function ParticipanteDialog({
 
   // Rola até o primeiro campo pendente quando o modal abre em modo "completar".
   useEffect(() => {
-    if (!open || !focarPendencias) return;
+    if (!open || !focarPendencias || jaFocou.current) return;
+
+    // Aguardamos os erros serem computados e o DOM atualizar para encontrar o campo .border-destructive
     const t = setTimeout(() => {
       const alvo = corpoRef.current?.querySelector<HTMLElement>(".border-destructive");
-      alvo?.scrollIntoView({ block: "center", behavior: "smooth" });
-      alvo?.focus?.();
-    }, 120);
+      if (alvo) {
+        jaFocou.current = true;
+        alvo.scrollIntoView({ block: "center", behavior: "smooth" });
+        alvo.focus?.();
+      }
+    }, 150);
     return () => clearTimeout(t);
   }, [open, focarPendencias, erros]);
 
