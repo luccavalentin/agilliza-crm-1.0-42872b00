@@ -114,14 +114,12 @@ export function StatusBancosProposta({
         };
 
         const temProtocolo = Boolean((b as any).numero_proposta_banco);
-        if (efetivo === "aguardando" && temProtocolo) {
+        if (temProtocolo) {
            cfg = { label: "Em análise no banco", tone: "info" };
         } else if (efetivo === "enviada" && !temProtocolo) {
            cfg = STATUS_BANCO["aguardando"];
         } else if (efetivo === "erro" && !temProtocolo) {
            cfg = STATUS_BANCO["erro"];
-        } else if ((efetivo === "em_analise" || efetivo === "enviada") && temProtocolo) {
-           cfg = { label: "Em análise no banco", tone: "info" };
         }
 
         return (
