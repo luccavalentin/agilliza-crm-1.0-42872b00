@@ -154,7 +154,7 @@ export function ResultadoInlineAmbos({ simulacaoIdSac, simulacaoIdPrice, onFecha
       
       await handleEnviarHook({
         propostaId: proposta_id,
-        bancoId,
+        bancoId: bancoId,
       });
 
       // Navegação já é tratada pelo hook se houver pendência. 
