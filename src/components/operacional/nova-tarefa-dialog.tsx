@@ -100,11 +100,11 @@ export function NovaTarefaDialog({
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="w-[calc(100%-2rem)] max-h-[90vh] overflow-y-auto sm:max-w-lg">
+      <DialogContent className="w-[calc(100%-2rem)] sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Nova tarefa</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4">
+        <div className="brand-scroll scroll-shadow-bottom flex-1 space-y-4 overflow-y-auto px-6 py-4">
           <div className="space-y-1.5">
             <Label>Título</Label>
             <Input
