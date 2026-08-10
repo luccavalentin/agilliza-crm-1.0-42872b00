@@ -91,7 +91,7 @@ function vazio(valor: unknown): boolean {
  * `utiliza_fgts` é booleano com default e nunca é apontado como pendente;
  * `fg_autorizacao_dados` precisa ser `true` (é um aceite do titular).
  */
-export function faltantesEnvolvido(env: Record<string, any>): CampoObrigatorio[] {
+export function faltantesEnvolvido(env: Record<string, any> = {}): CampoObrigatorio[] {
   const pf = String(env?.tipo_pessoa ?? "F") === "F";
   return CAMPOS_OBRIGATORIOS_PARTICIPANTE.filter((c) => {
     if (c.apenasPF && !pf) return false;

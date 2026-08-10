@@ -143,8 +143,8 @@ export function AbaEnviarBanco({
   const pendencias = useMemo(() => {
     return (envolvidos ?? []).map(env => ({
       env,
-      faltantes: faltantesEnvolvido(env)
-    })).filter(p => p.faltantes.length > 0);
+      faltantes: faltantesEnvolvido(env || {})
+    })).filter(p => p.faltantes && p.faltantes.length > 0);
   }, [envolvidos]);
 
   const bloqueado = pendencias.length > 0;
