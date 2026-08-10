@@ -833,7 +833,7 @@ async function enviarPropostaImplInner({
   // Bancos a enviar: por linha (bancoId) ou todos os selecionados ainda não enviados.
   let query = supabase.from("proposta_bancos").select("*").eq("proposta_id", propostaId);
   
-  if (bancoId) {
+  if (bancoId && bancoId !== "todos") {
     // 1. CRÍTICO — O BOTÃO AINDA NÃO ENVIA (CORREÇÃO)
     // Os chamadores passam banco_id (ex: 'itau', 'santander') ou o ID da linha (uuid).
     // Filtramos corretamente para evitar o falso positivo "bancos.length === 0".
@@ -1107,9 +1107,17 @@ async function enviarPropostaImplInner({
   };
 
   const enviados: EnviarResultado["bancos"] = [];
+  // Cache da oportunidade para evitar múltiplos GETs redundantes durante o loop de bancos.
+  const { data: opCache } = await supabase
+    .from("homefin_oportunidades")
+    .select("*")
+    .eq("proposta_id", propostaId)
+    .maybeSingle();
+
   for (const b of bancos as any[]) {
     // Sequencial de propósito (ver comentário acima): evita a condição de
     // corrida na inclusão de múltiplas propostas na mesma oportunidade.
+    // Passamos o opCache para que enviarBancoIntegracao não precise buscar novamente.
     const r = await enviarBancoIntegracao(b);
     enviados.push(r);
   }

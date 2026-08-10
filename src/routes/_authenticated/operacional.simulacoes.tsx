@@ -73,8 +73,8 @@ function Pagina() {
   const excluir = useServerFn(excluirSimulacao);
   const restaurar = useServerFn(restaurarSimulacao);
   const criar = useServerFn(criarProposta);
-  const { enviar: handleEnviarHook } = useEnviarProposta();
   const destravar = useServerFn(destravarSimulacao);
+
 
 
   const obter = useServerFn(obterSimulacao);
@@ -114,6 +114,7 @@ function Pagina() {
   const [propostasCriadas, setPropostasCriadas] = useState<
     Array<{ simulacao_banco_id: string; banco_id: string; nome_banco: string; proposta_id: string; numero: string }>
   >([]);
+  const { enviar: handleEnviarHook, statusPorBanco, limparStatus } = useEnviarProposta();
 
   // Encaminhamento: e-mail ou whatsapp
   const [encaminhamento, setEncaminhamento] = useState<{
@@ -249,6 +250,7 @@ function Pagina() {
 
   async function handleEnviarProposta(id: string, numero: string) {
     setEnvio({ id, numero, bancos: [] });
+    limparStatus();
     setPropostasCriadas([]);
     setEnviandoBancoId(null);
     setEnvioCarregando(true);
@@ -267,7 +269,7 @@ function Pagina() {
   }
 
   async function enviarBancoIndividual(banco: any) {
-    if (!envio || enviandoBancoId) return;
+    if (!envio) return;
     setEnviandoBancoId(banco.id);
     try {
       const res = await criar({
@@ -296,6 +298,12 @@ function Pagina() {
     } finally {
       setEnviandoBancoId(null);
     }
+  }
+  async function enviarTodos(bancos: any[]) {
+    if (!envio) return;
+    // Dispara todos em paralelo no Hook, mas aqui na UI apenas iteramos
+    // O Hook useEnviarProposta agora gerencia o estado individual.
+    await Promise.allSettled(bancos.map(b => enviarBancoIndividual(b)));
   }
 
 
@@ -638,9 +646,9 @@ function Pagina() {
         envio={envio}
         onClose={() => setEnvio(null)}
         carregando={envioCarregando}
-        enviandoBancoId={enviandoBancoId}
-        propostasCriadas={propostasCriadas}
+        statusPorBanco={statusPorBanco}
         onEnviarBanco={enviarBancoIndividual}
+        onEnviarTodos={enviarTodos}
       />
 
       <SelecionarBancosPdfDialog
