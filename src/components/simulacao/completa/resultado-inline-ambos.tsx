@@ -188,9 +188,6 @@ export function ResultadoInlineAmbos({ simulacaoIdSac, simulacaoIdPrice, onFecha
     }
   }
 
-      setCriandoBanco(null);
-    }
-  }
 
   // Remoção do download automático para modo Ambos conforme solicitado.
   useEffect(() => {
