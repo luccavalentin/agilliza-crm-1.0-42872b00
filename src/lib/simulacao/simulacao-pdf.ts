@@ -1224,6 +1224,7 @@ function salvar(doc: jsPDF, s: any, _tipo: string, bancos: any[] = [], filePrefi
 }
 
 
+
 // ---------------------------------------------------------------------------
 // Compatibilidade: detalhe de um único banco = extrato detalhado com 1 banco
 // ---------------------------------------------------------------------------
