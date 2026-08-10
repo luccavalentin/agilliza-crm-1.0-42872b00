@@ -3,6 +3,7 @@ import { Calculator } from "lucide-react";
 import { toast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
+import { limitesLtv } from "@/lib/simulacao/renda";
 import {
   Select,
   SelectContent,
@@ -306,14 +307,19 @@ export function SecaoOperacaoImovel({ ctx }: { ctx: SimulacaoCompletaCtx }) {
           />
           {f.valor_imovel > 0 && (() => {
             const pctEntradaSugerida = Math.round((1 - ltvMax) * 100);
-            const entradaSugerida = Math.round(f.valor_imovel * (1 - ltvMax));
+            const { entradaMinima } = limitesLtv(f.valor_imovel, ltvMax);
+            
+            // Comparação em centavos para o botão sumir quando aplicado
+            const atualCentavos = Math.round(f.valor_entrada * 100);
+            const sugeridaCentavos = Math.round(entradaMinima * 100);
+
             return (
               <p className="text-xs text-muted-foreground">
                 Entrada sugerida ({pctEntradaSugerida}%):{" "}
                 <span className="font-medium text-foreground">
-                  {formatBRL(entradaSugerida)}
+                  {formatBRL(entradaMinima)}
                 </span>
-                {f.valor_entrada !== entradaSugerida && (
+                {atualCentavos !== sugeridaCentavos && (
                   <button
                     type="button"
                     onClick={aplicarEntradaSugerida}
