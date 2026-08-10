@@ -12,13 +12,13 @@ export const STATUS_BANCO: Record<string, { label: string; tone: Tone }> = {
   aguardando: { label: "Aguardando envio", tone: "muted" },
   nao_enviado: { label: "Não enviado", tone: "muted" },
   enviada: { label: "Enviada ao banco", tone: "info" },
-  em_analise: { label: "Em análise de crédito", tone: "info" },
+  em_analise: { label: "Em análise no banco", tone: "info" },
   condicionado: { label: "Aprovado com condições", tone: "warning" },
-  aprovada: { label: "Crédito aprovado", tone: "success" },
-  aprovado: { label: "Crédito aprovado", tone: "success" },
+  aprovada: { label: "Aprovada", tone: "success" },
+  aprovado: { label: "Aprovada", tone: "success" },
   recusada: { label: "Crédito recusado", tone: "danger" },
   recusado: { label: "Crédito recusado", tone: "danger" },
-  erro: { label: "Erro no envio", tone: "danger" },
+  erro: { label: "Falha no envio", tone: "danger" },
   cancelada: { label: "Cancelada", tone: "muted" },
 };
 
