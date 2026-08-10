@@ -78,19 +78,18 @@ export function DialogClientesEtapa({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl overflow-hidden rounded-2xl border border-border/60 bg-gradient-to-b from-card to-card/95 p-0 shadow-2xl">
-        <div className="relative border-b border-border/50 bg-gradient-to-r from-primary/5 via-transparent to-primary/5 px-6 py-4">
-          <DialogHeader className="relative">
-            <DialogTitle className="flex items-center gap-2 text-base font-semibold tracking-tight">
-              <Users className="size-4 text-primary" />
-              {titulo}
-              <span className="ml-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
-                {clientes.length} cliente{clientes.length === 1 ? "" : "s"}
-              </span>
-            </DialogTitle>
-            <DialogDescription>Pesquise e clique para abrir o cadastro.</DialogDescription>
-          </DialogHeader>
-        </div>
-        <div className="space-y-4 px-6 pb-6 pt-4">
+        <DialogHeader className="relative border-b border-border/50 bg-gradient-to-r from-primary/5 via-transparent to-primary/5 px-6 py-4">
+          <DialogTitle className="flex items-center gap-2 text-base font-semibold tracking-tight">
+            <Users className="size-4 text-primary" />
+            {titulo}
+            <span className="ml-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+              {clientes.length} cliente{clientes.length === 1 ? "" : "s"}
+            </span>
+          </DialogTitle>
+          <DialogDescription>Pesquise e clique para abrir o cadastro.</DialogDescription>
+        </DialogHeader>
+
+        <div className="brand-scroll scroll-shadow-bottom flex-1 space-y-4 overflow-y-auto px-6 pb-6 pt-4">
           <div className="group relative">
             <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary" />
             <Input
@@ -101,7 +100,7 @@ export function DialogClientesEtapa({
               className="h-11 rounded-xl border-border/70 bg-background pl-11 pr-4 text-sm shadow-sm"
             />
           </div>
-          <div className="grid max-h-[62vh] grid-cols-1 gap-2 overflow-y-auto pr-1 sm:grid-cols-2 [scrollbar-gutter:stable]">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             {filtrados.map((c) => (
               <button
                 key={c.id}
@@ -233,7 +232,7 @@ export function DialogArquivoContratos(p: DialogArquivoProps) {
             </span>
           </div>
         </div>
-        <div className="mt-3 max-h-[52vh] space-y-2 overflow-y-auto pr-1">
+        <div className="brand-scroll scroll-shadow-bottom mt-3 flex-1 space-y-2 overflow-y-auto p-6 pt-0">
           {p.carregando ? (
             Array.from({ length: 4 }).map((_, i) => (
               <Skeleton key={i} className="h-16 w-full rounded-lg" />
