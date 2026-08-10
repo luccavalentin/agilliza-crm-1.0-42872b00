@@ -1160,6 +1160,23 @@ export async function enviarSimulacaoImpl({
 
 
 
+    // REGRA 3d: Marcar como erro bancos que ficaram sem homefin_id_simulacao_banco
+    const { data: bancosFinais } = await supabase
+      .from("simulacao_bancos")
+      .select("*")
+      .eq("simulacao_id", simulacaoId)
+      .eq("selecionado", true);
+
+    for (const b of bancosFinais ?? []) {
+      if (b.status_banco === "aguardando" && !b.homefin_id_simulacao_banco) {
+        const msg = "Não foi possível iniciar a simulação neste banco. Nenhum dado foi enviado ao banco. Clique em reenviar.";
+        await supabase.from("simulacao_bancos").update({
+          status_banco: "erro",
+          mensagem_banco: msg
+        }).eq("id", b.id);
+      }
+    }
+
     // Status geral considerando TODOS os bancos selecionados (não só os desta
     // chamada), pois o envio pode ser feito banco a banco para dar progresso.
     const { data: todosBancos } = await supabase
@@ -1167,6 +1184,7 @@ export async function enviarSimulacaoImpl({
       .select("status_banco")
       .eq("simulacao_id", simulacaoId)
       .eq("selecionado", true);
+
     const listaStatus = (todosBancos ?? []) as { status_banco: string | null }[];
     const sucesso = listaStatus.filter((r) => r.status_banco === "simulada").length;
     const pendentes = listaStatus.filter(
