@@ -314,7 +314,7 @@ function drawInfoFinanciamento(
       label: "Sistema de amortização",
       valor: sistemaDoBanco(b, s),
     },
-    { label: "Taxa efetiva anual", valor: pctTxt(d?.taxaJurosAno ?? b?.taxa_juros_ano) },
+    { label: "Taxa efetiva anual", valor: b?.taxa_juros_ano != null ? `${Number(b.taxa_juros_ano).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}% a.a.` : "—" },
     { label: "Taxa de juros mensal", valor: pctTxt(d?.taxaJurosMes, "a.m.") },
     {
       label: "CET (Custo Efetivo Total)",
