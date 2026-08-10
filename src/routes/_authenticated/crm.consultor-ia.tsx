@@ -394,27 +394,29 @@ function ConsultorIaPage() {
 
             {lista.map((m) =>
               m.papel === "usuario" ? (
-                <div key={m.id} className="flex justify-end">
-                  <div className="max-w-[80%] rounded-2xl rounded-br-md bg-primary px-4 py-2.5 text-sm leading-relaxed text-primary-foreground shadow-sm shadow-primary/20">
+                <div key={m.id} className="mb-6 flex justify-end">
+                  <div className="max-w-[85%] rounded-[2rem] rounded-br-lg bg-primary px-6 py-4 text-base font-medium leading-relaxed text-primary-foreground shadow-xl shadow-primary/10">
                     {m.conteudo}
                   </div>
                 </div>
               ) : (
-                <div key={m.id} className="flex items-start gap-3">
-                  <span className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-lg border border-primary/20 bg-primary/10 text-primary">
-                    <Bot className="size-4" />
-                  </span>
-                  <div className="min-w-0 max-w-[92%] flex-1">
+                <div key={m.id} className="mb-8 flex items-start gap-5">
+                  <div className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-card shadow-lg ring-1 ring-border/50">
+                    <Bot className="size-5 text-primary" />
+                  </div>
+                  <div className="min-w-0 flex-1 space-y-4">
                     {m.sem_resposta ? (
-                      <p className="mb-2 inline-flex items-center gap-1.5 rounded-full border border-amber-500/40 bg-amber-500/10 px-2.5 py-1 text-[11px] font-medium text-amber-700 dark:text-amber-400">
+                      <div className="inline-flex items-center gap-2 rounded-xl border border-amber-500/20 bg-amber-500/5 px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
                         <TriangleAlert className="size-3.5" />
-                        Conhecimento geral da IA — não consta na base da empresa
-                      </p>
+                        Conhecimento Geral
+                      </div>
                     ) : null}
-                    <Markdown
-                      conteudo={m.conteudo}
-                      className="text-sm leading-relaxed text-foreground"
-                    />
+                    <div className="rounded-3xl border border-border/30 bg-card/30 p-6 shadow-sm backdrop-blur-sm">
+                      <Markdown
+                        conteudo={m.conteudo}
+                        className="text-[15px] leading-relaxed text-foreground/90"
+                      />
+                    </div>
 
                     {m.fontes_usadas.length > 0 ? (
                       <div className="mt-3 flex flex-wrap items-center gap-1.5">
