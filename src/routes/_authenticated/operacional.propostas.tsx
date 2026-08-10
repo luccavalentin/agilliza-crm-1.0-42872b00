@@ -146,7 +146,7 @@ function Pagina() {
   }, [sincronizarLoteFn]);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["propostas", escopo, busca, dataInicio, dataFim, responsavel, verExcluidas],
+    queryKey: ["propostas", escopo, busca, dataInicio, dataFim, responsavel, verExcluidas, corretorFiltro, imobFiltro, comercialFiltro],
     queryFn: () =>
       listarPropostas({
         data: {
