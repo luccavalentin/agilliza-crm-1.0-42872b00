@@ -529,37 +529,42 @@ function ConsultorIaPage() {
             <div ref={fimRef} />
           </div>
 
-          <div className="border-t border-border/60 bg-background/40 p-3 sm:p-4">
-            <div className="group relative rounded-2xl border border-border/70 bg-card shadow-sm transition-all focus-within:border-primary/50 focus-within:shadow-lg focus-within:shadow-primary/10">
-              <Textarea
-                ref={inputRef}
-                value={pergunta}
-                onChange={(e) => setPergunta(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    enviar();
-                  }
-                }}
-                rows={2}
-                placeholder="Pergunte ao consultor sobre bancos, FGTS, documentação, esteira…"
-                disabled={streaming}
-                className="max-h-40 min-h-[56px] resize-none border-0 bg-transparent pr-14 text-sm shadow-none focus-visible:ring-0"
-              />
-              <Button
-                size="icon"
-                onClick={() => enviar()}
-                disabled={streaming || !pergunta.trim()}
-                aria-label="Enviar pergunta"
-                className="absolute bottom-2.5 right-2.5 size-9 rounded-xl shadow-md shadow-primary/25"
-              >
-                <ArrowUp className="size-4" />
-              </Button>
+          <div className="border-t border-border/40 bg-card/60 p-6 backdrop-blur-md">
+            <div className="mx-auto max-w-4xl">
+              <div className="group relative flex items-end gap-3 rounded-[2rem] border border-border/50 bg-background/50 p-2 shadow-2xl transition-all focus-within:border-primary/50 focus-within:ring-4 focus-within:ring-primary/5">
+                <Textarea
+                  ref={inputRef}
+                  value={pergunta}
+                  onChange={(e) => setPergunta(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      enviar();
+                    }
+                  }}
+                  rows={1}
+                  placeholder="Envie sua dúvida para a inteligência Agilliza..."
+                  disabled={streaming}
+                  className="max-h-60 min-h-[48px] flex-1 resize-none border-0 bg-transparent px-4 py-3 text-base font-medium shadow-none focus-visible:ring-0"
+                />
+                <Button
+                  size="icon"
+                  onClick={() => enviar()}
+                  disabled={streaming || !pergunta.trim()}
+                  className="mb-1 mr-1 size-10 shrink-0 rounded-2xl shadow-xl shadow-primary/20 transition-transform active:scale-95 disabled:opacity-50"
+                >
+                  <ArrowUp className="size-5" />
+                </Button>
+              </div>
+              <div className="mt-3 flex items-center justify-center gap-4 text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">
+                <div className="flex items-center gap-1.5">
+                  <Command className="size-3" />
+                  <span>Enter envia</span>
+                </div>
+                <div className="size-1 rounded-full bg-border" />
+                <span>Shift + Enter para nova linha</span>
+              </div>
             </div>
-            <p className="mt-2 flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground">
-              <Command className="size-3" />
-              Enter envia · Shift + Enter quebra linha · respostas podem citar fontes internas
-            </p>
           </div>
         </section>
       </div>
