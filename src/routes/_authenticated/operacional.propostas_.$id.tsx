@@ -502,9 +502,9 @@ function Pagina() {
   const pendentes = useMemo(() => {
     return (envolvidos ?? []).map((env, index) => ({
       env,
-      faltantes: faltantesEnvolvido(env),
+      faltantes: faltantesEnvolvido(env || {}),
       index: index + 1
-    })).filter((item: any) => item.faltantes.length > 0);
+    })).filter((item: any) => item.faltantes && item.faltantes.length > 0);
   }, [envolvidos]);
 
   const totalPendentes = (envolvidos ?? []).length;

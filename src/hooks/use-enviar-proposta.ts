@@ -116,10 +116,10 @@ export function useEnviarProposta() {
         currentEnvolvidos = (atualizada as any)?.envolvidos ?? [];
       }
 
-      const pendencias = (currentEnvolvidos || []).map(env => ({
+      const pendencias = (currentEnvolvidos ?? []).map(env => ({
         env,
-        faltantes: faltantesEnvolvido(env)
-      })).filter(p => p.faltantes.length > 0);
+        faltantes: faltantesEnvolvido(env || {})
+      })).filter(p => p.faltantes && p.faltantes.length > 0);
 
       if (pendencias.length > 0) {
         clearInterval(interval);

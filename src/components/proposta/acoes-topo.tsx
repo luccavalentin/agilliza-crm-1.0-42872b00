@@ -87,9 +87,9 @@ export function AcoesTopo({
     const { faltantesEnvolvido } = require("@/lib/propostas/campos-obrigatorios");
     return (envolvidos ?? []).map(env => ({
       env,
-      faltantes: faltantesEnvolvido(env),
-      descrever: descreverParticipante(env)
-    })).filter(p => p.faltantes.length > 0);
+      faltantes: faltantesEnvolvido(env || {}),
+      descrever: descreverParticipante(env || {})
+    })).filter(p => p.faltantes && p.faltantes.length > 0);
   }, [envolvidos]);
 
   const bloqueado = pendencias.length > 0;
