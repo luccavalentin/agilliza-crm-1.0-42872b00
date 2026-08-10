@@ -861,6 +861,8 @@ async function enviarPropostaImplInner({
     .eq("id", propostaId);
 
   // Primeiro envio = ainda em rascunho ou após um erro de envio.
+  const primeiroEnvio = statusAtual === "rascunho" || statusAtual === "erro_envio";
+
 
   const STATUS_BLOQUEIA_NOVO_BANCO: PropostaStatus[] = [
     "cancelada",
@@ -1534,20 +1536,25 @@ export async function sincronizarPropostaImpl({
     }
   }
 
-  const ROTULO_DETALHE: Partial<Record<PropostaStatus, string>> = {
-    credito_recusado: "Crédito recusado",
-    credito_aprovado: "Crédito aprovado",
-    em_analise_credito: "Em análise de crédito",
-    aguardando_documentos: "Coleta de documentos",
-    engenharia_vistoria: "Engenharia / vistoria",
-    analise_juridica: "Análise jurídica",
-    contrato_emitido: "Contrato emitido",
-    cancelada: "Cancelada",
-  };
   const patch: Record<string, unknown> = {
+    status: statusEfetivo,
     detalhe_status_atual:
       statusAtividade.detalhe ?? ROTULO_DETALHE[statusEfetivo] ?? nomeEtapa,
     ultima_sincronizacao_em: new Date().toISOString(),
+  };
+
+  const atualizado = statusEfetivo !== prop.status || patch.detalhe_status_atual !== prop.detalhe_status_atual;
+  if (atualizado) {
+    patch.status_atualizado_em = new Date().toISOString();
+    await supabase.from("propostas").update(patch as any).eq("id", propostaId);
+
+    // Verificação de integridade pós-gravação
+    const { data: conferir } = await supabase.from("propostas").select("status").eq("id", propostaId).single();
+    if (conferir?.status !== statusEfetivo) {
+      console.error(`[proposta] FALHA CRÍTICA: Status da PRO-${propostaId} deveria ser ${statusEfetivo} mas está ${conferir?.status} após sync.`);
+    }
+  }
+
   };
 
 
