@@ -143,7 +143,7 @@ export const listarClientes = createServerFn({ method: "GET" })
         (r: any): ClienteListaItem => ({
           id: r.id,
           numero_cliente: r.numero_cliente,
-          nome: r.nome,
+          nome: toTitleCase(r.nome),
           documento: podePii ? r.documento : mascararDocumento(r.documento ?? ""),
           documento_masc: !podePii,
           telefone_celular: r.telefone_celular,
@@ -626,11 +626,20 @@ export const getCliente = createServerFn({ method: "GET" })
       if (c.documento_secundario)
         c.documento_secundario = mascararDocumento(c.documento_secundario);
     }
+    // Cadastros antigos (gravados em CAIXA ALTA) são exibidos já no padrão do sistema.
+    const c2 = cliente as any;
+    for (const campo of [
+      "nome", "mae", "pai", "nacionalidade", "profissao", "empresa",
+      "conjuge_nome", "conjuge_nome_mae", "conjuge_nacionalidade",
+      "conjuge_profissao", "conjuge_empresa",
+    ]) {
+      if (typeof c2[campo] === "string" && c2[campo]) c2[campo] = toTitleCase(c2[campo]);
+    }
     return {
-      cliente: cliente as any,
+      cliente: c2,
       podePii,
-      etapa_codigo: (cliente as any).cliente_pipeline?.pipeline_stages?.codigo ?? null,
-      responsavel_nome: (cliente as any).responsavel?.nome ?? null,
+      etapa_codigo: c2.cliente_pipeline?.pipeline_stages?.codigo ?? null,
+      responsavel_nome: toTitleCase(c2.responsavel?.nome) || null,
     };
   });
 
@@ -763,7 +772,7 @@ export const listarPainel = createServerFn({ method: "GET" })
           const corr = parceiros.find((v) => v.tipo_vinculo === "corretor");
           return {
             id: r.id,
-            nome: r.nome,
+            nome: toTitleCase(r.nome),
             numero_cliente: r.numero_cliente,
             vistoria_agendada_em: r.vistoria_agendada_em ?? null,
             vistoria_concluida_em: r.vistoria_concluida_em ?? null,
