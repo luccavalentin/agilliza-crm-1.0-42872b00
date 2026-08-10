@@ -761,6 +761,10 @@ export const listarSimulacoes = createServerFn({ method: "GET" })
       query = query.eq("correspondente_id", me.correspondente_id);
     }
 
+    // Executa a query sem range primeiro para pegar o count real de TODAS as simulações filtradas
+    const { count, error: errCount } = await query;
+    if (errCount) throw new Error(errCount.message);
+
     query = query.order("created_at", { ascending: false })
       .range(from, to);
 
