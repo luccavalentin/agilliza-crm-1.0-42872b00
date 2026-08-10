@@ -85,7 +85,7 @@ export function PainelDrilldownDialog({
   return (
     <>
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[90vh] w-[calc(100vw-1.5rem)] max-w-2xl flex-col gap-0 border-border/60 p-0 shadow-2xl sm:max-h-[80vh]">
+      <DialogContent className="flex max-h-[90vh] w-[calc(100vw-1.5rem)] max-w-2xl flex-col gap-0 border-border/60 p-0 shadow-2xl sm:max-h-[80vh] overflow-hidden">
         <img
           src={agillizaSymbol}
           alt=""
