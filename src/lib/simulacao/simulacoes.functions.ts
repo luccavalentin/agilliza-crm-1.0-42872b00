@@ -761,19 +761,10 @@ export const listarSimulacoes = createServerFn({ method: "GET" })
       query = query.eq("correspondente_id", me.correspondente_id);
     }
 
-    // Executa a query sem range primeiro para pegar o count real de TODAS as simulações filtradas
-    const { count, error: errCount } = await query;
-    if (errCount) throw new Error(errCount.message);
-
-    query = query.order("created_at", { ascending: false })
-      .range(from, to);
-
     if (data.apenas_excluidas) query = query.not("deleted_at", "is", null);
     else query = query.is("deleted_at", null);
 
     if (data.escopo === "minhas") {
-      // Inclui simulações onde o usuário é criador/responsável OU está vinculado
-      // ao cliente como parceiro (imobiliária, corretor, comercial).
       const { data: vinc } = await supabase
         .from("cliente_parceiros")
         .select("cliente_id")
@@ -797,8 +788,15 @@ export const listarSimulacoes = createServerFn({ method: "GET" })
       query = query.or(filtros.join(","));
     }
 
-    const { data: rows, error, count } = await query;
-    if (error) throw new Error(error.message);
+    // Pega o count real com TODOS os filtros aplicados antes de paginar
+    const { count, error: errCount } = await query;
+    if (errCount) throw new Error(errCount.message);
+
+    const { data: rows, error: errRows } = await query
+      .order("created_at", { ascending: false })
+      .range(from, to);
+    
+    if (errRows) throw new Error(errRows.message);
 
     // Para manter a paginação correta e previsível, a lista exibe cada registro
     // de simulação como um item individual. O front-end pode agrupar visualmente
