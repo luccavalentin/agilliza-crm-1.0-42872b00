@@ -282,7 +282,7 @@ function ConsultorIaPage() {
           <Button 
             onClick={novaConversa} 
             variant="outline"
-            className="group/btn h-12 gap-2.5 rounded-full border-primary/15 bg-card px-8 font-semibold text-primary transition-all hover:border-primary/40 hover:bg-primary hover:text-white hover:shadow-[0_15px_30px_-10px_rgba(0,15,159,0.3)]"
+            className="group/btn h-10 gap-2 rounded-full border-primary/15 bg-card px-6 text-sm font-semibold text-primary transition-all hover:border-primary/40 hover:bg-primary hover:text-white hover:shadow-[0_10px_20px_-10px_rgba(0,15,159,0.3)]"
           >
             <MessageSquarePlus className="size-5 transition-transform group-hover/btn:rotate-12" />
             Nova conversa
