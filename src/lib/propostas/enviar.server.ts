@@ -1194,6 +1194,11 @@ async function enviarPropostaImplInner({
   for (const r of enviados) {
     resultados.push(r);
     if (r.status !== "erro") sucesso++;
+    else if (r.erro_estruturado?.codigo === "CADASTRO_INCOMPLETO") {
+      // Se parou por cadastro incompleto, garante que o status global não vire "erro_envio"
+      // Se já estava em erro_envio, volta para aguardando_envio
+      if (statusAtual === "erro_envio") statusAtual = "aguardando_envio";
+    }
   }
 
 

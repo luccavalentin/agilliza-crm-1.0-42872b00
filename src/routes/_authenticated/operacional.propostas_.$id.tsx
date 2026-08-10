@@ -503,7 +503,7 @@ function Pagina() {
   const onCadastroIncompleto = React.useCallback((envolvidoPendente: any) => {
     setTab("COMPRADORES");
     setDestacarObrigatorios(true);
-    if (envolvidoPendente) {
+    if (envolvidoPendente && envolvidoPendente.id) {
       setParticipanteModal(envolvidoPendente);
       const idx = envolvidos.findIndex((e: any) => e.id === envolvidoPendente.id);
       setIndiceParticipante(idx + 1);
@@ -517,6 +517,10 @@ function Pagina() {
       }
     }
   }, [envolvidos]);
+
+  const onCadastroIncompletoSemArgs = React.useCallback(() => {
+    onCadastroIncompleto(null);
+  }, [onCadastroIncompleto]);
 
   const handleEnviarAposCadastro = React.useCallback(async () => {
     // Reenviar para todos os bancos pendentes após fechar o modal de cadastro
