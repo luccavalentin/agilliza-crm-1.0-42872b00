@@ -299,6 +299,12 @@ function Pagina() {
       setEnviandoBancoId(null);
     }
   }
+  async function enviarTodos(bancos: any[]) {
+    if (!envio) return;
+    for (const b of bancos) {
+      await enviarBancoIndividual(b);
+    }
+  }
 
 
   const itens = data?.itens ?? [];
