@@ -197,7 +197,7 @@ function Pagina() {
       try {
         await handleEnviarHook({ 
           propostaId: proposta_id,
-          bancoId // Passa o ID do banco (UUID da tabela bancos)
+          bancoId: bancoId ?? "todos" // Passa o ID do banco ou "todos" se não houver
         });
       } catch {
         /* mensagem já exibida pelo gate */

@@ -53,7 +53,7 @@ export function useEnviarProposta() {
     enviarFn: customEnviarFn
   }: { 
     propostaId: string; 
-    bancoId: string; // Tornando obrigatório para o novo fluxo por banco
+    bancoId: string | "todos";
     envolvidos?: any[];
     onCadastroIncompleto?: (primeiroPendente: any) => void;
     enviarFn?: (args: { data: { proposta_id: string; banco_id?: string } }) => Promise<any>;

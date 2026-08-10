@@ -73,8 +73,8 @@ function Pagina() {
   const excluir = useServerFn(excluirSimulacao);
   const restaurar = useServerFn(restaurarSimulacao);
   const criar = useServerFn(criarProposta);
-  const { enviar: handleEnviarHook } = useEnviarProposta();
   const destravar = useServerFn(destravarSimulacao);
+
 
 
   const obter = useServerFn(obterSimulacao);
@@ -640,9 +640,9 @@ function Pagina() {
         envio={envio}
         onClose={() => setEnvio(null)}
         carregando={envioCarregando}
-        enviandoBancoId={enviandoBancoId}
-        propostasCriadas={propostasCriadas}
+        statusPorBanco={statusPorBanco}
         onEnviarBanco={enviarBancoIndividual}
+        onEnviarTodos={enviarTodos}
       />
 
       <SelecionarBancosPdfDialog
