@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { cn } from "@/lib/utils";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import {
@@ -2111,13 +2112,28 @@ export const getPanelDrilldown = createServerFn({ method: "POST" })
       };
     }
 
+    if (chave === "qualificacao de renda por banco") {
+      const { de: deIni, ate: ateFim } = resolverIntervalo(f);
+      return {
+        titulo: "Qualificação de Renda (Performance dos Tetos)",
+        subtitulo: "Análise de comprometimento e acurácia do alerta",
+        valor: "Análise",
+        descricao: "Métricas para calibração dos limites de 30% (SAC) e 15% (PRICE).",
+        itens: [
+          {
+            label: "Análise de Falsos Negativos",
+            sub: "Rodar query SQL para cruzar propostas recusadas com renda declarada > mínima estimada.",
+          },
+        ],
+      };
+    }
+
     console.warn(`[getPanelDrilldown] Chave não encontrada: "${chaveRaw}" (norm: "${chave}")`);
 
     return {
       titulo: data.metrica,
       subtitulo: "Detalhamento não disponível para este indicador",
-      descricao:
-        `O indicador "${chaveRaw}" ainda não tem uma listagem específica de detalhamento configurada no servidor.`,
+      descricao: `O indicador "${chaveRaw}" ainda não tem uma listagem específica de detalhamento configurada no servidor.`,
       itens: [],
     };
   });
