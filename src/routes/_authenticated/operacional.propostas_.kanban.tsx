@@ -28,7 +28,7 @@ import { cn } from "@/lib/utils";
 import { numeroBancoParaExibir } from "@/lib/propostas/numero-banco-display";
 
 /** Máximo de cards visíveis antes de "empilhar" o restante numa pasta com busca. */
-const MAX_VISIVEIS_POR_COLUNA = 2;
+const MAX_VISIVEIS_POR_COLUNA = 3;
 
 export const Route = createFileRoute("/_authenticated/operacional/propostas_/kanban")({
   head: () => ({ meta: [{ title: "Kanban de Propostas — Agilliza" }] }),
@@ -354,9 +354,11 @@ function Pagina() {
         </div>
 
         {escopo === "todas" && c.nome_responsavel && (
-          <div className="mt-2 flex items-center gap-1 text-[11px] text-muted-foreground">
-            <User className="h-3 w-3 shrink-0" />
-            <span className="truncate">{c.nome_responsavel}</span>
+          <div className="mt-2 max-h-16 overflow-y-auto pr-1 custom-scrollbar">
+            <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+              <User className="h-3 w-3 shrink-0" />
+              <span className="truncate">{c.nome_responsavel}</span>
+            </div>
           </div>
         )}
 
@@ -503,32 +505,30 @@ function Pagina() {
               key={col.destino}
               onDragOver={(e) => e.preventDefault()}
               onDrop={() => soltar(col.destino)}
-              className="flex min-h-40 max-h-[36rem] min-w-0 flex-col overflow-hidden rounded-xl border border-border bg-muted/30 shadow-sm"
+              className="flex min-h-[22rem] max-h-[40rem] min-w-0 flex-col overflow-hidden rounded-2xl border border-border bg-card/95 shadow-sm backdrop-blur-sm transition-[box-shadow,border-color] duration-200 hover:shadow-md"
             >
-              <div className="shrink-0 overflow-hidden rounded-t-xl">
+              <div className="shrink-0 overflow-hidden border-b border-border/50">
                 <div className={cn("h-[3px]", TONE_BAR[cfg.tone])} />
-                <div className="flex items-center justify-between gap-2 px-3 py-2.5">
-                  <span className="min-w-0 text-xs font-semibold uppercase leading-snug text-muted-foreground">
+                <div className="flex items-center justify-between gap-2 bg-gradient-to-br from-primary/[0.04] via-card to-card px-3.5 py-3">
+                  <span className="min-w-0 text-xs font-semibold uppercase leading-snug text-foreground">
                     {cfg.label}
                   </span>
-                  <span className="shrink-0 rounded-full bg-background px-2 py-0.5 text-xs font-bold text-primary shadow-sm ring-1 ring-primary/10">
+                  <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary ring-1 ring-inset ring-primary/20">
                     {cards.length}
                   </span>
                 </div>
               </div>
-              <div className="flex flex-1 flex-col gap-2 overflow-y-auto p-2 [scrollbar-width:thin]">
+              <div className="flex flex-1 flex-col gap-2 overflow-hidden p-3">
                 <button
                   type="button"
                   onClick={() => {
                     setBuscaPasta("");
                     setPastaAberta(col.destino);
                   }}
-                  className="group flex shrink-0 items-center justify-between gap-2 rounded-xl border border-dashed border-border bg-background/60 px-3 py-2.5 text-xs font-medium text-muted-foreground shadow-sm transition hover:border-primary/40 hover:bg-primary/5 hover:text-foreground"
+                  className="group/vm flex shrink-0 items-center justify-between gap-2 rounded-xl border border-dashed border-border bg-background/60 px-3 py-2.5 text-xs font-medium text-muted-foreground shadow-sm transition hover:border-primary/40 hover:bg-primary/5 hover:text-foreground"
                 >
                   <div className="flex items-center gap-2">
-                    <div className="relative">
-                      <FolderOpen className="h-4 w-4 text-primary" />
-                    </div>
+                    <FolderOpen className="h-4 w-4 text-primary" />
                     {excedente > 0
                       ? `Ver mais ${excedente} ${excedente === 1 ? "proposta" : "propostas"}`
                       : cards.length > 0
@@ -538,10 +538,14 @@ function Pagina() {
                   <Search className="h-3.5 w-3.5 opacity-70 group-hover:opacity-100" />
                 </button>
 
-                {visiveis.map((c) => renderCard(c, cfg))}
-                {cards.length === 0 && (
-                  <p className="px-1 py-6 text-center text-xs text-muted-foreground">Vazio</p>
-                )}
+                <div className="flex-1 overflow-y-auto pr-0.5 custom-scrollbar">
+                  <div className="flex flex-col gap-2">
+                    {visiveis.map((c) => renderCard(c, cfg))}
+                    {cards.length === 0 && (
+                      <p className="py-8 text-center text-xs text-muted-foreground">Nenhuma proposta nesta etapa</p>
+                    )}
+                  </div>
+                </div>
               </div>
 
             </div>

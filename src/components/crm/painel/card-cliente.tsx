@@ -196,33 +196,35 @@ export function CardCliente({
         </div>
       )}
 
-      <div className="mt-2 space-y-0.5">
-        <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
-          <User className="h-3 w-3 shrink-0" />
-          <span className="truncate" title={c.responsavel_nome ?? "—"}>
-            Resp: {c.responsavel_nome ?? "—"}
-          </span>
+      <div className="mt-2.5 max-h-16 overflow-y-auto pr-1 custom-scrollbar">
+        <div className="space-y-1">
+          <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+            <User className="h-3 w-3 shrink-0" />
+            <span className="truncate" title={c.responsavel_nome ?? "—"}>
+              Resp: {c.responsavel_nome ?? "—"}
+            </span>
+          </div>
+          {c.analista_nome && (
+            <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+              <UserCheck className="h-3 w-3 shrink-0" />
+              <span className="truncate" title={c.analista_nome}>
+                Analista: {c.analista_nome}
+              </span>
+            </div>
+          )}
+          {(c.corretor_nome || c.imobiliaria_nome) && (
+            <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+              <Building2 className="h-3 w-3 shrink-0" />
+              <span
+                className="truncate"
+                title={[c.corretor_nome, c.imobiliaria_nome].filter(Boolean).join(" · ")}
+              >
+                {c.corretor_nome ?? c.imobiliaria_nome}
+                {c.corretor_nome && c.imobiliaria_nome && ` · ${c.imobiliaria_nome}`}
+              </span>
+            </div>
+          )}
         </div>
-        {c.analista_nome && (
-          <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
-            <UserCheck className="h-3 w-3 shrink-0" />
-            <span className="truncate" title={c.analista_nome}>
-              Analista: {c.analista_nome}
-            </span>
-          </div>
-        )}
-        {(c.corretor_nome || c.imobiliaria_nome) && (
-          <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
-            <Building2 className="h-3 w-3 shrink-0" />
-            <span
-              className="truncate"
-              title={[c.corretor_nome, c.imobiliaria_nome].filter(Boolean).join(" · ")}
-            >
-              {c.corretor_nome ?? c.imobiliaria_nome}
-              {c.corretor_nome && c.imobiliaria_nome && ` · ${c.imobiliaria_nome}`}
-            </span>
-          </div>
-        )}
       </div>
 
       {temProposta && c.nome_banco && (
