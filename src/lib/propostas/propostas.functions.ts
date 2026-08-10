@@ -266,12 +266,16 @@ export const obterProposta = createServerFn({ method: "GET" })
     const { supabase } = context;
     const { data: proposta, error } = await supabase
       .from("propostas")
-      .select("*")
+      .select("*, profiles!propostas_deleted_by_fkey(nome)")
       .eq("id", data.id)
-      .is("deleted_at", null)
       .maybeSingle();
     if (error) throw new Error(error.message);
     if (!proposta) throw new Error("Proposta não encontrada.");
+    
+    // Adiciona o nome de quem excluiu se disponível
+    if (proposta.deleted_by && proposta.profiles) {
+      (proposta as any).nome_excluidor = proposta.profiles.nome;
+    }
 
 
     const [bancos, envolvidos, documentos, followups, historico] = await Promise.all([
