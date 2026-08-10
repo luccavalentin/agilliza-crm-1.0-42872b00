@@ -250,6 +250,9 @@ export const listarPropostas = createServerFn({ method: "GET" })
     if (data.imobiliaria_nome) {
       listaFiltrada = listaFiltrada.filter(i => i.imobiliaria_nome === data.imobiliaria_nome);
     }
+    if (data.comercial_nome) {
+      listaFiltrada = listaFiltrada.filter(i => i.comercial_nome === data.comercial_nome);
+    }
 
     return { itens: listaFiltrada as PropostaListaItem[], total: count ?? 0 };
 
