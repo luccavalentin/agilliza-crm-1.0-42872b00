@@ -188,7 +188,7 @@ export function ComparativoBancos({
                     rotulo="Total fin. (banco)"
                     valor={totalBancoTexto(b)}
                   />
-                  <MobileStat rotulo="IOF (banco)" valor={formatBRL(b.valor_iof)} />
+                  <MobileStat rotulo="IOF (banco)" valor={b.valor_iof != null ? formatBRL(b.valor_iof) : "—"} />
 
                 </dl>
 
@@ -316,7 +316,7 @@ export function ComparativoBancos({
                     </TableCell>
 
                     <TableCell className="py-3 text-right text-sm tabular-nums whitespace-nowrap">
-                      {formatBRL(b.valor_iof)}
+                      {b.valor_iof != null ? formatBRL(b.valor_iof) : "—"}
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-1">

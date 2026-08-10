@@ -327,7 +327,10 @@ export function ResultadoInlineCompleta({ simulacaoId, onFechar, isSecundaria }:
                           rotulo="Total fin. (banco)"
                           valor={totalBancoTexto(b)}
                         />
-                        <MobileStat rotulo="IOF (banco)" valor={formatBRL(b.valor_iof)} />
+                        <MobileStat 
+                          rotulo="IOF (banco)" 
+                          valor={b.valor_iof != null ? formatBRL(b.valor_iof) : "—"} 
+                        />
 
                         <MobileStat
                           rotulo="Renda estimada"

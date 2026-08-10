@@ -351,7 +351,7 @@ export function ResultadoInlineAmbos({ simulacaoIdSac, simulacaoIdPrice, onFecha
                         />
                         <MobileStat rotulo="Prazo" valor={`${l.simulacao.prazo}m`} />
                         <MobileStat rotulo="Total fin. (banco)" valor={totalBancoTexto(b)} />
-                        <MobileStat rotulo="IOF (banco)" valor={formatBRL(b.valor_iof)} />
+                        <MobileStat rotulo="IOF (banco)" valor={b.valor_iof != null ? formatBRL(b.valor_iof) : "—"} />
 
                         <MobileStat rotulo="Renda estimada" valor={formatBRL(rendaMinimaDoBanco(b))} />
                       </dl>
