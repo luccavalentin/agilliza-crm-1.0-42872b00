@@ -255,6 +255,14 @@ function Pagina() {
     return Array.from(s).sort((a, b) => a.localeCompare(b, "pt-BR"));
   }, [parceirosCadastrados]);
 
+  const comerciais = useMemo(() => {
+    const s = new Set<string>();
+    (parceirosCadastrados ?? [])
+      .filter((p) => (p.tipo_pessoa ?? "").toLowerCase() === "comercial")
+      .forEach((p) => p.nome && s.add(p.nome));
+    return Array.from(s).sort((a, b) => a.localeCompare(b, "pt-BR"));
+  }, [parceirosCadastrados]);
+
 
   const itensFiltrados = itens;
 
