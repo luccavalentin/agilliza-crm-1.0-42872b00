@@ -7,6 +7,7 @@ import { BancoLogo } from "@/components/bancos/banco-logo";
 import { BancoStatusBadge } from "@/components/simulacao/status-badge";
 import { obterSimulacao } from "@/lib/simulacao/simulacoes.functions";
 import { formatBRL, formatPercent } from "@/lib/simulacao/format";
+import { totalFinanciadoBanco } from "@/lib/simulacao/origem-dados";
 import { cn } from "@/lib/utils";
 import { corDoBanco } from "@/lib/bancos/cores";
 import { DetalheBancoDialog } from "@/components/simulacao/detalhe-banco-dialog";
