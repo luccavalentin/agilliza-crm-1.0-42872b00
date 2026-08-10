@@ -485,6 +485,17 @@ function Pagina() {
             </select>
           </div>
           <div className="flex flex-col gap-1">
+            <Label className="text-xs text-muted-foreground">Comercial</Label>
+            <select
+              value={comercialFiltro}
+              onChange={(e) => setComercialFiltro(e.target.value)}
+              className="h-11 w-[12rem] rounded-xl border border-input bg-background px-3 text-sm shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <option value="todos">Todos</option>
+              {comerciais.map((r) => <option key={r} value={r}>{r}</option>)}
+            </select>
+          </div>
+          <div className="flex flex-col gap-1">
             <Label className="text-xs text-muted-foreground">Imobiliária</Label>
             <select
               value={imobFiltro}
