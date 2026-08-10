@@ -62,7 +62,7 @@ export const Route = createFileRoute("/_authenticated/admin/consultor-ia-base")(
       {
         name: "description",
         content:
-          "Biblioteca de crédito imobiliário da Agilliza: pesquise por palavra-chave e consulte verbetes curados que fundamentam o Consultor IA.",
+          "Biblioteca de crédito imobiliário da Agilliza: pesquise por palavra-chave e consulte verbetes curados que fundamentam a inteligência moderna.",
       },
       { property: "og:title", content: "Biblioteca de conhecimento — Agilliza" },
       {
