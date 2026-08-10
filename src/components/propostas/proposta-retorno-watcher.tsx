@@ -2,6 +2,9 @@ import { useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { usePropostaNotificacaoStore } from "@/hooks/use-proposta-notificacao-store";
 import { signalIncomingChat } from "@/components/shared/chat-alert-store";
+import { tipoAtivo, tipoComSom } from "@/lib/notification-prefs";
+import { playChatSound, previewChatSound } from "@/lib/chat-sound";
+
 
 interface Props {
   userId?: string | null;
@@ -65,9 +68,16 @@ export function PropostaRetornoWatcher({ userId }: Props) {
             const uniqueKey = `sim-info-${row.id}`;
             if (seenSimIds.current.has(uniqueKey)) return;
             seenSimIds.current.add(uniqueKey);
+            
+            if (!tipoAtivo("retorno_simulacao")) return;
+
+            if (tipoComSom("retorno_simulacao")) {
+              previewChatSound("tri"); // Som positivo para conclusão
+            }
 
             adicionarPopup({
               id: sim.id,
+              tipo: "simulacao",
               numero: sim.numero_simulacao,
               status: "Comparativo de Taxas Concluído",
               nome_cliente: sim.nome_cliente || "—",
@@ -77,6 +87,7 @@ export function PropostaRetornoWatcher({ userId }: Props) {
                 simulacao: sim
               }
             });
+
           }
         }
       )
@@ -121,29 +132,42 @@ export function PropostaRetornoWatcher({ userId }: Props) {
           if (seenIds.current.has(uniqueKey)) return;
           seenIds.current.add(uniqueKey);
 
-          // Dispara Alerta Sonoro de Notificação Real
-          import("@/lib/chat-sound").then(m => {
-            m.playNotificationSound();
-            // Toca duas vezes para ser mais perceptível no retorno do banco
-            setTimeout(() => m.playNotificationSound(), 400);
-          });
-          
-          // Notificação de chat interna (opcional, mantendo silêncio se preferir apenas som real)
+          if (!tipoAtivo("retorno_proposta")) return;
+
+          // Dispara som se configurado
+          if (tipoComSom("retorno_proposta")) {
+            const status = (row.status_banco || "").toLowerCase();
+            const isPositive = ["aprovada", "aprovado", "simulada"].includes(status);
+            const isNegative = ["recusada", "recusado", "erro"].includes(status);
+            
+            if (isPositive) previewChatSound("tri");
+            else if (isNegative) previewChatSound("suave");
+            else previewChatSound("pop");
+          }
+
+          // Notificação de chat interna
           signalIncomingChat(`prop-${row.id}`, {
             titulo: `Retorno de Proposta: ${row.nome_banco || "Banco"}`,
             corpo: `Proposta ${prop.numero_proposta} - Cliente: ${prop.nome_cliente || "—"}`,
-            skipSound: true, // Já tocamos acima manualmente
+            skipSound: true,
           });
 
           // Adiciona ao Store para exibir o Popup Personalizado
           adicionarPopup({
             id: row.id,
+            tipo: "proposta",
             numero: prop.numero_proposta,
             status: row.status_banco || "Atualizada",
+            mensagem_banco: row.mensagem_banco,
             nome_cliente: prop.nome_cliente || "—",
             banco: row.nome_banco || "Banco",
+            dados_adicionais: {
+              proposta: prop,
+              banco_row: row
+            }
           });
         }
+
       )
       .subscribe();
 
