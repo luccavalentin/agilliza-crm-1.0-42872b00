@@ -145,7 +145,7 @@ export function DetalheBancoDialog({
           <FileText className="h-4 w-4" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-4xl">
+      <DialogContent className="max-w-4xl flex flex-col p-0 overflow-hidden max-h-[90vh]">
         {/* Barra de cor do banco */}
         <div className="h-1 w-full shrink-0" style={{ backgroundColor: cor }} aria-hidden />
 
