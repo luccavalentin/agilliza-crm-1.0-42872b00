@@ -340,18 +340,24 @@ function ConsultorIaPage() {
         </aside>
 
         <section className="relative flex flex-col overflow-hidden rounded-3xl border border-border/40 bg-card/40 shadow-2xl backdrop-blur-xl">
-          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-5 sm:px-6">
+          <div className="flex-1 space-y-6 overflow-y-auto px-6 py-8 custom-scrollbar">
             {!conversaId && !streaming ? (
-              <div className="mx-auto max-w-2xl py-10 text-center">
-                <span className="mx-auto mb-4 grid size-14 place-items-center rounded-2xl border border-primary/20 bg-primary/10 text-primary">
-                  <Sparkles className="size-6" />
-                </span>
-                <h2 className="text-lg font-semibold tracking-tight">Como posso ajudar hoje?</h2>
-                <p className="mx-auto mt-1.5 max-w-md text-sm text-muted-foreground">
-                  Regras de bancos, FGTS, SFH/SFI, documentação, engenharia, jurídico e etapas da
-                  esteira — com fonte citada em cada resposta.
+              <div className="mx-auto flex max-w-2xl flex-col items-center py-12 text-center">
+                <div className="relative mb-8">
+                  <div className="absolute -inset-4 rounded-full bg-primary/20 blur-2xl" />
+                  <div className="relative flex size-20 items-center justify-center rounded-3xl bg-card shadow-2xl ring-1 ring-border/50">
+                    <Sparkles className="size-10 text-primary" />
+                  </div>
+                </div>
+                
+                <h2 className="text-3xl font-bold tracking-tight">
+                  Como posso potencializar seus negócios hoje?
+                </h2>
+                <p className="mt-4 text-base font-medium text-muted-foreground/80">
+                  Especialista em regras bancárias, FGTS, documentação e toda a jornada do crédito imobiliário Agilliza.
                 </p>
-                <div className="mt-6 grid gap-2.5 text-left sm:grid-cols-2">
+
+                <div className="mt-12 grid w-full gap-4 sm:grid-cols-2">
                   {SUGESTOES.map((s) => {
                     const Icone = s.icone;
                     return (
@@ -359,17 +365,19 @@ function ConsultorIaPage() {
                         key={s.prompt}
                         type="button"
                         onClick={() => enviar(s.prompt)}
-                        className="group flex items-start gap-3 rounded-xl border border-border/60 bg-background/60 p-3 text-left transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:bg-primary/[0.05] hover:shadow-md"
+                        className="group relative flex flex-col items-start gap-4 rounded-2xl border border-border/40 bg-background/50 p-5 text-left transition-all hover:border-primary/40 hover:bg-card hover:shadow-2xl hover:shadow-primary/5"
                       >
-                        <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
-                          <Icone className="size-4" />
-                        </span>
-                        <span className="min-w-0">
-                          <span className="block text-xs font-semibold">{s.titulo}</span>
-                          <span className="mt-0.5 block text-xs text-muted-foreground">
+                        <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary transition-transform group-hover:scale-110">
+                          <Icone className="size-5" />
+                        </div>
+                        <div className="space-y-1">
+                          <h4 className="text-sm font-bold uppercase tracking-wider text-primary/80 transition-colors group-hover:text-primary">
+                            {s.titulo}
+                          </h4>
+                          <p className="text-sm font-medium text-muted-foreground transition-colors group-hover:text-foreground">
                             {s.prompt}
-                          </span>
-                        </span>
+                          </p>
+                        </div>
                       </button>
                     );
                   })}
