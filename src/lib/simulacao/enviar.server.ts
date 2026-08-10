@@ -611,7 +611,8 @@ export async function enviarSimulacaoImpl({
     // Santander em Home Equity usa a rota operacional Somahome; oportunidades
     // antigas criadas como Home Equity comum ficam sem retorno. Para reenvio,
     // criamos uma nova oportunidade na operação correta.
-    let idOportunidade = sim.homefin_id_oportunidade as string | null;
+    let idOportunidade = usaRotaSantanderHomeEquity
+      ? null : (sim.homefin_id_oportunidade as string | null);
 
     if (idOportunidade) {
       try {
