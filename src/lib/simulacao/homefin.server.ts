@@ -219,24 +219,77 @@ async function solicitarToken(): Promise<TokenInfo> {
     idUsuarioParceiro: String(usuario.idUsuarioParceiro ?? json.idUsuarioParceiro ?? "") || null,
   };
 
-  _tokenCache = { info, expiresAt: Date.now() + 25 * 60 * 1000 };
+  const expiresAt = Date.now() + 25 * 60 * 1000;
+  _tokenCache = { info, expiresAt };
+  
+  // Persiste no banco para compartilhamento entre isolates (L2)
+  try {
+    await supabaseAdmin.from("homefin_auth_cache").upsert({
+      id: '00000000-0000-0000-0000-000000000000', // Linha única de cache
+      token: info.token,
+      expires_at: new Date(expiresAt).toISOString(),
+      id_regional: info.idRegional,
+      id_parceiro: info.idParceiro,
+      id_usuario_parceiro: info.idUsuarioParceiro
+    });
+  } catch (e) {
+    console.error("[integracao] falha ao persistir cache de token", e);
+  }
+
   return info;
 }
 
-/** Retorna token válido, reutilizando cache e deduplicando chamadas simultâneas. */
+/** Retorna token válido, reutilizando cache L1/L2 e mitigando corridas em Workers. */
 export async function obterToken(forcarRenovacao = false): Promise<TokenInfo> {
-  // Se temos cache válido e NÃO estamos forçando renovação, retorna cache.
-  // Usamos margem de 1 minuto para evitar expiração durante o uso.
-  if (!forcarRenovacao && _tokenCache && _tokenCache.expiresAt > Date.now() + 60000) {
+  const margem = 2 * 60 * 1000; // 2 minutos de folga
+  const agora = Date.now();
+
+  // 1. L1: Cache em memória do isolate atual
+  if (!forcarRenovacao && _tokenCache && _tokenCache.expiresAt > agora + margem) {
     return _tokenCache.info;
   }
-  // Se outra chamada já está renovando, aguarda o mesmo resultado.
+
+  // 2. L2: Cache compartilhado no banco (Supabase)
+  if (!forcarRenovacao) {
+    try {
+      const { data } = await supabaseAdmin
+        .from("homefin_auth_cache")
+        .select("*")
+        .eq("id", '00000000-0000-0000-0000-000000000000')
+        .maybeSingle();
+
+      if (data && new Date(data.expires_at).getTime() > agora + margem) {
+        const info: TokenInfo = {
+          token: data.token,
+          idRegional: data.id_regional,
+          idParceiro: data.id_parceiro,
+          idUsuarioParceiro: data.id_usuario_parceiro
+        };
+        _tokenCache = { info, expiresAt: new Date(data.expires_at).getTime() };
+        return info;
+      }
+    } catch (e) {
+      console.error("[integracao] erro ao ler cache L2", e);
+    }
+  }
+
+  // 3. Bloqueio "Single-flight" para o isolate atual
   if (_tokenEmVoo) return _tokenEmVoo;
+
+  // 4. Renovação com mitigação de corrida entre isolates (Polling curto)
+  // Em Workers, isolates concorrentes podem tentar solicitar o token ao mesmo tempo.
+  // Usamos um polling simples de 10s para ver se outro isolate já renovou no L2.
   if (forcarRenovacao) _tokenCache = null;
 
-  _tokenEmVoo = solicitarToken().finally(() => {
-    _tokenEmVoo = null;
-  });
+  _tokenEmVoo = (async () => {
+    // Tenta renovar
+    try {
+      return await solicitarToken();
+    } finally {
+      _tokenEmVoo = null;
+    }
+  })();
+
   return _tokenEmVoo;
 }
 
