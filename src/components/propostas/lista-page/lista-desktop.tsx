@@ -33,6 +33,7 @@ type Props = {
   verExcluidas: boolean;
   handleExcluir: (id: string) => Promise<void>;
   handleRestaurar: (id: string) => Promise<void>;
+  handleExcluirDefinitivo?: (id: string) => Promise<void>;
   selecionados?: string[];
   onToggleSelecionado?: (id: string) => void;
   onToggleTodos?: () => void;
@@ -46,6 +47,7 @@ export function ListaDesktop({
   verExcluidas,
   handleExcluir,
   handleRestaurar,
+  handleExcluirDefinitivo,
   selecionados,
   onToggleSelecionado,
   onToggleTodos,
@@ -203,14 +205,23 @@ export function ListaDesktop({
                   </TableCell>
                   <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                     {verExcluidas ? (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-8 rounded-lg"
-                        onClick={() => handleRestaurar(p.id)}
-                      >
-                        <Undo2 className="mr-1 h-3.5 w-3.5" /> Restaurar
-                      </Button>
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-8 rounded-lg"
+                          onClick={() => handleRestaurar(p.id)}
+                        >
+                          <Undo2 className="mr-1 h-3.5 w-3.5" /> Restaurar
+                        </Button>
+                        {handleExcluirDefinitivo && (
+                          <ConfirmDelete
+                            titulo="Excluir definitivamente"
+                            descricao={`A proposta ${p.numero_proposta} será apagada permanentemente. Esta ação não pode ser desfeita.`}
+                            onConfirm={() => handleExcluirDefinitivo(p.id)}
+                          />
+                        )}
+                      </div>
                     ) : (
                       <ConfirmDelete
                         titulo="Excluir proposta"

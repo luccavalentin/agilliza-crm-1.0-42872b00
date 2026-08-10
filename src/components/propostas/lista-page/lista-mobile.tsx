@@ -23,6 +23,7 @@ type Props = {
   verExcluidas: boolean;
   handleExcluir: (id: string) => Promise<void>;
   handleRestaurar: (id: string) => Promise<void>;
+  handleExcluirDefinitivo?: (id: string) => Promise<void>;
 };
 
 export function ListaMobile({
@@ -33,6 +34,7 @@ export function ListaMobile({
   verExcluidas,
   handleExcluir,
   handleRestaurar,
+  handleExcluirDefinitivo,
 }: Props) {
   const router = useRouter();
   return (
@@ -94,14 +96,23 @@ export function ListaMobile({
                 </span>
                 <div onClick={(e) => e.stopPropagation()} className="shrink-0">
                   {verExcluidas ? (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-8 rounded-lg"
-                      onClick={() => handleRestaurar(p.id)}
-                    >
-                      <Undo2 className="mr-1 h-3.5 w-3.5" /> Restaurar
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-8 rounded-lg"
+                        onClick={() => handleRestaurar(p.id)}
+                      >
+                        <Undo2 className="mr-1 h-3.5 w-3.5" /> Restaurar
+                      </Button>
+                      {handleExcluirDefinitivo && (
+                        <ConfirmDelete
+                          titulo="Excluir definitivamente"
+                          descricao={`A proposta ${p.numero_proposta} será apagada permanentemente. Esta ação não pode ser desfeita.`}
+                          onConfirm={() => handleExcluirDefinitivo(p.id)}
+                        />
+                      )}
+                    </div>
                   ) : (
                     <ConfirmDelete
                       titulo="Excluir proposta"

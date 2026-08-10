@@ -9,6 +9,7 @@ import {
   listarPropostas,
   excluirProposta,
   restaurarProposta,
+  excluirPropostaDefinitivamente,
   sincronizarPropostasAtivas,
 } from "@/lib/propostas/propostas.functions";
 import { propostaQueryOptions } from "@/lib/propostas/queries";
@@ -50,6 +51,7 @@ function Pagina() {
   const queryClient = useQueryClient();
   const excluir = useServerFn(excluirProposta);
   const restaurar = useServerFn(restaurarProposta);
+  const excluirDefinitivo = useServerFn(excluirPropostaDefinitivamente);
   const sincronizarLoteFn = useServerFn(sincronizarPropostasAtivas);
   const padrao = useMemo(() => intervaloMesAtual(), []);
   const [escopo, setEscopo] = useState<Escopo>("minhas");
@@ -264,6 +266,16 @@ function Pagina() {
     }
   }
 
+  async function handleExcluirDefinitivo(id: string) {
+    try {
+      await excluirDefinitivo({ data: { id } });
+      toast.success("Proposta excluída definitivamente.");
+      queryClient.invalidateQueries({ queryKey: ["propostas"] });
+    } catch {
+      toast.error("Não foi possível excluir definitivamente.");
+    }
+  }
+
   // ── Seleção múltipla + exclusão em massa ──────────────────────────────
   const [selecionados, setSelecionados] = useState<string[]>([]);
   const [excluindoLote, setExcluindoLote] = useState(false);
@@ -399,6 +411,7 @@ function Pagina() {
         verExcluidas={verExcluidas}
         handleExcluir={handleExcluir}
         handleRestaurar={handleRestaurar}
+        handleExcluirDefinitivo={handleExcluirDefinitivo}
       />
 
       <ListaDesktop
@@ -409,6 +422,7 @@ function Pagina() {
         verExcluidas={verExcluidas}
         handleExcluir={handleExcluir}
         handleRestaurar={handleRestaurar}
+        handleExcluirDefinitivo={handleExcluirDefinitivo}
         selecionados={selecionados}
         onToggleSelecionado={toggleSelecionado}
         onToggleTodos={toggleTodos}
