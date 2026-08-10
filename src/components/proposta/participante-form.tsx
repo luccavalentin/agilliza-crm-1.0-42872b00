@@ -1,6 +1,4 @@
 import { useState, useEffect, useRef, useMemo } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Loader2, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -13,8 +11,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { ESTADO_CIVIL_COM_REGIME } from "@/lib/propostas/dominios";
-import { LABEL_POR_CHAVE, faltantesEnvolvido } from "@/lib/propostas/campos-obrigatorios";
-import { ressincronizarDadosParticipantes } from "@/lib/propostas/propostas.functions";
+import { LABEL_POR_CHAVE } from "@/lib/propostas/campos-obrigatorios";
 import { CamposParticipante } from "./participante-form/campos-participante";
 import {
   camposFaltantes,
@@ -47,8 +44,7 @@ export function ParticipanteDialog({
   avisoTopo,
   participanteIndex,
   totalParticipantes,
-  propostaId,
-  onSalvoPermanecer,
+  participanteId,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
@@ -72,13 +68,9 @@ export function ParticipanteDialog({
   participanteIndex?: number;
   /** Total de participantes para exibição de progresso. */
   totalParticipantes?: number;
-  /** ID da proposta para ressincronização. */
-  propostaId?: string;
-  /** Callback opcional chamado após salvar com sucesso e permanecer no modal. */
-  onSalvoPermanecer?: () => void;
+  /** Identidade estável usada para inicializar somente ao trocar de participante. */
+  participanteId?: string;
 }) {
-  const qc = useQueryClient();
-  const ressincronizarFn = useServerFn(ressincronizarDadosParticipantes);
   const [salvandoInterno, setSalvandoInterno] = useState(false);
 
   const [f, setF] = useState<ParticipanteForm>(inicial ?? VAZIO);
@@ -93,14 +85,16 @@ export function ParticipanteDialog({
   const corpoRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (open) {
-      setF(inicial ?? { ...VAZIO, tipo_qualificacao: tipoQualificacaoFixo ?? "CO" });
-      setConjuge(conjugeInicial ?? { ...VAZIO, tipo_qualificacao: "TI" });
-      setErros(new Set());
-      setErrosC(new Set());
-      setTentouEnviar(Boolean(focarPendencias));
-    }
-  }, [open, inicial, conjugeInicial, tipoQualificacaoFixo, focarPendencias]);
+    if (!open) return;
+    setF(inicial ?? { ...VAZIO, tipo_qualificacao: tipoQualificacaoFixo ?? "CO" });
+    setConjuge(conjugeInicial ?? { ...VAZIO, tipo_qualificacao: "TI" });
+    setErros(new Set());
+    setErrosC(new Set());
+    setTentouEnviar(Boolean(focarPendencias));
+    // `inicial` e `conjugeInicial` são snapshots. Enquanto este participante
+    // estiver aberto, o estado digitado no formulário é a fonte de verdade.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, participanteId]);
 
   // Após a primeira tentativa, revalida ao vivo para o vermelho sumir conforme preenche.
   useEffect(() => {
@@ -213,23 +207,8 @@ export function ParticipanteDialog({
   }
 
   async function submit(enviar: boolean) {
+    if (salvandoInterno || salvando) return;
     setTentouEnviar(true);
-
-    // 1. Ressincroniza antes de qualquer validação (P1.g)
-    if (propostaId && !salvandoInterno) {
-      setSalvandoInterno(true);
-      const tid = toast.loading("Sincronizando dados com o CRM...");
-      try {
-        await ressincronizarFn({ data: { proposta_id: propostaId } });
-        await qc.invalidateQueries({ queryKey: ["proposta", propostaId] });
-        toast.success("Dados sincronizados.", { id: tid });
-      } catch (err) {
-        console.error("Erro na ressincronização automática:", err);
-        toast.dismiss(tid);
-      } finally {
-        setSalvandoInterno(false);
-      }
-    }
 
     const faltando = camposFaltantes(f);
     setErros(faltando);
@@ -246,11 +225,12 @@ export function ParticipanteDialog({
     }
 
     const conjugePayload = c ? formParaEnvolvido(c) : null;
-    await onSalvar(formParaEnvolvido(f), conjugePayload, { enviar });
-
-    // Após salvar, revalida para atualizar o estado visual se permanecer no modal
-    setTentouEnviar(true);
-    onSalvoPermanecer?.();
+    setSalvandoInterno(true);
+    try {
+      await onSalvar(formParaEnvolvido(f), conjugePayload, { enviar });
+    } finally {
+      setSalvandoInterno(false);
+    }
   }
 
 
@@ -322,26 +302,26 @@ export function ParticipanteDialog({
             )}
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)} disabled={salvando}>
+            <Button variant="outline" onClick={() => onOpenChange(false)} disabled={salvando || salvandoInterno}>
               Cancelar
             </Button>
             <Button
               variant="ghost"
               onClick={() => submit(false)}
-              disabled={salvando || !podeEnviar}
+              disabled={salvando || salvandoInterno || !podeEnviar}
             >
               Salvar sem enviar
             </Button>
             <Button
               onClick={() => submit(true)}
-              disabled={salvando || !podeEnviar}
+              disabled={salvando || salvandoInterno || !podeEnviar}
               title={
                 podeEnviar
                   ? "Salva o cadastro e envia a proposta ao banco"
                   : `Faltam: ${pendentesAgora.join(", ")}`
               }
             >
-              {salvando && <Loader2 className="mr-1 h-4 w-4 animate-spin" />}
+              {(salvando || salvandoInterno) && <Loader2 className="mr-1 h-4 w-4 animate-spin" />}
               Salvar e enviar ao banco
             </Button>
           </div>

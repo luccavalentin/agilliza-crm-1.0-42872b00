@@ -175,6 +175,7 @@ export function TabEnvolvidos({
         }
         inicial={inicial}
         conjugeInicial={conjugeInicial}
+        participanteId={editId ?? (open ? "novo" : undefined)}
         tipoQualificacaoFixo={tipo === "VD" ? "VD" : undefined}
         salvando={salvando}
         onSalvar={salvar}

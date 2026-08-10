@@ -261,6 +261,24 @@ function Pagina() {
   const totalPendentes = (envolvidos ?? []).length;
   const proximoPendente = pendentes[0];
 
+  const inicialParticipante = useMemo(
+    () => (participanteModal ? envolvidoParaForm(participanteModal) : undefined),
+    // O snapshot só deve mudar quando muda a pessoa editada.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [participanteModal?.id],
+  );
+  const conjugeInicialParticipante = useMemo(() => {
+    if (!participanteModal?.id) return undefined;
+    const conjuge = envolvidos.find(
+      (env: any) =>
+        env.conjuge_de === participanteModal.id ||
+        (participanteModal.conjuge_id && env.id === participanteModal.conjuge_id),
+    );
+    return conjuge ? envolvidoParaForm(conjuge) : undefined;
+    // Mantém o snapshot estável durante a edição, inclusive em refetches.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [participanteModal?.id, participanteModal?.conjuge_id]);
+
   const abrirCadastroPendente = () => {
     if (!proximoPendente) return;
     setParticipanteModal(proximoPendente.env);
@@ -637,11 +655,13 @@ function Pagina() {
         }
         participanteIndex={indiceParticipante}
         totalParticipantes={totalPendentes}
-        inicial={participanteModal ? envolvidoParaForm(participanteModal) : undefined}
-        propostaId={id}
+        inicial={inicialParticipante}
+        conjugeInicial={conjugeInicialParticipante}
+        participanteId={participanteModal?.id}
         focarPendencias={true}
         onSalvar={async (principal, conjuge, opcoes) => {
           if (!participanteModal?.id) return;
+          let enviandoAoBanco = false;
           try {
             await atualizarEnvolvido({
               data: { id: participanteModal.id, dados: principal },
@@ -652,23 +672,40 @@ function Pagina() {
               });
             } else if (conjuge) {
               await adicionarEnvolvido({
-                data: { proposta_id: id, dados: conjuge },
+                data: {
+                  proposta_id: id,
+                  dados: {
+                    ...conjuge,
+                    tipo_qualificacao: "TI",
+                    conjuge_de: participanteModal.id,
+                  },
+                },
               });
             }
-            toast.success("Dados do participante atualizados.");
-            await qc.invalidateQueries({ queryKey: ["proposta", id] });
+            // Lê a proposta novamente sem invalidar/remontar o formulário. A
+            // resposta atualizada é usada para decidir o próximo passo.
+            const atualizada: any = await qc.fetchQuery({
+              ...propostaQueryOptions(id),
+              staleTime: 0,
+            });
+            const envolvidosAtualizados = atualizada?.envolvidos ?? [];
+            const novosPendentes = envolvidosAtualizados
+              .map((env: any, index: number) => ({
+                env,
+                faltantes: faltantesEnvolvido(env),
+                index: index + 1,
+              }))
+              .filter((item: any) => item.faltantes.length > 0);
 
-            // Avança para o próximo pendente; quando não houver mais, envia.
-            const novosPendentes = pendentes.filter(
-              (item: any) => item.env.id !== participanteModal.id,
-            );
             if (novosPendentes.length > 0) {
               setParticipanteModal(novosPendentes[0].env);
               setIndiceParticipante(novosPendentes[0].index);
+              toast.success("Dados salvos. Complete o próximo participante.");
               return;
             }
 
             if (!opcoes?.enviar) {
+              toast.success("Dados do participante atualizados.");
               setParticipanteModal(null);
               return;
             }
@@ -679,22 +716,22 @@ function Pagina() {
             );
             const bancoId =
               bancosPendentes.length === 1 ? bancosPendentes[0].banco_id : undefined;
-            const atualizada: any = await qc.fetchQuery(propostaQueryOptions(id));
+            enviandoAoBanco = true;
             const r = await handleEnviarHook({
               propostaId: id,
               bancoId,
-              envolvidos: atualizada?.envolvidos ?? data?.envolvidos,
+              envolvidos: envolvidosAtualizados,
               onCadastroIncompleto: (env: any) => setParticipanteModal(env),
             });
             // Só fecha quando o envio realmente concluiu (o gate devolve
             // undefined quando bloqueou por cadastro incompleto).
             if (r) setParticipanteModal(null);
           } catch (e: any) {
-            toast.error(e?.message ?? "Falha ao salvar participante.");
+            // O gate de envio já mostra o motivo real retornado pelo banco.
+            if (!enviandoAoBanco) {
+              toast.error(e?.message ?? "Falha ao salvar participante.");
+            }
           }
-        }}
-        onSalvoPermanecer={() => {
-          /* mantém o modal aberto; o fechamento é decidido no onSalvar */
         }}
       />
 
