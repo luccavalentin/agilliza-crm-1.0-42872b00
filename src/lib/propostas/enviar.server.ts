@@ -1536,6 +1536,17 @@ export async function sincronizarPropostaImpl({
     }
   }
 
+  const ROTULO_DETALHE: Partial<Record<PropostaStatus, string>> = {
+    credito_recusado: "Crédito recusado",
+    credito_aprovado: "Crédito aprovado",
+    em_analise_credito: "Em análise de crédito",
+    aguardando_documentos: "Coleta de documentos",
+    engenharia_vistoria: "Engenharia / vistoria",
+    analise_juridica: "Análise jurídica",
+    contrato_emitido: "Contrato emitido",
+    cancelada: "Cancelada",
+  };
+
   const patch: Record<string, unknown> = {
     status: statusEfetivo,
     detalhe_status_atual:
@@ -1555,7 +1566,6 @@ export async function sincronizarPropostaImpl({
     }
   }
 
-  };
 
 
   // Funil COMPLETO da oportunidade retornado pelo banco (pós-aprovação e demais
