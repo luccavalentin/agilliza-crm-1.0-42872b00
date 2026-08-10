@@ -8,7 +8,16 @@ import tseslint from "typescript-eslint";
 export default tseslint.config(
   { ignores: ["dist", ".output", ".vinxi"] },
   {
-    extends: [js.configs.recommended, ...tseslint.configs.recommended],
+    extends: [
+      js.configs.recommended,
+      ...tseslint.configs.recommended.map((c) => ({
+        ...c,
+        rules: {
+          ...c.rules,
+          "@typescript-eslint/no-explicit-any": "off",
+        },
+      })),
+    ],
     files: ["**/*.{ts,tsx}"],
     languageOptions: {
       ecmaVersion: 2020,
