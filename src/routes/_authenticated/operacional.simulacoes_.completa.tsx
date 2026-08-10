@@ -23,6 +23,8 @@ import { SecaoTitular } from "@/components/simulacao/completa/secao-titular";
 import { SecaoConjuge } from "@/components/simulacao/completa/secao-conjuge";
 import { SecaoBancos } from "@/components/simulacao/completa/secao-bancos";
 import { SecaoConsentimentos } from "@/components/simulacao/completa/secao-consentimentos";
+import { EnviarPropostaDialog } from "@/components/simulacao/enviar-proposta-dialog";
+
 import { ResultadoInlineCompleta } from "@/components/simulacao/completa/resultado-inline";
 import { ResultadoInlineAmbos } from "@/components/simulacao/completa/resultado-inline-ambos";
 import { TabelaComparativaCPFs } from "@/components/simulacao/completa/tabela-comparativa-cpfs";
@@ -341,6 +343,16 @@ function Pagina() {
       )}
 
       <ConsultandoOverlay aberto={enviando} total={totalBancosResumo} concluidos={concluidos} />
+
+      <EnviarPropostaDialog
+        envio={ctx.envioEstado}
+        onClose={ctx.fecharDialogEnvio}
+        carregando={false}
+        statusPorBanco={ctx.statusPorBanco}
+        onEnviarBanco={ctx.enviarBancoIndividual}
+        onEnviarTodos={ctx.enviarTodosBancos}
+      />
+
 
 
 

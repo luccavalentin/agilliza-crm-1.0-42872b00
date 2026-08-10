@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { useRouter } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { mensagemCamposPendentes } from "@/lib/simulacao/rotulos-campos";
 import { toast } from "sonner";
@@ -10,12 +10,15 @@ import { completaSchema } from "@/lib/simulacao/schemas";
 import { formatBRL, maskCpfCnpj, maskCelular } from "@/lib/simulacao/format";
 import { ajustarPrazoPorIdade, prazoMaximoParaProponentes } from "@/lib/simulacao/prazo";
 import { obterConfiguracoesModulos } from "@/lib/admin/configuracoes-modulos.functions";
+import { useEnviarProposta } from "@/hooks/use-enviar-proposta";
+import { criarProposta } from "@/lib/propostas/propostas.functions";
 import {
   listarBancosAtivos,
   listarOperacoes,
   obterSimulacao,
   obterClienteCRM,
 } from "@/lib/simulacao/simulacoes.functions";
+
 import {
   EMAIL_PADRAO,
   ESTADO_INICIAL,
@@ -76,6 +79,24 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
   // Segundo id de simulação para o modo "Ambos" (uma simulação SAC + uma PRICE).
   const [simulacaoResultadoIdPrice, setSimulacaoResultadoIdPrice] = useState<string | null>(null);
   const [simulacaoResultadoIdSecundario, setSimulacaoResultadoIdSecundario] = useState<string | null>(null);
+  
+  const { 
+    enviar: enviarPropostaHook, 
+    statusPorBanco, 
+    iniciarStatus: iniciarStatusEnvio 
+  } = useEnviarProposta();
+
+  // Estado para o diálogo de "Enviar Proposta"
+  const [envioEstado, setEnvioEstado] = useState<any | null>(null);
+
+  const abrirDialogEnvio = useCallback((sim: any) => {
+    setEnvioEstado(sim);
+  }, []);
+
+  const fecharDialogEnvio = useCallback(() => {
+    setEnvioEstado(null);
+  }, []);
+
 
   const { data: bancos } = useQuery({
     queryKey: ["bancos-ativos"],
@@ -1138,6 +1159,49 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
     enviar,
     executarEnvio,
     enviarAmbos,
+    // Diálogo de envio
+    envioEstado,
+    statusPorBanco,
+    abrirDialogEnvio,
+    fecharDialogEnvio,
+    // Handler individual para o diálogo
+    enviarBancoIndividual: async (banco: any) => {
+      if (!envioEstado) return;
+      iniciarStatusEnvio(banco.id);
+      return enviarPropostaHook({
+        propostaId: undefined, // será criada
+        bancoId: banco.id,
+        criarPropostaFn: async () => {
+          const { proposta_id } = await criarProposta({
+            data: {
+              simulacao_id: envioEstado.id,
+              banco_id: banco.id
+            }
+          });
+          return { proposta_id };
+        }
+      });
+    },
+    enviarTodosBancos: async (bancos: any[]) => {
+      if (!envioEstado) return;
+      for (const b of bancos) {
+        iniciarStatusEnvio(b.id);
+        enviarPropostaHook({
+          propostaId: undefined,
+          bancoId: b.id,
+          criarPropostaFn: async () => {
+            const { proposta_id } = await criarProposta({
+              data: {
+                simulacao_id: envioEstado.id,
+                banco_id: b.id
+              }
+            });
+            return { proposta_id };
+          }
+        });
+      }
+    },
+
     // resultado inline
     simulacaoResultadoId,
     simulacaoResultadoIdPrice,
