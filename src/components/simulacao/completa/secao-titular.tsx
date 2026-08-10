@@ -178,7 +178,7 @@ export function SecaoTitular({ ctx }: { ctx: SimulacaoCompletaCtx }) {
                 compoeRendaConjuge={f.compoe_renda && f.compoe_renda_conjuge}
               />
             </div>
-          )}
+          </div>
         </Campo>
         {f.sistema_amortizacao === "B" && (
           <Campo
