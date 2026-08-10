@@ -849,10 +849,21 @@ async function enviarPropostaImplInner({
   }
 
   const statusAtual = prop.status as PropostaStatus;
+  
+  // Limpa mensagens de erro e protocolos de tentativas anteriores para garantir
+  // que a mensagem exibida reflita a causa real desta tentativa.
+  await supabase
+    .from("propostas")
+    .update({ 
+      ultimo_erro: null,
+      detalhe_status_atual: null 
+    } as any)
+    .eq("id", propostaId);
+
   // Primeiro envio = ainda em rascunho ou após um erro de envio.
-  // Envio adicional = a proposta já foi ao banco e queremos incluir outro(s)
-  // banco(s) na MESMA oportunidade (a API permite várias propostas por oportunidade).
   const primeiroEnvio = statusAtual === "rascunho" || statusAtual === "erro_envio";
+
+
   const STATUS_BLOQUEIA_NOVO_BANCO: PropostaStatus[] = [
     "cancelada",
     "registrado",
@@ -1184,11 +1195,14 @@ async function enviarPropostaImplInner({
   const errosDestaTentativa = resultados
     .filter((r) => r.status === "erro")
     .map((r) => `${r.nome_banco ?? "Banco"}: ${r.mensagem ?? "falha ao enviar"}`);
+  
   const patchFinal: Record<string, any> = {
     ultimo_erro: errosDestaTentativa.length > 0 ? errosDestaTentativa.join(" | ") : null,
+    status: novoStatusGlobal,
   };
-  if (novoStatusGlobal !== statusAtual) patchFinal.status = novoStatusGlobal;
+  
   await supabase.from("propostas").update(patchFinal as any).eq("id", propostaId);
+
 
   await supabase.from("proposta_historico").insert({
     proposta_id: propostaId,
@@ -1486,12 +1500,10 @@ export async function sincronizarPropostaImpl({
     novoStatus = derivado;
   }
 
+  // ---- 2.5) Recálculo Final e Sincronização de Status Global ----
+  const statusDefinitivoBancos = await recalcularStatusGlobalProposta(supabase, propostaId);
+  const statusEfetivo = (statusDefinitivoBancos ?? novoStatus ?? prop.status) as PropostaStatus;
 
-  // Detalhe coerente com o desfecho: a atividade real do banco tem prioridade;
-  // quando há um desfecho de crédito (recusado/aprovado/análise) ou situação
-  // terminal, nunca exibimos uma etapa anterior do funil (ex.: "Simulação"),
-  // que contradiz o status e confunde o usuário.
-  const statusEfetivo = (novoStatus ?? prop.status) as PropostaStatus;
 
   // ---- Propaga o desfecho da proposta para as linhas de banco ----
   // A lista de propostas exibe proposta_bancos.status_banco. Quando o desfecho
@@ -1534,11 +1546,26 @@ export async function sincronizarPropostaImpl({
     contrato_emitido: "Contrato emitido",
     cancelada: "Cancelada",
   };
+
   const patch: Record<string, unknown> = {
+    status: statusEfetivo,
     detalhe_status_atual:
       statusAtividade.detalhe ?? ROTULO_DETALHE[statusEfetivo] ?? nomeEtapa,
     ultima_sincronizacao_em: new Date().toISOString(),
   };
+
+  const atualizado = statusEfetivo !== prop.status || patch.detalhe_status_atual !== prop.detalhe_status_atual;
+  if (atualizado) {
+    patch.status_atualizado_em = new Date().toISOString();
+    await supabase.from("propostas").update(patch as any).eq("id", propostaId);
+
+    // Verificação de integridade pós-gravação
+    const { data: conferir } = await supabase.from("propostas").select("status").eq("id", propostaId).single();
+    if (conferir?.status !== statusEfetivo) {
+      console.error(`[proposta] FALHA CRÍTICA: Status da PRO-${propostaId} deveria ser ${statusEfetivo} mas está ${conferir?.status} após sync.`);
+    }
+  }
+
 
 
   // Funil COMPLETO da oportunidade retornado pelo banco (pós-aprovação e demais

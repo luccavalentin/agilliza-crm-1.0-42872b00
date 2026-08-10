@@ -91,13 +91,20 @@ export async function adicionarParticipanteImpl({
   // Deduplicação por CPF antes de montar o payload
   const { data: envsExistentes } = await supabase
     .from("proposta_envolvidos")
-    .select("cpf_cnpj")
+    .select("cpf_cnpj, tipo_qualificacao")
     .eq("proposta_id", propostaId);
   
-  const cpfsExistentes = (envsExistentes ?? []).map(e => soDigitosStr(e.cpf_cnpj)).filter(Boolean);
+  const envolvidos = (envsExistentes ?? []);
+  const cpfsExistentes = envolvidos.map(e => soDigitosStr(e.cpf_cnpj)).filter(Boolean);
+  
   if (cpfsExistentes.includes(cpfCnpj)) {
+    const jaEhConjuge = envolvidos.some(e => soDigitosStr(e.cpf_cnpj) === cpfCnpj && e.tipo_qualificacao === "CJ");
+    if (jaEhConjuge) {
+      throw new Error("Este participante já está cadastrado como cônjuge. Para torná-lo proponente, remova-o da seção de cônjuge primeiro.");
+    }
     throw new Error("Este CPF/CNPJ já está cadastrado nesta proposta.");
   }
+
 
   const payload = {
     tipoSituacao: participante.tipoSituacao ?? "A",
