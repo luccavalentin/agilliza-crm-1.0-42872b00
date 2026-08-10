@@ -196,9 +196,12 @@ export function extrairErroRetorno(
     // Só códigos exatamente positivos indicam sucesso; prefixos como "01.03"
     // podem ser códigos de fase/erro do banco e não devem ser mascarados.
     if (c && !(c === "0" || c === "00" || c === "000" || c === "200" || /^(ok|success|sucesso)$/i.test(c))) {
-      // Quando retornoIntegracao vier vazio ({"error":{}}), orientar acionar suporte
-      if (typeof obj?.error === "object" && Object.keys(obj.error).length === 0) {
-        return `O banco não informou o motivo da recusa (código ${c}). Por favor, acione o suporte técnico da plataforma para diagnóstico com o número da proposta Agilliza.`;
+      // Quando retornoIntegracao vier vazio ({"error":{}}) ou apenas com código,
+      // orientar o acionamento do suporte.
+      const erroVazio = typeof obj?.error === "object" && obj?.error !== null && Object.keys(obj.error).length === 0;
+      
+      if (erroVazio) {
+        return `O banco não informou o motivo detalhado (código ${c}). Por favor, acione o suporte técnico da plataforma para diagnóstico com o número desta proposta.`;
       }
       return `A proposta não foi efetivada no banco (falha na integração - código ${c}). Verifique os detalhes técnicos ou acione o suporte.`;
     }
