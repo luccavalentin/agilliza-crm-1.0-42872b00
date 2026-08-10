@@ -836,6 +836,8 @@ async function enviarPropostaImplInner({
   if (bancoId) {
     // Chamadores podem passar o ID da linha (uuid) ou o banco_id (string curta ex: 'itau').
     // Tentamos ambos para máxima compatibilidade.
+    // Chamadores podem passar o ID da linha (uuid) ou o banco_id (string curta ex: 'itau').
+    // Tentamos ambos para máxima compatibilidade.
     query = query.or(`banco_id.eq.${bancoId},id.eq.${bancoId}`);
   } else {
     query = query.eq("selecionado", true);
