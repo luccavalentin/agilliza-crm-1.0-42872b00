@@ -105,10 +105,22 @@ export function StatusBancosProposta({
         const cor = corDoBanco(b.nome_banco);
         const bruto = String(b.status_banco ?? "");
         const efetivo = desfecho && !STATUS_BANCO_TERMINAL.has(bruto) ? desfecho : bruto;
-        const cfg = STATUS_BANCO[efetivo] ?? {
+        
+        // Regra crítica: só exibir "Enviada ao banco" se houver protocolo real.
+        // Caso contrário, tratamos como aguardando ou falha.
+        let cfg = STATUS_BANCO[efetivo] ?? {
           label: efetivo || "—",
           tone: "muted" as Tone,
         };
+
+        const temProtocolo = Boolean((b as any).numero_proposta_banco);
+        if (efetivo === "enviada" && !temProtocolo) {
+           cfg = STATUS_BANCO["aguardando"];
+        } else if (efetivo === "erro" && !temProtocolo) {
+           cfg = STATUS_BANCO["erro"]; // Já mapeado para "Falha no envio"
+        } else if ((efetivo === "em_analise" || efetivo === "enviada") && temProtocolo) {
+           cfg = { label: "Em análise no banco", tone: "info" };
+        }
 
         return (
           <div
