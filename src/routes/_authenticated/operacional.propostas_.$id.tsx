@@ -756,7 +756,7 @@ function Pagina() {
           participanteModal && (
             <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive font-medium leading-relaxed">
               <AlertTriangle className="inline-block h-4 w-4 mr-1.5 align-text-bottom" />
-              Faltam {faltantesEnvolvido(participanteModal).length} dados obrigatórios de{" "}
+              Falta{faltantesEnvolvido(participanteModal).length === 1 ? "" : "m"} {faltantesEnvolvido(participanteModal).length} dado{faltantesEnvolvido(participanteModal).length === 1 ? "" : "s"} obrigatório{faltantesEnvolvido(participanteModal).length === 1 ? "" : "s"} de{" "}
               {descreverParticipante(participanteModal)} para enviar ao banco. Preencha os campos destacados em vermelho.
             </div>
           )

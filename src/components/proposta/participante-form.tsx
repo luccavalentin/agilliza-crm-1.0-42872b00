@@ -125,9 +125,11 @@ export function ParticipanteDialog({
 
 
 
-  const pf = f.tipo_pessoa === "F";
-  const permiteConjuge = true;
-  const precisaConjuge = permiteConjuge && pf && ESTADO_CIVIL_COM_REGIME.has(f.estado_civil);
+  // 1. CORREÇÃO: A seção de cônjuge só aparece para o TITULAR/comprador principal
+  // e se não houver um cônjuge já cadastrado como participante independente.
+  const ehConjuge = f.tipo_qualificacao === "CJ";
+  const permiteConjuge = !ehConjuge;
+  const precisaConjuge = permiteConjuge && f.tipo_pessoa === "F" && ESTADO_CIVIL_COM_REGIME.has(f.estado_civil);
 
   const set = (patch: Partial<ParticipanteForm>) => setF((p) => ({ ...p, ...patch }));
   const setC = (patch: Partial<ParticipanteForm>) => setConjuge((p) => ({ ...p, ...patch }));
@@ -304,7 +306,7 @@ export function ParticipanteDialog({
               </p>
             ) : (
               <p className="text-[11px] font-medium text-muted-foreground">
-                Faltam {pendentesAgora.length} dado(s) obrigatório(s): {pendentesAgora.join(", ")}
+                Faltam {pendentesAgora.length} {pendentesAgora.length === 1 ? "dado obrigatório" : "dados obrigatórios"}: {pendentesAgora.join(", ")}
               </p>
             )}
           </div>
