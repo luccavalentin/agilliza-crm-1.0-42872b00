@@ -1135,16 +1135,22 @@ async function enviarPropostaImplInner({
       const ehErroLimiteSantander = b.banco_id === TIPO_BANCO_SANTANDER && 
         (originalMsg.includes("INT-SANTANDER-RANGE") || originalMsg.includes("financingAmount"));
 
-      // Se for erro de limite, não classificamos como erro_envio para não sugerir reenvio sem ajuste.
-      // Tratamos como crédito recusado por regra do banco.
-      const statusFinalBanco = ehErroLimiteSantander ? "recusada" : "erro";
-      const situacaoFinalBanco = ehErroLimiteSantander ? "recusado" : "nao_enviado";
+      // 1. "erro_envio" EM PROPOSTA QUE O BANCO RECEBEU
+      // Se houve um erro de timeout (fetch/timeout) APÓS o POST ter sido enviado,
+      // ou se o erro indica que a leitura falhou mas o envio pode ter ocorrido.
+      // Aqui, se falhou no catch do chamarIntegracao de inclusão, geralmente é erro de envio real.
+      // Mas se o erro for timeout, usamos "aguardando_retorno" (mapeado como 'enviada' localmente).
+      const ehTimeout = originalMsg.includes("timeout") || originalMsg.includes("deadline") || originalMsg.includes("fetch");
+      
+      const statusFinalBanco = ehErroLimiteSantander ? "recusada" : (ehTimeout ? "enviada" : "erro");
+      const situacaoFinalBanco = ehErroLimiteSantander ? "recusado" : (ehTimeout ? "em_analise" : "nao_enviado");
+      const msgBanco = ehTimeout ? "Envio iniciado, aguardando confirmação do banco (timeout na leitura)." : msg;
 
       await supabase
         .from("proposta_bancos")
         .update({ 
           status_banco: statusFinalBanco, 
-          mensagem_banco: msg,
+          mensagem_banco: msgBanco,
           situacao_banco: situacaoFinalBanco
         } as any)
         .eq("id", b.id);
@@ -1153,7 +1159,7 @@ async function enviarPropostaImplInner({
         banco_id: b.banco_id,
         nome_banco: b.nome_banco,
         status: statusFinalBanco,
-        mensagem: msg,
+        mensagem: msgBanco,
       };
     }
   };
