@@ -106,7 +106,7 @@ export function PipelineStepper({
                     />
                   </div>
                 )}
-                <div className="flex w-[4.75rem] flex-col items-center gap-2 px-1 sm:w-28">
+                <div className="flex w-16 flex-col items-center gap-2 px-1 sm:w-28">
                   <span
                     className={cn(
                       "relative grid size-8 place-items-center rounded-full text-xs font-bold transition-all",
