@@ -12,13 +12,13 @@ export const STATUS_BANCO: Record<string, { label: string; tone: Tone }> = {
   aguardando: { label: "Aguardando envio", tone: "muted" },
   nao_enviado: { label: "Não enviado", tone: "muted" },
   enviada: { label: "Enviada ao banco", tone: "info" },
-  em_analise: { label: "Em análise de crédito", tone: "info" },
+  em_analise: { label: "Em análise no banco", tone: "info" },
   condicionado: { label: "Aprovado com condições", tone: "warning" },
-  aprovada: { label: "Crédito aprovado", tone: "success" },
-  aprovado: { label: "Crédito aprovado", tone: "success" },
+  aprovada: { label: "Aprovada", tone: "success" },
+  aprovado: { label: "Aprovada", tone: "success" },
   recusada: { label: "Crédito recusado", tone: "danger" },
   recusado: { label: "Crédito recusado", tone: "danger" },
-  erro: { label: "Erro no envio", tone: "danger" },
+  erro: { label: "Falha no envio", tone: "danger" },
   cancelada: { label: "Cancelada", tone: "muted" },
 };
 
@@ -105,10 +105,22 @@ export function StatusBancosProposta({
         const cor = corDoBanco(b.nome_banco);
         const bruto = String(b.status_banco ?? "");
         const efetivo = desfecho && !STATUS_BANCO_TERMINAL.has(bruto) ? desfecho : bruto;
-        const cfg = STATUS_BANCO[efetivo] ?? {
+        
+        // Regra crítica: só exibir "Enviada ao banco" se houver protocolo real.
+        // Caso contrário, tratamos como aguardando ou falha.
+        let cfg = STATUS_BANCO[efetivo] ?? {
           label: efetivo || "—",
           tone: "muted" as Tone,
         };
+
+        const temProtocolo = Boolean((b as any).numero_proposta_banco);
+        if (efetivo === "enviada" && !temProtocolo) {
+           cfg = STATUS_BANCO["aguardando"];
+        } else if (efetivo === "erro" && !temProtocolo) {
+           cfg = STATUS_BANCO["erro"]; // Já mapeado para "Falha no envio"
+        } else if ((efetivo === "em_analise" || efetivo === "enviada") && temProtocolo) {
+           cfg = { label: "Em análise no banco", tone: "info" };
+        }
 
         return (
           <div

@@ -546,6 +546,71 @@ function Pagina() {
           </div>
         )}
 
+        {/* Banco feedback / Error messages */}
+        {bancos.map((b: any) => {
+          const erroMsg = b.mensagem_banco || b.mensagem;
+          if (!erroMsg && !b.retorno_integracao) return null;
+
+          return (
+            <div
+              key={b.id}
+              className={cn(
+                "mt-4 flex flex-col gap-3 rounded-xl border p-4 mx-5 mb-5",
+                b.status_banco === "erro"
+                  ? "border-destructive/20 bg-destructive/5"
+                  : "border-primary/20 bg-primary/5",
+              )}
+            >
+              <div className="flex items-start gap-3">
+                {b.status_banco === "erro" ? (
+                  <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-destructive" />
+                ) : (
+                  <Info className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+                )}
+                <div className="flex-1 space-y-1">
+                  <p className="text-sm font-semibold text-foreground">
+                    Retorno do {b.nome_banco}
+                  </p>
+                  <p className="text-sm leading-relaxed text-muted-foreground">
+                    {erroMsg || "O banco não informou o motivo detalhado."}
+                  </p>
+                  
+                  {(b.retorno_integracao || b.codigo_situacao_banco) && (
+                    <div className="mt-3">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm" className="h-7 px-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground">
+                            Detalhes técnicos <ChevronDown className="ml-1 h-3 w-3" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="start" className="max-w-[400px]">
+                          <div className="p-3 text-[11px] font-mono leading-normal text-muted-foreground">
+                            {b.codigo_situacao_banco && (
+                              <div className="mb-2">
+                                <span className="font-bold text-foreground">Código banco:</span> {b.codigo_situacao_banco}
+                              </div>
+                            )}
+                            {b.retorno_integracao && (
+                              <div>
+                                <span className="font-bold text-foreground">Payload:</span>
+                                <pre className="mt-1 max-h-[200px] overflow-auto whitespace-pre-wrap rounded bg-muted/50 p-2 text-[10px]">
+                                  {typeof b.retorno_integracao === 'string' 
+                                    ? b.retorno_integracao 
+                                    : JSON.stringify(b.retorno_integracao, null, 2)}
+                                </pre>
+                              </div>
+                            )}
+                          </div>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+
         <div className="p-5">
           <PipelineStepper status={status} detalheStatus={p.detalhe_status_atual} />
           <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1.5 border-t border-border/60 pt-3 text-[11px] text-muted-foreground">
