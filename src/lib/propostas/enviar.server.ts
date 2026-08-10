@@ -822,9 +822,7 @@ async function enviarPropostaImplInner({
     );
   }
 
-  // Uma oportunidade cancelada no banco (tipoSituacao "C") não aceita novas
-  // propostas: o provedor devolve erro genérico e a proposta fica "enviada"
-  // sem nunca chegar ao banco. Verificamos ANTES de qualquer envio.
+  // Verificação de oportunidade cancelada (tipoSituacao "C")
   {
     const ctxCheck = {
       simulacao_id: prop.simulacao_id,
@@ -842,21 +840,42 @@ async function enviarPropostaImplInner({
       const situacao = String(
         op?.tipoSituacao?.id ?? op?.tipoSituacao ?? op?.situacao ?? "",
       ).toUpperCase();
+
       if (situacao === "C") {
-        await supabase
-          .from("propostas")
-          .update({
-            ultimo_erro:
-              "A oportunidade bancária desta proposta foi cancelada no banco. Gere uma nova simulação para criar uma oportunidade válida.",
-          } as any)
-          .eq("id", propostaId);
-        throw new IntegracaoBancariaError(
-          "A oportunidade bancária desta proposta foi cancelada no banco e não pode mais receber envios. Gere uma nova simulação para criar uma oportunidade válida.",
-        );
+        // CORREÇÃO: Em vez de apenas travar, tentamos criar uma oportunidade NOVA
+        // para reaproveitar os dados e não bloquear o usuário.
+        try {
+          const { enviarSimulacaoImpl } = await import("../simulacao/enviar.server");
+          const { oportunidade_id: novoIdOp } = await enviarSimulacaoImpl({
+            simulacaoId: prop.simulacao_id,
+            userId,
+            ip: "127.0.0.1",
+            supabase,
+            bancoIds: [prop.banco_id],
+          });
+
+          if (novoIdOp) {
+            await supabase
+              .from("propostas")
+              .update({ homefin_id_oportunidade: novoIdOp } as any)
+              .eq("id", propostaId);
+            
+            await supabase.from("proposta_historico").insert({
+              proposta_id: propostaId,
+              tipo_evento: "sincronizacao",
+              descricao: `A oportunidade bancária anterior (${prop.homefin_id_oportunidade}) estava cancelada no banco. Uma nova oportunidade (${novoIdOp}) foi criada automaticamente para este envio.`,
+            });
+            
+            // Atualiza a variável local para o restante do fluxo
+            prop.homefin_id_oportunidade = novoIdOp;
+          }
+        } catch (errNova) {
+          throw new IntegracaoBancariaError(
+            "A oportunidade no banco foi cancelada e não foi possível criar uma nova automaticamente. Gere uma nova simulação manual para enviar esta proposta."
+          );
+        }
       }
     } catch (e) {
-      // Só bloqueia quando a checagem CONFIRMOU o cancelamento; indisponibilidade
-      // da consulta nunca pode travar o envio.
       if (e instanceof IntegracaoBancariaError) throw e;
     }
   }
@@ -1435,39 +1454,53 @@ export async function sincronizarPropostaImpl({
     };
     // Salva apenas o número REAL da proposta no banco. Códigos de oportunidade
     // ou simulação são referências técnicas e não devem aparecer como "Nº banco".
-    // Em falha de integração, NUNCA gravar protocolo: a proposta não existe na
-    // esteira real do banco, então qualquer código devolvido é fantasma.
-    const numeroReal = falhaIntegracao ? null : numeroPropostaBancoReal(sim);
+    // Em falha de integração, NUNCA gravar protocolo.
+    // Buscamos se existe log de sucesso 2xx para esta proposta
+    const { count: countEnvio } = await supabase
+      .from("proposta_logs_homefin")
+      .select("id", { count: "exact", head: true })
+      .eq("proposta_id", propostaId)
+      .like("endpoint", "%/incluir-proposta-integracao")
+      .gte("status_http", 200)
+      .lt("status_http", 300);
+
+    const enviouReal = (countEnvio ?? 0) > 0;
+    const numeroReal = falhaIntegracao ? null : numeroPropostaBancoReal(sim, enviouReal);
+    const refIntegracao = referenciaIntegracaoBanco(sim);
+    
     if (falhaIntegracao) {
       patchBanco.numero_proposta_banco = null;
-    } else if (numeroReal) {
-      // Um mesmo protocolo em duas linhas de banco/propostas diferentes é bug
-      // de vazamento — loga e não propaga.
-      const { data: colisao } = await supabase
-        .from("proposta_bancos")
-        .select("id, proposta_id, banco_id")
-        .eq("numero_proposta_banco", numeroReal)
-        .neq("id", pb.id)
-        .limit(1);
-      if (colisao && colisao.length > 0) {
-        console.error("[proposta] protocolo duplicado entre bancos/propostas — descartado", {
-          numero: numeroReal,
-          atual: pb.id,
-          existente: colisao[0],
-        });
-        patchBanco.numero_proposta_banco = null;
-      } else {
-        patchBanco.numero_proposta_banco = numeroReal;
-        if (
-          !numeroPropostaBanco ||
-          sim.bancoEscolhido === "S" ||
-          mapa.proposta === "credito_aprovado"
-        ) {
-          numeroPropostaBanco = numeroReal;
+    } else {
+      patchBanco.referencia_integracao = refIntegracao;
+      if (numeroReal) {
+        // Um mesmo protocolo em duas linhas de banco/propostas diferentes é bug
+        // de vazamento — loga e não propaga.
+        const { data: colisao } = await supabase
+          .from("proposta_bancos")
+          .select("id, proposta_id, banco_id")
+          .eq("numero_proposta_banco", numeroReal)
+          .neq("id", pb.id)
+          .limit(1);
+        if (colisao && colisao.length > 0) {
+          console.error("[proposta] protocolo duplicado entre bancos/propostas — descartado", {
+            numero: numeroReal,
+            atual: pb.id,
+            existente: colisao[0],
+          });
+          patchBanco.numero_proposta_banco = null;
+        } else {
+          patchBanco.numero_proposta_banco = numeroReal;
+          if (
+            !numeroPropostaBanco ||
+            sim.bancoEscolhido === "S" ||
+            mapa.proposta === "credito_aprovado"
+          ) {
+            numeroPropostaBanco = numeroReal;
+          }
         }
+      } else if (numeroAtualEhReferenciaTecnica(pb, sim)) {
+        patchBanco.numero_proposta_banco = null;
       }
-    } else if (numeroAtualEhReferenciaTecnica(pb, sim)) {
-      patchBanco.numero_proposta_banco = null;
     }
 
     if (sim.valorParcelaBanco != null) patchBanco.valor_parcela = sim.valorParcelaBanco;
