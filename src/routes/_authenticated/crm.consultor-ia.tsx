@@ -270,8 +270,8 @@ function ConsultorIaPage() {
             </div>
           </div>
           
-          <div className="space-y-3">
-            <h1 className="bg-gradient-to-b from-primary to-brand-azul-noite bg-clip-text text-3xl font-extrabold tracking-tight text-transparent sm:text-4xl">
+          <div className="space-y-1.5">
+            <h1 className="bg-gradient-to-b from-primary to-brand-azul-noite bg-clip-text text-2xl font-extrabold tracking-tight text-transparent sm:text-3xl">
               Consultor IA
             </h1>
             <p className="mx-auto max-w-2xl text-base font-medium text-muted-foreground/80">
