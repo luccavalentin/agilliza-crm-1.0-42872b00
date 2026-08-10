@@ -40,24 +40,16 @@ import { extrairDetalheBanco } from "@/lib/simulacao/detalhe-banco";
 import { rendaMinimaPelosBancos, rendaMinimaDoBanco } from "@/lib/simulacao/renda";
 import { cn } from "@/lib/utils";
 import { ErroBancoDetalhe } from "@/components/simulacao/erro-banco-detalhe";
-import { bancoInformou } from "@/lib/simulacao/origem-dados";
+import { totalFinanciadoBanco } from "@/lib/simulacao/origem-dados";
 /**
- * Campos com fallback interno para o valor SOLICITADO: só exibimos quando o
- * banco realmente informou (ver src/lib/simulacao/origem-dados.ts).
+ * Só exibimos o que a IF realmente devolveu. Quando o retorno não traz o
+ * campo, mostramos "—" — nunca o valor SOLICITADO na operação
+ * (ver src/lib/simulacao/origem-dados.ts).
  */
-const prazoMaxTexto = (b: any, data: any) => {
-  const contratado = Number(data?.simulacao?.prazo) || 0;
-  const max = Number(b.prazo_pagamento_max) || 0;
-  if (bancoInformou(b, "prazo_pagamento_max") && max && max !== contratado) {
-    return `${max}m`;
-  }
-  return "—";
+const totalBancoTexto = (b: any) => {
+  const v = totalFinanciadoBanco(b);
+  return v == null ? "—" : formatBRL(v);
 };
-const financMaxTexto = (b: any) =>
-  bancoInformou(b, "valor_financiamento_max") && b.valor_financiamento_max != null
-    ? formatBRL(b.valor_financiamento_max)
-    : "—";
-
 
 interface Props {
   simulacaoId: string;
@@ -65,10 +57,7 @@ interface Props {
   isSecundaria?: boolean;
 }
 
-function totalFinanciado(b: any): number | null {
-  const d = extrairDetalheBanco(b?.raw_response);
-  return d?.financiamentoTotal ?? d?.valorFinanciamento ?? b?.valor_financiamento_max ?? null;
-}
+
 
 
 export function ResultadoInlineCompleta({ simulacaoId, onFechar, isSecundaria }: Props) {
@@ -335,18 +324,11 @@ export function ResultadoInlineCompleta({ simulacaoId, onFechar, isSecundaria }:
                         />
                         <MobileStat rotulo="Prazo" valor={`${s.prazo}m`} />
                         <MobileStat
-                          rotulo="Prazo máx"
-                          valor={prazoMaxTexto(b, data)}
+                          rotulo="Total fin. (banco)"
+                          valor={totalBancoTexto(b)}
                         />
-                        <MobileStat
-                          rotulo="Financ. máx"
-                          valor={financMaxTexto(b)}
-                        />
-                        <MobileStat
-                          rotulo="Total financiado"
-                          valor={formatBRL(totalFinanciado(b))}
-                        />
-                        <MobileStat rotulo="IOF" valor={formatBRL(b.valor_iof)} />
+                        <MobileStat rotulo="IOF (banco)" valor={formatBRL(b.valor_iof)} />
+
                         <MobileStat
                           rotulo="Renda estimada"
                           valor={formatBRL(rendaMinimaDoBanco(b))}
@@ -409,9 +391,9 @@ export function ResultadoInlineCompleta({ simulacaoId, onFechar, isSecundaria }:
                         <TableHead className="px-2 py-2 text-right text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Parcela</TableHead>
                         <TableHead className="px-2 py-2 text-right text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Taxa a.a.</TableHead>
                         <TableHead className="px-2 py-2 text-right text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Prazo</TableHead>
-                        <TableHead className="px-2 py-2 text-right text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Prazo máx (banco)</TableHead>
-                        <TableHead className="px-2 py-2 text-right text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Total fin.</TableHead>
-                        <TableHead className="px-2 py-2 text-right text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">IOF</TableHead>
+                        <TableHead className="px-2 py-2 text-right text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Total fin. (banco)</TableHead>
+                        <TableHead className="px-2 py-2 text-right text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">IOF (banco)</TableHead>
+
                         <TableHead className="px-2 py-2 text-right text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Renda est.</TableHead>
                         <TableHead className="px-2 py-2"></TableHead>
                       </TableRow>
