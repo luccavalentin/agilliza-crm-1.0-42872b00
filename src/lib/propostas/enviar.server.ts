@@ -1107,9 +1107,17 @@ async function enviarPropostaImplInner({
   };
 
   const enviados: EnviarResultado["bancos"] = [];
+  // Cache da oportunidade para evitar múltiplos GETs redundantes durante o loop de bancos.
+  const { data: opCache } = await supabase
+    .from("homefin_oportunidades")
+    .select("*")
+    .eq("proposta_id", propostaId)
+    .maybeSingle();
+
   for (const b of bancos as any[]) {
     // Sequencial de propósito (ver comentário acima): evita a condição de
     // corrida na inclusão de múltiplas propostas na mesma oportunidade.
+    // Passamos o opCache para que enviarBancoIntegracao não precise buscar novamente.
     const r = await enviarBancoIntegracao(b);
     enviados.push(r);
   }

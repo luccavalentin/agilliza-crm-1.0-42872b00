@@ -269,7 +269,7 @@ function Pagina() {
   }
 
   async function enviarBancoIndividual(banco: any) {
-    if (!envio || enviandoBancoId) return;
+    if (!envio) return;
     setEnviandoBancoId(banco.id);
     try {
       const res = await criar({
@@ -301,9 +301,9 @@ function Pagina() {
   }
   async function enviarTodos(bancos: any[]) {
     if (!envio) return;
-    for (const b of bancos) {
-      await enviarBancoIndividual(b);
-    }
+    // Dispara todos em paralelo no Hook, mas aqui na UI apenas iteramos
+    // O Hook useEnviarProposta agora gerencia o estado individual.
+    await Promise.allSettled(bancos.map(b => enviarBancoIndividual(b)));
   }
 
 
