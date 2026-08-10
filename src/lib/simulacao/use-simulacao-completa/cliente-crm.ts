@@ -98,13 +98,14 @@ export function patchPuxarConjugeCRM(prev: Form, crm: any): Form {
     email_conjuge: crm.conjuge_email || "",
     celular_conjuge: crm.conjuge_celular ? maskCelular(crm.conjuge_celular) : "",
   };
+  const temConjuge = ecTitular === "CA" || ecTitular === "UE";
   const next: Form = {
     ...prev,
-    possui_conjuge: true,
-    compoe_renda: prev.compoe_renda || Number(crm.conjuge_renda) > 0,
-    compoe_renda_conjuge: prev.compoe_renda_conjuge || Number(crm.conjuge_renda) > 0,
+    possui_conjuge: temConjuge,
+    compoe_renda: temConjuge && (prev.compoe_renda || Number(crm.conjuge_renda) > 0),
+    compoe_renda_conjuge: temConjuge && (prev.compoe_renda_conjuge || Number(crm.conjuge_renda) > 0),
     estado_civil: ecTitular,
-    estado_civil_conjuge: ecTitular,
+    estado_civil_conjuge: temConjuge ? (prev.estado_civil_conjuge || ecTitular) : "",
   };
   for (const [k, v] of Object.entries(doCrm)) {
     const atual = (prev as any)[k];

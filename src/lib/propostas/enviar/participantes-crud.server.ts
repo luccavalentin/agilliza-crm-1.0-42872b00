@@ -87,22 +87,34 @@ export async function adicionarParticipanteImpl({
   }
   const cpfCnpj = soDigitosStr(participante.cpfCnpj);
   if (!cpfCnpj) throw new Error("CPF/CNPJ obrigatório para incluir participante.");
-  
+
   // Deduplicação por CPF antes de montar o payload
   const { data: envsExistentes } = await supabase
     .from("proposta_envolvidos")
     .select("cpf_cnpj, tipo_qualificacao")
     .eq("proposta_id", propostaId);
-  
-  const envolvidos = (envsExistentes ?? []);
-  const cpfsExistentes = envolvidos.map(e => soDigitosStr(e.cpf_cnpj)).filter(Boolean);
-  
+
+  const envolvidos = envsExistentes ?? [];
+  const cpfsExistentes = envolvidos.map((e) => soDigitosStr(e.cpf_cnpj)).filter(Boolean);
+
   if (cpfsExistentes.includes(cpfCnpj)) {
-    const jaEhConjuge = envolvidos.some(e => soDigitosStr(e.cpf_cnpj) === cpfCnpj && e.tipo_qualificacao === "CJ");
+    const jaEhConjuge = envolvidos.some(
+      (e) => soDigitosStr(e.cpf_cnpj) === cpfCnpj && e.tipo_qualificacao === "CJ",
+    );
     if (jaEhConjuge) {
-      throw new Error("Este participante já está cadastrado como cônjuge. Para torná-lo proponente, remova-o da seção de cônjuge primeiro.");
+      throw new Error(
+        "Este participante já está cadastrado como cônjuge. Para torná-lo proponente, remova-o da seção de cônjuge primeiro.",
+      );
     }
     throw new Error("Este CPF/CNPJ já está cadastrado nesta proposta.");
+  }
+
+  // Deduplicação entre titular e cônjuge no mesmo payload
+  const cpfConj = soDigitosStr(participante.cpfConjuge);
+  if (cpfConj && cpfConj === cpfCnpj) {
+    throw new Error(
+      "O CPF do titular e do cônjuge não podem ser iguais. Por favor, corrija o cadastro.",
+    );
   }
 
 
