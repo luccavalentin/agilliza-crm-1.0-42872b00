@@ -260,21 +260,21 @@ function ConsultorIaPage() {
         style={{ backgroundImage: 'radial-gradient(var(--primary) 1px, transparent 1px)', backgroundSize: '32px 32px' }} 
       />
 
-      <header className="relative z-10 mx-auto w-full max-w-5xl">
-        <div className="flex flex-col items-center gap-6 text-center">
+      <header className="relative z-10 mx-auto w-full max-w-5xl py-4">
+        <div className="flex flex-col items-center gap-4 text-center">
           <div className="group relative">
             <div className="absolute -inset-2 rounded-[2rem] bg-gradient-to-tr from-primary/30 to-primary/5 opacity-0 blur-2xl transition duration-700 group-hover:opacity-100" />
-            <div className="relative flex size-20 items-center justify-center rounded-[1.5rem] bg-card shadow-[0_20px_50px_-12px_rgba(0,15,159,0.15)] ring-1 ring-primary/10 transition-transform duration-500 group-hover:scale-105">
-              <Bot className="size-10 text-primary" />
+            <div className="relative flex size-16 items-center justify-center rounded-[1.2rem] bg-card shadow-[0_15px_40px_-12px_rgba(0,15,159,0.15)] ring-1 ring-primary/10 transition-transform duration-500 group-hover:scale-105">
+              <Bot className="size-8 text-primary" />
               <div className="absolute -bottom-1 -right-1 size-5 rounded-full border-[3px] border-card bg-emerald-500 shadow-lg" />
             </div>
           </div>
           
-          <div className="space-y-3">
-            <h1 className="bg-gradient-to-b from-primary to-brand-azul-noite bg-clip-text text-3xl font-extrabold tracking-tight text-transparent sm:text-4xl">
+          <div className="space-y-1.5">
+            <h1 className="bg-gradient-to-b from-primary to-brand-azul-noite bg-clip-text text-2xl font-extrabold tracking-tight text-transparent sm:text-3xl">
               Consultor IA
             </h1>
-            <p className="mx-auto max-w-2xl text-base font-medium text-muted-foreground/80">
+            <p className="mx-auto max-w-2xl text-sm font-medium text-muted-foreground/80">
               A inteligência moderna da Agilliza para o mercado imobiliário.
             </p>
           </div>
@@ -282,7 +282,7 @@ function ConsultorIaPage() {
           <Button 
             onClick={novaConversa} 
             variant="outline"
-            className="group/btn h-12 gap-2.5 rounded-full border-primary/15 bg-card px-8 font-semibold text-primary transition-all hover:border-primary/40 hover:bg-primary hover:text-white hover:shadow-[0_15px_30px_-10px_rgba(0,15,159,0.3)]"
+            className="group/btn h-10 gap-2 rounded-full border-primary/15 bg-card px-6 text-sm font-semibold text-primary transition-all hover:border-primary/40 hover:bg-primary hover:text-white hover:shadow-[0_10px_20px_-10px_rgba(0,15,159,0.3)]"
           >
             <MessageSquarePlus className="size-5 transition-transform group-hover/btn:rotate-12" />
             Nova conversa
