@@ -43,3 +43,30 @@ export function bancoInformou(banco: any, campo: CampoComOrigem): boolean {
 export function valorInformadoPeloBanco<T>(banco: any, campo: CampoComOrigem, valor: T): T | null {
   return bancoInformou(banco, campo) ? valor : null;
 }
+
+/**
+ * Total financiado EFETIVAMENTE devolvido pela IF. Nunca cai para o valor
+ * solicitado na operação — se o banco não informou, devolve `null` e a tela
+ * mostra "—" ("não informado pelo banco").
+ */
+export function totalFinanciadoBanco(banco: any): number | null {
+  const raw = banco?.raw_response as any;
+  const num = (v: unknown) => {
+    const n = Number(v);
+    return Number.isFinite(n) && n > 0 ? n : null;
+  };
+  if (raw && typeof raw === "object") {
+    const doRetorno =
+      num(raw.valorFinanciamentoBancoMax) ??
+      num(raw.valorFinanciamentoBanco) ??
+      num(raw.valorTotalFinanciamento);
+    if (doRetorno != null) return doRetorno;
+  }
+  // Sem retorno bruto (registros legados): usa o campo apenas se marcado como
+  // resposta do banco.
+  if (bancoInformou(banco, "valor_financiamento_max")) {
+    return num(banco?.valor_financiamento_max);
+  }
+  return null;
+}
+

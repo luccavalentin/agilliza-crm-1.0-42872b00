@@ -30,24 +30,15 @@ import { extrairDetalheBanco } from "@/lib/simulacao/detalhe-banco";
 import { rendaMinimaDoBanco } from "@/lib/simulacao/renda";
 import { cn } from "@/lib/utils";
 import { ErroBancoDetalhe } from "@/components/simulacao/erro-banco-detalhe";
-import { bancoInformou } from "@/lib/simulacao/origem-dados";
+import { totalFinanciadoBanco } from "@/lib/simulacao/origem-dados";
 /**
- * Campos com fallback interno para o valor SOLICITADO: só exibimos quando o
- * banco realmente informou (ver src/lib/simulacao/origem-dados.ts).
+ * Só exibimos o que a IF realmente devolveu; sem retorno, mostramos "—"
+ * (nunca o valor SOLICITADO — ver src/lib/simulacao/origem-dados.ts).
  */
-const prazoMaxTexto = (b: any, sim: any) => {
-  const contratado = Number(sim?.prazo) || 0;
-  const max = Number(b.prazo_pagamento_max) || 0;
-  if (bancoInformou(b, "prazo_pagamento_max") && max && max !== contratado) {
-    return `${max}m`;
-  }
-  return "—";
+const totalBancoTexto = (b: any) => {
+  const v = totalFinanciadoBanco(b);
+  return v == null ? "—" : formatBRL(v);
 };
-const financMaxTexto = (b: any) =>
-  bancoInformou(b, "valor_financiamento_max") && b.valor_financiamento_max != null
-    ? formatBRL(b.valor_financiamento_max)
-    : "—";
-
 
 interface Props {
   simulacaoIdSac: string | null;
@@ -55,10 +46,7 @@ interface Props {
   onFechar: () => void;
 }
 
-function totalFinanciado(b: any): number | null {
-  const d = extrairDetalheBanco(b?.raw_response);
-  return d?.financiamentoTotal ?? d?.valorFinanciamento ?? b?.valor_financiamento_max ?? null;
-}
+
 
 function bancosDaSimulacaoAtual(data: any): any[] {
   const lista = ((data?.bancos as any[]) ?? []);
@@ -362,13 +350,9 @@ export function ResultadoInlineAmbos({ simulacaoIdSac, simulacaoIdPrice, onFecha
                           valor={b.taxa_juros_ano != null ? formatPercent(b.taxa_juros_ano / 100) : "—"}
                         />
                         <MobileStat rotulo="Prazo" valor={`${l.simulacao.prazo}m`} />
-                        <MobileStat
-                          rotulo="Prazo máx"
-                          valor={prazoMaxTexto(b, l.simulacao)}
-                        />
-                        <MobileStat rotulo="Financ. máx" valor={financMaxTexto(b)} />
-                        <MobileStat rotulo="Total financiado" valor={formatBRL(totalFinanciado(b))} />
-                        <MobileStat rotulo="IOF" valor={formatBRL(b.valor_iof)} />
+                        <MobileStat rotulo="Total fin. (banco)" valor={totalBancoTexto(b)} />
+                        <MobileStat rotulo="IOF (banco)" valor={formatBRL(b.valor_iof)} />
+
                         <MobileStat rotulo="Renda estimada" valor={formatBRL(rendaMinimaDoBanco(b))} />
                       </dl>
 
@@ -422,10 +406,10 @@ export function ResultadoInlineAmbos({ simulacaoIdSac, simulacaoIdPrice, onFecha
                     <TableHead className="w-[11%] text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Parcela</TableHead>
                     <TableHead className="w-[7%] text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Taxa</TableHead>
                     <TableHead className="w-[7%] text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Prazo</TableHead>
-                    <TableHead className="w-[8%] text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Prazo máx</TableHead>
-                    <TableHead className="w-[12%] text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Financiado</TableHead>
-                    <TableHead className="w-[9%] text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">IOF</TableHead>
+                    <TableHead className="w-[16%] text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Total fin. (banco)</TableHead>
+                    <TableHead className="w-[11%] text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">IOF (banco)</TableHead>
                     <TableHead className="w-[11%] text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Renda est.</TableHead>
+
                     <TableHead className="w-[12%]"></TableHead>
                   </TableRow>
                 </TableHeader>
@@ -489,12 +473,10 @@ export function ResultadoInlineAmbos({ simulacaoIdSac, simulacaoIdPrice, onFecha
                         <TableCell className="py-3 text-right text-sm tabular-nums whitespace-nowrap">
                           {l.simulacao.prazo}m
                         </TableCell>
-                        <TableCell className="py-3 text-right text-sm tabular-nums whitespace-nowrap">
-                          {prazoMaxTexto(b, l.simulacao)}
-                        </TableCell>
                         <TableCell className="py-3 text-right text-sm font-semibold tabular-nums whitespace-nowrap">
-                          {formatBRL(totalFinanciado(b))}
+                          {totalBancoTexto(b)}
                         </TableCell>
+
                         <TableCell className="py-3 text-right text-sm tabular-nums whitespace-nowrap">
                           {formatBRL(b.valor_iof)}
                         </TableCell>

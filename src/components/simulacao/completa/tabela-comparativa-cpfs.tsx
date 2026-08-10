@@ -7,6 +7,7 @@ import { BancoLogo } from "@/components/bancos/banco-logo";
 import { BancoStatusBadge } from "@/components/simulacao/status-badge";
 import { obterSimulacao } from "@/lib/simulacao/simulacoes.functions";
 import { formatBRL, formatPercent } from "@/lib/simulacao/format";
+import { totalFinanciadoBanco } from "@/lib/simulacao/origem-dados";
 import { cn } from "@/lib/utils";
 import { corDoBanco } from "@/lib/bancos/cores";
 import { DetalheBancoDialog } from "@/components/simulacao/detalhe-banco-dialog";
@@ -94,8 +95,8 @@ export function TabelaComparativaCPFs({ simulacaoIdA, simulacaoIdB }: Props) {
               <TableHead className="text-[10px] font-bold uppercase tracking-wider">Situação</TableHead>
               <TableHead className="text-right text-[10px] font-bold uppercase tracking-wider">Parcela</TableHead>
               <TableHead className="text-right text-[10px] font-bold uppercase tracking-wider">Taxa a.a.</TableHead>
-              <TableHead className="text-right text-[10px] font-bold uppercase tracking-wider">Prazo</TableHead>
-              <TableHead className="text-right text-[10px] font-bold uppercase tracking-wider">Financiamento</TableHead>
+              <TableHead className="text-right text-[10px] font-bold uppercase tracking-wider">Total fin. (banco)</TableHead>
+
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -143,12 +144,13 @@ export function TabelaComparativaCPFs({ simulacaoIdA, simulacaoIdB }: Props) {
                   <TableCell className="text-right font-bold text-primary tabular-nums">
                     {linha.taxa_juros_ano ? formatPercent(linha.taxa_juros_ano / 100) : "—"}
                   </TableCell>
-                  <TableCell className="text-right tabular-nums text-muted-foreground">
-                    {linha.prazo_pagamento_max ? `${linha.prazo_pagamento_max}m` : "—"}
-                  </TableCell>
                   <TableCell className="text-right font-medium tabular-nums">
-                    {linha.valor_financiamento_max ? formatBRL(linha.valor_financiamento_max) : "—"}
+                    {(() => {
+                      const v = totalFinanciadoBanco(linha);
+                      return v == null ? "—" : formatBRL(v);
+                    })()}
                   </TableCell>
+
                 </TableRow>
               );
             })}
