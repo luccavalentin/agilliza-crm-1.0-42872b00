@@ -342,6 +342,16 @@ function Pagina() {
 
       <ConsultandoOverlay aberto={enviando} total={totalBancosResumo} concluidos={concluidos} />
 
+      <EnviarPropostaDialog
+        envio={ctx.envioEstado}
+        onClose={ctx.fecharDialogEnvio}
+        carregando={false}
+        statusPorBanco={ctx.statusPorBanco}
+        onEnviarBanco={ctx.enviarBancoIndividual}
+        onEnviarTodos={ctx.enviarTodosBancos}
+      />
+
+
 
 
 
