@@ -22,22 +22,18 @@ import {
   AmortizacaoTag,
   MobileStat,
   ResumoCelula,
-  totalFinanciado,
 } from "@/components/simulacao/detalhe-page/ui";
-import { bancoInformou } from "@/lib/simulacao/origem-dados";
+import { totalFinanciadoBanco } from "@/lib/simulacao/origem-dados";
 
 /**
- * Campos com fallback interno para o valor SOLICITADO: só exibimos quando o
- * banco realmente informou (ver src/lib/simulacao/origem-dados.ts).
+ * Só exibimos o que a IF realmente devolveu; sem retorno, "—"
+ * (nunca o valor SOLICITADO — ver src/lib/simulacao/origem-dados.ts).
  */
-const prazoMaxTexto = (b: any) =>
-  bancoInformou(b, "prazo_pagamento_max") && b.prazo_pagamento_max
-    ? `${b.prazo_pagamento_max}m`
-    : "—";
-const financMaxTexto = (b: any) =>
-  bancoInformou(b, "valor_financiamento_max") && b.valor_financiamento_max != null
-    ? formatBRL(b.valor_financiamento_max)
-    : "—";
+const totalBancoTexto = (b: any) => {
+  const v = totalFinanciadoBanco(b);
+  return v == null ? "—" : formatBRL(v);
+};
+
 
 
 type Props = {
@@ -189,18 +185,11 @@ export function ComparativoBancos({
                     }
                   />
                   <MobileStat
-                    rotulo="Prazo máx"
-                    valor={prazoMaxTexto(b)}
+                    rotulo="Total fin. (banco)"
+                    valor={totalBancoTexto(b)}
                   />
-                  <MobileStat
-                    rotulo="Financ. máx"
-                    valor={financMaxTexto(b)}
-                  />
-                  <MobileStat
-                    rotulo="Total financiado"
-                    valor={formatBRL(totalFinanciado(b))}
-                  />
-                  <MobileStat rotulo="IOF" valor={formatBRL(b.valor_iof)} />
+                  <MobileStat rotulo="IOF (banco)" valor={formatBRL(b.valor_iof)} />
+
                 </dl>
 
                 <div className="mt-3 flex items-center justify-end gap-2">
@@ -261,17 +250,12 @@ export function ComparativoBancos({
                 Taxa a.a.
               </TableHead>
               <TableHead className="text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Prazo máx
+                Total fin. (banco)
               </TableHead>
               <TableHead className="text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Financ. máx
+                IOF (banco)
               </TableHead>
-              <TableHead className="text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Total financiado
-              </TableHead>
-              <TableHead className="text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                IOF
-              </TableHead>
+
               <TableHead></TableHead>
             </TableRow>
           </TableHeader>
@@ -285,7 +269,7 @@ export function ComparativoBancos({
                 <Fragment key={b.id}>
                   {primeiroDoGrupo && (
                     <TableRow className="border-border/60 bg-muted/40 hover:bg-muted/40">
-                      <TableCell colSpan={9} className="py-2">
+                      <TableCell colSpan={7} className="py-2">
                         <div className="flex items-center gap-2">
                           <AmortizacaoTag sistema={b._sistema} />
                           <span className="text-[11px] uppercase tracking-wide text-muted-foreground">
@@ -327,15 +311,10 @@ export function ComparativoBancos({
                     <TableCell className="py-3 text-right text-sm tabular-nums whitespace-nowrap">
                       {b.taxa_juros_ano != null ? formatPercent(b.taxa_juros_ano / 100) : "—"}
                     </TableCell>
-                    <TableCell className="py-3 text-right text-sm tabular-nums whitespace-nowrap">
-                      {prazoMaxTexto(b)}
-                    </TableCell>
-                    <TableCell className="py-3 text-right text-sm tabular-nums whitespace-nowrap">
-                      {financMaxTexto(b)}
-                    </TableCell>
                     <TableCell className="py-3 text-right text-sm font-semibold tabular-nums whitespace-nowrap">
-                      {formatBRL(totalFinanciado(b))}
+                      {totalBancoTexto(b)}
                     </TableCell>
+
                     <TableCell className="py-3 text-right text-sm tabular-nums whitespace-nowrap">
                       {formatBRL(b.valor_iof)}
                     </TableCell>
