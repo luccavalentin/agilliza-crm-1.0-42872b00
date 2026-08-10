@@ -37,7 +37,6 @@ export function ParticipanteDialog({
   open,
   onOpenChange,
   titulo,
-  onEnviarAgora,
   inicial,
   conjugeInicial,
   tipoQualificacaoFixo,
@@ -45,7 +44,6 @@ export function ParticipanteDialog({
   onSalvar,
   idBanco,
   focarPendencias,
-  rodapeExtra,
   avisoTopo,
   participanteIndex,
   totalParticipantes,
@@ -62,14 +60,12 @@ export function ParticipanteDialog({
   onSalvar: (
     principal: ReturnType<typeof formParaEnvolvido>,
     conjuge: ReturnType<typeof formParaEnvolvido> | null,
+    opcoes?: { enviar?: boolean },
   ) => Promise<void> | void;
-  /** Callback para disparar o envio ao banco diretamente do modal após validar/salvar. */
-  onEnviarAgora?: () => void;
   idBanco?: number;
   /** Abre já destacando (e rolando até) o primeiro campo obrigatório pendente. */
   focarPendencias?: boolean;
-  /** Conteúdo extra no rodapé (ex.: "Enviar ao banco agora"). */
-  rodapeExtra?: React.ReactNode;
+
   /** Faixa informativa no topo do formulário. */
   avisoTopo?: React.ReactNode;
   /** Índice do participante atual para exibição de progresso. */
@@ -159,6 +155,34 @@ export function ParticipanteDialog({
     conjuge.uf,
   ].some((valor) => String(valor ?? "").trim().length > 0) || conjuge.renda > 0;
 
+  /** Cônjuge normalizado que será salvo junto com o titular (quando houver). */
+  const conjugeParaSalvar: ParticipanteForm | null = useMemo(
+    () =>
+      precisaConjuge && conjugeTemDados
+        ? {
+            ...conjuge,
+            tipo_qualificacao: "TI",
+            tipo_pessoa: "F",
+            estado_civil: f.estado_civil,
+            regime_casamento: f.regime_casamento,
+          }
+        : null,
+    [precisaConjuge, conjugeTemDados, conjuge, f.estado_civil, f.regime_casamento],
+  );
+
+  // Validade calculada EM TEMPO REAL a partir do formulário (nunca a partir do
+  // estado de erro, que só é preenchido após a primeira tentativa).
+  const pendentesAgora = useMemo(() => {
+    const chaves = [
+      ...camposFaltantes(f),
+      ...(conjugeParaSalvar ? camposFaltantes(conjugeParaSalvar) : []),
+    ];
+    return Array.from(new Set(chaves)).map((k) => LABEL_POR_CHAVE[k] ?? k);
+  }, [f, conjugeParaSalvar]);
+
+  const podeEnviar = pendentesAgora.length === 0;
+
+
   async function buscarCep(
     cepRaw: string,
     aplicar: (patch: Partial<ParticipanteForm>) => void,
@@ -188,9 +212,9 @@ export function ParticipanteDialog({
     }
   }
 
-  async function submit() {
+  async function submit(enviar: boolean) {
     setTentouEnviar(true);
-    
+
     // 1. Ressincroniza antes de qualquer validação (P1.g)
     if (propostaId && !salvandoInterno) {
       setSalvandoInterno(true);
@@ -210,15 +234,7 @@ export function ParticipanteDialog({
     const faltando = camposFaltantes(f);
     setErros(faltando);
 
-    const c: ParticipanteForm | null = (precisaConjuge && conjugeTemDados)
-      ? {
-          ...conjuge,
-          tipo_qualificacao: "TI",
-          tipo_pessoa: "F",
-          estado_civil: f.estado_civil,
-          regime_casamento: f.regime_casamento,
-        }
-      : null;
+    const c: ParticipanteForm | null = conjugeParaSalvar;
     const faltandoC = c ? camposFaltantes(c) : new Set<string>();
     setErrosC(faltandoC);
 
@@ -230,12 +246,13 @@ export function ParticipanteDialog({
     }
 
     const conjugePayload = c ? formParaEnvolvido(c) : null;
-    await onSalvar(formParaEnvolvido(f), conjugePayload);
-    
+    await onSalvar(formParaEnvolvido(f), conjugePayload, { enviar });
+
     // Após salvar, revalida para atualizar o estado visual se permanecer no modal
     setTentouEnviar(true);
     onSalvoPermanecer?.();
   }
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -294,35 +311,42 @@ export function ParticipanteDialog({
 
         <DialogFooter className="flex-col gap-2 sm:flex-row sm:items-center">
           <div className="flex-1">
-            {tentouEnviar && (erros.size === 0 && errosC.size === 0) && (
-              <div className="flex items-center gap-3">
-                <p className="text-[11px] font-bold text-emerald-600 flex items-center gap-1 uppercase tracking-wider">
-                  <CheckCircle2 className="h-3.5 w-3.5" /> Tudo pronto para enviar
-                </p>
-                {onEnviarAgora && (
-                  <Button 
-                    variant="link" 
-                    size="sm" 
-                    className="h-auto p-0 text-primary font-bold animate-pulse" 
-                    onClick={onEnviarAgora}
-                  >
-                    Enviar proposta agora →
-                  </Button>
-                )}
-              </div>
+            {podeEnviar ? (
+              <p className="flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider text-success">
+                <CheckCircle2 className="h-3.5 w-3.5" /> Tudo pronto para enviar
+              </p>
+            ) : (
+              <p className="text-[11px] font-medium text-muted-foreground">
+                Faltam {pendentesAgora.length} dado(s) obrigatório(s): {pendentesAgora.join(", ")}
+              </p>
             )}
           </div>
-          <div className="flex gap-2">
-            {rodapeExtra}
+          <div className="flex flex-wrap gap-2">
             <Button variant="outline" onClick={() => onOpenChange(false)} disabled={salvando}>
               Cancelar
             </Button>
-            <Button onClick={submit} disabled={salvando}>
+            <Button
+              variant="ghost"
+              onClick={() => submit(false)}
+              disabled={salvando || !podeEnviar}
+            >
+              Salvar sem enviar
+            </Button>
+            <Button
+              onClick={() => submit(true)}
+              disabled={salvando || !podeEnviar}
+              title={
+                podeEnviar
+                  ? "Salva o cadastro e envia a proposta ao banco"
+                  : `Faltam: ${pendentesAgora.join(", ")}`
+              }
+            >
               {salvando && <Loader2 className="mr-1 h-4 w-4 animate-spin" />}
-              Salvar
+              Salvar e enviar ao banco
             </Button>
           </div>
         </DialogFooter>
+
 
       </DialogContent>
     </Dialog>
