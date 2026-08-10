@@ -577,9 +577,6 @@ function ConsultorIaPage() {
                   </div>
                 </div>
               </div>
-              <p className="mt-3 text-center text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/40">
-                Poderosa Inteligência Agilliza &middot; Mercado Imobiliário Elite
-              </p>
             </div>
           </footer>
         </section>
