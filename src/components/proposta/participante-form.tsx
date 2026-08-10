@@ -45,6 +45,7 @@ export function ParticipanteDialog({
   participanteIndex,
   totalParticipantes,
   participanteId,
+  nomeConjugeExistente,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
@@ -59,17 +60,12 @@ export function ParticipanteDialog({
     opcoes?: { enviar?: boolean },
   ) => Promise<void> | void;
   idBanco?: number;
-  /** Abre já destacando (e rolando até) o primeiro campo obrigatório pendente. */
   focarPendencias?: boolean;
-
-  /** Faixa informativa no topo do formulário. */
   avisoTopo?: React.ReactNode;
-  /** Índice do participante atual para exibição de progresso. */
   participanteIndex?: number;
-  /** Total de participantes para exibição de progresso. */
   totalParticipantes?: number;
-  /** Identidade estável usada para inicializar somente ao trocar de participante. */
   participanteId?: string;
+  nomeConjugeExistente?: string | null;
 }) {
   const [salvandoInterno, setSalvandoInterno] = useState(false);
 
