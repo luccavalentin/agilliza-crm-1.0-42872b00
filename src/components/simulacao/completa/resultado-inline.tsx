@@ -136,30 +136,42 @@ export function ResultadoInlineCompleta({ simulacaoId, onFechar, isSecundaria }:
   }
 
   async function enviarAprovacao(bancoId: string) {
+    if (criandoBanco) return;
+    
+    // 1. Inicia feedback visual imediato no hook (Etapa 1: Criando)
+    iniciarStatusEnvio(bancoId);
     setCriandoBanco(bancoId);
+    
     try {
-      const { proposta_id } = await criarProposta({
-        data: { simulacao_id: simulacaoId, banco_id: bancoId },
-      });
-      
-      await handleEnviarHook({
-        propostaId: proposta_id,
-        bancoId: bancoId,
-        enviarFn: enviarPropostaFn
+      // 2. Chama o hook que agora sabe gerenciar a criação e status
+      const res = await handleEnviarHook({
+        bancoId,
+        criarPropostaFn: async () => {
+          const { proposta_id } = await criarProposta({
+            data: { 
+              simulacao_id: simulacaoId, 
+              banco_id: bancoId 
+            },
+          });
+          return { proposta_id };
+        }
       });
 
-      if (!router.state.location.pathname.includes(`/propostas/${proposta_id}`)) {
+      if (res?.proposta_id) {
+        if (!router.state.location.pathname.includes(`/propostas/${res.proposta_id}`)) {
           router.navigate({
             to: "/operacional/propostas/$id",
-            params: { id: proposta_id },
+            params: { id: res.proposta_id },
           });
+        }
       }
     } catch (e) {
-      // Erros já mostrados pelo hook/toast
+      // Erros gerenciados pelo hook
     } finally {
       setCriandoBanco(null);
     }
   }
+
 
   if (isLoading || !data) {
     return (
