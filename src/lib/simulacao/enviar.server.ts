@@ -804,14 +804,14 @@ export async function enviarSimulacaoImpl({
     // REGRA 3: A simulação só sai de "enviando" quando todos os bancos tiverem desfecho.
     // O loop de bancos é SEQUENCIAL para evitar condições de corrida na oportunidade.
     const resultados: EnviarResultado["bancos"] = [];
-    for (const b of bancos as any[]) {
-      const enviarBanco = async (b: any): Promise<EnviarResultado["bancos"][number]> => {
-        // Registrar início do envio para este banco
-        await supabase.from("simulacao_bancos").update({ 
-          status_banco: "enviando", 
-          mensagem_banco: null,
-          simulado_em: new Date().toISOString()
-        }).eq("id", b.id);
+    const enviarBanco = async (b: any): Promise<EnviarResultado["bancos"][number]> => {
+      // Registrar início do envio para este banco
+      await supabase.from("simulacao_bancos").update({ 
+        status_banco: "enviando", 
+        mensagem_banco: null,
+        simulado_em: new Date().toISOString()
+      }).eq("id", b.id);
+
 
       let timeoutId: any;
       const timeoutPromise = new Promise((_, reject) => {
