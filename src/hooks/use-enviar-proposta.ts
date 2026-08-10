@@ -168,7 +168,7 @@ export function useEnviarProposta() {
       clearInterval(interval);
       setBusyBancoId(null);
       clickLock.current[bancoId] = false;
-      const msg = e instanceof Error ? e.message : "Falha ao enviar proposta.";
+      const msg = e instanceof Error ? e.message : "Falha ao enviar proposta. Verifique os dados dos participantes.";
       atualizarStatus(bancoId, { 
         status: "error", 
         mensagem: msg 
