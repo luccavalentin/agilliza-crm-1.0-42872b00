@@ -61,7 +61,7 @@ const DialogContent = React.forwardRef<
           Qualquer conteúdo direto de DialogContent que não seja Header/Footer 
           será envolvido em uma área de scroll.
       */}
-      <div className="flex flex-col flex-1 min-h-0 relative z-1">
+      <div className="brand-scroll flex flex-1 flex-col overflow-y-auto min-h-0 relative z-1">
         {children}
       </div>
 

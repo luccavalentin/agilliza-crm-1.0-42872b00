@@ -68,7 +68,7 @@ export function ContasKpiDialog({
   return (
     <Dialog open={!!filtro} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl">
-        <DialogHeader className="border-b border-border">
+        <DialogHeader className="border-b border-border p-6 pb-4">
           <DialogTitle className="text-base">{filtro?.titulo}</DialogTitle>
           <DialogDescription>
             {itens.length} {itens.length === 1 ? "conta" : "contas"} · total {formatBRL(total)}
