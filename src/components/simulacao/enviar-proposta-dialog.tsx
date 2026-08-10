@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { BancoLogo } from "@/components/bancos/banco-logo";
 import { corDoBanco } from "@/lib/bancos/cores";
 import { cn } from "@/lib/utils";
-import { formatBRL, formatPercent } from "@/lib/simulacao/format";
+import { formatBRL, formatPercent, formatTaxa } from "@/lib/simulacao/format";
 import type { StatusEnvioBanco } from "@/hooks/use-enviar-proposta";
 
 export type PropostaCriada = {
@@ -133,10 +133,10 @@ export function EnviarPropostaDialog({
                             Parcela <span className="text-foreground">{formatBRL(b.valor_parcela)}</span>
                           </span>
                           <span className="flex items-center gap-1">
-                            Taxa <span className="text-foreground">{formatPercent(b.taxa_juros_ano)} a.a.</span>
+                            Taxa <span className="text-foreground">{formatTaxa(b.taxa_juros_ano)} a.a.</span>
                           </span>
                           <span className="flex items-center gap-1">
-                            Prazo <span className="text-foreground">{b.prazo_pagamento_banco ?? b.prazo}m</span>
+                            Prazo <span className="text-foreground">{b.prazo_pagamento_max ?? b.prazo_pagamento_banco ?? b.prazo ?? "—"}{b.prazo_pagamento_max || b.prazo_pagamento_banco || b.prazo ? "m" : ""}</span>
                           </span>
                         </div>
                       </div>

@@ -38,7 +38,7 @@ import {
 import { useEnviarProposta } from "@/hooks/use-enviar-proposta";
 import { SITUACAO_BANCO_LABEL, type SituacaoBanco } from "@/components/proposta/situacao-banco-labels";
 import type { PropostaStatus } from "@/lib/propostas/state-machine";
-import { formatBRL } from "@/lib/simulacao/format";
+import { formatBRL, formatTaxa } from "@/lib/simulacao/format";
 import { cn } from "@/lib/utils";
 
 function MetricaBanco({ label, valor }: { label: string; valor: string }) {
@@ -197,7 +197,7 @@ export function TabResumo({
                 <MetricaBanco label="Prazo" valor={String(b.prazo_pagamento_max ?? "—")} />
                 <MetricaBanco
                   label="Taxa/ano"
-                  valor={b.taxa_juros_ano != null ? `${b.taxa_juros_ano}%` : "—"}
+                  valor={formatTaxa(b.taxa_juros_ano)}
                 />
               </div>
 
@@ -315,7 +315,7 @@ export function TabResumo({
                     {b.prazo_pagamento_max ?? "—"}
                   </TableCell>
                   <TableCell className="text-right tabular-nums">
-                    {b.taxa_juros_ano != null ? `${b.taxa_juros_ano}%` : "—"}
+                    {formatTaxa(b.taxa_juros_ano)}
                   </TableCell>
                   <TableCell>
                     <ToneBadge tone={statusBancoConfig(b.status_banco).tone}>
