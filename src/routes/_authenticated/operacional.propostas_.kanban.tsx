@@ -223,36 +223,35 @@ function Pagina() {
     queryFn: () => listarResponsaveisEquipe(),
     staleTime: 5 * 60_000,
   });
+
   const responsaveis = useMemo(() => {
     const s = new Set<string>();
     (equipe ?? []).forEach((m) => m.nome && s.add(m.nome));
-    itens.forEach((i: any) => i.nome_responsavel && s.add(i.nome_responsavel));
     return Array.from(s).sort((a, b) => a.localeCompare(b, "pt-BR"));
-  }, [equipe, itens]);
-  // Todos os parceiros do ecossistema (mesmo os sem proposta ainda) + nomes que
-  // já aparecem nos cards. Assim o filtro "Corretor/Imobiliária" mostra tudo que
-  // está vinculado ao correspondente, não apenas o que está visível na tela.
+  }, [equipe]);
+
   const { data: parceirosCadastrados } = useQuery({
     queryKey: ["parceiros-cadastrados"],
     queryFn: () => listarParceiros(),
     staleTime: 5 * 60_000,
   });
+
   const corretores = useMemo(() => {
     const s = new Set<string>();
     (parceirosCadastrados ?? [])
       .filter((p) => (p.tipo_pessoa ?? "").toLowerCase() === "corretor")
       .forEach((p) => p.nome && s.add(p.nome));
-    itens.forEach((i: any) => i.corretor_nome && s.add(i.corretor_nome));
     return Array.from(s).sort((a, b) => a.localeCompare(b, "pt-BR"));
-  }, [parceirosCadastrados, itens]);
+  }, [parceirosCadastrados]);
+
   const imobiliarias = useMemo(() => {
     const s = new Set<string>();
     (parceirosCadastrados ?? [])
       .filter((p) => (p.tipo_pessoa ?? "").toLowerCase() === "imobiliaria")
       .forEach((p) => p.nome && s.add(p.nome));
-    itens.forEach((i: any) => i.imobiliaria_nome && s.add(i.imobiliaria_nome));
     return Array.from(s).sort((a, b) => a.localeCompare(b, "pt-BR"));
-  }, [parceirosCadastrados, itens]);
+  }, [parceirosCadastrados]);
+
 
   const itensFiltrados = itens;
 
