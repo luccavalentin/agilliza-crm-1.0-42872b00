@@ -1193,11 +1193,14 @@ async function enviarPropostaImplInner({
   const errosDestaTentativa = resultados
     .filter((r) => r.status === "erro")
     .map((r) => `${r.nome_banco ?? "Banco"}: ${r.mensagem ?? "falha ao enviar"}`);
+  
   const patchFinal: Record<string, any> = {
     ultimo_erro: errosDestaTentativa.length > 0 ? errosDestaTentativa.join(" | ") : null,
+    status: novoStatusGlobal,
   };
-  if (novoStatusGlobal !== statusAtual) patchFinal.status = novoStatusGlobal;
+  
   await supabase.from("propostas").update(patchFinal as any).eq("id", propostaId);
+
 
   await supabase.from("proposta_historico").insert({
     proposta_id: propostaId,
@@ -1495,12 +1498,10 @@ export async function sincronizarPropostaImpl({
     novoStatus = derivado;
   }
 
+  // ---- 2.5) Recálculo Final e Sincronização de Status Global ----
+  const statusDefinitivoBancos = await recalcularStatusGlobalProposta(supabase, propostaId);
+  const statusEfetivo = (statusDefinitivoBancos ?? novoStatus ?? prop.status) as PropostaStatus;
 
-  // Detalhe coerente com o desfecho: a atividade real do banco tem prioridade;
-  // quando há um desfecho de crédito (recusado/aprovado/análise) ou situação
-  // terminal, nunca exibimos uma etapa anterior do funil (ex.: "Simulação"),
-  // que contradiz o status e confunde o usuário.
-  const statusEfetivo = (novoStatus ?? prop.status) as PropostaStatus;
 
   // ---- Propaga o desfecho da proposta para as linhas de banco ----
   // A lista de propostas exibe proposta_bancos.status_banco. Quando o desfecho
