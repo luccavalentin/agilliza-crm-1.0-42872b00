@@ -310,7 +310,7 @@ export function ParticipanteDialog({
               </p>
             ) : (
               <p className="text-[11px] font-medium text-muted-foreground">
-                Faltam {pendentesAgora.length} {pendentesAgora.length === 1 ? "dado obrigatório" : "dados obrigatórios"}: {pendentesAgora.join(", ")}
+                Falta{pendentesAgora.length === 1 ? "" : "m"} {pendentesAgora.length} {pendentesAgora.length === 1 ? "dado obrigatório" : "dados obrigatórios"}: {pendentesAgora.join(", ")}
               </p>
             )}
           </div>
