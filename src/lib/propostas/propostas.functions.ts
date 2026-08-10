@@ -274,7 +274,8 @@ export const obterProposta = createServerFn({ method: "GET" })
     
     // Adiciona o nome de quem excluiu se disponível
     if (proposta.deleted_by && proposta.profiles) {
-      (proposta as any).nome_excluidor = proposta.profiles.nome;
+      const profile = Array.isArray(proposta.profiles) ? proposta.profiles[0] : (proposta.profiles as any);
+      (proposta as any).nome_excluidor = profile?.nome;
     }
 
 
