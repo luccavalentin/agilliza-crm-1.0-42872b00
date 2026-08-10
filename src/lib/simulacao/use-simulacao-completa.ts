@@ -76,6 +76,24 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
   // Segundo id de simulação para o modo "Ambos" (uma simulação SAC + uma PRICE).
   const [simulacaoResultadoIdPrice, setSimulacaoResultadoIdPrice] = useState<string | null>(null);
   const [simulacaoResultadoIdSecundario, setSimulacaoResultadoIdSecundario] = useState<string | null>(null);
+  
+  const { 
+    enviar: enviarPropostaHook, 
+    statusPorBanco, 
+    iniciarStatus: iniciarStatusEnvio 
+  } = useEnviarProposta();
+
+  // Estado para o diálogo de "Enviar Proposta"
+  const [envioEstado, setEnvioEstado] = useState<any | null>(null);
+
+  const abrirDialogEnvio = useCallback((sim: any) => {
+    setEnvioEstado(sim);
+  }, []);
+
+  const fecharDialogEnvio = useCallback(() => {
+    setEnvioEstado(null);
+  }, []);
+
 
   const { data: bancos } = useQuery({
     queryKey: ["bancos-ativos"],
@@ -1138,6 +1156,49 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
     enviar,
     executarEnvio,
     enviarAmbos,
+    // Diálogo de envio
+    envioEstado,
+    statusPorBanco,
+    abrirDialogEnvio,
+    fecharDialogEnvio,
+    // Handler individual para o diálogo
+    enviarBancoIndividual: async (banco: any) => {
+      if (!envioEstado) return;
+      iniciarStatusEnvio(banco.id);
+      return enviarPropostaHook({
+        propostaId: undefined, // será criada
+        bancoId: banco.id,
+        criarPropostaFn: async () => {
+          const { proposta_id } = await criarProposta({
+            data: {
+              simulacao_id: envioEstado.id,
+              banco_id: banco.id
+            }
+          });
+          return { proposta_id };
+        }
+      });
+    },
+    enviarTodosBancos: async (bancos: any[]) => {
+      if (!envioEstado) return;
+      for (const b of bancos) {
+        iniciarStatusEnvio(b.id);
+        enviarPropostaHook({
+          propostaId: undefined,
+          bancoId: b.id,
+          criarPropostaFn: async () => {
+            const { proposta_id } = await criarProposta({
+              data: {
+                simulacao_id: envioEstado.id,
+                banco_id: b.id
+              }
+            });
+            return { proposta_id };
+          }
+        });
+      }
+    },
+
     // resultado inline
     simulacaoResultadoId,
     simulacaoResultadoIdPrice,
