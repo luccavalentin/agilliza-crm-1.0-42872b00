@@ -1,9 +1,10 @@
+import * as React from "react";
 import { createFileRoute, useRouter, Link } from "@tanstack/react-router";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { corDoBanco } from "@/lib/bancos/cores";
 import { numeroBancoParaExibir } from "@/lib/propostas/numero-banco-display";
 import { BancoLogo } from "@/components/bancos/banco-logo";
-import { React.useState, React.useEffect, useRef, React.useMemo } from "react";
+import { useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -419,11 +420,6 @@ function formatarDataHora(iso: string): string {
 function Pagina() {
   const { id } = Route.useParams();
   const { complementar } = Route.useSearch();
-  const { id } = Route.useParams();
-  const { complementar } = Route.useSearch();
-  const router = useRouter();
-  const qc = useQueryClient();
-  const { enviar: handleEnviarHook } = useEnviarProposta();
   const router = useRouter();
   const qc = useQueryClient();
   const { enviar: handleEnviarHook } = useEnviarProposta();

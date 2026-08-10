@@ -1447,8 +1447,8 @@ export const moverStatusProposta = createServerFn({ method: "POST" })
       proposta_id: data.proposta_id,
       tipo_evento: "status",
       descricao: data.motivo ?? null,
-      status_anterior: de,
-      status_novo: para,
+      status_anterior: de as any,
+      status_novo: para as any,
       ator_id: userId,
     });
     return { ok: true };
