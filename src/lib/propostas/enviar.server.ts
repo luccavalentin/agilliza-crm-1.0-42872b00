@@ -849,10 +849,19 @@ async function enviarPropostaImplInner({
   }
 
   const statusAtual = prop.status as PropostaStatus;
+  
+  // Limpa mensagens de erro e protocolos de tentativas anteriores para garantir
+  // que a mensagem exibida reflita a causa real desta tentativa.
+  await supabase
+    .from("propostas")
+    .update({ 
+      ultimo_erro: null,
+      detalhe_status_atual: null 
+    } as any)
+    .eq("id", propostaId);
+
   // Primeiro envio = ainda em rascunho ou após um erro de envio.
-  // Envio adicional = a proposta já foi ao banco e queremos incluir outro(s)
-  // banco(s) na MESMA oportunidade (a API permite várias propostas por oportunidade).
-  const primeiroEnvio = statusAtual === "rascunho" || statusAtual === "erro_envio";
+
   const STATUS_BLOQUEIA_NOVO_BANCO: PropostaStatus[] = [
     "cancelada",
     "registrado",
