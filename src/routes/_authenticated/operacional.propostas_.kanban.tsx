@@ -354,9 +354,11 @@ function Pagina() {
         </div>
 
         {escopo === "todas" && c.nome_responsavel && (
-          <div className="mt-2 flex items-center gap-1 text-[11px] text-muted-foreground">
-            <User className="h-3 w-3 shrink-0" />
-            <span className="truncate">{c.nome_responsavel}</span>
+          <div className="mt-2 max-h-16 overflow-y-auto pr-1 custom-scrollbar">
+            <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+              <User className="h-3 w-3 shrink-0" />
+              <span className="truncate">{c.nome_responsavel}</span>
+            </div>
           </div>
         )}
 
