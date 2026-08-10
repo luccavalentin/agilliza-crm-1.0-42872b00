@@ -532,7 +532,7 @@ function Pagina() {
                   <h3 className="text-2xl font-bold text-foreground">{stats.count}</h3>
                   <span className="text-sm font-medium text-muted-foreground">{formatBRL(stats.total)}</span>
                 </div>
-                <p className="text-[10px] text-muted-foreground mt-0.5">Mês atual (01 até o fim)</p>
+                
               </div>
             </Card>
           );
