@@ -469,7 +469,7 @@ function Pagina() {
 
   const bancos = data?.bancos ?? [];
   const envolvidos = data?.envolvidos ?? [];
-  const p = data?.proposta as any;
+  const p = (data?.proposta || {}) as any;
 
   const [tab, setTab] = React.useState<Tab>("RESUMO");
   const [enviandoAuto, setEnviandoAuto] = React.useState(false);
