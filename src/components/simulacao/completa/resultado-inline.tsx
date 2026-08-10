@@ -461,15 +461,10 @@ export function ResultadoInlineCompleta({ simulacaoId, onFechar, isSecundaria }:
                           <TableCell className="px-2 py-2 text-right tabular-nums whitespace-nowrap">
                             {s.prazo}m
                           </TableCell>
-                          <TableCell className="px-2 py-2 text-right tabular-nums whitespace-nowrap">
-                            {prazoMaxTexto(b, data)}
-                          </TableCell>
-                          <TableCell className="px-2 py-2 text-right tabular-nums whitespace-nowrap">
-                            {financMaxTexto(b)}
-                          </TableCell>
                           <TableCell className="px-2 py-2 text-right font-semibold tabular-nums whitespace-nowrap">
-                            {formatBRL(totalFinanciado(b))}
+                            {totalBancoTexto(b)}
                           </TableCell>
+
                           <TableCell className="px-2 py-2 text-right tabular-nums whitespace-nowrap">
                             {formatBRL(b.valor_iof)}
                           </TableCell>
