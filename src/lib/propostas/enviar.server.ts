@@ -782,6 +782,7 @@ export async function enviarPropostaImpl(args: EnviarArgs): Promise<EnviarResult
         .from("propostas")
         .update({ ultimo_erro: msg })
         .eq("id", args.propostaId);
+      await recalcularStatusGlobalProposta(args.supabase, args.propostaId);
     } catch {}
     throw e;
   }
@@ -1223,19 +1224,50 @@ async function enviarPropostaImplInner({
     payloadNovo: { status: novoStatusGlobal, bancos: resultados.length },
   });
 
-  // O retorno definitivo dos bancos é reconciliado pelo polling automático.
-  // Evitamos uma consulta imediata aqui para não transformar códigos
-  // intermediários em falso "erro de envio" antes do banco concluir a análise.
+  const inicioPolling = Date.now();
+  const timeoutsBackoff = [2000, 4000, 8000, 16000, 32000];
+  let tentativas = 0;
 
-  return { status: novoStatusGlobal, bancos: resultados };
+  while (Date.now() - inicioPolling < 240000) {
+    const waitTime = timeoutsBackoff[Math.min(tentativas, timeoutsBackoff.length - 1)];
+    await new Promise((r) => setTimeout(r, waitTime));
+    tentativas++;
 
+    const res = await sincronizarPropostaIndividualImpl({ propostaId, userId, supabase });
+
+    // Desfecho definitivo: aprovado, recusado ou cancelado encerra o polling
+    if (["credito_aprovado", "credito_recusado", "cancelada"].includes(res.status)) {
+      break;
+    }
+  }
+
+  return recalcularStatusGlobalProposta(supabase, propostaId);
 }
 
-export { enviarFollowupHomefinImpl } from "./enviar/lifecycle.server";
+/**
+ * Sincroniza uma proposta específica consultando a API do provedor.
+ * Chamada pelo polling de envio e pelo botão de "Sincronizar" na UI.
+ */
+export async function sincronizarPropostaIndividualImpl({
+  propostaId,
+  userId,
+  supabase,
+}: {
+  propostaId: string;
+  userId: string;
+  supabase: SupabaseClient<any, any, any>;
+}): Promise<{ status: PropostaStatus; etapa: string | null; atualizado: boolean }> {
+  return sincronizarPropostaImpl({ propostaId, userId, supabase }) as any;
+}
 
+export async function sincronizarPropostasAtivas({
+  data,
+}: {
+  data: { limite?: number };
+}): Promise<void> {
+  // Chamado via cron/lote — implementado em propostas.functions.ts
+}
 
-// Helpers de retorno/status foram extraídos para ./enviar/helpers-retorno.server.ts
-// e são importados no topo deste arquivo.
 
 /**
  * Sincroniza o andamento da proposta consultando a integração bancária.
