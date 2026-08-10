@@ -347,7 +347,7 @@ export function ComparativoBancos({
                             size="sm"
                             className="bg-gradient-to-b from-primary to-primary/90 shadow-sm transition-all duration-200 hover:-translate-y-px hover:shadow-md hover:brightness-105 active:translate-y-0 active:scale-[0.98]"
                             disabled={b.status_banco !== "simulada" || criandoBanco !== null}
-                            onClick={() => onCriar(b.id)}
+                            onClick={() => onCriar(b.id, b.banco_id)}
                           >
                             {criandoBanco === b.id ? "Enviando…" : "Enviar Aprovação"}
                           </Button>
