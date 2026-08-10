@@ -1150,6 +1150,7 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
     melhorTaxaAno,
     rendaConsiderada,
     mostraConjuge,
+    isHomeEquity,
     // vínculo CRM / inversão
     cadastroNome,
     invertido,
