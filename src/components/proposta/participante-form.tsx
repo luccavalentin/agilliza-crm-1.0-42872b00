@@ -121,10 +121,10 @@ export function ParticipanteDialog({
 
 
 
-  // 1. CORREÇÃO: A seção de cônjuge só aparece para o TITULAR/comprador principal
+  // 1 & 2. CORREÇÃO: A seção de cônjuge só aparece para o TITULAR/comprador principal
   // e se não houver um cônjuge já cadastrado como participante independente.
   const ehConjuge = f.tipo_qualificacao === "CJ";
-  const permiteConjuge = !ehConjuge;
+  const permiteConjuge = !ehConjuge && !nomeConjugeExistente;
   const precisaConjuge = permiteConjuge && f.tipo_pessoa === "F" && ESTADO_CIVIL_COM_REGIME.has(f.estado_civil);
 
   const set = (patch: Partial<ParticipanteForm>) => setF((p) => ({ ...p, ...patch }));
