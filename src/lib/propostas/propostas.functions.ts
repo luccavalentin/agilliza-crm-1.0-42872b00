@@ -241,18 +241,19 @@ export const listarPropostas = createServerFn({ method: "GET" })
 
     // Aplica filtros de nome no servidor se solicitados
     let listaFiltrada = lista;
-    if (data.responsavel_nome) {
+    if (data.responsavel_nome && data.responsavel_nome !== "todos") {
       listaFiltrada = listaFiltrada.filter(i => i.nome_responsavel === data.responsavel_nome);
     }
-    if (data.corretor_nome) {
+    if (data.corretor_nome && data.corretor_nome !== "todos") {
       listaFiltrada = listaFiltrada.filter(i => i.corretor_nome === data.corretor_nome);
     }
-    if (data.imobiliaria_nome) {
+    if (data.imobiliaria_nome && data.imobiliaria_nome !== "todos") {
       listaFiltrada = listaFiltrada.filter(i => i.imobiliaria_nome === data.imobiliaria_nome);
     }
-    if (data.comercial_nome) {
+    if (data.comercial_nome && data.comercial_nome !== "todos") {
       listaFiltrada = listaFiltrada.filter(i => i.comercial_nome === data.comercial_nome);
     }
+
 
     return { itens: listaFiltrada as PropostaListaItem[], total: count ?? 0 };
 
@@ -1560,6 +1561,7 @@ export const sincronizarPropostasAtivas = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     const { supabase, userId } = context;
     const STATUS_ATIVOS = [
+      "rascunho",
       "enviada_banco",
       "em_analise_credito",
       "credito_aprovado",
@@ -1567,6 +1569,7 @@ export const sincronizarPropostasAtivas = createServerFn({ method: "POST" })
       "engenharia_vistoria",
       "analise_juridica",
     ];
+
     const { data: rows, error } = await supabase
       .from("propostas")
       .select("id")
