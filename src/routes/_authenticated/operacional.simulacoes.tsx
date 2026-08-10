@@ -317,9 +317,10 @@ function Pagina() {
     });
   });
   const kpiBancos = bancosUnicos.size;
+  const prazos = itens.map((s) => Number(s.prazo)).filter((n) => n > 0);
   const kpiPrazo = data?.stats?.prazoMedio ?? (
-    itens.map((s) => Number(s.prazo)).filter((n) => n > 0).length
-      ? Math.round(itens.map((s) => Number(s.prazo)).filter((n) => n > 0).reduce((a, b) => a + b, 0) / itens.map((s) => Number(s.prazo)).filter((n) => n > 0).length)
+    prazos.length
+      ? Math.round(prazos.reduce((a, b) => a + b, 0) / prazos.length)
       : 0
   );
 
