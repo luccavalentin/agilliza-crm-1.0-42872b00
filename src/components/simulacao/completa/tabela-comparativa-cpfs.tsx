@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { BancoLogo } from "@/components/bancos/banco-logo";
 import { BancoStatusBadge } from "@/components/simulacao/status-badge";
 import { obterSimulacao } from "@/lib/simulacao/simulacoes.functions";
-import { formatBRL, formatPercent } from "@/lib/simulacao/format";
+import { formatBRL, formatPercent, formatTaxa } from "@/lib/simulacao/format";
 import { totalFinanciadoBanco } from "@/lib/simulacao/origem-dados";
 import { cn } from "@/lib/utils";
 import { corDoBanco } from "@/lib/bancos/cores";
@@ -176,7 +176,7 @@ export function TabelaComparativaCPFs({ simulacaoIdA, simulacaoIdB }: Props) {
                     {linha.valor_parcela ? formatBRL(linha.valor_parcela) : "—"}
                   </TableCell>
                   <TableCell className="text-right font-bold text-primary tabular-nums">
-                    {linha.taxa_juros_ano ? formatPercent(linha.taxa_juros_ano / 100) : "—"}
+                    {linha.taxa_juros_ano ? formatTaxa(linha.taxa_juros_ano) : "—"}
                   </TableCell>
                   <TableCell className="text-right font-medium tabular-nums">
                     {(() => {

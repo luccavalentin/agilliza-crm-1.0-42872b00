@@ -24,7 +24,7 @@ import {
 } from "@/lib/simulacao/simulacoes.functions";
 import { criarProposta } from "@/lib/propostas/propostas.functions";
 import { useEnviarProposta } from "@/hooks/use-enviar-proposta";
-import { formatBRL, formatPercent } from "@/lib/simulacao/format";
+import { formatBRL, formatPercent, formatTaxa } from "@/lib/simulacao/format";
 import { corDoBanco } from "@/lib/bancos/cores";
 import { extrairDetalheBanco } from "@/lib/simulacao/detalhe-banco";
 import { rendaMinimaDoBanco } from "@/lib/simulacao/renda";
@@ -347,7 +347,7 @@ export function ResultadoInlineAmbos({ simulacaoIdSac, simulacaoIdPrice, onFecha
                         <MobileStat rotulo="Parcela" valor={formatBRL(b.valor_parcela)} />
                         <MobileStat
                           rotulo="Taxa a.a."
-                          valor={b.taxa_juros_ano != null ? formatPercent(b.taxa_juros_ano / 100) : "—"}
+                          valor={b.taxa_juros_ano != null ? formatTaxa(b.taxa_juros_ano) : "—"}
                         />
                         <MobileStat rotulo="Prazo" valor={`${l.simulacao.prazo}m`} />
                         <MobileStat rotulo="Total fin. (banco)" valor={totalBancoTexto(b)} />
@@ -468,7 +468,7 @@ export function ResultadoInlineAmbos({ simulacaoIdSac, simulacaoIdPrice, onFecha
                           {formatBRL(b.valor_parcela)}
                         </TableCell>
                         <TableCell className="py-3 text-right text-sm tabular-nums whitespace-nowrap">
-                          {b.taxa_juros_ano != null ? formatPercent(b.taxa_juros_ano / 100) : "—"}
+                          {b.taxa_juros_ano != null ? formatTaxa(b.taxa_juros_ano) : "—"}
                         </TableCell>
                         <TableCell className="py-3 text-right text-sm tabular-nums whitespace-nowrap">
                           {l.simulacao.prazo}m

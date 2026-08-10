@@ -34,7 +34,7 @@ import {
   enviarSimulacaoBanco,
 } from "@/lib/simulacao/simulacoes.functions";
 // Import já realizado no topo
-import { formatBRL, formatPercent } from "@/lib/simulacao/format";
+import { formatBRL, formatPercent, formatTaxa } from "@/lib/simulacao/format";
 import { corDoBanco } from "@/lib/bancos/cores";
 
 import { rendaMinimaPelosBancos, rendaMinimaDoBanco } from "@/lib/simulacao/renda";
@@ -318,7 +318,7 @@ export function ResultadoInlineCompleta({ simulacaoId, onFechar, isSecundaria }:
                           rotulo="Taxa a.a."
                           valor={
                             b.taxa_juros_ano != null
-                              ? formatPercent(b.taxa_juros_ano / 100)
+                              ? formatTaxa(b.taxa_juros_ano)
                               : "—"
                           }
                         />
@@ -441,7 +441,7 @@ export function ResultadoInlineCompleta({ simulacaoId, onFechar, isSecundaria }:
                             {formatBRL(b.valor_parcela)}
                           </TableCell>
                           <TableCell className="px-2 py-2 text-right tabular-nums whitespace-nowrap">
-                            {b.taxa_juros_ano != null ? formatPercent(b.taxa_juros_ano / 100) : "—"}
+                            {b.taxa_juros_ano != null ? formatTaxa(b.taxa_juros_ano) : "—"}
                           </TableCell>
                           <TableCell className="px-2 py-2 text-right tabular-nums whitespace-nowrap">
                             {s.prazo}m
