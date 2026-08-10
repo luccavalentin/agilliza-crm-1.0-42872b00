@@ -208,6 +208,7 @@ export const listarPropostas = createServerFn({ method: "GET" })
         parceiroIds.add(pid);
         if (tipo === "imobiliaria" && !imobPorCliente.has(cid)) imobPorCliente.set(cid, pid);
         if (tipo === "corretor" && !corrPorCliente.has(cid)) corrPorCliente.set(cid, pid);
+        if (tipo === "comercial" && !comPorCliente.has(cid)) comPorCliente.set(cid, pid);
       }
     }
     if (parceiroIds.size) {
