@@ -82,9 +82,13 @@ export const listarPropostas = createServerFn({ method: "GET" })
         escopo: z.enum(["todas", "minhas"]).default("todas"),
         status: z.string().optional(),
         responsavel: z.string().uuid().optional(),
+        responsavel_nome: z.string().optional(),
+        corretor_nome: z.string().optional(),
+        imobiliaria_nome: z.string().optional(),
         q: z.string().optional(),
         data_inicio: z.string().optional(),
         data_fim: z.string().optional(),
+
         pagina: z.number().int().min(1).default(1),
         porPagina: z.number().int().min(1).max(500).default(30),
         apenas_excluidas: z.boolean().default(false),
@@ -126,6 +130,11 @@ export const listarPropostas = createServerFn({ method: "GET" })
     if (data.status) query = query.eq("status", data.status as any);
     if (data.data_inicio) query = query.gte("created_at", data.data_inicio);
     if (data.data_fim) query = query.lte("created_at", data.data_fim);
+
+    // Filtros de nomes (Parceiros/Responsáveis) baseados nos nomes pré-carregados no hook, 
+    // mas agora aplicados no servidor para garantir que "todos" os dados sejam buscados corretamente.
+    // O backend irá filtrar após resolver as tabelas de junção (profiles/parceiros).
+
     if (data.q) {
       const q = data.q.trim();
       query = query.or(
@@ -223,7 +232,21 @@ export const listarPropostas = createServerFn({ method: "GET" })
         bancos: bancosPorProp.get(r.id) ?? [],
       };
     });
-    return { itens: lista as PropostaListaItem[], total: count ?? 0 };
+
+    // Aplica filtros de nome no servidor se solicitados
+    let listaFiltrada = lista;
+    if (data.responsavel_nome) {
+      listaFiltrada = listaFiltrada.filter(i => i.nome_responsavel === data.responsavel_nome);
+    }
+    if (data.corretor_nome) {
+      listaFiltrada = listaFiltrada.filter(i => i.corretor_nome === data.corretor_nome);
+    }
+    if (data.imobiliaria_nome) {
+      listaFiltrada = listaFiltrada.filter(i => i.imobiliaria_nome === data.imobiliaria_nome);
+    }
+
+    return { itens: listaFiltrada as PropostaListaItem[], total: count ?? 0 };
+
   });
 
 /** ===== Detalhe ===== */

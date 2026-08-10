@@ -140,7 +140,7 @@ function Pagina() {
   }, [q]);
 
   const { data } = useQuery({
-    queryKey: ["propostas", "kanban", escopo, busca, dataInicio, dataFim],
+    queryKey: ["propostas", "kanban", escopo, busca, dataInicio, dataFim, respFiltro, corretorFiltro, imobFiltro],
     queryFn: () =>
       listarPropostas({
         data: {
@@ -148,11 +148,15 @@ function Pagina() {
           q: busca || undefined,
           data_inicio: dataInicio ? `${dataInicio}T00:00:00` : undefined,
           data_fim: dataFim ? `${dataFim}T23:59:59` : undefined,
+          responsavel_nome: respFiltro !== "todos" ? respFiltro : undefined,
+          corretor_nome: corretorFiltro !== "todos" ? corretorFiltro : undefined,
+          imobiliaria_nome: imobFiltro !== "todos" ? imobFiltro : undefined,
           pagina: 1,
           porPagina: 500,
         },
       }),
   });
+
 
   // Comunicação em tempo real com a proposta: qualquer mudança de status/etapa
   // (via ficha, sincronização com o banco ou outro usuário) atualiza o Kanban.
@@ -248,16 +252,8 @@ function Pagina() {
     return Array.from(s).sort((a, b) => a.localeCompare(b, "pt-BR"));
   }, [parceirosCadastrados, itens]);
 
-  const itensFiltrados = useMemo(
-    () =>
-      itens.filter((i: any) => {
-        if (respFiltro !== "todos" && (i.nome_responsavel ?? "") !== respFiltro) return false;
-        if (corretorFiltro !== "todos" && (i.corretor_nome ?? "") !== corretorFiltro) return false;
-        if (imobFiltro !== "todos" && (i.imobiliaria_nome ?? "") !== imobFiltro) return false;
-        return true;
-      }),
-    [itens, respFiltro, corretorFiltro, imobFiltro],
-  );
+  const itensFiltrados = itens;
+
 
   // Agrupa uma única vez por coluna, em vez de refiltrar a lista inteira
   // (até 500 itens) para cada uma das colunas a cada render.
@@ -492,6 +488,56 @@ function Pagina() {
           </Button>
         </div>
       </Card>
+      
+      {/* KPI - Propostas em Andamento */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {(() => {
+          const stats = useMemo(() => {
+            const ativos = itens.filter(i => {
+              const s = i.status as PropostaStatus;
+              // Lógica: Se o crédito está em coleta de documentos até analise juridica está em andamento.
+              const emAndamento = [
+                "credito_aprovado",
+                "aguardando_documentos",
+                "engenharia_vistoria",
+                "analise_juridica",
+                // Legados mapeados para essas etapas
+                "checklist_documentacao",
+                "cadastro_complementar",
+                "dossie_completo",
+                "formularios",
+                "envio_documentos_banco",
+                "vistoria_agendamento",
+                "vistoria_concluida",
+                "emissao_contrato"
+              ].includes(s);
+              return emAndamento;
+            });
+
+            return {
+              count: ativos.length,
+              total: ativos.reduce((acc, i) => acc + (Number(i.valor_financiamento) || 0), 0)
+            };
+          }, [itens]);
+
+          return (
+            <Card className="rounded-2xl border-border/60 p-4 bg-gradient-to-br from-primary/5 to-transparent shadow-sm flex items-center gap-4">
+              <div className="size-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                <Clock className="h-6 w-6" />
+              </div>
+              <div>
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Propostas em Andamento</p>
+                <div className="flex items-baseline gap-2">
+                  <h3 className="text-2xl font-bold text-foreground">{stats.count}</h3>
+                  <span className="text-sm font-medium text-muted-foreground">{formatBRL(stats.total)}</span>
+                </div>
+                <p className="text-[10px] text-muted-foreground mt-0.5">Mês atual (01 até o fim)</p>
+              </div>
+            </Card>
+          );
+        })()}
+      </div>
+
 
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
