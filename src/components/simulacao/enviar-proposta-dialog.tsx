@@ -80,7 +80,7 @@ export function EnviarPropostaDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-3 py-2">
+        <div className="brand-scroll scroll-shadow-bottom flex-1 space-y-3 overflow-y-auto px-6 py-4">
           {carregando ? (
             <div className="flex flex-col items-center justify-center py-12 gap-3">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -238,7 +238,7 @@ export function EnviarPropostaDialog({
           )}
         </div>
 
-        <DialogFooter className="flex flex-col gap-2 sm:flex-row sm:justify-between items-center mt-2 border-t pt-4">
+        <DialogFooter className="flex flex-col gap-2 sm:flex-row sm:justify-between items-center">
           <div className="flex-1">
              {!enviandoQualquer && !todosConcluidos && simulados.length > 1 && (
                <Button 
