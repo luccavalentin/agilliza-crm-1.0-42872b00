@@ -32,8 +32,8 @@ export const MARGEM_SEGURANCA_RENDA = 0.00; // Margem removida conforme Princíp
 
 /** Percentual máximo da renda que pode ser comprometido com a parcela. */
 export const COMPROMETIMENTO_MAX = 0.3;
-/** Comprometimento máx no PRICE (Bradesco projeta pico da parcela → ~18% da inicial). */
-export const COMPROMETIMENTO_MAX_PRICE = 0.18;
+/** Comprometimento máx no PRICE (SFH/SFI exige mais margem para juros sobre saldo). */
+export const COMPROMETIMENTO_MAX_PRICE = 0.15;
 
 /**
  * Encargos mensais obrigatórios que os bancos SOMAM à parcela ao verificar o
@@ -128,10 +128,10 @@ export function parcelaExigidaPeloBanco(banco: BancoRendaApi): number | null {
 /**
  * Renda mínima exigida pelo banco, aplicando o teto correto por sistema:
  *   SAC   → parcela / 30%
- *   PRICE → parcela / 18%  (regra padrão para todas as IFs que ofertam PRICE)
+ *   PRICE → parcela / 15%  (regra padrão para todas as IFs que ofertam PRICE)
  *
- * Em PRICE a renda devolvida pela API do banco é ignorada (geralmente vem
- * calculada em SAC); sempre recomputamos com o teto de 15% sobre a parcela.
+ * Em PRICE a renda devolvida pela API do banco é frequentemente calculada 
+ * em SAC pela HomeFin; sempre recomputamos com o teto de 15% sobre a parcela.
  */
 export function rendaMinimaDoBanco(banco: BancoRendaApi): number | null {
   const parcela = parcelaExigidaPeloBanco(banco);
@@ -258,8 +258,7 @@ export function avaliarRendaMinima(params: {
 
   // Parcela usada para QUALIFICAÇÃO da renda:
   // - SAC: primeira parcela do próprio sistema (já é a maior) com teto 30%.
-  // - PRICE: primeira parcela PRICE com teto 18% (equivale à projeção do pico
-  //   pelo Bradesco: ~2,27x a inicial × 30% ≈ 18% da inicial).
+  // - PRICE: primeira parcela PRICE com teto 15% (exige mais renda que SAC).
   const { primeira_parcela: parcelaSistema } = calcularSimulacao({
     valor_financiamento: base,
     prazo_meses,
@@ -277,7 +276,16 @@ export function avaliarRendaMinima(params: {
   const tetoComprometimento = sistema === "P" ? COMPROMETIMENTO_MAX_PRICE : COMPROMETIMENTO_MAX;
   const rendaMinimaCrua = rendaMinimaParaParcela(prestacaoTotal, tetoComprometimento);
   // Arredonda para cima no centenar (Princípio #1 - Simulação nunca trava)
-  const rendaMinima = Math.ceil(rendaMinimaCrua / 100) * 100;
+  let rendaMinima = Math.ceil(rendaMinimaCrua / 100) * 100;
+
+  // Guarda-corpo: PRICE jamais pode exigir menos renda que SAC para o mesmo financiamento
+  if (sistema === "P") {
+    const sac = avaliarRendaMinima({ ...params, sistema: "S" });
+    if (sac && rendaMinima < sac.rendaMinima) {
+      console.error(`[renda] Bug de cálculo: PRICE (${rendaMinima}) exigindo menos que SAC (${sac.rendaMinima}) para base ${base}`);
+      rendaMinima = sac.rendaMinima + 100; // Força superioridade
+    }
+  }
   const renda = renda_informada && renda_informada > 0 ? renda_informada : null;
 
   return {

@@ -107,7 +107,7 @@ export function DicaRendaMinima(props: Props) {
           <div className="flex items-center justify-between gap-3 border-t border-border/40 pt-1.5">
             <div className="flex items-center gap-2">
               <span className="rounded-full bg-purple-100 px-2 py-0.5 text-[10px] font-bold text-purple-700 dark:bg-purple-900/30 dark:text-purple-300">
-                PRICE (18%)
+                PRICE
               </span>
               <span className="text-[11px] font-medium text-muted-foreground">
                 Renda {compoeRendaConjuge ? "familiar" : "titular"}
