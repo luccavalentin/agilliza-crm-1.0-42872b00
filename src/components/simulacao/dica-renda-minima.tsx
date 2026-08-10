@@ -96,7 +96,7 @@ export function DicaRendaMinima(props: Props) {
                 SAC
               </span>
               <span className="text-[11px] font-medium text-muted-foreground">
-                Renda {compoeRendaConjuge ? "familiar" : "titular"}
+                Renda mínima estimada {compoeRendaConjuge ? "familiar" : "titular"} (SAC)
               </span>
             </div>
             <span
@@ -115,7 +115,7 @@ export function DicaRendaMinima(props: Props) {
                 PRICE
               </span>
               <span className="text-[11px] font-medium text-muted-foreground">
-                Renda {compoeRendaConjuge ? "familiar" : "titular"}
+                Renda mínima estimada {compoeRendaConjuge ? "familiar" : "titular"} (PRICE)
               </span>
             </div>
             <span
@@ -128,12 +128,18 @@ export function DicaRendaMinima(props: Props) {
             </span>
           </div>
         </div>
-        {compoeRendaConjuge && (
-          <p className="px-1 text-[10px] text-muted-foreground italic">
-            Sugestão: {formatBRL(Math.max(evalSac.rendaMinima, evalPrice.rendaMinima) / 2)} para
-            cada proponente
+        <div className="flex flex-col gap-1 px-1">
+          <p className="text-[10px] italic text-muted-foreground">
+            Estimativa conservadora, com folga de 10%. O banco pode aceitar renda menor — e
+            também pode recusar por outros critérios além da renda.
           </p>
-        )}
+          {compoeRendaConjuge && (
+            <p className="text-[10px] italic text-muted-foreground/70">
+              Sugestão: {formatBRL(Math.max(evalSac.rendaMinima, evalPrice.rendaMinima) / 2)} para
+              cada proponente
+            </p>
+          )}
+        </div>
       </div>
     );
   }
@@ -173,10 +179,11 @@ export function DicaRendaMinima(props: Props) {
           </div>
           <div className="flex flex-col">
             <span className="text-[11px] font-medium text-muted-foreground leading-tight">
-              Renda necessária {compoeRendaConjuge ? "familiar" : "titular"}
+              Renda mínima estimada {compoeRendaConjuge ? "familiar" : "titular"} (
+              {sistema === "S" ? "SAC" : "PRICE"})
             </span>
             <span className="text-[9px] text-muted-foreground/60 leading-tight">
-              Tabela {sistema === "S" ? "SAC" : "PRICE"}
+              Estimativa conservadora, com folga de 10%.
             </span>
           </div>
         </div>
@@ -184,11 +191,17 @@ export function DicaRendaMinima(props: Props) {
           {formatBRL(rendaMin)}
         </p>
       </div>
-      {compoeRendaConjuge && (
-        <p className="px-1 text-[10px] text-muted-foreground/70 italic">
-          Sugestão: {formatBRL(rendaMin / 2)} para cada proponente
+      <div className="flex flex-col gap-1 px-1">
+        <p className="text-[10px] italic text-muted-foreground">
+          O banco pode aceitar renda menor — e também pode recusar por outros critérios além
+          da renda.
         </p>
-      )}
+        {compoeRendaConjuge && (
+          <p className="text-[10px] italic text-muted-foreground/70">
+            Sugestão: {formatBRL(rendaMin / 2)} para cada proponente
+          </p>
+        )}
+      </div>
     </div>
   );
 }

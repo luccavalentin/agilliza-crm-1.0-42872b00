@@ -26,7 +26,7 @@ import { calcularSimulacao, type SistemaAmortizacao } from "./simulacao-rapida";
  * Margem de segurança aplicada sobre o maior valor de renda encontrado
  * para absorver diferenças de encargos entre instituições.
  */
-export const MARGEM_SEGURANCA_RENDA = 0.0; // Margem removida conforme Princípio #1
+export const MARGEM_SEGURANCA_RENDA = 0.1;
 
 /** Percentual máximo da renda que pode ser comprometido com a parcela. */
 export const COMPROMETIMENTO_MAX = 0.3;
@@ -266,8 +266,12 @@ export function avaliarRendaMinima(params: {
 
   const tetoComprometimento = sistema === "P" ? COMPROMETIMENTO_MAX_PRICE : COMPROMETIMENTO_MAX;
   const rendaMinimaCrua = rendaMinimaParaParcela(prestacaoTotal, tetoComprometimento);
-  // Arredonda para cima no centenar (Princípio #1 - Simulação nunca trava)
-  let rendaMinima = Math.ceil(rendaMinimaCrua / 100) * 100;
+  
+  // Aplica margem de segurança de 10% (CONCEITO ÚNICO)
+  const rendaComMargem = rendaMinimaCrua * (1 + MARGEM_SEGURANCA_RENDA);
+  
+  // Arredonda para cima no milhar (CONCEITO ÚNICO)
+  let rendaMinima = Math.ceil(rendaComMargem / 1000) * 1000;
 
   // Guarda-corpo: PRICE jamais pode exigir menos renda que SAC para o mesmo financiamento
   if (sistema === "P") {
@@ -348,7 +352,8 @@ export function rendaMinimaSugerida(params: {
       ? fontes.sort((a, b) => b.rendaMinima - a.rendaMinima)[0]
       : { primeiraParcela: 0, rendaMinima: 0, detalhe_fonte: "Indefinida", suficiente: null };
 
-  const rendaFinal = Math.ceil(vencedora.rendaMinima / 100) * 100;
+  // O arredondamento já foi feito em avaliarRendaMinima() seguindo o conceito único.
+  const rendaFinal = vencedora.rendaMinima;
 
   const renda = renda_informada && renda_informada > 0 ? renda_informada : null;
 

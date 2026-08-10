@@ -1,4 +1,5 @@
 import { Link2, Repeat } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -119,12 +120,13 @@ export function SecaoTitular({ ctx }: { ctx: SimulacaoCompletaCtx }) {
             </>
           }
         >
-          <div className="flex gap-2">
+          <div className={cn("flex flex-col gap-2", f.sistema_amortizacao === "S" && "rounded-lg border border-primary/20 bg-primary/[0.02] p-2 -m-2")}>
+            <div className="flex gap-2">
             <CurrencyInput
               value={f.renda_total}
               onChange={(v) => set("renda_total", v)}
               placeholder="Ex: 9.500,00"
-              className="flex-1"
+              className={cn("flex-1", f.sistema_amortizacao === "S" && "border-primary/40 shadow-sm")}
             />
             {f.valor_financiamento > 0 && f.prazo > 0 && (
               <Button
@@ -186,13 +188,20 @@ export function SecaoTitular({ ctx }: { ctx: SimulacaoCompletaCtx }) {
               </>
             }
           >
-            <div id="campo-renda-price" className="flex gap-2">
+          <div
+            id="campo-renda-price"
+            className={cn(
+              "flex flex-col gap-2",
+              f.sistema_amortizacao === "P" && "rounded-lg border border-primary/20 bg-primary/[0.02] p-2 -m-2",
+            )}
+          >
+            <div className="flex gap-2">
               <CurrencyInput
                 value={f.renda_price ?? 0}
                 onChange={(v) => set("renda_price", v)}
                 placeholder="Ex: 12.000,00"
                 aria-invalid={!!erros.renda_price}
-                className="flex-1"
+                className={cn("flex-1", f.sistema_amortizacao === "P" && "border-primary/40 shadow-sm")}
               />
               {f.valor_financiamento > 0 && f.prazo > 0 && (
                 <Button
@@ -229,6 +238,7 @@ export function SecaoTitular({ ctx }: { ctx: SimulacaoCompletaCtx }) {
                 />
               </div>
             )}
+            </div>
           </Campo>
         )}
         <Campo
