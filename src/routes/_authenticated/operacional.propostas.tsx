@@ -29,6 +29,7 @@ import { ListaMobile } from "@/components/propostas/lista-page/lista-mobile";
 import { ListaDesktop } from "@/components/propostas/lista-page/lista-desktop";
 import { BarraSelecao } from "@/components/shared/barra-selecao";
 
+import { listarParceiros } from "@/lib/crm/parceiros.functions";
 import {
   intervaloMesAtual,
   type Escopo,
@@ -59,6 +60,9 @@ function Pagina() {
   const [responsavel, setResponsavel] = useState<string>("todos");
   const [dataInicio, setDataInicio] = useState("");
   const [dataFim, setDataFim] = useState("");
+  const [corretorFiltro, setCorretorFiltro] = useState("todos");
+  const [imobFiltro, setImobFiltro] = useState("todos");
+  const [comercialFiltro, setComercialFiltro] = useState("todos");
 
   const listarColegasFn = useServerFn(listarColegas);
   const { data: colegas } = useQuery({
@@ -66,6 +70,36 @@ function Pagina() {
     queryFn: () => listarColegasFn(),
     staleTime: 5 * 60_000,
   });
+
+  const { data: parceirosCadastrados } = useQuery({
+    queryKey: ["parceiros-cadastrados"],
+    queryFn: () => listarParceiros(),
+    staleTime: 5 * 60_000,
+  });
+
+  const corretores = useMemo(() => {
+    const s = new Set<string>();
+    (parceirosCadastrados ?? [])
+      .filter((p) => (p.tipo_pessoa ?? "").toLowerCase() === "corretor")
+      .forEach((p) => p.nome && s.add(p.nome));
+    return Array.from(s).sort((a, b) => a.localeCompare(b, "pt-BR"));
+  }, [parceirosCadastrados]);
+
+  const imobiliarias = useMemo(() => {
+    const s = new Set<string>();
+    (parceirosCadastrados ?? [])
+      .filter((p) => (p.tipo_pessoa ?? "").toLowerCase() === "imobiliaria")
+      .forEach((p) => p.nome && s.add(p.nome));
+    return Array.from(s).sort((a, b) => a.localeCompare(b, "pt-BR"));
+  }, [parceirosCadastrados]);
+
+  const comerciais = useMemo(() => {
+    const s = new Set<string>();
+    (parceirosCadastrados ?? [])
+      .filter((p) => (p.tipo_pessoa ?? "").toLowerCase() === "comercial")
+      .forEach((p) => p.nome && s.add(p.nome));
+    return Array.from(s).sort((a, b) => a.localeCompare(b, "pt-BR"));
+  }, [parceirosCadastrados]);
 
   useEffect(() => {
     const t = setTimeout(() => setBusca(q.trim()), 300);
@@ -143,7 +177,7 @@ function Pagina() {
   }, [sincronizarLoteFn]);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["propostas", escopo, busca, dataInicio, dataFim, responsavel, verExcluidas],
+    queryKey: ["propostas", escopo, busca, dataInicio, dataFim, responsavel, verExcluidas, corretorFiltro, imobFiltro, comercialFiltro],
     queryFn: () =>
       listarPropostas({
         data: {
@@ -156,6 +190,9 @@ function Pagina() {
           pagina: 1,
           porPagina: 100,
           apenas_excluidas: verExcluidas,
+          corretor_nome: corretorFiltro !== "todos" ? corretorFiltro : undefined,
+          imobiliaria_nome: imobFiltro !== "todos" ? imobFiltro : undefined,
+          comercial_nome: comercialFiltro !== "todos" ? comercialFiltro : undefined,
         },
       }),
   });
@@ -195,6 +232,9 @@ function Pagina() {
     setQ("");
     setBusca("");
     setResponsavel("todos");
+    setCorretorFiltro("todos");
+    setImobFiltro("todos");
+    setComercialFiltro("todos");
     setDataInicio("");
     setDataFim("");
     setEscopo("minhas");
@@ -325,22 +365,31 @@ function Pagina() {
         <VolumeCard volume={volumeTotal} loading={isLoading} />
       </div>
 
-      <FiltrosPropostas
-        escopo={escopo}
-        setEscopo={setEscopo}
-        q={q}
-        setQ={setQ}
-        responsavel={responsavel}
-        setResponsavel={setResponsavel}
-        colegas={colegas}
-        dataInicio={dataInicio}
-        setDataInicio={setDataInicio}
-        dataFim={dataFim}
-        setDataFim={setDataFim}
-        onLimpar={limparFiltros}
-        verExcluidas={verExcluidas}
-        setVerExcluidas={setVerExcluidas}
-      />
+        <FiltrosPropostas
+          escopo={escopo}
+          setEscopo={setEscopo}
+          q={q}
+          setQ={setQ}
+          responsavel={responsavel}
+          setResponsavel={setResponsavel}
+          colegas={colegas}
+          dataInicio={dataInicio}
+          setDataInicio={setDataInicio}
+          dataFim={dataFim}
+          setDataFim={setDataFim}
+          onLimpar={limparFiltros}
+          verExcluidas={verExcluidas}
+          setVerExcluidas={setVerExcluidas}
+          corretorFiltro={corretorFiltro}
+          setCorretorFiltro={setCorretorFiltro}
+          corretores={corretores}
+          imobFiltro={imobFiltro}
+          setImobFiltro={setImobFiltro}
+          imobiliarias={imobiliarias}
+          comercialFiltro={comercialFiltro}
+          setComercialFiltro={setComercialFiltro}
+          comerciais={comerciais}
+        />
 
       <ListaMobile
         isLoading={isLoading}

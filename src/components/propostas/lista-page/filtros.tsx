@@ -24,6 +24,15 @@ type Props = {
   onLimpar: () => void;
   verExcluidas: boolean;
   setVerExcluidas: (u: (v: boolean) => boolean) => void;
+  corretorFiltro: string;
+  setCorretorFiltro: (v: string) => void;
+  corretores: string[];
+  imobFiltro: string;
+  setImobFiltro: (v: string) => void;
+  imobiliarias: string[];
+  comercialFiltro: string;
+  setComercialFiltro: (v: string) => void;
+  comerciais: string[];
 };
 
 export function FiltrosPropostas({
@@ -41,6 +50,15 @@ export function FiltrosPropostas({
   onLimpar,
   verExcluidas,
   setVerExcluidas,
+  corretorFiltro,
+  setCorretorFiltro,
+  corretores,
+  imobFiltro,
+  setImobFiltro,
+  imobiliarias,
+  comercialFiltro,
+  setComercialFiltro,
+  comerciais,
 }: Props) {
   return (
     <Card className="rounded-xl border-border/60 p-3 shadow-sm sm:p-4">
@@ -110,6 +128,44 @@ export function FiltrosPropostas({
           <Trash2 className="mr-1.5 h-4 w-4" />
           {verExcluidas ? "Ver ativas" : "Excluídas"}
         </Button>
+      </div>
+
+      <div className="mt-3 flex flex-wrap items-end gap-3 border-t border-border/40 pt-3">
+        <div className="flex flex-col gap-1">
+          <Label className="text-xs text-muted-foreground">Corretor</Label>
+          <select
+            value={corretorFiltro}
+            onChange={(e) => setCorretorFiltro(e.target.value)}
+            className="h-11 w-[12rem] rounded-xl border border-input bg-background px-3 text-sm shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <option value="todos">Todos</option>
+            {corretores.map((r) => <option key={r} value={r}>{r}</option>)}
+          </select>
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <Label className="text-xs text-muted-foreground">Imobiliária</Label>
+          <select
+            value={imobFiltro}
+            onChange={(e) => setImobFiltro(e.target.value)}
+            className="h-11 w-[12rem] rounded-xl border border-input bg-background px-3 text-sm shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <option value="todos">Todos</option>
+            {imobiliarias.map((r) => <option key={r} value={r}>{r}</option>)}
+          </select>
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <Label className="text-xs text-muted-foreground">Comercial</Label>
+          <select
+            value={comercialFiltro}
+            onChange={(e) => setComercialFiltro(e.target.value)}
+            className="h-11 w-[12rem] rounded-xl border border-input bg-background px-3 text-sm shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <option value="todos">Todos</option>
+            {comerciais.map((r) => <option key={r} value={r}>{r}</option>)}
+          </select>
+        </div>
       </div>
     </Card>
   );

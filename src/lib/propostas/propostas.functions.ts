@@ -37,6 +37,7 @@ export interface PropostaListaItem {
   nome_responsavel: string | null;
   imobiliaria_nome: string | null;
   corretor_nome: string | null;
+  comercial_nome: string | null;
   bancos: PropostaBancoResumo[];
   deleted_at?: string | null;
   deleted_by?: string | null;
@@ -85,6 +86,7 @@ export const listarPropostas = createServerFn({ method: "GET" })
         responsavel_nome: z.string().optional(),
         corretor_nome: z.string().optional(),
         imobiliaria_nome: z.string().optional(),
+        comercial_nome: z.string().optional(),
         q: z.string().optional(),
         data_inicio: z.string().optional(),
         data_fim: z.string().optional(),
@@ -191,6 +193,7 @@ export const listarPropostas = createServerFn({ method: "GET" })
     );
     const imobPorCliente = new Map<string, string>();
     const corrPorCliente = new Map<string, string>();
+    const comPorCliente = new Map<string, string>();
     const parceiroIds = new Set<string>();
     if (clienteIds.length) {
       const { data: vinc } = await supabase
@@ -205,6 +208,7 @@ export const listarPropostas = createServerFn({ method: "GET" })
         parceiroIds.add(pid);
         if (tipo === "imobiliaria" && !imobPorCliente.has(cid)) imobPorCliente.set(cid, pid);
         if (tipo === "corretor" && !corrPorCliente.has(cid)) corrPorCliente.set(cid, pid);
+        if (tipo === "comercial" && !comPorCliente.has(cid)) comPorCliente.set(cid, pid);
       }
     }
     if (parceiroIds.size) {
@@ -222,12 +226,14 @@ export const listarPropostas = createServerFn({ method: "GET" })
       const responsavel_id = r.usuario_responsavel_id ?? r.usuario_criador_id ?? null;
       const imobId = r.cliente_id ? imobPorCliente.get(r.cliente_id) ?? null : null;
       const corrId = r.cliente_id ? corrPorCliente.get(r.cliente_id) ?? null : null;
+      const comId = r.cliente_id ? comPorCliente.get(r.cliente_id) ?? null : null;
       return {
         ...r,
         responsavel_id,
         nome_responsavel: responsavel_id ? (nomesPerfis.get(responsavel_id) ?? null) : null,
         imobiliaria_nome: imobId ? (nomesPerfis.get(imobId) ?? null) : null,
         corretor_nome: corrId ? (nomesPerfis.get(corrId) ?? null) : null,
+        comercial_nome: comId ? (nomesPerfis.get(comId) ?? null) : null,
         nome_excluidor: r.deleted_by ? (nomesPerfis.get(r.deleted_by) ?? null) : null,
         bancos: bancosPorProp.get(r.id) ?? [],
       };
@@ -243,6 +249,9 @@ export const listarPropostas = createServerFn({ method: "GET" })
     }
     if (data.imobiliaria_nome) {
       listaFiltrada = listaFiltrada.filter(i => i.imobiliaria_nome === data.imobiliaria_nome);
+    }
+    if (data.comercial_nome) {
+      listaFiltrada = listaFiltrada.filter(i => i.comercial_nome === data.comercial_nome);
     }
 
     return { itens: listaFiltrada as PropostaListaItem[], total: count ?? 0 };

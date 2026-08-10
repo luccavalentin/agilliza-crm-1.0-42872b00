@@ -132,6 +132,7 @@ function Pagina() {
   const [respFiltro, setRespFiltro] = useState("todos");
   const [corretorFiltro, setCorretorFiltro] = useState("todos");
   const [imobFiltro, setImobFiltro] = useState("todos");
+  const [comercialFiltro, setComercialFiltro] = useState("todos");
 
 
   // Busca ao vivo: filtra conforme o usuário digita (com debounce).
@@ -141,7 +142,7 @@ function Pagina() {
   }, [q]);
 
   const { data } = useQuery({
-    queryKey: ["propostas", "kanban", escopo, busca, dataInicio, dataFim, respFiltro, corretorFiltro, imobFiltro],
+    queryKey: ["propostas", "kanban", escopo, busca, dataInicio, dataFim, respFiltro, corretorFiltro, imobFiltro, comercialFiltro],
     queryFn: () =>
       listarPropostas({
         data: {
@@ -152,6 +153,7 @@ function Pagina() {
           responsavel_nome: respFiltro !== "todos" ? respFiltro : undefined,
           corretor_nome: corretorFiltro !== "todos" ? corretorFiltro : undefined,
           imobiliaria_nome: imobFiltro !== "todos" ? imobFiltro : undefined,
+          comercial_nome: comercialFiltro !== "todos" ? comercialFiltro : undefined,
           pagina: 1,
           porPagina: 500,
         },
@@ -192,6 +194,7 @@ function Pagina() {
     setRespFiltro("todos");
     setCorretorFiltro("todos");
     setImobFiltro("todos");
+    setComercialFiltro("todos");
   }
 
 
@@ -248,6 +251,14 @@ function Pagina() {
     const s = new Set<string>();
     (parceirosCadastrados ?? [])
       .filter((p) => (p.tipo_pessoa ?? "").toLowerCase() === "imobiliaria")
+      .forEach((p) => p.nome && s.add(p.nome));
+    return Array.from(s).sort((a, b) => a.localeCompare(b, "pt-BR"));
+  }, [parceirosCadastrados]);
+
+  const comerciais = useMemo(() => {
+    const s = new Set<string>();
+    (parceirosCadastrados ?? [])
+      .filter((p) => (p.tipo_pessoa ?? "").toLowerCase() === "comercial")
       .forEach((p) => p.nome && s.add(p.nome));
     return Array.from(s).sort((a, b) => a.localeCompare(b, "pt-BR"));
   }, [parceirosCadastrados]);
@@ -471,6 +482,17 @@ function Pagina() {
             >
               <option value="todos">Todos</option>
               {corretores.map((r) => <option key={r} value={r}>{r}</option>)}
+            </select>
+          </div>
+          <div className="flex flex-col gap-1">
+            <Label className="text-xs text-muted-foreground">Comercial</Label>
+            <select
+              value={comercialFiltro}
+              onChange={(e) => setComercialFiltro(e.target.value)}
+              className="h-11 w-[12rem] rounded-xl border border-input bg-background px-3 text-sm shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <option value="todos">Todos</option>
+              {comerciais.map((r) => <option key={r} value={r}>{r}</option>)}
             </select>
           </div>
           <div className="flex flex-col gap-1">
