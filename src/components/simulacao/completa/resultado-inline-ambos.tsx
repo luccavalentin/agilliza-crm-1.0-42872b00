@@ -123,7 +123,13 @@ export function ResultadoInlineAmbos({ simulacaoIdSac, simulacaoIdPrice, onFecha
   const qc = useQueryClient();
   const [reenviandoBanco, setReenviandoBanco] = useState<string | null>(null);
   const [criandoBanco, setCriandoBanco] = useState<string | null>(null);
-  const { enviar: handleEnviarHook, busy: enviandoBanco, busyBancoId } = useEnviarProposta();
+  const { 
+    enviar: handleEnviarHook, 
+    busy: enviandoBanco, 
+    busyBancoId,
+    iniciarStatus: iniciarStatusEnvio
+  } = useEnviarProposta();
+
   const jaBaixou = useRef(false);
 
   const qSac = useSimQuery(simulacaoIdSac);
@@ -146,28 +152,42 @@ export function ResultadoInlineAmbos({ simulacaoIdSac, simulacaoIdPrice, onFecha
   }
 
   async function enviarAprovacao(simId: string, bancoId: string) {
+    if (criandoBanco) return;
+    
+    // 1. Inicia feedback visual imediato no hook (Etapa 1: Criando)
+    iniciarStatusEnvio(bancoId);
     setCriandoBanco(bancoId);
+    
     try {
-      const { proposta_id } = await criarProposta({
-        data: { simulacao_id: simId, banco_id: bancoId },
-      });
-      
-      await handleEnviarHook({
-        propostaId: proposta_id,
-        bancoId: bancoId,
+      // 2. Chama o hook centralizado
+      const res = await handleEnviarHook({
+        bancoId,
+        criarPropostaFn: async () => {
+          const { proposta_id } = await criarProposta({
+            data: { 
+              simulacao_id: simId, 
+              banco_id: bancoId 
+            },
+          });
+          return { proposta_id };
+        }
       });
 
-      // Navegação já é tratada pelo hook se houver pendência. 
-      // Se deu certo, o hook já mostra o toast de sucesso.
-      if (!router.state.location.pathname.includes(`/propostas/${proposta_id}`)) {
+      if (res?.proposta_id) {
+        if (!router.state.location.pathname.includes(`/propostas/${res.proposta_id}`)) {
           router.navigate({
             to: "/operacional/propostas/$id",
-            params: { id: proposta_id },
+            params: { id: res.proposta_id },
           });
+        }
       }
     } catch (e) {
-      // Erros já mostrados pelo hook/toast
+      // Erros gerenciados pelo hook
     } finally {
+      setCriandoBanco(null);
+    }
+  }
+
       setCriandoBanco(null);
     }
   }
