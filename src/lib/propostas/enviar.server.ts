@@ -253,15 +253,14 @@ async function renovarSimulacaoSeConsumida({
     valorTotalFinanciamento: valorFinanciamento + valorDespesasFinanciadas,
     fgAutorizacaoDados: true,
   };
+  // O PUT /oportunidade aceita EXCLUSIVAMENTE valorImovel, valorFinanciamento
+  // e prazo. Qualquer outro campo (estado civil, regime de casamento, cônjuge,
+  // dados do imóvel) provoca HTTP 500 no provedor e mascara a mensagem real do
+  // banco. Estado civil/cônjuge vão no PUT /participante.
   const payloadOportunidadeAtual: Record<string, unknown> = {
     valorImovel,
     valorFinanciamento,
     prazo,
-    tipoEstadoCivil: familiaAtual.estadoCivil ? { id: familiaAtual.estadoCivil } : undefined,
-    regimeCasamento: prop.regime_casamento ? { id: prop.regime_casamento } : undefined,
-    fgCompoeRenda: familiaAtual.compoeRenda,
-
-    fgAutorizacaoDados: true,
   };
   // A oportunidade pode ter sido criada quando o cliente ainda estava casado e
   // depois o cadastro foi corrigido para solteiro. Se não sincronizarmos esse
