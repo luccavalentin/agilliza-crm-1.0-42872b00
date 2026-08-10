@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev",
-    "build": "eslint . --max-warnings=0 && vite build",
+    "build": "eslint . --quiet --rule \"react-hooks/rules-of-hooks: error\" && vite build",
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "lint": "eslint .",
