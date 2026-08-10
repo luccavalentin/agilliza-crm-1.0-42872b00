@@ -44,23 +44,23 @@ export function statusDaEtapa(nomeEtapa: string | null): PropostaStatus | null {
  * NUNCA foi de fato efetivada na esteira do banco (falha de integração).
  *
  * Docs oficiais (swagger Homefin) — tipoSituacao:
- *   S = Sem Integração · P = Erro ao Enviar Proposta · N = Em Análise ·
- *   A = Crédito Aprovado · R = Crédito Recusado.
+ *   P = Pendente/Simulada · A = Aprovada · C = Condicionada/Favorável
+ *   R = Recusada · N = Negada · E = Erro.
+ *   (S = Sem Integração — nunca ocorre no fluxo real de proposta).
  *
  * Regras (a proposta CHEGOU ao banco quando existe protocolo):
- *  - "R" (Recusa) é decisão REAL de crédito — nunca é falha de integração.
- *  - Só considera falha quando tipoSituacao ∈ {"P","E"} (erro ao enviar).
- *  - **Se o retorno traz um protocolo real do banco** (numeroPropostaBanco,
- *    codigoPropostaBanco ou codigoOportunidadeBanco), a proposta chegou ao
- *    banco — NÃO é falha de integração, mesmo que venha P/E ou mensagem no
- *    retornoIntegracao (bancos usam esses campos para observações/validações
- *    posteriores à aceitação da proposta).
+ *  - "R" (Recusa) e "N" (Negada) são decisões REAIS de crédito — nunca falha técnica.
+ *  - "A" (Aprovada) e "C" (Condicionada) são desfechos FAVORÁVEIS.
+ *  - **Só persiste numero_proposta_banco quando existir evidência de envio real**
+ *    no log HTTP (status 2xx para incluir-proposta-integracao). Sem isso,
+ *    qualquer código no retorno é apenas referência da simulação.
+ *  - O discriminator `tipoSituacao` é apenas indicativo; a persistência do
+ *    protocolo é regida pela presença do log de confirmação de envio.
  */
 export function ehFalhaIntegracaoBanco(sim: any): boolean {
   const tipo = String(sim?.tipoSituacao ?? "").toUpperCase().charAt(0);
+  // P (Pendente) ou E (Erro) sem protocolo real é falha de integração.
   if (tipo !== "P" && tipo !== "E") return false;
-  // Se o banco devolveu qualquer protocolo, a proposta foi recebida — não é
-  // falha de integração; a mensagem eventual fica apenas como observação.
   if (numeroPropostaBancoReal(sim) || referenciaIntegracaoBanco(sim)) return false;
   return true;
 }
@@ -242,11 +242,16 @@ export function statusInternoBanco(
     codigo.includes("negad") ||
     codigo.includes("indefer") ||
     codigo.includes("rejeit") ||
-    codigoNumerico === "514"
+    codigoNumerico === "514" ||
+    t === "R" ||
+    t === "N"
   ) {
     return { banco: "recusada", proposta: "credito_recusado" };
   }
-  if (codigo.includes("cond")) return { banco: "condicionado", proposta: "credito_aprovado" };
+  // C = Condicionada é desfecho FAVORÁVEL.
+  if (codigo.includes("cond") || t === "C") {
+    return { banco: "condicionado", proposta: "credito_aprovado" };
+  }
   if (codigo.includes("aprov") || codigo.includes("favoravel")) {
     return { banco: "aprovada", proposta: "credito_aprovado" };
   }
@@ -402,9 +407,11 @@ function protocoloValido(valor: string | null): string | null {
  * IDs internos (UUIDs) que não são protocolos reais do banco são filtrados.
  */
 export function numeroPropostaBancoReal(sim: any): string | null {
+  // O discriminante principal agora é a confirmação do log HTTP de inclusão,
+  // mas preservamos a verificação básica de tipoSituacao para retrocompatibilidade
+  // com dados onde o log pode estar ausente mas o status já é terminal.
   const tipo = String(sim?.tipoSituacao ?? "").toUpperCase().charAt(0);
-  // Se ainda for 'S' (Sem integração de proposta), o código é apenas da simulação.
-  if (tipo === "S") return null;
+  if (tipo === "P" || tipo === "S") return null;
 
   return protocoloValido(
     buscarCampoRaso(sim, [

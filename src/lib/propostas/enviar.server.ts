@@ -1032,7 +1032,7 @@ async function enviarPropostaImplInner({
 
       // No POST de inclusão a API pode devolver `retornoIntegracao` com uma
       // mensagem informativa (validação, aviso do banco) MESMO quando a
-      // proposta foi aceita e ganhou um `tipoSituacao` real (S/N/A/R) OU
+      // proposta foi aceita e ganhou um `tipoSituacao` real (A/C/R/N). OU
       // quando o banco já devolveu um protocolo/oportunidade.
       //
       // Regra oficial (swagger Homefin): só `tipoSituacao` ∈ {P,E} sem
@@ -1375,9 +1375,8 @@ export async function sincronizarPropostaImpl({
       sim.retornoIntegracao ?? sim.descricaoRespostaBanco?.retornoIntegracao,
     );
 
-    // Falha/erro de integração: a API define `P` como erro ao enviar proposta
-    // e alguns bancos usam `E` para erro técnico/validação. Não converter esses
-    // retornos em sucesso apenas por haver código externo no payload.
+    // Falha/erro de integração: P (Pendente) sem evidência de envio real ou
+    // E (Erro) técnico/validação. Não converter esses retornos em sucesso.
     // IMPORTANTE: se localmente o banco já foi confirmado como enviado
     // (status_banco em enviada/em_analise/aprovada/condicionada/recusada, ou
     // já há protocolo do banco gravado), P/E no polling é apenas leitura
