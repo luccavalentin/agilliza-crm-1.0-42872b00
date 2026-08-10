@@ -1001,7 +1001,7 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
 
 
     // 1. Validar esquema completo (Zod)
-    const parsed = completaSchema.safeParse({ ...f, id_operacao_homefin: idOperacao });
+    const parsed = completaSchema.safeParse({ ...fEnvio, id_operacao_homefin: idOperacao });
     if (!parsed.success) {
       const novos: Record<string, string> = {};
       let firstErrorKey: string | null = null;
@@ -1032,9 +1032,9 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
     }
     setErros({});
 
-    const imovel = Number(f.valor_imovel) || 0;
-    const entrada = Number(f.valor_entrada) || 0;
-    const fin = Number(f.valor_financiamento) || 0;
+    const imovel = Number(fEnvio.valor_imovel) || 0;
+    const entrada = Number(fEnvio.valor_entrada) || 0;
+    const fin = Number(fEnvio.valor_financiamento) || 0;
     if (imovel > 0 && Math.abs(imovel - (entrada + fin)) > 1) {
       toast.error(
         `Os valores não batem: entrada (${formatBRL(entrada)}) + financiamento (${formatBRL(fin)}) = ${formatBRL(entrada + fin)}, mas o imóvel vale ${formatBRL(imovel)}. Ajuste antes de enviar.`,
@@ -1044,7 +1044,7 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
     }
     if (financiamentoExcedido) {
       toast.error(
-        f.fg_financiar_despesas
+        fEnvio.fg_financiar_despesas
           ? `Financiamento + despesas não pode passar de ${Math.round(ltvMax * 100)}% do imóvel (${formatBRL(financiamentoMaximo)}). Aumente a entrada para pelo menos ${formatBRL(entradaMinimaEfetiva)}.`
           : `O banco financia no máximo ${Math.round(ltvMax * 100)}% do imóvel (${formatBRL(financiamentoMaximo)}). Aumente a entrada para pelo menos ${formatBRL(entradaMinima)}.`,
       );
@@ -1052,7 +1052,7 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
     }
     // Renda mínima não bloqueia mais o envio (Princípio #1 - Simulação nunca trava)
     // if (!rendaSuficiente()) return;
-    await executarEnvio();
+    await executarEnvio(fEnvio);
   }
 
 
@@ -1064,13 +1064,14 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
     });
   }
 
-  async function executarEnvio() {
+  async function executarEnvio(dados: any) {
     await executarEnvioSimples({
-      f, idOperacao, modoProposta, router, setErros, setEnviando, setConcluidos,
+      f: dados, idOperacao, modoProposta, router, setErros, setEnviando, setConcluidos,
       setSimulacaoResultadoId, setSimulacaoResultadoIdPrice,
       setSimulacaoResultadoIdSecundario,
     });
   }
+
 
 
 
