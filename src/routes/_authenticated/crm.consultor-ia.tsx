@@ -271,10 +271,10 @@ function ConsultorIaPage() {
           </div>
           
           <div className="space-y-3">
-            <h1 className="bg-gradient-to-b from-primary to-brand-azul-noite bg-clip-text text-4xl font-extrabold tracking-tight text-transparent sm:text-6xl">
+            <h1 className="bg-gradient-to-b from-primary to-brand-azul-noite bg-clip-text text-3xl font-extrabold tracking-tight text-transparent sm:text-4xl">
               Consultor IA
             </h1>
-            <p className="mx-auto max-w-2xl text-lg font-medium text-muted-foreground/80">
+            <p className="mx-auto max-w-2xl text-base font-medium text-muted-foreground/80">
               A inteligência moderna da Agilliza para o mercado imobiliário.
             </p>
           </div>
@@ -320,15 +320,16 @@ function ConsultorIaPage() {
                 return (
                   <div
                     key={c.id}
-                    className={`group relative flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${
+                    className={`group relative flex items-center gap-3 rounded-xl px-4 py-3 text-sm transition-all border border-transparent ${
                       ativa
-                        ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
+                        ? "bg-primary/5 border-primary/20 text-primary shadow-sm"
                         : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
                     }`}
                   >
+                    <MessageSquarePlus className={`size-4 shrink-0 ${ativa ? "text-primary" : "text-muted-foreground/40"}`} />
                     <button
                       type="button"
-                      className="min-w-0 flex-1 truncate text-left"
+                      className="min-w-0 flex-1 truncate text-left font-semibold"
                       onClick={() => setConversaId(c.id)}
                     >
                       {c.titulo}
@@ -339,7 +340,7 @@ function ConsultorIaPage() {
                       className={`transition-opacity ${ativa ? "opacity-80 hover:opacity-100" : "opacity-0 group-hover:opacity-100"}`}
                       onClick={() => excluir.mutate(c.id)}
                     >
-                      <Trash2 className={`size-3.5 ${ativa ? "text-primary-foreground" : "text-muted-foreground/60 hover:text-destructive"}`} />
+                      <Trash2 className={`size-3.5 ${ativa ? "text-primary" : "text-muted-foreground/60 hover:text-destructive"}`} />
                     </button>
                   </div>
                 );
@@ -355,14 +356,14 @@ function ConsultorIaPage() {
                 <div className="relative mb-10">
                   <div className="absolute -inset-8 rounded-full bg-primary/15 blur-3xl" />
                   <div className="relative flex size-24 items-center justify-center rounded-[2rem] bg-card shadow-[0_25px_50px_-12px_rgba(0,15,159,0.2)] ring-1 ring-primary/10">
-                    <Sparkles className="size-12 text-primary" />
+                    <Bot className="size-12 text-primary" />
                   </div>
                 </div>
                 
-                <h2 className="text-3xl font-extrabold tracking-tight text-brand-azul-noite sm:text-4xl">
+                <h2 className="text-2xl font-extrabold tracking-tight text-brand-azul-noite sm:text-3xl">
                   Como posso potencializar seus negócios hoje?
                 </h2>
-                <p className="mt-5 text-lg font-medium text-muted-foreground/70">
+                <p className="mt-4 text-base font-medium text-muted-foreground/70">
                   Especialista em regras bancárias, FGTS, documentação e toda a jornada do crédito imobiliário Agilliza.
                 </p>
 
