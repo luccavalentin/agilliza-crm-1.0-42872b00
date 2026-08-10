@@ -834,10 +834,9 @@ async function enviarPropostaImplInner({
   let query = supabase.from("proposta_bancos").select("*").eq("proposta_id", propostaId);
   
   if (bancoId) {
-    // Chamadores podem passar o ID da linha (uuid) ou o banco_id (string curta ex: 'itau').
-    // Tentamos ambos para máxima compatibilidade.
-    // Chamadores podem passar o ID da linha (uuid) ou o banco_id (string curta ex: 'itau').
-    // Tentamos ambos para máxima compatibilidade.
+    // 1. CRÍTICO — O BOTÃO AINDA NÃO ENVIA (CORREÇÃO)
+    // Os chamadores passam banco_id (ex: 'itau', 'santander') ou o ID da linha (uuid).
+    // Filtramos corretamente para evitar o falso positivo "bancos.length === 0".
     query = query.or(`banco_id.eq.${bancoId},id.eq.${bancoId}`);
   } else {
     query = query.eq("selecionado", true);
@@ -849,7 +848,7 @@ async function enviarPropostaImplInner({
     throw new Error("Banco não encontrado nesta proposta.");
   }
 
-  // Se passou um banco específico, e ele já foi enviado, mensagem clara.
+  // Separação de mensagens conforme solicitado:
   if (bancoId && bancosSel && bancosSel.length > 0) {
     if (bancoJaEnviado(bancosSel[0] as any)) {
       throw new Error("Este banco já foi enviado.");
