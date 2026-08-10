@@ -65,11 +65,21 @@ export function EnviarPropostaDialog({
     return { ok, erro };
   }, [statusPorBanco]);
 
+  const handleTentativaFechar = (o: boolean) => {
+    if (!o) {
+      if (enviandoQualquer) {
+        if (confirm("Há envios em andamento. Fechar não cancela o envio — o resultado aparecerá na lista de propostas. Deseja fechar?")) {
+          onClose();
+        }
+      } else {
+        onClose();
+      }
+    }
+  };
+
   return (
-    <Dialog open={!!envio} onOpenChange={(o) => {
-      if (enviandoQualquer) return; // Não fecha se estiver enviando
-      if (!o) onClose();
-    }}>
+    <Dialog open={!!envio} onOpenChange={handleTentativaFechar}>
+
       <DialogContent className="max-w-xl">
         <DialogHeader>
           <DialogTitle>Enviar proposta</DialogTitle>
