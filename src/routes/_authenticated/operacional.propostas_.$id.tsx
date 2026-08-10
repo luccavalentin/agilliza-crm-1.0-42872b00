@@ -770,10 +770,10 @@ function Pagina() {
         nomeConjugeExistente={useMemo(() => {
           if (!participanteModal?.id) return null;
           // Se o participante atual é titular e tem um cônjuge que já está na lista de envolvidos
-          const principal = p.envolvidos.find(e => e.id === participanteModal.id);
+          const principal = p.envolvidos.find((e: any) => e.id === participanteModal.id);
           if (!principal || principal.tipo_qualificacao === 'CJ') return null;
           
-          const conj = p.envolvidos.find(e => e.conjuge_de === principal.id || (principal.conjuge_id && e.id === principal.conjuge_id));
+          const conj = p.envolvidos.find((e: any) => e.conjuge_de === principal.id || (principal.conjuge_id && e.id === principal.conjuge_id));
           return conj?.nome || null;
         }, [p.envolvidos, participanteModal?.id])}
         onSalvar={async (principal, conjuge, opcoes) => {
