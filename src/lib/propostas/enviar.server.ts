@@ -770,6 +770,45 @@ async function enviarPropostaImplInner({
     );
   }
 
+  // Uma oportunidade cancelada no banco (tipoSituacao "C") não aceita novas
+  // propostas: o provedor devolve erro genérico e a proposta fica "enviada"
+  // sem nunca chegar ao banco. Verificamos ANTES de qualquer envio.
+  {
+    const ctxCheck = {
+      simulacao_id: prop.simulacao_id,
+      proposta_id: propostaId,
+      correspondente_id: prop.correspondente_id,
+    };
+    try {
+      const resp = await chamarIntegracao<any>(
+        `/oportunidade/${prop.homefin_id_oportunidade}`,
+        "GET",
+        undefined,
+        ctxCheck,
+      );
+      const op = resp?.oportunidade ?? resp?.data ?? resp ?? {};
+      const situacao = String(
+        op?.tipoSituacao?.id ?? op?.tipoSituacao ?? op?.situacao ?? "",
+      ).toUpperCase();
+      if (situacao === "C") {
+        await supabase
+          .from("propostas")
+          .update({
+            ultimo_erro:
+              "A oportunidade bancária desta proposta foi cancelada no banco. Gere uma nova simulação para criar uma oportunidade válida.",
+          } as any)
+          .eq("id", propostaId);
+        throw new IntegracaoBancariaError(
+          "A oportunidade bancária desta proposta foi cancelada no banco e não pode mais receber envios. Gere uma nova simulação para criar uma oportunidade válida.",
+        );
+      }
+    } catch (e) {
+      // Só bloqueia quando a checagem CONFIRMOU o cancelamento; indisponibilidade
+      // da consulta nunca pode travar o envio.
+      if (e instanceof IntegracaoBancariaError) throw e;
+    }
+  }
+
   const statusAtual = prop.status as PropostaStatus;
   // Primeiro envio = ainda em rascunho ou após um erro de envio.
   // Envio adicional = a proposta já foi ao banco e queremos incluir outro(s)
