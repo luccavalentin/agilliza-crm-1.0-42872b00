@@ -957,7 +957,8 @@ async function enviarPropostaImplInner({
     primeiroEnvio ||
     prop.status === "erro_envio" ||
     prop.status === "credito_recusado" ||
-    prop.status === "rascunho"
+    prop.status === "rascunho" ||
+    prop.status === "aguardando_envio"
   ) {
     patchProposta.status = "enviada_banco";
   }
