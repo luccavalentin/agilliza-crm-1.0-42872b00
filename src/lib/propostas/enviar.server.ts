@@ -845,7 +845,7 @@ async function enviarPropostaImplInner({
         // CORREÇÃO: Em vez de apenas travar, tentamos criar uma oportunidade NOVA
         // para reaproveitar os dados e não bloquear o usuário.
         try {
-          const { originarOportunidade } = await import("./simulacao/homefin.server");
+          const { originarOportunidade } = await import("../simulacao/homefin.server");
           const { id: novoIdOp } = await originarOportunidade({
             cliente_id: prop.cliente_id,
             imovel_id: prop.imovel_id,
