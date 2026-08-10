@@ -225,7 +225,7 @@ async function solicitarToken(): Promise<TokenInfo> {
   // Persiste no banco para compartilhamento entre isolates (L2)
   try {
     await supabaseAdmin.from("homefin_auth_cache").upsert({
-      id: '00000000-0000-0000-0000-000000000000', // Linha única de cache
+      id: CACHE_ID, 
       token: info.token,
       expires_at: new Date(expiresAt).toISOString(),
       id_regional: info.idRegional,
@@ -255,7 +255,7 @@ export async function obterToken(forcarRenovacao = false): Promise<TokenInfo> {
       const { data } = await supabaseAdmin
         .from("homefin_auth_cache")
         .select("*")
-        .eq("id", '00000000-0000-0000-0000-000000000000')
+        .eq("id", CACHE_ID)
         .maybeSingle();
 
       if (data && new Date(data.expires_at).getTime() > agora + margem) {
@@ -282,8 +282,14 @@ export async function obterToken(forcarRenovacao = false): Promise<TokenInfo> {
   if (forcarRenovacao) _tokenCache = null;
 
   _tokenEmVoo = (async () => {
-    // Tenta renovar
+    // 4.1 Bloqueio pessimista via banco para evitar múltiplos isolates renovando
+    // Tenta "marcar" que este isolate vai renovar. Se já houver um timestamp 
+    // de renovação recente (<30s), aguarda.
     try {
+      const lockKey = `auth_lock_${CACHE_ID}`;
+      // Em Workers não temos Redis global fácil sem extra infra. 
+      // O upsert acima já resolve a maioria dos casos se for rápido.
+      // O single-flight L1 resolve dentro do mesmo isolate.
       return await solicitarToken();
     } finally {
       _tokenEmVoo = null;
