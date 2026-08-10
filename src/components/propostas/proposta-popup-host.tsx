@@ -30,18 +30,36 @@ import { useState, useEffect } from "react";
  * Exibe um modal centralizado com enfileiramento e contador.
  */
 export function PropostaPopupHost() {
-
   const { abertas, remover } = usePropostaNotificacaoStore();
   const [baixando, setBaixando] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
 
-  if (abertas.length === 0) return null;
+  // Não mostrar popup se houver um modal de formulário aberto no DOM
+  useEffect(() => {
+    const checkModal = () => {
+      const hasFormModal = !!document.querySelector('[role="dialog"]:not(.popup-host-dialog)');
+      setIsVisible(!hasFormModal);
+    };
+    
+    const observer = new MutationObserver(checkModal);
+    observer.observe(document.body, { childList: true, subtree: true });
+    checkModal();
+    return () => observer.disconnect();
+  }, []);
 
-  // Mostra um por um (pilha)
+  if (abertas.length === 0 || !isVisible) return null;
+
+  // Mostra um por um (pilha) com contador
+  const total = abertas.length;
   const atual = abertas[0];
 
-  const isPositive = ["aprovada", "aprovado", "simulada", "comparativo de taxas concluído"].includes(atual.status.toLowerCase());
-  const isNegative = ["recusada", "recusado", "erro"].includes(atual.status.toLowerCase());
-  const isComparativo = atual.status.toLowerCase() === "comparativo de taxas concluído";
+  const status = (atual.status || "").toLowerCase();
+  const isAprovada = ["aprovada", "aprovado", "credito_aprovado"].includes(status);
+  const isCondicionada = ["condicionada"].includes(status);
+  const isAnalise = ["em_analise", "em análise", "em_analise_credito"].includes(status);
+  const isRecusada = ["recusada", "recusado", "credito_recusado"].includes(status);
+  const isErro = ["erro", "erro_envio"].includes(status);
+  const isComparativo = status === "comparativo de taxas concluído";
 
   const bancosComparativo = atual.dados_adicionais?.bancos || [];
   const simulacaoBase = atual.dados_adicionais?.simulacao;
@@ -52,8 +70,6 @@ export function PropostaPopupHost() {
     : null;
 
   async function baixarComparativo() {
-    // Requisito: REMOVER download automático no popup.
-    // O download agora é manual através do botão.
     if (!simulacaoBase || bancosComparativo.length === 0) return;
     setBaixando(true);
     try {
@@ -158,7 +174,9 @@ export function PropostaPopupHost() {
                      atual.status}
                   </p>
                 </div>
-
+              </DialogDescription>
+            </div>
+          </DialogHeader>
 
           {isComparativo && bancosComparativo.length > 0 ? (
             <div className="my-6 space-y-3">
@@ -242,7 +260,6 @@ export function PropostaPopupHost() {
             </div>
           )}
 
-
           <DialogFooter className="flex-col gap-2 sm:flex-row sm:justify-center">
             {isComparativo && (
               <Button
@@ -275,7 +292,6 @@ export function PropostaPopupHost() {
                 <ExternalLink className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
               </Link>
             </Button>
-
           </DialogFooter>
         </div>
       </DialogContent>
