@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { useRouter } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { mensagemCamposPendentes } from "@/lib/simulacao/rotulos-campos";
 import { toast } from "sonner";
 import { avaliarRendaMinima, TAXA_MIP_MES, TAXA_DFI_MES, TAXA_ADMIN_MES } from "@/lib/simulacao/renda";
 import { taxaAnoDeBanco } from "@/lib/simulacao/simulacao-rapida";
@@ -1011,7 +1012,7 @@ export function useSimulacaoCompleta({ duplicar, modoProposta }: OpcoesHook) {
         if (!firstErrorKey) firstErrorKey = key;
       }
       setErros(novos);
-      toast.error("Por favor, preencha todos os campos obrigatórios marcados com asterisco (*).");
+      toast.error(mensagemCamposPendentes(Object.keys(novos)));
       
       // Scroll para o primeiro campo com erro
       if (firstErrorKey && typeof document !== "undefined") {

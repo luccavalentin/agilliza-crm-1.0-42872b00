@@ -6,6 +6,7 @@
  * mas recebem todas as dependências como parâmetros para permanecerem fora do
  * ciclo de vida do React e serem testáveis isoladamente.
  */
+import { mensagemCamposPendentes } from "@/lib/simulacao/rotulos-campos";
 import { toast } from "sonner";
 import { completaSchema, validarCepImovelHomeEquity } from "@/lib/simulacao/schemas";
 import {
@@ -108,7 +109,7 @@ export async function executarEnvioAmbos(ctx: CtxBase): Promise<void> {
         const novos: Record<string, string> = {};
         for (const issue of parsedS.error.issues) novos[String(issue.path[0])] = issue.message;
         setErros(novos);
-        toast.error("Revise os campos obrigatórios destacados.");
+        toast.error(mensagemCamposPendentes(Object.keys(novos)));
         setEnviando(false);
         setConcluidos(0);
         return;
@@ -164,7 +165,7 @@ export async function executarEnvioAmbos(ctx: CtxBase): Promise<void> {
         const novos: Record<string, string> = {};
         for (const issue of parsedP.error.issues) novos[String(issue.path[0])] = issue.message;
         setErros(novos);
-        toast.error("Revise os campos obrigatórios destacados.");
+        toast.error(mensagemCamposPendentes(Object.keys(novos)));
         setEnviando(false);
         setConcluidos(0);
         return;
@@ -250,7 +251,10 @@ export async function executarEnvioSimples(ctx: CtxBase): Promise<void> {
   if (bloquearSemCepHomeEquity(f, setErros)) return;
   const parsed = completaSchema.safeParse({ ...f, id_operacao_homefin: idOperacao });
   if (!parsed.success) {
-    toast.error("Revise os campos obrigatórios destacados.");
+    const novos: Record<string, string> = {};
+    for (const issue of parsed.error.issues) novos[String(issue.path[0])] = issue.message;
+    setErros(novos);
+    toast.error(mensagemCamposPendentes(Object.keys(novos)));
     return;
   }
   setErros({});
