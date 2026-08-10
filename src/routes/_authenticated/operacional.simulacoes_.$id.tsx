@@ -10,7 +10,8 @@ import {
   excluirSimulacao,
   inverterTitularSimulacao,
 } from "@/lib/simulacao/simulacoes.functions";
-import { criarProposta, enviarPropostaHomeFin } from "@/lib/propostas/propostas.functions";
+import { criarProposta } from "@/lib/propostas/propostas.functions";
+import { useEnviarProposta } from "@/hooks/use-enviar-proposta";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { HistoricoTimeline } from "@/components/simulacao/detalhe-page/historico-timeline";
@@ -31,6 +32,7 @@ function Pagina() {
   const { id } = Route.useParams();
   const router = useRouter();
   const qc = useQueryClient();
+  const { enviar: handleEnviarHook } = useEnviarProposta();
   const [pdfDialogAberto, setPdfDialogAberto] = useState(false);
   const [detalhePdfAberto, setDetalhePdfAberto] = useState(false);
   const [reenviandoBanco, setReenviandoBanco] = useState<string | null>(null);
