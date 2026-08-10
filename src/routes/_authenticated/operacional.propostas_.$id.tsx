@@ -267,7 +267,6 @@ function Pagina() {
     setParticipanteModal(proximoPendente.env);
     setIndiceParticipante(proximoPendente.index);
   };
-  const enviarAutoFn = useServerFn(enviarPropostaHomeFin);
   const onCadastroIncompleto = () => {
     abrirCadastroPendente();
   };
