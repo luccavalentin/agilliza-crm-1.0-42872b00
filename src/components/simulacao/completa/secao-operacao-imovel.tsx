@@ -55,6 +55,7 @@ export function SecaoOperacaoImovel({ ctx }: { ctx: SimulacaoCompletaCtx }) {
     normalizarPctDespesas,
     pctDespesas,
     modoProposta,
+    isHomeEquity,
   } = ctx;
 
   async function alterarCepImovel(valor: string) {
