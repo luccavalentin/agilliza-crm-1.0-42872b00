@@ -753,7 +753,7 @@ function Pagina() {
                 : `Ativa há ${diasDesde} dia(s)`}
             </p>
           </div>
-          <AcoesTopo proposta={p} propostaId={id} bancos={data.bancos} envolvidos={data.envolvidos} documentos={data.documentos} followups={data.followups} onCadastroIncompleto={onCadastroIncompleto} />
+          <AcoesTopo proposta={p} propostaId={id} bancos={data.bancos} envolvidos={data.envolvidos} documentos={data.documentos} followups={data.followups} onCadastroIncompleto={onCadastroIncompletoSemArgs} />
         </div>
 
         {/* KPIs */}

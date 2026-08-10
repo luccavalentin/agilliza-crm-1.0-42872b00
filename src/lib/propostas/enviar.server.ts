@@ -1197,7 +1197,7 @@ async function enviarPropostaImplInner({
     else if (r.erro_estruturado?.codigo === "CADASTRO_INCOMPLETO") {
       // Se parou por cadastro incompleto, garante que o status global não vire "erro_envio"
       // Se já estava em erro_envio, volta para aguardando_envio
-      if (statusAtual === "erro_envio") statusAtual = "aguardando_envio";
+      if (statusAtualVar === "erro_envio") statusAtualVar = "aguardando_envio";
     }
   }
 
@@ -1207,7 +1207,7 @@ async function enviarPropostaImplInner({
   // ---- 3) Recálculo do status global (propostas.status) a partir dos bancos ----
   // FONTE ÚNICA DE VERDADE: propostas.status é DERIVADO do estado atual de
   // proposta_bancos através da função centralizada.
-  const novoStatusGlobal = (await recalcularStatusGlobalProposta(supabase, propostaId)) || statusAtual;
+  const novoStatusGlobal = (await recalcularStatusGlobalProposta(supabase, propostaId)) || statusAtualVar;
 
   // Verificação de integridade (Log de divergência)
   if (sucesso > 0 && novoStatusGlobal === "credito_recusado") {
