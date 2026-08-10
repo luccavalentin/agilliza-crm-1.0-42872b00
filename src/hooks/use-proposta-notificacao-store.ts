@@ -2,12 +2,15 @@ import { create } from "zustand";
 
 interface PropostaNotificacao {
   id: string;
+  tipo: "proposta" | "simulacao";
   numero: string;
   status: string;
+  mensagem_banco?: string | null;
   nome_cliente: string;
   banco: string;
   dados_adicionais?: any;
 }
+
 
 interface PropostaNotificacaoStore {
   abertas: PropostaNotificacao[];
