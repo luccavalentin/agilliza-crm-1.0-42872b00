@@ -274,13 +274,13 @@ export const criarSimulacao = createServerFn({ method: "POST" })
 
 
 
-    const { correspondente_id } = await supabase
+    const { data: prof } = await supabase
       .from("profiles")
       .select("correspondente_id")
       .eq("id", userId)
-      .single()
-      .then(r => r.data ?? {});
+      .maybeSingle();
     
+    const correspondente_id = prof?.correspondente_id;
     if (!correspondente_id) throw new Error("Correspondente não vinculado.");
 
     const casado = dd.estado_civil === "CA" || dd.estado_civil === "UE";
@@ -289,7 +289,8 @@ export const criarSimulacao = createServerFn({ method: "POST" })
                                 Boolean(dd.data_nascimento_conjuge);
     
     const testarAmbos = data.modo === "completa" && casado && possuiConjugeMinimo;
-    const limparDocumento = (v?: string | null) => (v ?? "").replace(/\D/g, "");
+    let cliente_id = dd.cliente_id ?? null;
+    const clienteOrigemId = cliente_id;
 
     const upsertClienteCRM = async (params: {
       nome?: string | null;
