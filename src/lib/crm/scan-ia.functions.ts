@@ -302,7 +302,7 @@ export const processarLeitura = createServerFn({ method: "POST" })
 
     const { data: leitura } = await supabase
       .from("scan_ia_leituras")
-      .select("id, arquivo_url, tipo_documento, correspondente_id")
+      .select("id, arquivo_url, tipo_documento, tipo_confirmado, correspondente_id")
       .eq("id", data.id)
       .maybeSingle();
     if (!leitura || leitura.correspondente_id !== corr) throw new Error("Leitura não encontrada.");
@@ -462,7 +462,7 @@ export const processarLeitura = createServerFn({ method: "POST" })
               generationConfig: {
                 temperature: temperatura,
                 responseMimeType: "application/json",
-                maxOutputTokens: 8192,
+                maxOutputTokens: 16384,
               },
 
             }),
@@ -504,18 +504,32 @@ export const processarLeitura = createServerFn({ method: "POST" })
       };
       try {
         parsed = JSON.parse(texto);
-      } catch {
+      } catch (parseError: any) {
+        // Tenta recuperar se for apenas um problema de markdown ou caracteres extras
         const m = texto.match(/\{[\s\S]*\}/);
-        parsed = m ? JSON.parse(m[0]) : { campos: [] };
+        if (m) {
+          try {
+            parsed = JSON.parse(m[0]);
+          } catch {
+            throw new Error(`JSON malformado devolvido pela IA: ${parseError.message}. Resposta: ${texto.slice(0, 500)}`);
+          }
+        } else {
+          throw new Error(`Resposta da IA não contém um JSON válido: ${parseError.message}. Resposta: ${texto.slice(0, 500)}`);
+        }
       }
 
+      // Identificação automática do tipo
+      const confiancaTipo = Number(parsed.confianca_tipo) || 0;
       const tipoSugerido = ehTipoConhecido(parsed.tipo_documento)
         ? parsed.tipo_documento
         : "outro";
+
+      // O tipo informado pelo usuário tem precedência para o processamento de campos se existir
+      const tipoParaFiltro = tipoInformado && ehTipoConhecido(tipoInformado) ? tipoInformado : tipoSugerido;
+
       // Só aceita campos previstos para o tipo sugerido (evita ruído do modelo).
       const permitidos = new Set([
-        ...camposEsperadosDoTipo(tipoSugerido),
-        ...(tipoInformado ? camposEsperadosDoTipo(tipoInformado) : []),
+        ...camposEsperadosDoTipo(tipoParaFiltro),
         ...TODOS_CAMPOS_EXTRAIVEIS,
         ...CAMPOS_ESPERADOS,
       ]);
@@ -565,8 +579,10 @@ export const processarLeitura = createServerFn({ method: "POST" })
             campos.length === 0
               ? "A IA não conseguiu extrair campos deste documento. Verifique a qualidade da digitalização ou tente reprocessar."
               : null,
-
           tipo_documento_sugerido: tipoSugerido,
+          // Se não houver tipo informado e a confiança for alta, podemos pré-selecionar
+          tipo_documento: !tipoInformado && confiancaTipo >= 0.8 ? tipoSugerido : leitura.tipo_documento,
+          tipo_confirmado: !tipoInformado && confiancaTipo >= 0.8 ? false : !!leitura.tipo_confirmado,
         })
         .eq("id", data.id);
 
@@ -579,19 +595,27 @@ export const processarLeitura = createServerFn({ method: "POST" })
           total_campos: campos.length,
           tipo_informado: tipoInformado || null,
           tipo_sugerido: tipoSugerido,
-          confianca_tipo: Number(parsed.confianca_tipo) || null,
+          confianca_tipo: confiancaTipo,
           divergencia_tipo: !!tipoInformado && tipoInformado !== tipoSugerido,
+          prompt_utilizado: prompt.slice(0, 1000),
         },
       });
 
 
       return { ok: true };
     } catch (e: any) {
-      const msg = e?.message ? String(e.message).slice(0, 500) : "Erro ao processar leitura.";
+      console.error("[processarLeitura] Erro:", e);
+      const msg = e?.message ? String(e.message).slice(0, 1000) : "Erro ao processar leitura.";
+      
+      // Garante que o erro seja persistido para diagnóstico
       await supabase
         .from("scan_ia_leituras")
-        .update({ status: "erro", erro: msg })
+        .update({ 
+          status: "erro", 
+          erro: msg 
+        })
         .eq("id", data.id);
+        
       return { ok: false, erro: msg };
     }
   });

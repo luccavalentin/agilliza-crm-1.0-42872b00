@@ -253,6 +253,23 @@ function Pagina() {
               ) : null}
 
               <div className="flex flex-col gap-2 sm:flex-row">
+                {divergencia && (
+                  <div className="flex flex-col gap-2 w-full sm:w-auto">
+                    <p className="text-[10px] uppercase font-bold text-warning mb-1">A IA sugere:</p>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="border-warning/50 text-warning hover:bg-warning/10 h-10 px-4"
+                      onClick={() => {
+                        setTipoEscolhido(d.tipo_documento_sugerido!);
+                        confirmarTipo.mutate(d.tipo_documento_sugerido!);
+                      }}
+                    >
+                      Usar {rotuloTipo(d.tipo_documento_sugerido)}
+                    </Button>
+                  </div>
+                )}
+
                 <Select value={tipoEscolhido} onValueChange={setTipoEscolhido}>
                   <SelectTrigger className="sm:flex-1">
                     <SelectValue placeholder="Selecione o tipo correto" />

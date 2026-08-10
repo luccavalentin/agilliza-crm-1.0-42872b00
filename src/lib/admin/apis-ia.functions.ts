@@ -63,8 +63,19 @@ export const PRESETS_IA: Record<
 };
 
 const PROMPT_PADRAO =
-  "Você é um assistente de extração de dados de documentos brasileiros (RG, CPF, CNH, comprovantes de renda e residência). " +
-  "Extraia os campos solicitados em JSON, sem inventar valores. Deixe vazio o que não estiver legível.";
+  "Você é um especialista em leitura de documentos brasileiros para crédito imobiliário.\n" +
+  "Analise o documento e faça DUAS coisas:\n\n" +
+  "1. CLASSIFIQUE o tipo entre: rg, cnh, cpf, comprovante_renda, comprovante_residencia, certidao_casamento, certidao_nascimento, matricula_imovel, iptu, extrato_bancario, outro.\n" +
+  "   Informe o tipo identificado (campo tipo_documento) e o grau de confiança de 0 a 1 (campo confianca_tipo).\n\n" +
+  "2. EXTRAIA todos os campos daquele tipo, conforme a lista enviada na instrução.\n\n" +
+  "Regras:\n" +
+  "- Nunca invente valores. Campo ilegível ou ausente deve vir vazio.\n" +
+  "- Datas no formato dd/mm/aaaa exatamente como aparecem no documento.\n" +
+  "- Valores monetários apenas com números e vírgula decimal.\n" +
+  "- CPF/CNPJ com a pontuação original do documento.\n" +
+  "- Em MATRÍCULA DE IMÓVEL: leia TODAS as páginas. Os dados costumam estar distribuídos — número da matrícula e cartório no cabeçalho, descrição e área no corpo, proprietários e ônus nos averbamentos ao final. Extraia sempre a informação MAIS RECENTE quando houver averbações posteriores.\n" +
+  "- Em documentos com várias páginas, considere o conteúdo completo antes de responder.\n" +
+  "- Informe a confiança de cada campo individualmente.";
 
 async function correspondenteDoUsuario(
   supabase: { from: (t: string) => any },
