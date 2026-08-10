@@ -31,7 +31,7 @@ export function KpiDetalheDialog({
       <DialogContent className="sm:max-w-xl">
         {k && (
           <>
-            <DialogHeader className="p-6 pb-0">
+            <DialogHeader className="p-6 pb-4">
               <DialogTitle className="flex items-center gap-2">
                 <span className="grid size-8 place-items-center rounded-lg bg-primary/10 text-primary ring-1 ring-inset ring-primary/15">
                   <k.icon className="size-4" />
