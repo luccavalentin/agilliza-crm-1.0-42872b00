@@ -189,20 +189,13 @@ function Pagina() {
       const { proposta_id } = await criarProposta({
         data: { simulacao_id: id, simulacao_banco_id: simulacaoBancoId },
       });
-      // Envia a proposta direto ao banco no mesmo clique.
+      // O envio ao banco passa obrigatoriamente pelo gate único
+      // (useEnviarProposta), que ressincroniza o cadastro, valida os campos
+      // obrigatórios e abre o formulário quando faltar algo.
       try {
-        await enviarPropostaHomeFin({
-          data: { proposta_id },
-        });
-        toast.success("Proposta enviada ao banco.");
-      } catch (envioErr) {
-        // Proposta criada, mas faltam dados para o envio — leva o usuário
-        // à ficha para completar e reenviar.
-        toast.warning(
-          envioErr instanceof Error
-            ? `Proposta criada. Complete os dados para enviar: ${envioErr.message}`
-            : "Proposta criada. Complete os dados para enviar ao banco.",
-        );
+        await handleEnviarHook({ propostaId: proposta_id });
+      } catch {
+        /* mensagem já exibida pelo gate */
       }
       router.navigate({
         to: "/operacional/propostas/$id",
