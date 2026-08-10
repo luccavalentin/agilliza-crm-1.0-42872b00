@@ -153,6 +153,7 @@ function Pagina() {
           responsavel_nome: respFiltro !== "todos" ? respFiltro : undefined,
           corretor_nome: corretorFiltro !== "todos" ? corretorFiltro : undefined,
           imobiliaria_nome: imobFiltro !== "todos" ? imobFiltro : undefined,
+          comercial_nome: comercialFiltro !== "todos" ? comercialFiltro : undefined,
           pagina: 1,
           porPagina: 500,
         },
