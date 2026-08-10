@@ -213,8 +213,8 @@ export async function executarEnvioAmbos(ctx: CtxBase): Promise<void> {
     setConcluidos(0);
     toast.success("Simulações SAC e PRICE geradas. Confira os resultados abaixo.");
 
-    // Download automático dos PDFs gerados no modo Ambos
-    if (bancosSimulados.length > 0) {
+    // Download automático dos PDFs gerados no modo Ambos (apenas se habilitado no form)
+    if (bancosSimulados.length > 0 && f.download_automatico !== false) {
       try {
         const { baixarSimulacaoDetalhadaPDF } = await import("@/lib/simulacao/simulacao-pdf");
         // Agrupa bancos por id de simulação para evitar múltiplas chamadas com dados repetidos
