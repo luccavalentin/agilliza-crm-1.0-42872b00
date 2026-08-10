@@ -7,7 +7,7 @@ import type { PropostaStatus } from "@/lib/propostas/state-machine";
  */
 export const ETAPAS_STEPPER = [
   { codigo: "simulacao", numero: 1, label: "Simulação", auto: false },
-  { codigo: "credito_enviado", numero: 2, label: "Enviado p/ aprovação de crédito", auto: true },
+  { codigo: "credito_enviado", numero: 2, label: "Enviado p/ aprovação de...", auto: true },
   { codigo: "credito_aprovado", numero: 3, label: "Crédito aprovado", auto: true },
   { codigo: "coleta_documentos", numero: 4, label: "Coleta de documentos", auto: false },
   { codigo: "engenharia_vistoria", numero: 5, label: "Engenharia / vistoria", auto: false },

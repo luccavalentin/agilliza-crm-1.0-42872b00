@@ -82,8 +82,8 @@ export function PipelineStepper({
       </div>
 
       {/* Trilho de etapas — padding vertical evita corte do anel */}
-      <div className="brand-scroll w-full overflow-x-auto px-1 pb-2 pt-3">
-        <ol className="flex min-w-max items-start">
+      <div className="w-full px-1 pb-2 pt-3">
+        <ol className="flex w-full items-start justify-between">
           {ETAPAS_STEPPER.map((etapa, i) => {
             const concluida = i < atual;
             const isAtual = i === atual;
@@ -106,7 +106,7 @@ export function PipelineStepper({
                     />
                   </div>
                 )}
-                <div className="flex w-[4.75rem] flex-col items-center gap-2 px-1 sm:w-24">
+                <div className="flex w-16 flex-col items-center gap-2 px-1 sm:w-28">
                   <span
                     className={cn(
                       "relative grid size-8 place-items-center rounded-full text-xs font-bold transition-all",
