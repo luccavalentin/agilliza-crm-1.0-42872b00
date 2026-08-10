@@ -676,8 +676,46 @@ export async function enviarSimulacaoImpl({
       codigoSistemaAmortizacaoBanco: { id: sim.sistema_amortizacao ?? "S" },
     };
 
+    if (!idOportunidade && !usaRotaSantanderHomeEquity) {
+      // Eleição de líder: tenta obter o lock no Postgres para evitar race condition entre requisições paralelas.
+      // O lock expira em 90s se a requisição líder morrer sem completar.
+      const noventaSegundosAtras = new Date(Date.now() - 90 * 1000).toISOString();
+      const { data: liderEleito } = await supabase
+        .from("simulacoes")
+        .update({ oportunidade_lock_em: new Date().toISOString() } as any)
+        .match({ id: simulacaoId })
+        .is("homefin_id_oportunidade", null)
+        .or(`oportunidade_lock_em.is.null,oportunidade_lock_em.lt.${noventaSegundosAtras}`)
+        .select("id")
+        .maybeSingle();
+
+      if (!liderEleito) {
+        // Seguidor: aguarda o líder criar a oportunidade (polling curto)
+        const maxWait = 60_000;
+        const start = Date.now();
+        while (Date.now() - start < maxWait) {
+          const { data: retrySim } = await supabase
+            .from("simulacoes")
+            .select("homefin_id_oportunidade")
+            .eq("id", simulacaoId)
+            .maybeSingle();
+          
+          if (retrySim?.homefin_id_oportunidade) {
+            idOportunidade = retrySim.homefin_id_oportunidade;
+            break;
+          }
+          await new Promise(r => setTimeout(r, 300));
+        }
+
+        if (!idOportunidade) {
+          // Timeout no polling: falha apenas esta requisição.
+          throw new Error("Não foi possível iniciar a simulação neste banco. Nenhum dado foi enviado ao banco. Clique em reenviar.");
+        }
+      }
+    }
+
     if (!idOportunidade) {
-      // Garantia de atomicidade para evitar duplicidade de oportunidade quando múltiplos bancos rodam em paralelo
+      // Líder ou Santander Home Equity: executa a criação da oportunidade
       // (Embora o loop de bancos agora seja sequencial, o ID da oportunidade deve ser persistido antes).
       const rendaTotalCalculada = num(sim.compoe_renda_conjuge ? (num(sim.renda_total) + num(sim.renda_conjuge)) : sim.renda_total);
       
