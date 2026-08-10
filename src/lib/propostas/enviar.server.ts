@@ -1475,33 +1475,35 @@ export async function sincronizarPropostaImpl({
       patchBanco.numero_proposta_banco = null;
     } else {
       patchBanco.referencia_integracao = refIntegracao;
-      // Um mesmo protocolo em duas linhas de banco/propostas diferentes é bug
-      // de vazamento — loga e não propaga.
-      const { data: colisao } = await supabase
-        .from("proposta_bancos")
-        .select("id, proposta_id, banco_id")
-        .eq("numero_proposta_banco", numeroReal)
-        .neq("id", pb.id)
-        .limit(1);
-      if (colisao && colisao.length > 0) {
-        console.error("[proposta] protocolo duplicado entre bancos/propostas — descartado", {
-          numero: numeroReal,
-          atual: pb.id,
-          existente: colisao[0],
-        });
-        patchBanco.numero_proposta_banco = null;
-      } else {
-        patchBanco.numero_proposta_banco = numeroReal;
-        if (
-          !numeroPropostaBanco ||
-          sim.bancoEscolhido === "S" ||
-          mapa.proposta === "credito_aprovado"
-        ) {
-          numeroPropostaBanco = numeroReal;
+      if (numeroReal) {
+        // Um mesmo protocolo em duas linhas de banco/propostas diferentes é bug
+        // de vazamento — loga e não propaga.
+        const { data: colisao } = await supabase
+          .from("proposta_bancos")
+          .select("id, proposta_id, banco_id")
+          .eq("numero_proposta_banco", numeroReal)
+          .neq("id", pb.id)
+          .limit(1);
+        if (colisao && colisao.length > 0) {
+          console.error("[proposta] protocolo duplicado entre bancos/propostas — descartado", {
+            numero: numeroReal,
+            atual: pb.id,
+            existente: colisao[0],
+          });
+          patchBanco.numero_proposta_banco = null;
+        } else {
+          patchBanco.numero_proposta_banco = numeroReal;
+          if (
+            !numeroPropostaBanco ||
+            sim.bancoEscolhido === "S" ||
+            mapa.proposta === "credito_aprovado"
+          ) {
+            numeroPropostaBanco = numeroReal;
+          }
         }
+      } else if (numeroAtualEhReferenciaTecnica(pb, sim)) {
+        patchBanco.numero_proposta_banco = null;
       }
-    } else if (numeroAtualEhReferenciaTecnica(pb, sim)) {
-      patchBanco.numero_proposta_banco = null;
     }
 
     if (sim.valorParcelaBanco != null) patchBanco.valor_parcela = sim.valorParcelaBanco;
