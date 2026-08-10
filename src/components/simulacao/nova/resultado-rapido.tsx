@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { BancoLogo } from "@/components/bancos/banco-logo";
 import { corDoBanco } from "@/lib/bancos/cores";
 import { cn } from "@/lib/utils";
-import { formatBRL, formatPercent } from "@/lib/simulacao/format";
+import { formatBRL, formatTaxa } from "@/lib/simulacao/format";
 
 interface Comparativo {
   banco_id: string;
@@ -136,7 +136,7 @@ function BancoResultadoCard({
 
       <dl className="flex flex-col divide-y divide-border/60 rounded-xl border border-border/50 bg-muted/30">
         <Info label="Parcela inicial" value={formatBRL(c.resultado.primeira_parcela)} emphasis />
-        <Info label="Taxa a.a." value={formatPercent(c.taxa_ano)} />
+        <Info label="Taxa a.a." value={formatTaxa(c.taxa_ano)} />
         <Info label="Prazo" value={`${prazoMeses} meses`} />
         <Info label="Financ. máx" value={formatBRL(valorFinanciamento)} />
         <Info label="Renda mínima" value={formatBRL(c.resultado.primeira_parcela / 0.3)} emphasis />

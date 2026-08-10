@@ -27,7 +27,7 @@ import { ResultadoInlineCompleta } from "@/components/simulacao/completa/resulta
 import { ResultadoInlineAmbos } from "@/components/simulacao/completa/resultado-inline-ambos";
 import { TabelaComparativaCPFs } from "@/components/simulacao/completa/tabela-comparativa-cpfs";
 
-import { formatBRL, formatPercent } from "@/lib/simulacao/format";
+import { formatBRL, formatPercent, formatTaxa } from "@/lib/simulacao/format";
 import { useSimulacaoCompleta } from "@/lib/simulacao/use-simulacao-completa";
 import { obterSimulacao } from "@/lib/simulacao/simulacoes.functions";
 import { cn } from "@/lib/utils";
@@ -434,7 +434,7 @@ function ComparativoTaxasDialog({ aberto, onClose, idTitular, idSecundario }: { 
                   {taxaTitular && taxaConjuge 
                     ? taxaTitular <= taxaConjuge 
                       ? (taxaTitular === taxaConjuge 
-                          ? `Ambos perfis apresentaram taxas iguais (${formatPercent(taxaTitular/100)} a.a.).`
+                          ? `Ambos perfis apresentaram taxas iguais (${formatTaxa(taxaTitular)} a.a.).`
                           : `O perfil de ${nomeTitular} apresentou as condições mais vantajosas para o financiamento.`)
                       : `O perfil de ${nomeConjuge} apresentou as condições mais vantajosas para o financiamento.`
                     : "Aguardando processamento final dos retornos bancários..."}
@@ -480,7 +480,7 @@ function TaxaCard({ nome, taxa, isWinner }: { nome: string; taxa: number | null;
             "text-4xl font-black tabular-nums tracking-tighter",
             isWinner ? "text-primary" : "text-foreground"
           )}>
-            {taxa ? formatPercent(taxa / 100) : "—"}
+            {taxa ? formatTaxa(taxa) : "—"}
           </span>
           {taxa && <span className="text-sm font-bold text-muted-foreground">a.a.</span>}
         </div>

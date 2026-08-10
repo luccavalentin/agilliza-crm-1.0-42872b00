@@ -1,7 +1,7 @@
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { exportPDF, drawBrandHeader } from "@/lib/relatorios/report-pdf";
-import { formatBRL, formatPercent } from "@/lib/simulacao/format";
+import { formatBRL, formatPercent, formatTaxa } from "@/lib/simulacao/format";
 import type { ReportColumn, ReportKpi, ReportRow } from "@/lib/relatorios/shared";
 import { extrairDetalheBanco, normalizarSistemaAmortizacao, calcularCET, type DetalheBanco } from "@/lib/simulacao/detalhe-banco";
 import { avaliarRendaMinima, rendaMinimaPelosBancos, rendaMinimaDoBanco } from "@/lib/simulacao/renda";
@@ -314,7 +314,7 @@ function drawInfoFinanciamento(
       label: "Sistema de amortização",
       valor: sistemaDoBanco(b, s),
     },
-    { label: "Taxa efetiva anual", valor: pctTxt(d?.taxaJurosAno ?? b?.taxa_juros_ano) },
+    { label: "Taxa efetiva anual", valor: b?.taxa_juros_ano != null ? `${Number(b.taxa_juros_ano).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}% a.a.` : "—" },
     { label: "Taxa de juros mensal", valor: pctTxt(d?.taxaJurosMes, "a.m.") },
     {
       label: "CET (Custo Efetivo Total)",
@@ -721,8 +721,8 @@ export function baixarSimulacaoPDF(input: SimulacaoPdfInput) {
       banco: b.nome_banco ?? "—",
       ...(isMista ? { tabela: sistemaDoBanco(b, s) } : {}),
       parcela: b.valor_parcela != null ? formatBRL(b.valor_parcela) : "—",
-      taxa: b.taxa_juros_ano != null ? formatPercent(b.taxa_juros_ano / 100) : "—",
-      cet: cet != null ? formatPercent(cet / 100) : "—",
+      taxa: b.taxa_juros_ano != null ? formatTaxa(b.taxa_juros_ano) : "—",
+      cet: cet != null ? formatTaxa(cet) : "—",
       renda: b.renda_minima != null ? formatBRL(b.renda_minima) : (rendaMinimaDoBanco(b) != null ? formatBRL(rendaMinimaDoBanco(b)!) : (d?.rendaMinimaExigida ? formatBRL(d.rendaMinimaExigida) : "—")),
       seguros: seguros > 0 ? formatBRL(seguros) : "—",
     };

@@ -10,6 +10,15 @@ export function formatPercent(v: number | null | undefined, casas = 2): string {
   return `${(v * 100).toLocaleString("pt-BR", {  minimumFractionDigits: casas, maximumFractionDigits: casas })}%`;
 }
 
+/** Formata uma taxa que já vem em formato percentual (ex: 12.30 para 12,30%). */
+export function formatTaxa(v: number | null | undefined, casas = 2): string {
+  if (v == null || Number.isNaN(v)) return "—";
+  return `${Number(v).toLocaleString("pt-BR", {
+    minimumFractionDigits: casas,
+    maximumFractionDigits: casas,
+  })}%`;
+}
+
 /** Converte texto com máscara BRL ("1.234,56" ou "R$ 1.234,56") em número. */
 export function parseBRL(texto: string): number {
   const limpo = texto

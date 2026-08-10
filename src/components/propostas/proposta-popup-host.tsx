@@ -231,13 +231,13 @@ export function PropostaPopupHost() {
                   {atual.dados_adicionais.banco_row.taxa_juros_ano > 0 && (
                     <div className="bg-muted/50 p-2 rounded border border-border/40">
                       <p className="text-muted-foreground font-medium uppercase tracking-tighter">Taxa</p>
-                      <p className="font-bold text-foreground">{atual.dados_adicionais.banco_row.taxa_juros_ano}% a.a.</p>
+                      <p className="font-bold text-foreground">{Number(atual.dados_adicionais.banco_row.taxa_juros_ano).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}% a.a.</p>
                     </div>
                   )}
                   {atual.dados_adicionais.banco_row.prazo_pagamento > 0 && (
                     <div className="bg-muted/50 p-2 rounded border border-border/40">
                       <p className="text-muted-foreground font-medium uppercase tracking-tighter">Prazo</p>
-                      <p className="font-bold text-foreground">{atual.dados_adicionais.banco_row.prazo_pagamento} meses</p>
+                      <p className="font-bold text-foreground">{atual.dados_adicionais.banco_row.prazo_pagamento_max || atual.dados_adicionais.banco_row.prazo_pagamento} meses</p>
                     </div>
                   )}
                   {atual.dados_adicionais.banco_row.protocolo && (
