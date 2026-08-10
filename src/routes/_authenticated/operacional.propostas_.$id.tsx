@@ -40,7 +40,6 @@ import { propostaQueryOptions } from "@/lib/propostas/queries";
 import {
   obterProposta,
   selecionarBancoProposta,
-  enviarPropostaHomeFin,
   sincronizarProposta,
   cancelarProposta,
   moverStatusProposta,
