@@ -223,8 +223,9 @@ function Pagina() {
             <AlertDialogCancel>Revisar dados</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
-                setConfirmRenda(null);
-                void executarEnvio();
+                  setConfirmRenda(null);
+                  void enviar();
+
               }}
             >
               Enviar mesmo assim
