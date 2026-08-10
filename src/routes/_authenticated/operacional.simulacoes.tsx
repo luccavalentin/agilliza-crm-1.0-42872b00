@@ -309,7 +309,7 @@ function Pagina() {
 
   const itens = data?.itens ?? [];
   const kpiTotal = data?.total ?? itens.length;
-  const kpiValor = itens.reduce((acc, s) => acc + (Number(s.valor_financiamento) || 0), 0);
+  const kpiValor = data?.stats?.volumeTotal ?? itens.reduce((acc, s) => acc + (Number(s.valor_financiamento) || 0), 0);
   const bancosUnicos = new Set<string>();
   itens.forEach((s) => {
     (Array.isArray(s.bancos) ? s.bancos : []).forEach((b: any) => {
@@ -318,9 +318,11 @@ function Pagina() {
   });
   const kpiBancos = bancosUnicos.size;
   const prazos = itens.map((s) => Number(s.prazo)).filter((n) => n > 0);
-  const kpiPrazo = prazos.length
-    ? Math.round(prazos.reduce((a, b) => a + b, 0) / prazos.length)
-    : 0;
+  const kpiPrazo = data?.stats?.prazoMedio ?? (
+    prazos.length
+      ? Math.round(prazos.reduce((a, b) => a + b, 0) / prazos.length)
+      : 0
+  );
 
   // Agregações para o detalhamento dos KPIs (o que cada card "guarda").
   const porStatus = itens.reduce<Record<string, number>>((acc, s) => {

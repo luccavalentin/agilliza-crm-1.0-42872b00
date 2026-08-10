@@ -733,7 +733,7 @@ const listarSchema = z.object({
 export const listarSimulacoes = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => listarSchema.parse(d))
-  .handler(async ({ data, context }): Promise<{ itens: SimulacaoListaItem[]; total: number }> => {
+  .handler(async ({ data, context }): Promise<{ itens: SimulacaoListaItem[]; total: number; stats?: { volumeTotal: number; prazoMedio: number } }> => {
     const { supabase, userId } = context;
     const from = (data.pagina - 1) * data.porPagina;
     const to = from + data.porPagina - 1;
@@ -761,15 +761,10 @@ export const listarSimulacoes = createServerFn({ method: "GET" })
       query = query.eq("correspondente_id", me.correspondente_id);
     }
 
-    query = query.order("created_at", { ascending: false })
-      .range(from, to);
-
     if (data.apenas_excluidas) query = query.not("deleted_at", "is", null);
     else query = query.is("deleted_at", null);
 
     if (data.escopo === "minhas") {
-      // Inclui simulações onde o usuário é criador/responsável OU está vinculado
-      // ao cliente como parceiro (imobiliária, corretor, comercial).
       const { data: vinc } = await supabase
         .from("cliente_parceiros")
         .select("cliente_id")
@@ -793,8 +788,15 @@ export const listarSimulacoes = createServerFn({ method: "GET" })
       query = query.or(filtros.join(","));
     }
 
-    const { data: rows, error, count } = await query;
-    if (error) throw new Error(error.message);
+    // Pega o count real com TODOS os filtros aplicados antes de paginar
+    const { count, error: errCount } = await query;
+    if (errCount) throw new Error(errCount.message);
+
+    const { data: rows, error: errRows } = await query
+      .order("created_at", { ascending: false })
+      .range(from, to);
+    
+    if (errRows) throw new Error(errRows.message);
 
     // Para manter a paginação correta e previsível, a lista exibe cada registro
     // de simulação como um item individual. O front-end pode agrupar visualmente
@@ -855,7 +857,23 @@ export const listarSimulacoes = createServerFn({ method: "GET" })
         bancos: [...bancosPrincipal, ...bancosExtras],
       };
     }) as SimulacaoListaItem[];
-    return { itens, total };
+    // Carrega estatísticas totais (Volume e Prazo Médio) do banco de dados baseadas nos mesmos filtros,
+    // já que itens.reduce() só pega os itens da página atual (limit 50).
+    const { data: stats } = await query.select("valor_financiamento, prazo");
+    const totalVolume = (stats ?? []).reduce((acc, s) => acc + (Number(s.valor_financiamento) || 0), 0);
+    const validPrazos = (stats ?? []).map(s => Number(s.prazo)).filter(n => n > 0);
+    const totalPrazoMedio = validPrazos.length 
+      ? Math.round(validPrazos.reduce((a, b) => a + b, 0) / validPrazos.length) 
+      : 0;
+
+    return { 
+      itens, 
+      total, 
+      stats: {
+        volumeTotal: totalVolume,
+        prazoMedio: totalPrazoMedio
+      }
+    };
   });
 
 /** ===== Duplicar simulação =====
