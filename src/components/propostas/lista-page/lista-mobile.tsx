@@ -1,5 +1,6 @@
 import { Link, useRouter } from "@tanstack/react-router";
-import { ChevronRight, FileText, Undo2, User } from "lucide-react";
+import { ChevronRight, FileText, Undo2, User, Trash2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -71,7 +72,10 @@ export function ListaMobile({
                   "--banco-ring": `${corBanco}26`,
                 } as React.CSSProperties
               }
-              className="group/card relative cursor-pointer overflow-hidden rounded-2xl border-border/60 bg-card p-0 shadow-sm ring-1 ring-inset ring-[var(--banco-ring)] transition-all duration-300 ease-out hover:z-10 hover:-translate-y-1 hover:scale-[1.02] hover:shadow-[0_18px_40px_-12px_rgba(0,0,0,0.18),0_0_0_1px_var(--banco-ring)]"
+              className={cn(
+                "group/card relative cursor-pointer overflow-hidden rounded-2xl border-border/60 bg-card p-0 shadow-sm ring-1 ring-inset ring-[var(--banco-ring)] transition-all duration-300 ease-out hover:z-10 hover:-translate-y-1 hover:scale-[1.02] hover:shadow-[0_18px_40px_-12px_rgba(0,0,0,0.18),0_0_0_1px_var(--banco-ring)]",
+                p.deleted_at && "opacity-80 grayscale-[0.3]"
+              )}
               onClick={() =>
                 router.navigate({ to: "/operacional/propostas/$id", params: { id: p.id } })
               }
@@ -128,7 +132,8 @@ export function ListaMobile({
                     </>
                   ) : (
                     <div className="flex flex-col gap-1">
-                      <div className="text-base font-semibold tabular-nums tracking-tight text-foreground">
+                      <div className="flex items-center gap-2 text-base font-semibold tabular-nums tracking-tight text-foreground">
+                        {p.deleted_at && <Trash2 className="h-4 w-4 text-destructive" />}
                         {p.numero_proposta}
                       </div>
                       <span className="text-[9px] font-medium text-muted-foreground uppercase tracking-tight">

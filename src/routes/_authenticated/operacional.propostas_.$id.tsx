@@ -1,4 +1,5 @@
 import { createFileRoute, useRouter, Link } from "@tanstack/react-router";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { corDoBanco } from "@/lib/bancos/cores";
 import { numeroBancoParaExibir } from "@/lib/propostas/numero-banco-display";
 import { BancoLogo } from "@/components/bancos/banco-logo";
@@ -149,9 +150,92 @@ export const Route = createFileRoute("/_authenticated/operacional/propostas_/$id
       abrir_cadastro: typeof search.abrir_cadastro === 'string' ? search.abrir_cadastro : undefined
     }),
   component: Pagina,
-  errorComponent: () => (
-    <div className="p-6 text-sm text-muted-foreground">Não foi possível carregar a proposta.</div>
-  ),
+  errorComponent: ({ error, reset }: { error: any; reset: () => void }) => {
+    const router = useRouter();
+    const msg = error?.message || "Não foi possível carregar a proposta.";
+    const e = error as any;
+
+    // Caso específico: Proposta Excluída
+    const isDeleted = e?.proposta?.deleted_at || msg.includes("excluída") || (e?.data?.proposta?.deleted_at);
+    const prop = e?.proposta || e?.data?.proposta;
+
+    if (prop?.deleted_at) {
+      return (
+        <div className="p-8 max-w-2xl mx-auto space-y-6">
+          <div className="flex items-center gap-3 text-destructive">
+            <Trash2 className="h-8 w-8" />
+            <h1 className="text-2xl font-bold">Esta proposta foi excluída</h1>
+          </div>
+          
+          <div className="bg-muted p-6 rounded-lg space-y-4 text-sm border">
+            <div className="grid grid-cols-[120px_1fr] gap-2">
+              <span className="font-semibold text-muted-foreground text-right">Data:</span>
+              <span>{formatarDataHora(prop.deleted_at)}</span>
+              
+              <span className="font-semibold text-muted-foreground text-right">Usuário:</span>
+              <span>{prop.nome_excluidor || prop.deleted_by || "Não identificado"}</span>
+              
+              {prop.deleted_motivo && (
+                <>
+                  <span className="font-semibold text-muted-foreground text-right">Motivo:</span>
+                  <span className="italic">"{prop.deleted_motivo}"</span>
+                </>
+              )}
+            </div>
+          </div>
+
+          <div className="flex gap-3 pt-4">
+            <Button 
+              variant="outline" 
+              onClick={() => router.navigate({ to: "/operacional/propostas" })}
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Voltar para a lista
+            </Button>
+            {/* O botão Restaurar dependeria de uma Server Function que ainda precisaria ser criada */}
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="p-8 max-w-3xl mx-auto space-y-6">
+        <div className="flex items-center gap-3 text-destructive">
+          <AlertCircle className="h-8 w-8" />
+          <h1 className="text-xl font-semibold">Falha ao carregar proposta</h1>
+        </div>
+        
+        <p className="text-muted-foreground">{msg}</p>
+
+        <Accordion type="single" collapsible className="w-full border rounded-lg bg-muted/30">
+          <AccordionItem value="details" className="border-none">
+            <AccordionTrigger className="px-4 py-2 hover:no-underline text-xs text-muted-foreground">
+              Detalhes técnicos
+            </AccordionTrigger>
+            <AccordionContent className="px-4 pb-4">
+              <pre className="text-[10px] overflow-auto max-h-[200px] p-2 bg-black/5 rounded">
+                {JSON.stringify(e, null, 2)}
+              </pre>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+
+        <div className="flex gap-3">
+          <Button onClick={() => reset()} size="sm">
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Tentar novamente
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => router.navigate({ to: "/operacional/propostas" })}
+          >
+            Voltar
+          </Button>
+        </div>
+      </div>
+    );
+  },
 });
 
 const TABS = [

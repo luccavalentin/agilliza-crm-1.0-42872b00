@@ -1,7 +1,8 @@
 import { Link, useRouter } from "@tanstack/react-router";
-import { FileText, Undo2, User } from "lucide-react";
+import { FileText, Undo2, User, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { cn } from "@/lib/utils";
 
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -128,7 +129,10 @@ export function ListaDesktop({
                       "--banco-ring": `${corBanco}59`,
                     } as React.CSSProperties
                   }
-                  className="group/row relative cursor-pointer transition-all duration-300 ease-out hover:z-10 hover:scale-[1.005] hover:bg-[var(--banco-tint)] hover:shadow-[inset_3px_0_0_0_var(--banco),0_12px_28px_-8px_rgba(0,0,0,0.12)]"
+                  className={cn(
+                    "group/row relative cursor-pointer transition-all duration-300 ease-out hover:z-10 hover:scale-[1.005] hover:bg-[var(--banco-tint)] hover:shadow-[inset_3px_0_0_0_var(--banco),0_12px_28px_-8px_rgba(0,0,0,0.12)]",
+                    p.deleted_at && "opacity-75 grayscale-[0.5] hover:grayscale-0 hover:opacity-100"
+                  )}
                   onClick={() =>
                     router.navigate({ to: "/operacional/propostas/$id", params: { id: p.id } })
                   }
@@ -161,7 +165,10 @@ export function ListaDesktop({
                         </>
                       ) : (
                         <div className="flex flex-col gap-1 font-medium tabular-nums text-foreground transition-colors group-hover/row:text-[var(--banco)] text-[14px]">
-                          <span>{p.numero_proposta}</span>
+                          <div className="flex items-center gap-2">
+                            {p.deleted_at && <Trash2 className="h-3.5 w-3.5 text-destructive" />}
+                            <span>{p.numero_proposta}</span>
+                          </div>
                           <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-tight">
                             {formatDataHora(p.created_at)}
                           </span>
