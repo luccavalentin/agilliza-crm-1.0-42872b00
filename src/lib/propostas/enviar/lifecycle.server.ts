@@ -86,6 +86,8 @@ export async function cancelarPropostaHomefinImpl({
   }
 
   try {
+    // Requisito: Oportunidade compartilhada. Não cancelar a OPORTUNIDADE (tipoSituacao: C) 
+    // se houver outros registros. Já verificado acima.
     await chamarIntegracao<any>(
       `/oportunidade/${idOp}`,
       "PUT",

@@ -400,18 +400,23 @@ function protocoloValido(valor: string | null): string | null {
  *  - `numeroPropostaBanco` / `numeroProposta` / `proposalNumber` / `codigoPropostaBanco`
  *  - `codigoOportunidadeBanco` quando o retorno está em análise/aprovado
  *
- * 2. PROTOCOLO GRAVADO SEM ENVIO DE PROPOSTA
- * Só gravar numero_proposta_banco quando a proposta tiver sido de fato enviada:
- * exigimos que a simulação tenha tipoSituacao ∈ {N, A, R} (já em esteira de proposta)
- * ou que o objeto venha de uma chamada de inclusão confirmada.
- * IDs internos (UUIDs) que não são protocolos reais do banco são filtrados.
+ * PROTOCOLO GRAVADO SEM ENVIO DE PROPOSTA
+ * Só gravar numero_proposta_banco quando a proposta tiver sido de fato enviada.
+ * A regra é:
+ * a) Se existe incluir-proposta-integracao com HTTP 2xx para ESTA proposta,
+ *    então o protocolo PODE ser lido do GET /oportunidade — casando pelo idSimulacao,
+ *    campo codigoOportunidadeBanco.
+ * b) Sem esse log 2xx, continua proibido gravar (evita protocolos fantasmas).
+ * c) Ordem de busca: codigoOportunidadeBanco do POST → codigoOportunidadeBanco do GET.
+ * d) Referências técnicas (UUIDs) são filtradas.
  */
-export function numeroPropostaBancoReal(sim: any): string | null {
-  // O discriminante principal agora é a confirmação do log HTTP de inclusão,
-  // mas preservamos a verificação básica de tipoSituacao para retrocompatibilidade
-  // com dados onde o log pode estar ausente mas o status já é terminal.
+export function numeroPropostaBancoReal(sim: any, enviouReal: boolean = false): string | null {
   const tipo = String(sim?.tipoSituacao ?? "").toUpperCase().charAt(0);
-  if (tipo === "P" || tipo === "S") return null;
+  
+  // Se não enviou real (log 2xx), só aceita se for status terminal (A/R/N/C)
+  // que indica que a esteira já andou.
+  const terminal = tipo === "A" || tipo === "R" || tipo === "N" || tipo === "C";
+  if (!enviouReal && !terminal) return null;
 
   return protocoloValido(
     buscarCampoRaso(sim, [
@@ -426,7 +431,7 @@ export function numeroPropostaBancoReal(sim: any): string | null {
 
 export function referenciaIntegracaoBanco(sim: any): string | null {
   return protocoloValido(
-    buscarCampoRaso(sim, ["codigoOportunidadeBanco", "codigoOportunidadeBancoInterno"]),
+    buscarCampoRaso(sim, ["codigoOportunidadeBancoInterno", "codigoSimulacaoBanco"]),
   );
 }
 
