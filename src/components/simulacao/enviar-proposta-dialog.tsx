@@ -177,15 +177,22 @@ export function EnviarPropostaDialog({
                         ) : isError ? (
                           <div className="flex flex-col items-end gap-1">
                             <span className="flex items-center gap-1.5 text-xs font-bold text-destructive">
-                              <XCircle className="h-4 w-4" /> Falhou
+                              <XCircle className="h-4 w-4" /> {status.erroEstruturado?.codigo === "CADASTRO_INCOMPLETO" ? "Dados pendentes" : "Falha"}
                             </span>
                             <Button 
                               variant="ghost" 
                               size="sm" 
                               className="h-7 px-2 text-[10px] font-bold uppercase tracking-wider hover:bg-destructive/10 hover:text-destructive"
-                              onClick={() => onEnviarBanco(b)}
+                              onClick={() => {
+                                if (status.erroEstruturado?.codigo === "CADASTRO_INCOMPLETO") {
+                                  onClose();
+                                  onEnviarBanco(b); // Isso vai disparar o fluxo de cadastro incompleto no hook
+                                } else {
+                                  onEnviarBanco(b);
+                                }
+                              }}
                             >
-                              Tentar novamente
+                              {status.erroEstruturado?.codigo === "CADASTRO_INCOMPLETO" ? "Completar e enviar" : "Tentar novamente"}
                             </Button>
                           </div>
                         ) : isLoading ? (

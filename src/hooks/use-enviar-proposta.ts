@@ -24,6 +24,7 @@ export interface StatusEnvioBanco {
   numeroProposta?: string;
   tempoDecorrido?: number;
   tipoStatus?: string;
+  erroEstruturado?: any;
 }
 
 export function useEnviarProposta() {
@@ -63,7 +64,8 @@ export function useEnviarProposta() {
     envolvidos,
     onCadastroIncompleto,
     enviarFn: customEnviarFn,
-    criarPropostaFn
+    criarPropostaFn,
+    reiniciarSeIncompleto = true
   }: { 
     propostaId?: string; 
     bancoId: string;
@@ -71,6 +73,7 @@ export function useEnviarProposta() {
     onCadastroIncompleto?: (primeiroPendente: any) => void;
     enviarFn?: (args: { data: { proposta_id: string; banco_id?: string } }) => Promise<any>;
     criarPropostaFn?: () => Promise<{ proposta_id: string }>;
+    reiniciarSeIncompleto?: boolean;
   }) => {
     // 5. TRAVA CONTRA CLIQUE DUPLO
     if (clickLock.current[bancoId]) return;
@@ -125,12 +128,23 @@ export function useEnviarProposta() {
         clearInterval(interval);
         setBusyBancoId(null);
         clickLock.current[bancoId] = false;
+        
+        const campos = pendencias.flatMap(p => p.faltantes.map(f => ({
+          envolvido_id: p.env.id,
+          campo: f.chave,
+          rotulo: f.label
+        })));
+
         atualizarStatus(bancoId, { 
           status: "error", 
-          mensagem: "Cadastro incompleto" 
+          mensagem: "Cadastro incompleto",
+          erroEstruturado: {
+            codigo: "CADASTRO_INCOMPLETO",
+            campos
+          }
         });
-        const primeiro = pendencias[0].env;
-        onCadastroIncompleto?.(primeiro);
+        
+        onCadastroIncompleto?.(pendencias[0].env);
         return;
       }
 
@@ -169,10 +183,17 @@ export function useEnviarProposta() {
       setBusyBancoId(null);
       clickLock.current[bancoId] = false;
       const msg = e instanceof Error ? e.message : "Falha ao enviar proposta. Verifique os dados dos participantes.";
+      const erroEstruturado = (e as any)?.data?.erro_estruturado || (e as any)?.erro_estruturado;
+      
       atualizarStatus(bancoId, { 
         status: "error", 
-        mensagem: msg 
+        mensagem: msg,
+        erroEstruturado
       });
+
+      if (erroEstruturado?.codigo === "CADASTRO_INCOMPLETO") {
+        onCadastroIncompleto?.(null);
+      }
       playChatSound(); // Som também no erro
       throw e;
     }

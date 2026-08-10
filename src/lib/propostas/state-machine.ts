@@ -32,6 +32,7 @@ export type PropostaStatus =
   | "emissao_contrato"
   | "contrato_emitido"
   | "erro_envio"
+  | "aguardando_envio"
   | "cancelada"
   // Status legados (mantidos para compatibilidade com dados/relatórios antigos).
   | "aguardando_documentos"
@@ -41,8 +42,9 @@ export type PropostaStatus =
 
 /** Transições permitidas por status. `cancelada` é permitida de quase qualquer estado. */
 export const TRANSICOES: Record<PropostaStatus, PropostaStatus[]> = {
-  rascunho: ["enviada_banco", "erro_envio", "cancelada"],
-  erro_envio: ["enviada_banco", "cancelada"],
+  rascunho: ["aguardando_envio", "enviada_banco", "erro_envio", "cancelada"],
+  aguardando_envio: ["enviada_banco", "erro_envio", "cancelada"],
+  erro_envio: ["aguardando_envio", "enviada_banco", "cancelada"],
   enviada_banco: ["em_analise_credito", "credito_aprovado", "credito_recusado", "erro_envio", "cancelada"],
   em_analise_credito: ["credito_aprovado", "credito_recusado", "cancelada"],
   credito_aprovado: ["aguardando_documentos", "cancelada"],
@@ -67,6 +69,7 @@ export const TRANSICOES: Record<PropostaStatus, PropostaStatus[]> = {
 /** Ordem de progressão do fluxo (usada para não retroceder o status). */
 export const ORDEM_STATUS: PropostaStatus[] = [
   "rascunho",
+  "aguardando_envio",
   "erro_envio",
   "enviada_banco",
   "em_analise_credito",
@@ -78,7 +81,7 @@ export const ORDEM_STATUS: PropostaStatus[] = [
 ];
 
 export function transicaoPermitida(de: PropostaStatus, para: PropostaStatus): boolean {
-  return TRANSICOES[de]?.includes(para) ?? false;
+  return (TRANSICOES[de] ?? []).includes(para);
 }
 
 /** Status que ainda aceitam edição dos dados da proposta. */

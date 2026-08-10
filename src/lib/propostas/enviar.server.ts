@@ -86,6 +86,17 @@ export async function recalcularStatusGlobalProposta(
 }
 
 
+export interface IntegracaoErroEstruturado {
+  codigo: "CADASTRO_INCOMPLETO" | "TIMEOUT" | "FALHA_CONEXAO" | "ERRO_BANCO";
+  mensagem: string;
+  campos?: {
+    envolvido_id: string;
+    campo: string;
+    rotulo: string;
+    secao?: string;
+  }[];
+}
+
 interface EnviarArgs {
   propostaId: string;
   userId: string;
@@ -103,6 +114,7 @@ interface EnviarResultado {
     status: string;
     numero_proposta_banco?: string | null;
     mensagem?: string;
+    erro_estruturado?: IntegracaoErroEstruturado;
   }[];
 }
 

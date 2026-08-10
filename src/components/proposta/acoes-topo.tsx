@@ -81,7 +81,7 @@ export function AcoesTopo({
   const isBusy = busy || enviarBusy;
 
   const status = proposta.status as PropostaStatus;
-  const proximos = TRANSICOES[status].filter((s) => s !== "cancelada");
+  const proximos = (TRANSICOES[status] ?? []).filter((s) => s !== "cancelada");
 
   const pendencias = useMemo(() => {
     const { faltantesEnvolvido } = require("@/lib/propostas/campos-obrigatorios");
