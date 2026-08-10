@@ -45,6 +45,7 @@ export function ParticipanteDialog({
   participanteIndex,
   totalParticipantes,
   participanteId,
+  nomeConjugeExistente,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
@@ -59,17 +60,12 @@ export function ParticipanteDialog({
     opcoes?: { enviar?: boolean },
   ) => Promise<void> | void;
   idBanco?: number;
-  /** Abre já destacando (e rolando até) o primeiro campo obrigatório pendente. */
   focarPendencias?: boolean;
-
-  /** Faixa informativa no topo do formulário. */
   avisoTopo?: React.ReactNode;
-  /** Índice do participante atual para exibição de progresso. */
   participanteIndex?: number;
-  /** Total de participantes para exibição de progresso. */
   totalParticipantes?: number;
-  /** Identidade estável usada para inicializar somente ao trocar de participante. */
   participanteId?: string;
+  nomeConjugeExistente?: string | null;
 }) {
   const [salvandoInterno, setSalvandoInterno] = useState(false);
 
@@ -125,9 +121,11 @@ export function ParticipanteDialog({
 
 
 
-  const pf = f.tipo_pessoa === "F";
-  const permiteConjuge = true;
-  const precisaConjuge = permiteConjuge && pf && ESTADO_CIVIL_COM_REGIME.has(f.estado_civil);
+  // 1 & 2. CORREÇÃO: A seção de cônjuge só aparece para o TITULAR/comprador principal
+  // e se não houver um cônjuge já cadastrado como participante independente.
+  const ehConjuge = f.tipo_qualificacao === "CJ";
+  const permiteConjuge = !ehConjuge && !nomeConjugeExistente;
+  const precisaConjuge = permiteConjuge && f.tipo_pessoa === "F" && ESTADO_CIVIL_COM_REGIME.has(f.estado_civil);
 
   const set = (patch: Partial<ParticipanteForm>) => setF((p) => ({ ...p, ...patch }));
   const setC = (patch: Partial<ParticipanteForm>) => setConjuge((p) => ({ ...p, ...patch }));
@@ -290,7 +288,15 @@ export function ParticipanteDialog({
                   mostrarIdentificacaoExtra={false}
                   idBanco={idBanco}
                 />
+              </div>
+            </div>
+          )}
 
+          {!ehConjuge && nomeConjugeExistente && ESTADO_CIVIL_COM_REGIME.has(f.estado_civil) && (
+            <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 sm:p-4">
+              <div className="flex items-center gap-2 text-sm text-primary font-medium">
+                <CheckCircle2 className="h-4 w-4" />
+                Cônjuge cadastrado como participante: {nomeConjugeExistente}
               </div>
             </div>
           )}
@@ -304,7 +310,7 @@ export function ParticipanteDialog({
               </p>
             ) : (
               <p className="text-[11px] font-medium text-muted-foreground">
-                Faltam {pendentesAgora.length} dado(s) obrigatório(s): {pendentesAgora.join(", ")}
+                Faltam {pendentesAgora.length} {pendentesAgora.length === 1 ? "dado obrigatório" : "dados obrigatórios"}: {pendentesAgora.join(", ")}
               </p>
             )}
           </div>

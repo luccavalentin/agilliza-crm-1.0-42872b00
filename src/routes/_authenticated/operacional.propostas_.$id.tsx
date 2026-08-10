@@ -756,7 +756,7 @@ function Pagina() {
           participanteModal && (
             <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive font-medium leading-relaxed">
               <AlertTriangle className="inline-block h-4 w-4 mr-1.5 align-text-bottom" />
-              Faltam {faltantesEnvolvido(participanteModal).length} dados obrigatórios de{" "}
+              Falta{faltantesEnvolvido(participanteModal).length === 1 ? "" : "m"} {faltantesEnvolvido(participanteModal).length} dado{faltantesEnvolvido(participanteModal).length === 1 ? "" : "s"} obrigatório{faltantesEnvolvido(participanteModal).length === 1 ? "" : "s"} de{" "}
               {descreverParticipante(participanteModal)} para enviar ao banco. Preencha os campos destacados em vermelho.
             </div>
           )
@@ -767,6 +767,15 @@ function Pagina() {
         conjugeInicial={conjugeInicialParticipante}
         participanteId={participanteModal?.id}
         focarPendencias={true}
+        nomeConjugeExistente={useMemo(() => {
+          if (!participanteModal?.id) return null;
+          // Se o participante atual é titular e tem um cônjuge que já está na lista de envolvidos
+          const principal = p.envolvidos.find((e: any) => e.id === participanteModal.id);
+          if (!principal || principal.tipo_qualificacao === 'CJ') return null;
+          
+          const conj = p.envolvidos.find((e: any) => e.conjuge_de === principal.id || (principal.conjuge_id && e.id === principal.conjuge_id));
+          return conj?.nome || null;
+        }, [p.envolvidos, participanteModal?.id])}
         onSalvar={async (principal, conjuge, opcoes) => {
           if (!participanteModal?.id) return;
           let enviandoAoBanco = false;
