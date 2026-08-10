@@ -241,31 +241,40 @@ function ConsultorIaPage() {
 
   return (
     <div className="relative flex min-h-full flex-col gap-6 p-4 sm:p-6 lg:p-8">
-      {/* Background futurista premium */}
+      {/* Background futurista ultra-premium seguindo os tons da Agilliza */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 opacity-40 blur-[120px]"
+        className="pointer-events-none absolute inset-0 opacity-60"
         style={{
-          background:
-            "radial-gradient(circle at 0% 0%, color-mix(in oklab, var(--primary) 15%, transparent) 0%, transparent 50%), radial-gradient(circle at 100% 100%, color-mix(in oklab, var(--primary) 10%, transparent) 0%, transparent 50%)",
+          background: `
+            radial-gradient(circle at 0% 0%, color-mix(in oklab, var(--primary) 12%, transparent) 0%, transparent 40%),
+            radial-gradient(circle at 100% 100%, color-mix(in oklab, var(--primary) 8%, transparent) 0%, transparent 40%),
+            radial-gradient(circle at 50% 50%, color-mix(in oklab, var(--primary) 3%, transparent) 0%, transparent 60%)
+          `,
         }}
       />
+      
+      {/* Textura de grade sutil para ar tecnológico */}
+      <div 
+        className="pointer-events-none absolute inset-0 opacity-[0.03]" 
+        style={{ backgroundImage: 'radial-gradient(var(--primary) 1px, transparent 1px)', backgroundSize: '32px 32px' }} 
+      />
 
-      <header className="relative z-10 mx-auto w-full max-w-5xl text-center">
-        <div className="flex flex-col items-center gap-6">
+      <header className="relative z-10 mx-auto w-full max-w-5xl">
+        <div className="flex flex-col items-center gap-6 text-center">
           <div className="group relative">
-            <div className="absolute -inset-1 rounded-2xl bg-gradient-to-tr from-primary/40 to-primary/10 opacity-75 blur transition duration-500 group-hover:opacity-100" />
-            <div className="relative flex size-16 items-center justify-center rounded-2xl bg-card shadow-2xl ring-1 ring-border/50">
-              <Bot className="size-8 text-primary" />
-              <div className="absolute -bottom-1 -right-1 size-4 rounded-full border-2 border-card bg-emerald-500 shadow-sm" />
+            <div className="absolute -inset-2 rounded-[2rem] bg-gradient-to-tr from-primary/30 to-primary/5 opacity-0 blur-2xl transition duration-700 group-hover:opacity-100" />
+            <div className="relative flex size-20 items-center justify-center rounded-[1.5rem] bg-card shadow-[0_20px_50px_-12px_rgba(0,15,159,0.15)] ring-1 ring-primary/10 transition-transform duration-500 group-hover:scale-105">
+              <Bot className="size-10 text-primary" />
+              <div className="absolute -bottom-1 -right-1 size-5 rounded-full border-[3px] border-card bg-emerald-500 shadow-lg" />
             </div>
           </div>
           
-          <div className="space-y-2">
-            <h1 className="bg-gradient-to-b from-foreground to-foreground/70 bg-clip-text text-4xl font-bold tracking-tight text-transparent sm:text-5xl">
+          <div className="space-y-3">
+            <h1 className="bg-gradient-to-b from-primary to-brand-azul-noite bg-clip-text text-4xl font-extrabold tracking-tight text-transparent sm:text-6xl">
               Consultor IA
             </h1>
-            <p className="mx-auto max-w-2xl text-lg font-medium text-muted-foreground/90">
+            <p className="mx-auto max-w-2xl text-lg font-medium text-muted-foreground/80">
               A inteligência moderna da Agilliza para o mercado imobiliário.
             </p>
           </div>
@@ -273,9 +282,9 @@ function ConsultorIaPage() {
           <Button 
             onClick={novaConversa} 
             variant="outline"
-            className="h-11 gap-2 rounded-full border-primary/20 bg-primary/5 px-6 transition-all hover:bg-primary/10 hover:shadow-lg hover:shadow-primary/5"
+            className="group/btn h-12 gap-2.5 rounded-full border-primary/15 bg-card px-8 font-semibold text-primary transition-all hover:border-primary/40 hover:bg-primary hover:text-white hover:shadow-[0_15px_30px_-10px_rgba(0,15,159,0.3)]"
           >
-            <MessageSquarePlus className="size-4" />
+            <MessageSquarePlus className="size-5 transition-transform group-hover/btn:rotate-12" />
             Nova conversa
           </Button>
         </div>
@@ -339,25 +348,25 @@ function ConsultorIaPage() {
           </div>
         </aside>
 
-        <section className="relative flex flex-col overflow-hidden rounded-3xl border border-border/40 bg-card/40 shadow-2xl backdrop-blur-xl">
-          <div className="flex-1 space-y-6 overflow-y-auto px-6 py-8 custom-scrollbar">
+        <section className="relative flex flex-col overflow-hidden rounded-[2rem] border border-primary/10 bg-card/60 shadow-[0_30px_70px_-20px_rgba(0,15,159,0.12)] backdrop-blur-2xl">
+          <div className="flex-1 space-y-8 overflow-y-auto px-6 py-10 custom-scrollbar">
             {!conversaId && !streaming ? (
               <div className="mx-auto flex max-w-2xl flex-col items-center py-12 text-center">
-                <div className="relative mb-8">
-                  <div className="absolute -inset-4 rounded-full bg-primary/20 blur-2xl" />
-                  <div className="relative flex size-20 items-center justify-center rounded-3xl bg-card shadow-2xl ring-1 ring-border/50">
-                    <Sparkles className="size-10 text-primary" />
+                <div className="relative mb-10">
+                  <div className="absolute -inset-8 rounded-full bg-primary/15 blur-3xl" />
+                  <div className="relative flex size-24 items-center justify-center rounded-[2rem] bg-card shadow-[0_25px_50px_-12px_rgba(0,15,159,0.2)] ring-1 ring-primary/10">
+                    <Sparkles className="size-12 text-primary" />
                   </div>
                 </div>
                 
-                <h2 className="text-3xl font-bold tracking-tight">
+                <h2 className="text-3xl font-extrabold tracking-tight text-brand-azul-noite sm:text-4xl">
                   Como posso potencializar seus negócios hoje?
                 </h2>
-                <p className="mt-4 text-base font-medium text-muted-foreground/80">
+                <p className="mt-5 text-lg font-medium text-muted-foreground/70">
                   Especialista em regras bancárias, FGTS, documentação e toda a jornada do crédito imobiliário Agilliza.
                 </p>
 
-                <div className="mt-12 grid w-full gap-4 sm:grid-cols-2">
+                <div className="mt-14 grid w-full gap-5 sm:grid-cols-2">
                   {SUGESTOES.map((s) => {
                     const Icone = s.icone;
                     return (
@@ -365,16 +374,16 @@ function ConsultorIaPage() {
                         key={s.prompt}
                         type="button"
                         onClick={() => enviar(s.prompt)}
-                        className="group relative flex flex-col items-start gap-4 rounded-2xl border border-border/40 bg-background/50 p-5 text-left transition-all hover:border-primary/40 hover:bg-card hover:shadow-2xl hover:shadow-primary/5"
+                        className="group relative flex flex-col items-start gap-4 rounded-3xl border border-primary/5 bg-card/40 p-6 text-left transition-all hover:border-primary/30 hover:bg-card hover:shadow-[0_20px_40px_-15px_rgba(0,15,159,0.1)]"
                       >
-                        <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary transition-transform group-hover:scale-110">
-                          <Icone className="size-5" />
+                        <div className="flex size-12 items-center justify-center rounded-2xl bg-primary/5 text-primary transition-all duration-300 group-hover:bg-primary group-hover:text-white group-hover:scale-110">
+                          <Icone className="size-6" />
                         </div>
-                        <div className="space-y-1">
-                          <h4 className="text-sm font-bold uppercase tracking-wider text-primary/80 transition-colors group-hover:text-primary">
+                        <div className="space-y-1.5">
+                          <h4 className="text-xs font-bold uppercase tracking-widest text-primary/60 transition-colors group-hover:text-primary">
                             {s.titulo}
                           </h4>
-                          <p className="text-sm font-medium text-muted-foreground transition-colors group-hover:text-foreground">
+                          <p className="text-[15px] font-semibold text-foreground/80 transition-colors group-hover:text-brand-azul-noite">
                             {s.prompt}
                           </p>
                         </div>
@@ -395,26 +404,26 @@ function ConsultorIaPage() {
             {lista.map((m) =>
               m.papel === "usuario" ? (
                 <div key={m.id} className="mb-6 flex justify-end">
-                  <div className="max-w-[85%] rounded-[2rem] rounded-br-lg bg-primary px-6 py-4 text-base font-medium leading-relaxed text-primary-foreground shadow-xl shadow-primary/10">
+                  <div className="max-w-[85%] rounded-[1.5rem] rounded-br-md bg-primary px-6 py-4 text-[15px] font-semibold leading-relaxed text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:shadow-xl hover:shadow-primary/25">
                     {m.conteudo}
                   </div>
                 </div>
               ) : (
-                <div key={m.id} className="mb-8 flex items-start gap-5">
-                  <div className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-card shadow-lg ring-1 ring-border/50">
-                    <Bot className="size-5 text-primary" />
+                <div key={m.id} className="mb-10 flex items-start gap-5">
+                  <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-card shadow-md ring-1 ring-primary/10">
+                    <Bot className="size-6 text-primary" />
                   </div>
                   <div className="min-w-0 flex-1 space-y-4">
                     {m.sem_resposta ? (
-                      <div className="inline-flex items-center gap-2 rounded-xl border border-amber-500/20 bg-amber-500/5 px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
+                      <div className="inline-flex items-center gap-2 rounded-full border border-amber-500/20 bg-amber-500/5 px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest text-amber-600 dark:text-amber-400">
                         <TriangleAlert className="size-3.5" />
                         Conhecimento Geral
                       </div>
                     ) : null}
-                    <div className="rounded-3xl border border-border/30 bg-card/30 p-6 shadow-sm backdrop-blur-sm">
+                    <div className="rounded-[1.5rem] rounded-tl-md border border-primary/5 bg-card/50 p-7 shadow-sm transition-all hover:shadow-md">
                       <Markdown
                         conteudo={m.conteudo}
-                        className="text-[15px] leading-relaxed text-foreground/90"
+                        className="text-[15.5px] leading-relaxed text-brand-azul-noite/90"
                       />
                     </div>
 
@@ -529,43 +538,49 @@ function ConsultorIaPage() {
             <div ref={fimRef} />
           </div>
 
-          <div className="border-t border-border/40 bg-card/60 p-6 backdrop-blur-md">
+          <footer className="relative z-20 border-t border-primary/5 bg-card/40 px-6 py-8 backdrop-blur-xl">
             <div className="mx-auto max-w-4xl">
-              <div className="group relative flex items-end gap-3 rounded-[2rem] border border-border/50 bg-background/50 p-2 shadow-2xl transition-all focus-within:border-primary/50 focus-within:ring-4 focus-within:ring-primary/5">
-                <Textarea
-                  ref={inputRef}
-                  value={pergunta}
-                  onChange={(e) => setPergunta(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      enviar();
-                    }
-                  }}
-                  rows={1}
-                  placeholder="Envie sua dúvida para a inteligência Agilliza..."
-                  disabled={streaming}
-                  className="max-h-60 min-h-[48px] flex-1 resize-none border-0 bg-transparent px-4 py-3 text-base font-medium shadow-none focus-visible:ring-0"
-                />
-                <Button
-                  size="icon"
-                  onClick={() => enviar()}
-                  disabled={streaming || !pergunta.trim()}
-                  className="mb-1 mr-1 size-10 shrink-0 rounded-2xl shadow-xl shadow-primary/20 transition-transform active:scale-95 disabled:opacity-50"
-                >
-                  <ArrowUp className="size-5" />
-                </Button>
-              </div>
-              <div className="mt-3 flex items-center justify-center gap-4 text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">
-                <div className="flex items-center gap-1.5">
-                  <Command className="size-3" />
-                  <span>Enter envia</span>
+              <div className="relative group">
+                {/* Glow de foco no input */}
+                <div className="absolute -inset-1.5 rounded-[1.8rem] bg-primary/5 opacity-0 blur-xl transition duration-500 group-focus-within:opacity-100" />
+                
+                <div className="relative flex flex-col items-center gap-3 overflow-hidden rounded-[1.5rem] border border-primary/10 bg-card p-2 shadow-[0_10px_40px_-15px_rgba(0,15,159,0.08)] transition-all group-focus-within:border-primary/30 group-focus-within:shadow-[0_20px_50px_-15px_rgba(0,15,159,0.12)] sm:flex-row">
+                  <Textarea
+                    ref={inputRef}
+                    value={pergunta}
+                    onChange={(e) => setPergunta(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        enviar();
+                      }
+                    }}
+                    rows={1}
+                    placeholder="Sua pergunta técnica aqui..."
+                    disabled={streaming}
+                    className="max-h-60 min-h-[48px] flex-1 resize-none border-0 bg-transparent px-4 py-3 text-base font-semibold text-brand-azul-noite focus-visible:ring-0 placeholder:text-muted-foreground/40 shadow-none"
+                  />
+                  <div className="flex w-full items-center justify-between gap-3 px-2 pb-1 sm:w-auto sm:pb-0">
+                    <Button
+                      size="icon"
+                      onClick={() => enviar()}
+                      disabled={!pergunta.trim() || streaming}
+                      className="size-11 shrink-0 rounded-2xl bg-primary shadow-lg shadow-primary/25 transition-all hover:scale-105 hover:bg-brand-azul-escuro disabled:scale-100 disabled:bg-muted/60 disabled:shadow-none"
+                    >
+                      {streaming ? (
+                        <Zap className="size-5 animate-pulse text-white/50" />
+                      ) : (
+                        <ArrowUp className="size-5 text-white" />
+                      )}
+                    </Button>
+                  </div>
                 </div>
-                <div className="size-1 rounded-full bg-border" />
-                <span>Shift + Enter para nova linha</span>
               </div>
+              <p className="mt-3 text-center text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/40">
+                Poderosa Inteligência Agilliza &middot; Mercado Imobiliário Elite
+              </p>
             </div>
-          </div>
+          </footer>
         </section>
       </div>
 
