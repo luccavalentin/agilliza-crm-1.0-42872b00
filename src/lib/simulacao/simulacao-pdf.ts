@@ -1003,11 +1003,23 @@ function criarDocSimulacaoDetalhada({
   };
 }
 
-/** Baixa o extrato detalhado em PDF. */
-export function baixarSimulacaoDetalhadaPDF(input: SimulacaoPdfInput) {
+/**
+ * Disparador principal: gera um PDF detalhado com todas as informações.
+ * Se houver múltiplos bancos, baixa como arquivos individuais (Padrão Agilliza).
+ */
+export async function baixarSimulacaoDetalhadaPDF(input: SimulacaoPdfInput): Promise<boolean> {
+  if (!input.bancos || input.bancos.length === 0) return false;
+  
+  // Se tem mais de um banco, baixa cada um individualmente (conforme pedido: "baixar SOMENTE a simulação")
+  // O nome "ZipPDF" é legado, na verdade ele dispara múltiplos downloads individuais.
+  if (input.bancos.length > 1) {
+    await baixarSimulacoesDetalhadasZipPDF(input);
+    return true;
+  }
+
   const { doc, nome } = criarDocSimulacaoDetalhada(input);
   baixarBlob(doc.output("blob"), `${nome}.pdf`);
-  return doc;
+  return true;
 }
 
 /**
@@ -1210,6 +1222,7 @@ function salvar(doc: jsPDF, s: any, _tipo: string, bancos: any[] = [], filePrefi
   baixarBlob(doc.output("blob"), `${nome}.pdf`);
   return doc;
 }
+
 
 
 // ---------------------------------------------------------------------------

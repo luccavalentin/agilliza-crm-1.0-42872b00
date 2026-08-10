@@ -563,13 +563,14 @@ function BaixarPdfsButton({ dataSac, dataPrice }: { dataSac: any; dataPrice: any
     let ok = 0;
     let err = 0;
     try {
-      const { baixarSimulacoesDetalhadasAgrupadasZipPDF } = await import("@/lib/simulacao/simulacao-pdf");
-      ok = await baixarSimulacoesDetalhadasAgrupadasZipPDF(
-        ativos.map((d) => ({
-          simulacao: d.simulacao,
-          bancos: bancosDaSimulacaoAtual(d).filter((b) => b.status_banco === "simulada"),
-        })),
-      );
+      const { baixarSimulacaoDetalhadaPDF } = await import("@/lib/simulacao/simulacao-pdf");
+      for (const d of ativos) {
+        const bancos = bancosDaSimulacaoAtual(d).filter((b) => b.status_banco === "simulada");
+        if (bancos.length > 0) {
+          const res = await baixarSimulacaoDetalhadaPDF({ simulacao: d.simulacao, bancos });
+          if (res) ok += bancos.length;
+        }
+      }
       if (ok > 0) toast.success(`${ok} PDF${ok === 1 ? "" : "s"} gerado${ok === 1 ? "" : "s"}.${err > 0 ? ` (${err} falharam)` : ""}`);
       else toast.error("Não foi possível gerar os PDFs.");
     } catch (e) {

@@ -62,6 +62,7 @@ export const ESTADO_INICIAL: Form = {
   bancos_price_ids: [] as string[],
   consentimento_lgpd: false,
   consentimento_scr: false,
+  download_automatico: true,
   email_verificado_em: null,
 };
 
