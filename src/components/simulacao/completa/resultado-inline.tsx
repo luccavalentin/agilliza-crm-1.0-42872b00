@@ -36,7 +36,7 @@ import {
 // Import já realizado no topo
 import { formatBRL, formatPercent } from "@/lib/simulacao/format";
 import { corDoBanco } from "@/lib/bancos/cores";
-import { extrairDetalheBanco } from "@/lib/simulacao/detalhe-banco";
+
 import { rendaMinimaPelosBancos, rendaMinimaDoBanco } from "@/lib/simulacao/renda";
 import { cn } from "@/lib/utils";
 import { ErroBancoDetalhe } from "@/components/simulacao/erro-banco-detalhe";
