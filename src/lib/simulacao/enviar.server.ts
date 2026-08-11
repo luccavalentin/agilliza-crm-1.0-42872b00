@@ -889,6 +889,8 @@ export async function enviarSimulacaoImpl({
       const resp = await chamarIntegracao<any>("/oportunidade", "POST", payload, ctx);
       const op = resp?.oportunidade ?? resp ?? {};
       idOportunidade = String(op.idOportunidade ?? op.id ?? "");
+      console.log(`[enviar.server] POST /oportunidade concluído. Novo ID: ${idOportunidade}`);
+
       await supabase
         .from("simulacoes")
         .update({
