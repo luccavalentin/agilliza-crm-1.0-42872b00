@@ -1108,19 +1108,19 @@ export async function enviarSimulacaoImpl({
           // capturar o retorno assim que ele chegar. Aumentamos o polling para o
           // Itaú (20 tentativas a cada 10s) para garantir o retorno.
           if (vazio(dadosApi)) {
-            // Backoff progressivo (3s, 6s, 12s, 24s… teto 30s) com orçamento
-            // total de tempo. Encerra imediatamente em desfecho definitivo
-            // (situação diferente de "em processamento") para não gastar os
-            // ~100s que o laço fixo consumia.
-            const ORCAMENTO_MS = 60_000;
+            // 1. BACKOFF PROGRESSIVO: intervalo crescente (2s, 4s, 8s, 15s, 30s...)
+            const ORCAMENTO_MS = TIMEOUT_BANCO_MS; // Teto de 240s para polling real
             const iniciouPolling = Date.now();
-            let espera = 3_000;
+            let espera = 2_000;
             let tentativas = 0;
-            let motivoFim = "orcamento_esgotado";
+            let motivoFim = "timeout";
 
             while (vazio(dadosApi) && Date.now() - iniciouPolling < ORCAMENTO_MS) {
               await new Promise((r) => setTimeout(r, espera));
+              // Backoff progressivo: 2, 4, 8, 16, 30, 30...
               espera = Math.min(espera * 2, 30_000);
+              if (espera > 15_000 && espera < 30_000) espera = 15_000; 
+
               tentativas++;
               try {
                 const op = await chamarIntegracao<any>(
@@ -1133,28 +1133,31 @@ export async function enviarSimulacaoImpl({
                 const achado = lista.find(
                   (s: any) => String(s?.idSimulacao ?? "") === String(idSimulacao),
                 );
-                if (achado && !vazio(achado)) {
-                  dados = achado;
-                  dadosApi = achado;
-                  motivoFim = "retorno_recebido";
-                  break;
-                }
-                // Desfecho definitivo sem valores: o banco já concluiu e não vai
-                // devolver nada. Continuar consultando é desperdício.
-                const situacao = String(
-                  achado?.tipoSituacao ?? achado?.situacao ?? "",
-                ).toUpperCase();
-                if (situacao && situacao !== "P" && situacao !== "A") {
-                  motivoFim = `situacao_definitiva_${situacao}`;
-                  break;
+
+                // 2. ENCERRAR O POLLING ASSIM QUE HOUVER DESFECHO
+                if (achado) {
+                  const situacao = String(achado?.tipoSituacao ?? achado?.situacao ?? "").toUpperCase();
+                  const temValores = !vazio(achado);
+
+                  if (temValores) {
+                    dados = achado;
+                    dadosApi = achado;
+                    motivoFim = "retorno_recebido";
+                    break;
+                  }
+
+                  // Desfecho definitivo sem valores (Erro ou Recusada)
+                  if (situacao && situacao !== "P" && situacao !== "A") {
+                    motivoFim = `situacao_definitiva_${situacao}`;
+                    break;
+                  }
                 }
               } catch (e) {
-                motivoFim = "falha_consulta";
                 console.warn(
                   "Falha ao consultar retorno da simulação (polling).",
                   e instanceof Error ? e.message : String(e),
                 );
-                break;
+                // No caso de erro na chamada GET, mantemos o loop até o timeout
               }
             }
 
