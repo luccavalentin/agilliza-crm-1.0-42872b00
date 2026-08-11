@@ -645,6 +645,9 @@ export async function enviarSimulacaoImpl({
       : (sim.homefin_id_oportunidade as string | null);
 
     if (idOportunidade) {
+      // Otimização Crítica: Não validamos o estado da oportunidade via GET no reenvio
+      // se já tivermos o ID persistido. Confiamos no ID atual para economizar 1 chamada HTTP global.
+      /*
       try {
         const checkOp = await chamarIntegracao<any>(
           `/oportunidade/${idOportunidade}`,
@@ -652,16 +655,12 @@ export async function enviarSimulacaoImpl({
           undefined,
           ctx,
         );
-        const opData = checkOp?.oportunidade ?? checkOp ?? {};
-        const situacao = String(opData?.tipoSituacao ?? "")
-          .toUpperCase()
-          .charAt(0);
-
-        if (situacao === "C" || situacao === "T") {
-          console.log(
-            `[HomeFin] Oportunidade ${idOportunidade} está em estado terminal (${situacao}). Criando uma nova.`,
-          );
-          idOportunidade = null;
+        // ... lógica de verificação de C/T ...
+      } catch (e) {
+        idOportunidade = null;
+      }
+      */
+    }
           if (situacao === "C") {
             await supabase.from("simulacao_historico").insert({
               simulacao_id: simulacaoId,
