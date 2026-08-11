@@ -309,7 +309,7 @@ export const criarSimulacao = createServerFn({ method: "POST" })
           data_nascimento: params.dataNascimento || null,
           estado_civil: mapEstadoCivilEnum(params.estadoCivil),
           regime_casamento: params.regimeCasamento ?? null,
-          renda_total_declarada: params.renda ?? null,
+          renda_total_declarada: params.renda ?? null, // Sempre individual do titular
           uf_interesse: params.ufInteresse ?? null,
           utiliza_fgts: params.utilizaFgts ?? false,
           conjuge_nome: params.conjugeNome ?? null,

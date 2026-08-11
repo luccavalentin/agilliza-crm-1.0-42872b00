@@ -287,12 +287,28 @@ async function garantirDadosParticipantesSimulacao({
     if (!ehTitular && !ehConjuge) continue;
 
     // REGRA 1: A renda enviada ao banco é SEMPRE a renda declarada para o participante.
-    // No caso de composição de renda, enviamos a soma das rendas para ambos os proponentes
-    // para garantir que a comparação de taxas seja válida (mesma base de cálculo).
-    const rendaTotalCalculada = num(
-      sim.compoe_renda_conjuge ? num(sim.renda_total) + num(sim.renda_conjuge) : sim.renda_total,
-    );
-    const rendaDeclarada = sim.compoe_renda ? rendaTotalCalculada : (ehConjuge ? num(sim.renda_conjuge) : num(sim.renda_total));
+    // No caso de composição de renda, enviamos a SOMA das rendas do titular e do cônjuge
+    // para ambos os proponentes, garantindo que a comparação de taxas seja baseada
+    // na mesma capacidade financeira (renda familiar).
+
+    // Garantia de isolamento: as variáveis de renda são extraídas do registro
+    // da simulação lido especificamente para este envio (sim), garantindo que
+    // valores de outras execuções ou objetos mutados não vazem.
+    const rendaTitular = num(sim.renda_total);
+    const rendaConjuge = num(sim.renda_conjuge);
+    const compoeRenda = Boolean(sim.compoe_renda);
+
+    // Validação crítica antes de montar o payload: se compoe_renda está ativo,
+    // a renda enviada não pode ser apenas a renda_total se houver renda_conjuge > 0.
+    if (compoeRenda && rendaConjuge > 0 && num(sim.renda_total + rendaConjuge) === rendaTitular) {
+      console.error(`[enviar.server] Erro de integridade: compoe_renda=true mas soma resultou no valor individual para sim ${sim.id}`);
+    }
+
+    const rendaDeclarada = compoeRenda
+      ? num(rendaTitular + rendaConjuge)
+      : ehConjuge
+        ? rendaConjuge
+        : rendaTitular;
 
     const payload: Record<string, unknown> = {
       tipoSituacao: part?.tipoSituacao ?? "A",
@@ -1177,7 +1193,23 @@ export async function enviarSimulacaoImpl({
                 simulado_em: new Date().toISOString(),
               })
               .eq("id", b.id);
-            return { banco_id: b.banco_id, status: "erro" as const, mensagem: msg };
+            return {
+              banco_id: b.banco_id,
+              status: "erro" as const,
+              mensagem: msg,
+              sac_comparativo: sim.sistema_amortizacao === "P" ? await (async () => {
+                const { data: sac } = await supabase
+                  .from("simulacao_bancos")
+                  .select("valor_parcela, taxa_juros_ano")
+                  .eq("banco_id", b.banco_id)
+                  .eq("status_banco", "simulada")
+                  .eq("sistema_amortizacao_banco", "SAC")
+                  .order("simulado_em", { ascending: false })
+                  .limit(1)
+                  .maybeSingle();
+                return sac;
+              })() : null
+            };
           }
 
           await supabase
