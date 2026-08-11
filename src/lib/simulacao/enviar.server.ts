@@ -392,20 +392,41 @@ export async function enviarSimulacaoImpl({
   const retryLimit = 2; // Tentativas para erros 5xx
   const TIMEOUT_BANCO_MS = 240_000;
 
-  // Watchdog: Recupera simulações presas em "enviando" ou interrompidas por timeout.
+  // Watchdog de Recuperação Ativa: Recupera simulações presas em "enviando" ou "rascunho" 
+  // (Scenario A & Scenario B). Nenhuma simulação pode ficar em "aguardando" por muito tempo.
   try {
-    const dezMinutosAtras = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+    const tresMinutosAtras = new Date(Date.now() - 3 * 60 * 1000).toISOString();
+    
+    // 1. Recupera Bancos Presos (Individualmente)
+    const { data: bancosPresos } = await supabase
+      .from("simulacao_bancos")
+      .select("id, status_banco, nome_banco")
+      .eq("status_banco", "aguardando")
+      .is("homefin_id_simulacao_banco", null)
+      .lt("created_at", tresMinutosAtras)
+      .limit(20);
+
+    for (const b of bancosPresos ?? []) {
+      const msg = `O envio deste banco (${b.nome_banco}) não foi iniciado corretamente. Clique em reenviar.`;
+      await supabase
+        .from("simulacao_bancos")
+        .update({ status_banco: "erro", mensagem_banco: msg })
+        .eq("id", b.id);
+    }
+
+    // 2. Recupera Simulações Pai
     const { data: presas } = await supabase
       .from("simulacoes")
-      .select("id, status")
+      .select("id, status, numero_simulacao")
       .or("status.eq.enviando,status.eq.rascunho")
-      .lt("ultimo_envio_em", dezMinutosAtras)
+      .lt("ultimo_envio_em", tresMinutosAtras)
       .limit(10);
 
     for (const p of presas ?? []) {
+      console.log(`[Watchdog] Recuperando simulação ${p.numero_simulacao} (${p.id}) presa em ${p.status}`);
       const msg = p.status === "enviando" 
-        ? "O envio foi interrompido por tempo (timeout). Clique em reenviar."
-        : "Simulação interrompida em rascunho. Tente reenviar.";
+        ? "O envio foi interrompido (timeout ou erro de rede). Clique em reenviar."
+        : "Simulação interrompida na criação. Tente reenviar.";
       await supabase
         .from("simulacoes")
         .update({
@@ -839,6 +860,7 @@ export async function enviarSimulacaoImpl({
     // O loop de bancos é SEQUENCIAL para evitar condições de corrida na oportunidade.
     const resultados: EnviarResultado["bancos"] = [];
     const enviarBanco = async (b: any): Promise<EnviarResultado["bancos"][number]> => {
+      console.log(`[enviar.server] Iniciando processamento do banco: ${b.nome_banco} (${b.banco_id}) para simulação ${simulacaoId}`);
       // Registrar início do envio para este banco
       await supabase
         .from("simulacao_bancos")
@@ -1239,20 +1261,21 @@ export async function enviarSimulacaoImpl({
       }
     }
 
-    // REGRA: Marcar como erro bancos que ficaram sem homefin_id_simulacao_banco
+    // REGRA (CENÁRIO C): Marcar como erro bancos que foram pulados ou interrompidos antes do POST /simulacao
     const { data: bancosFinais } = await supabase
       .from("simulacao_bancos")
       .select("*")
       .eq("simulacao_id", simulacaoId)
       .eq("selecionado", true);
 
-    for (const b of bancosFinais ?? []) {
-      if (
-        (b.status_banco === "aguardando" || b.status_banco === "enviando") &&
-        !b.homefin_id_simulacao_banco
-      ) {
-        const msg =
-          "O envio foi interrompido por tempo (timeout). Clique em reenviar este banco individualmente.";
+    const faltantes = (bancosFinais ?? []).filter(b => 
+      (b.status_banco === "aguardando" || b.status_banco === "enviando") && !b.homefin_id_simulacao_banco
+    );
+
+    if (faltantes.length > 0) {
+      console.error(`[enviar.server] ${faltantes.length} bancos pulados no laço ou interrompidos antes da criação na HomeFin.`);
+      for (const b of faltantes) {
+        const msg = "O envio deste banco falhou antes de ser iniciado. Por favor, tente reenviar este banco individualmente.";
         await supabase
           .from("simulacao_bancos")
           .update({
