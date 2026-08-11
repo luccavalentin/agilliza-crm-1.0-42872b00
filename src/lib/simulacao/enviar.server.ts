@@ -286,9 +286,19 @@ async function garantirDadosParticipantesSimulacao({
     const ehTitular = !ehConjuge && (!cpf || !cpfTitular || cpf === cpfTitular);
     if (!ehTitular && !ehConjuge) continue;
 
+    const estadoCivilSim = String(sim.estado_civil ?? "").toUpperCase();
+    const possuiConjugeSim = estadoCivilSim
+      ? estadoCivilSim === "CA" || estadoCivilSim === "UE"
+      : Boolean(sim.possui_conjuge);
+    const compoeRendaLocal = Boolean(sim.compoe_renda) && possuiConjugeSim;
+
     // REGRA 1: A renda enviada ao banco é SEMPRE a renda declarada para o participante.
-    // O sistema NUNCA substitui esse valor.
-    const rendaDeclarada = ehConjuge ? num(sim.renda_conjuge) : num(sim.renda_total);
+    // Quando compoe_renda é true, a renda é a SOMA de ambos.
+    const rendaDeclarada = compoeRendaLocal
+      ? num(sim.renda_total) + num(sim.renda_conjuge)
+      : ehConjuge
+        ? num(sim.renda_conjuge)
+        : num(sim.renda_total);
 
     const payload: Record<string, unknown> = {
       tipoSituacao: part?.tipoSituacao ?? "A",
@@ -339,7 +349,10 @@ async function garantirDadosParticipantesSimulacao({
               sim.estado_civil_conjuge ??
               sim.estado_civil ??
               undefined,
-            rendaConjuge: part?.rendaConjuge ?? num(sim.renda_conjuge) ?? undefined,
+            rendaConjuge:
+              part?.rendaConjuge ??
+              (compoeRendaLocal ? num(sim.renda_total) + num(sim.renda_conjuge) : num(sim.renda_conjuge)) ??
+              undefined,
           }
         : {}),
       ...endereco,
@@ -351,16 +364,17 @@ async function garantirDadosParticipantesSimulacao({
     );
 
     try {
-      await chamarIntegracao<any>(
-        `/oportunidade/${idOportunidade}/participante/${part.idParticipante}`,
-        "PUT",
-        cleanedPayload,
-        ctx,
-      );
+      // REGRA: Cada participante deve receber um PUT por envio.
+      // Verificamos se há idParticipante antes de chamar a integração.
+      if (part.idParticipante) {
+        await chamarIntegracao<any>(
+          `/oportunidade/${idOportunidade}/participante/${part.idParticipante}`,
+          "PUT",
+          cleanedPayload,
+          ctx,
+        );
+      }
     } catch (e) {
-      // Falha na complementação (PUT /participante) não deve travar o banco.
-      // Logamos o erro mas deixamos o fluxo seguir, pois alguns bancos processam
-      // a simulação mesmo com dados parciais se o proponente já existe na HomeFin.
       console.warn(`[enviar.server] Falha ao atualizar proponente ${part.idParticipante}:`, e);
     }
   }
@@ -761,7 +775,7 @@ export async function enviarSimulacaoImpl({
       // Líder ou Santander Home Equity: executa a criação da oportunidade
       // (Embora o loop de bancos agora seja sequencial, o ID da oportunidade deve ser persistido antes).
       const rendaTotalCalculada = num(
-        sim.compoe_renda_conjuge ? num(sim.renda_total) + num(sim.renda_conjuge) : sim.renda_total,
+        compoeRenda ? num(sim.renda_total) + num(sim.renda_conjuge) : sim.renda_total,
       );
 
       console.log(
@@ -825,7 +839,7 @@ export async function enviarSimulacaoImpl({
 
     // Auditoria de renda enviada ao banco (Princípio #2d - Log de auditoria)
     const rendaEnviada = num(
-      sim.compoe_renda_conjuge ? num(sim.renda_total) + num(sim.renda_conjuge) : sim.renda_total,
+      compoeRenda ? num(sim.renda_total) + num(sim.renda_conjuge) : sim.renda_total,
     );
     await supabase.from("simulacao_historico").insert({
       simulacao_id: simulacaoId,
@@ -1224,7 +1238,7 @@ export async function enviarSimulacaoImpl({
       resultados.push(await enviarBanco(b));
     }
 
-    // REGRA 3d: Marcar como erro bancos que ficaram sem homefin_id_simulacao_banco
+    // REGRA: Marcar como erro bancos que ficaram sem homefin_id_simulacao_banco
     const { data: bancosFinais } = await supabase
       .from("simulacao_bancos")
       .select("*")
@@ -1232,7 +1246,10 @@ export async function enviarSimulacaoImpl({
       .eq("selecionado", true);
 
     for (const b of bancosFinais ?? []) {
-      if (b.status_banco === "aguardando" && !b.homefin_id_simulacao_banco) {
+      if (
+        (b.status_banco === "aguardando" || b.status_banco === "enviando") &&
+        !b.homefin_id_simulacao_banco
+      ) {
         const msg =
           "Não foi possível iniciar a simulação neste banco. Nenhum dado foi enviado ao banco. Clique em reenviar.";
         await supabase
