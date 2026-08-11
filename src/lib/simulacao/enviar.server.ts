@@ -966,6 +966,8 @@ export async function enviarSimulacaoImpl({
         // Enviamos o prazo já validado pela idade, limitado a até 420 meses.
         const prazoBanco = num(sim.prazo);
         try {
+          console.log(`[enviar.server] Iniciando processo para banco ${b.nome_banco} (ID: ${b.id}) na oportunidade ${idOportunidade}`);
+
           const simPayload = {
             valorImovel: num(sim.valor_imovel),
             valorFinanciamento: num(sim.valor_financiamento),
@@ -977,7 +979,8 @@ export async function enviarSimulacaoImpl({
             valorTotalFinanciamento,
             fgAutorizacaoDados: true,
           };
-          console.log("Payload enviado para criar simulação bancária:", JSON.stringify(simPayload));
+          console.log(`[enviar.server] POST /oportunidade/${idOportunidade}/simulacao para ${b.nome_banco}:`, JSON.stringify(simPayload));
+
           const simResp = b.homefin_id_simulacao_banco
             ? await chamarComRetry<any>(
                 `/oportunidade/${idOportunidade}/simulacao/${b.homefin_id_simulacao_banco}`,
