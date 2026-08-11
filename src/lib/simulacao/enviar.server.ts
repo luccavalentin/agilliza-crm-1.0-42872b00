@@ -927,13 +927,18 @@ export async function enviarSimulacaoImpl({
             "valorTotalFinanciamento:",
             valorTotalFinanciamento,
           );
+          /* 
+          // Otimização: Removemos o PUT redundante logo após o POST, pois o POST já cria a simulação com os dados necessários.
+          // Isso economiza 1 chamada HTTP por banco.
           const putResp = await chamarIntegracao<any>(
             `/oportunidade/${idOportunidade}/simulacao/${idSimulacao}`,
             "PUT",
             putPayload,
             ctx,
           );
-          console.log("Retorno atualização simulação bancária:", JSON.stringify(putResp));
+          */
+          const putResp = simResp; // Usamos o retorno do POST como base
+          console.log("Retorno criação simulação bancária (POST):", JSON.stringify(simResp));
 
           // Confirma que a integração persistiu a flag antes de enviar ao banco.
           if (financiarDespesas) {
