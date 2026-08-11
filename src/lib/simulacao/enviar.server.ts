@@ -286,9 +286,19 @@ async function garantirDadosParticipantesSimulacao({
     const ehTitular = !ehConjuge && (!cpf || !cpfTitular || cpf === cpfTitular);
     if (!ehTitular && !ehConjuge) continue;
 
+    const estadoCivilSim = String(sim.estado_civil ?? "").toUpperCase();
+    const possuiConjugeSim = estadoCivilSim
+      ? estadoCivilSim === "CA" || estadoCivilSim === "UE"
+      : Boolean(sim.possui_conjuge);
+    const compoeRendaLocal = Boolean(sim.compoe_renda) && possuiConjugeSim;
+
     // REGRA 1: A renda enviada ao banco é SEMPRE a renda declarada para o participante.
-    // O sistema NUNCA substitui esse valor.
-    const rendaDeclarada = compoeRenda ? (num(sim.renda_total) + num(sim.renda_conjuge)) : (ehConjuge ? num(sim.renda_conjuge) : num(sim.renda_total));
+    // Quando compoe_renda é true, a renda é a SOMA de ambos.
+    const rendaDeclarada = compoeRendaLocal
+      ? num(sim.renda_total) + num(sim.renda_conjuge)
+      : ehConjuge
+        ? num(sim.renda_conjuge)
+        : num(sim.renda_total);
 
     const payload: Record<string, unknown> = {
       tipoSituacao: part?.tipoSituacao ?? "A",
@@ -339,7 +349,10 @@ async function garantirDadosParticipantesSimulacao({
               sim.estado_civil_conjuge ??
               sim.estado_civil ??
               undefined,
-            rendaConjuge: part?.rendaConjuge ?? (compoeRenda ? (num(sim.renda_total) + num(sim.renda_conjuge)) : num(sim.renda_conjuge)) ?? undefined,
+            rendaConjuge:
+              part?.rendaConjuge ??
+              (compoeRendaLocal ? num(sim.renda_total) + num(sim.renda_conjuge) : num(sim.renda_conjuge)) ??
+              undefined,
           }
         : {}),
       ...endereco,
