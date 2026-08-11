@@ -345,7 +345,7 @@ export function rendaMinimaSugerida(params: {
             : null,
           suficiente: renda_informada ? renda_informada >= rendaBco : null,
           bancoNome: b.nome_banco,
-          fonte: "api_banco",
+          fonte: "banco",
           detalhe_fonte: `Exigência do banco: ${b.nome_banco}`,
         });
       }
