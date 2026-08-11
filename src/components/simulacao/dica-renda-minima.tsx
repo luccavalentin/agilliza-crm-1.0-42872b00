@@ -130,8 +130,7 @@ export function DicaRendaMinima(props: Props) {
         </div>
         <div className="flex flex-col gap-1 px-1">
           <p className="text-[10px] italic text-muted-foreground">
-            Estimativa conservadora, com folga de 10%. O banco pode aceitar renda menor — e
-            também pode recusar por outros critérios além da renda.
+            O banco pode aceitar renda menor — e também pode recusar por outros critérios além da renda.
           </p>
           {compoeRendaConjuge && (
             <p className="text-[10px] italic text-muted-foreground/70">
@@ -183,7 +182,7 @@ export function DicaRendaMinima(props: Props) {
               {sistema === "S" ? "SAC" : "PRICE"})
             </span>
             <span className="text-[9px] text-muted-foreground/60 leading-tight">
-              Estimativa conservadora, com folga de 10%.
+              O banco pode aceitar renda menor.
             </span>
           </div>
         </div>
