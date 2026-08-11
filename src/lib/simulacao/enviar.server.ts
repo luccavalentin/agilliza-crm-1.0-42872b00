@@ -700,7 +700,11 @@ export async function enviarSimulacaoImpl({
         console.warn(`[HomeFin] Falha ao validar estado da oportunidade ${idOportunidade}:`, e);
         idOportunidade = null;
       }
+      console.log(`[enviar.server] Oportunidade existente ${idOportunidade} validada.`);
+    } else {
+      console.log(`[enviar.server] Nenhuma oportunidade prévia encontrada na simulação ${simulacaoId}.`);
     }
+
 
     // Campos que dependem da simulação atual e podem ter mudado desde a
     // primeira criação da oportunidade.
