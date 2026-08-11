@@ -1258,12 +1258,22 @@ export async function enviarSimulacaoImpl({
       }
     };
 
+    // Envio sequencial aos bancos para garantir que a API não recuse por excesso de concorrência
+    // e que cada erro seja capturado individualmente.
     for (const b of bancos as any[]) {
       try {
-        resultados.push(await enviarBanco(b));
+        const resultado = await enviarBanco(b);
+        resultados.push(resultado);
       } catch (e: any) {
         console.error(`[enviar.server] Falha isolada no banco ${b.id}:`, e);
-        resultados.push({ banco_id: b.banco_id, status: "erro", mensagem: String(e?.message ?? e) });
+        // Tenta uma única vez a recuperação se não houve resposta
+        try {
+          console.info(`[enviar.server] Retrying bank ${b.banco_id} once...`);
+          const retry = await enviarBanco(b);
+          resultados.push(retry);
+        } catch (retryErr) {
+          resultados.push({ banco_id: b.banco_id, status: "erro", mensagem: String(e?.message ?? e) });
+        }
       }
     }
 
