@@ -273,19 +273,6 @@ async function garantirDadosParticipantesSimulacao({
   } catch {
     return;
   }
-  let participantes: any[] = [];
-  try {
-    const resp = await chamarIntegracao<any>(
-      `/oportunidade/${idOportunidade}`,
-      "GET",
-      undefined,
-      ctx,
-    );
-    const op = resp?.oportunidade ?? resp ?? {};
-    participantes = Array.isArray(op?.participantes) ? op.participantes : [];
-  } catch {
-    return;
-  }
   if (participantes.length === 0) return;
 
   const endereco = await montarEnderecoParticipante(sim, cliente, endPrincipal);
