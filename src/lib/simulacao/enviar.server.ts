@@ -1169,21 +1169,19 @@ export async function enviarSimulacaoImpl({
           // assíncrona: a resposta do POST /integracao volta ainda "em
           // processamento" (tipoSituacao "P") e sem valores. A integração não
           // possui webhook, então consultamos a oportunidade algumas vezes para
-          // capturar o retorno assim que ele chegar. Aumentamos o polling para o
-          // Itaú (20 tentativas a cada 10s) para garantir o retorno.
+          // capturar o retorno assim que ele chegar.
           if (vazio(dadosApi)) {
+            console.log(`[enviar.server] Banco ${b.nome_banco} retornou sem valores. Iniciando polling...`);
             // 1. BACKOFF PROGRESSIVO: intervalo crescente (2s, 4s, 8s, 15s, 30s...)
             const ORCAMENTO_MS = TIMEOUT_BANCO_MS; // Teto de 240s para polling real
             const iniciouPolling = Date.now();
-            let espera = 2_000;
+            let intervaloFixo = 4_000; // Voltamos ao intervalo fixo de 4s que funcionava
             let tentativas = 0;
             let motivoFim = "timeout";
 
             while (vazio(dadosApi) && Date.now() - iniciouPolling < ORCAMENTO_MS) {
-              await new Promise((r) => setTimeout(r, espera));
-              // Backoff progressivo: 2, 4, 8, 16, 30, 30...
-              espera = Math.min(espera * 2, 30_000);
-              if (espera > 15_000 && espera < 30_000) espera = 15_000; 
+              await new Promise((r) => setTimeout(r, intervaloFixo));
+
 
               tentativas++;
               try {
