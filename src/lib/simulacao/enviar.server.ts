@@ -1181,17 +1181,13 @@ export async function enviarSimulacaoImpl({
           // possui webhook, então consultamos a oportunidade algumas vezes para
           // capturar o retorno assim que ele chegar. Bancos que já respondem
           // com valores no POST não entram neste laço.
-          // Alguns bancos (Itaú, principalmente) processam a integração de forma
-          // assíncrona: a resposta do POST /integracao volta ainda "em
-          // processamento" (tipoSituacao "P") e sem valores. A integração não
-          // possui webhook, então consultamos a oportunidade algumas vezes para
-          // capturar o retorno assim que ele chegar.
           if (vazio(dadosApi)) {
             console.log(`[enviar.server] Banco ${b.nome_banco} retornou sem valores. Iniciando polling...`);
             // 1. BACKOFF PROGRESSIVO: intervalo crescente (2s, 4s, 8s, 15s, 30s...)
             const ORCAMENTO_MS = TIMEOUT_BANCO_MS; // Teto de 240s para polling real
             const iniciouPolling = Date.now();
             let intervaloFixo = 4_000; // Voltamos ao intervalo fixo de 4s que funcionava
+
             let tentativas = 0;
             let motivoFim = "timeout";
 
