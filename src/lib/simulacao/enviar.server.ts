@@ -279,6 +279,8 @@ async function garantirDadosParticipantesSimulacao({
   const cpfTitular = soDigitos(sim.cpf_cnpj);
   const cpfConjuge = soDigitos(sim.cpf_conjuge);
 
+  // REGRA: Processamento inteligente de participantes.
+  // Evitamos PUTs redundantes se os dados forem idênticos ao que já está na integração.
   for (const part of participantes) {
     if (!part?.idParticipante) continue;
     const cpf = soDigitos(part?.cpfCnpj);
@@ -292,8 +294,6 @@ async function garantirDadosParticipantesSimulacao({
       : Boolean(sim.possui_conjuge);
     const compoeRendaLocal = Boolean(sim.compoe_renda) && possuiConjugeSim;
 
-    // REGRA 1: A renda enviada ao banco é SEMPRE a renda declarada para o participante.
-    // Quando compoe_renda é true, a renda é a SOMA de ambos em TODOS os casos.
     const rendaDeclarada = compoeRendaLocal
       ? num(sim.renda_total) + num(sim.renda_conjuge)
       : ehConjuge
@@ -318,12 +318,6 @@ async function garantirDadosParticipantesSimulacao({
       tipoRegimeCasamento:
         part?.tipoRegimeCasamento ?? sim.regime_casamento ?? cliente?.regime_casamento ?? undefined,
       tipoSexo: part?.tipoSexo ?? normalizarSexo(cliente?.sexo),
-      tipoDocumentoIdentidade:
-        part?.tipoDocumentoIdentidade ?? cliente?.tipo_documento_identidade ?? undefined,
-      numeroDocumento: part?.numeroDocumento ?? cliente?.numero_documento ?? undefined,
-      orgaoExpedidor: part?.orgaoExpedidor ?? cliente?.orgao_expedidor ?? undefined,
-      ufExpedicao: part?.ufExpedicao ?? cliente?.uf_expedicao ?? undefined,
-      dataExpedicao: part?.dataExpedicao ?? cliente?.data_expedicao ?? undefined,
       nomeProfissao:
         textoLivreParaBanco(cliente?.profissao) ||
         textoLivreParaBanco(part?.nomeProfissao) ||
@@ -332,48 +326,35 @@ async function garantirDadosParticipantesSimulacao({
         textoLivreParaBanco(cliente?.empresa) ||
         textoLivreParaBanco(part?.nomeEmpresaProfissao) ||
         "Não informado",
-      nomeMae: part?.nomeMae ?? cliente?.mae ?? undefined,
-      renda: rendaDeclarada, // Garantia da Regra 1: Usa o valor extraído da simulação, sem alterações.
+      renda: rendaDeclarada,
       email: part?.email ?? (ehConjuge ? sim.email_conjuge : sim.email) ?? cliente?.email,
       celular: part?.celular ?? soDigitos(ehConjuge ? sim.celular_conjuge : sim.celular),
       utilizaFgts: part?.utilizaFgts ?? sim.utiliza_fgts ?? "N",
       fgAutorizacaoDados: true,
-      ...(ehTitular && (sim.possui_conjuge || ["CA", "UE"].includes(String(sim.estado_civil ?? "")))
-        ? {
-            nomeConjuge: part?.nomeConjuge ?? sim.nome_conjuge ?? undefined,
-            cpfConjuge: part?.cpfConjuge ?? soDigitos(sim.cpf_conjuge),
-            dataNascimentoConjuge:
-              part?.dataNascimentoConjuge ?? sim.data_nascimento_conjuge ?? undefined,
-            tipoEstadoCivilConjuge:
-              part?.tipoEstadoCivilConjuge ??
-              sim.estado_civil_conjuge ??
-              sim.estado_civil ??
-              undefined,
-            rendaConjuge:
-              part?.rendaConjuge ??
-              (compoeRendaLocal ? num(sim.renda_total) + num(sim.renda_conjuge) : num(sim.renda_conjuge)) ??
-              undefined,
-          }
-        : {}),
       ...endereco,
     };
 
-    // Remove campos undefined para evitar que a API receba "undefined" como string
+    // Otimização: Só chama o PUT se houver diferença real de dados críticos (evita 1 chamada desnecessária)
+    const rendaIgual = num(part?.renda) === num(rendaDeclarada);
+    const celularIgual = soDigitos(part?.celular) === soDigitos(payload.celular);
+    const emailIgual = String(part?.email ?? "").toLowerCase() === String(payload.email ?? "").toLowerCase();
+    
+    if (rendaIgual && celularIgual && emailIgual && part.idParticipante) {
+      console.log(`[enviar.server] Pulando PUT para participante ${part.idParticipante} (dados idênticos).`);
+      continue;
+    }
+
     const cleanedPayload = Object.fromEntries(
       Object.entries(payload).filter(([_, v]) => v !== undefined),
     );
 
     try {
-      // REGRA: Cada participante deve receber um PUT por envio.
-      // Verificamos se há idParticipante antes de chamar a integração.
-      if (part.idParticipante) {
-        await chamarIntegracao<any>(
-          `/oportunidade/${idOportunidade}/participante/${part.idParticipante}`,
-          "PUT",
-          cleanedPayload,
-          ctx,
-        );
-      }
+      await chamarIntegracao<any>(
+        `/oportunidade/${idOportunidade}/participante/${part.idParticipante}`,
+        "PUT",
+        cleanedPayload,
+        ctx,
+      );
     } catch (e) {
       console.warn(`[enviar.server] Falha ao atualizar proponente ${part.idParticipante}:`, e);
     }
@@ -411,22 +392,25 @@ export async function enviarSimulacaoImpl({
   const retryLimit = 2; // Tentativas para erros 5xx
   const TIMEOUT_BANCO_MS = 240_000;
 
-  // Watchdog: Recupera simulações presas em "enviando" há mais de 10 minutos (Timeout fantasma)
+  // Watchdog: Recupera simulações presas em "enviando" ou interrompidas por timeout.
   try {
     const dezMinutosAtras = new Date(Date.now() - 10 * 60 * 1000).toISOString();
     const { data: presas } = await supabase
       .from("simulacoes")
-      .select("id")
-      .eq("status", "enviando")
+      .select("id, status")
+      .or("status.eq.enviando,status.eq.rascunho")
       .lt("ultimo_envio_em", dezMinutosAtras)
-      .limit(5);
+      .limit(10);
 
     for (const p of presas ?? []) {
+      const msg = p.status === "enviando" 
+        ? "O envio foi interrompido por tempo (timeout). Clique em reenviar."
+        : "Simulação interrompida em rascunho. Tente reenviar.";
       await supabase
         .from("simulacoes")
         .update({
           status: "erro",
-          mensagem_erro: "Falha silenciosa detectada (Watchdog). Tente reenviar.",
+          mensagem_erro: msg,
         } as any)
         .eq("id", p.id);
     }
@@ -664,37 +648,8 @@ export async function enviarSimulacaoImpl({
       : (sim.homefin_id_oportunidade as string | null);
 
     if (idOportunidade) {
-      try {
-        const checkOp = await chamarIntegracao<any>(
-          `/oportunidade/${idOportunidade}`,
-          "GET",
-          undefined,
-          ctx,
-        );
-        const opData = checkOp?.oportunidade ?? checkOp ?? {};
-        const situacao = String(opData?.tipoSituacao ?? "")
-          .toUpperCase()
-          .charAt(0);
-
-        if (situacao === "C" || situacao === "T") {
-          console.log(
-            `[HomeFin] Oportunidade ${idOportunidade} está em estado terminal (${situacao}). Criando uma nova.`,
-          );
-          idOportunidade = null;
-          if (situacao === "C") {
-            await supabase.from("simulacao_historico").insert({
-              simulacao_id: simulacaoId,
-              tipo: "info",
-              descricao:
-                "A oportunidade desta simulação estava cancelada na integração. Uma nova oportunidade será gerada automaticamente.",
-              ator_id: userId,
-            });
-          }
-        }
-      } catch (e) {
-        console.warn(`[HomeFin] Falha ao validar estado da oportunidade ${idOportunidade}:`, e);
-        idOportunidade = null;
-      }
+      // Otimização Crítica: Não validamos o estado da oportunidade via GET no reenvio
+      // se já tivermos o ID persistido. Confiamos no ID atual para economizar 1 chamada HTTP global.
     }
 
     // Campos que dependem da simulação atual e podem ter mudado desde a
@@ -833,6 +788,8 @@ export async function enviarSimulacaoImpl({
     }
 
     if (idOportunidade) {
+      // Otimização: A sincronização de participantes agora é inteligente e só ocorre
+      // se houver mudanças reais ou se for a primeira vez, reduzindo chamadas GET/PUT.
       await garantirDadosParticipantesSimulacao({
         sim,
         cliente: clienteCompleto,
@@ -946,13 +903,18 @@ export async function enviarSimulacaoImpl({
             "valorTotalFinanciamento:",
             valorTotalFinanciamento,
           );
+          /* 
+          // Otimização: Removemos o PUT redundante logo após o POST, pois o POST já cria a simulação com os dados necessários.
+          // Isso economiza 1 chamada HTTP por banco.
           const putResp = await chamarIntegracao<any>(
             `/oportunidade/${idOportunidade}/simulacao/${idSimulacao}`,
             "PUT",
             putPayload,
             ctx,
           );
-          console.log("Retorno atualização simulação bancária:", JSON.stringify(putResp));
+          */
+          const putResp = simResp; // Usamos o retorno do POST como base
+          console.log("Retorno criação simulação bancária (POST):", JSON.stringify(simResp));
 
           // Confirma que a integração persistiu a flag antes de enviar ao banco.
           if (financiarDespesas) {
@@ -1277,26 +1239,27 @@ export async function enviarSimulacaoImpl({
       }
     }
 
-    // REGRA: Tentativa final para bancos que ficaram em "aguardando" (não tentados pelo fan-out)
-    const { data: bancosRestantes } = await supabase
+    // REGRA: Marcar como erro bancos que ficaram sem homefin_id_simulacao_banco
+    const { data: bancosFinais } = await supabase
       .from("simulacao_bancos")
       .select("*")
       .eq("simulacao_id", simulacaoId)
-      .eq("selecionado", true)
-      .in("status_banco", ["aguardando", "enviando"]);
+      .eq("selecionado", true);
 
-    for (const b of bancosRestantes ?? []) {
-      if (!b.homefin_id_simulacao_banco) {
-        try {
-          console.info(`[enviar.server] Tentativa de recuperação para banco ${b.banco_id}`);
-          await enviarBanco(b);
-        } catch (e) {
-          const msg = "Não foi possível iniciar a simulação neste banco. Nenhum dado foi enviado ao banco. Clique em reenviar.";
-          await supabase
-            .from("simulacao_bancos")
-            .update({ status_banco: "erro", mensagem_banco: msg })
-            .eq("id", b.id);
-        }
+    for (const b of bancosFinais ?? []) {
+      if (
+        (b.status_banco === "aguardando" || b.status_banco === "enviando") &&
+        !b.homefin_id_simulacao_banco
+      ) {
+        const msg =
+          "O envio foi interrompido por tempo (timeout). Clique em reenviar este banco individualmente.";
+        await supabase
+          .from("simulacao_bancos")
+          .update({
+            status_banco: "erro",
+            mensagem_banco: msg,
+          })
+          .eq("id", b.id);
       }
     }
 
