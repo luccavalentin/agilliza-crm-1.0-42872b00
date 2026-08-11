@@ -649,10 +649,10 @@ export async function enviarSimulacaoImpl({
     // Santander em Home Equity usa a rota operacional Somahome; oportunidades
     // antigas criadas como Home Equity comum ficam sem retorno. Para reenvio,
     // criamos uma nova oportunidade na operação correta.
-    let idOportunidade = usaRotaSantanderHomeEquity
-      ? null
-      : (sim.homefin_id_oportunidade as string | null);
+    let idOportunidade = (sim.homefin_id_oportunidade as string | null);
 
+    // Se a oportunidade estiver cancelada, forçamos a criação de uma nova
+    // (Bancos não aceitam reenvio em oportunidade 'C').
     if (idOportunidade) {
       try {
         const checkOp = await chamarIntegracao<any>(
@@ -688,12 +688,33 @@ export async function enviarSimulacaoImpl({
     }
 
     // Campos que dependem da simulação atual e podem ter mudado desde a
-    // primeira criação da oportunidade (ex.: usuário marcou "financiar despesas"
-    // e reenviou). Precisam ser sincronizados também no reenvio, senão o banco
-    // continua recebendo os valores antigos.
+    // primeira criação da oportunidade.
     const idOperacaoIntegracao = usaRotaSantanderHomeEquity
       ? ROTA_SANTANDER_HOME_EQUITY.idOperacao
       : sim.id_operacao_homefin;
+
+    // Se já temos a oportunidade, sincronizamos os dados da operação (valor, prazo, amortização)
+    // antes de integrar os bancos, garantindo que o banco receba os valores atualizados.
+    if (idOportunidade) {
+      try {
+        await chamarIntegracao<any>(
+          `/oportunidade/${idOportunidade}`,
+          "PUT",
+          {
+            valorImovel: num(sim.valor_imovel),
+            valorFinanciamento: num(sim.valor_financiamento),
+            prazo: num(sim.prazo),
+            codigoSistemaAmortizacaoBanco: { id: sim.sistema_amortizacao ?? "S" },
+            fgFinanciarDespesas,
+            valorDespesasFinanciadas,
+            valorTotalFinanciamento,
+          },
+          ctx,
+        );
+      } catch (e) {
+        console.warn(`[HomeFin] Falha ao sincronizar dados da oportunidade ${idOportunidade}:`, e);
+      }
+    }
 
     const dadosOportunidade: Record<string, unknown> = {
       tipoImovel: { id: sim.tipo_imovel },
@@ -721,13 +742,12 @@ export async function enviarSimulacaoImpl({
       codigoSistemaAmortizacaoBanco: { id: sim.sistema_amortizacao ?? "S" },
     };
 
-    if (!idOportunidade && !usaRotaSantanderHomeEquity) {
-      // Eleição de líder: tenta obter o lock no Postgres para evitar race condition entre requisições paralelas.
-      // O lock expira em 90s se a requisição líder morrer sem completar.
-      // Usamos um UPDATE condicional para garantir atomicidade.
+    if (!idOportunidade) {
+      // O lock é baseado no agrupador_id para que o par SAC/PRICE compartilhe a mesma oportunidade
+      const lockKey = sim.agrupador_id || simulacaoId;
       const noventaSegundosAtras = new Date(Date.now() - 90 * 1000).toISOString();
       const { data: liderEleito } = await supabase.rpc("eleger_lider_oportunidade", {
-        p_simulacao_id: simulacaoId,
+        p_simulacao_id: lockKey,
         p_lock_timeout: noventaSegundosAtras,
       });
 
@@ -739,7 +759,9 @@ export async function enviarSimulacaoImpl({
           const { data: retrySim } = await supabase
             .from("simulacoes")
             .select("homefin_id_oportunidade")
-            .eq("id", simulacaoId)
+            .eq(sim.agrupador_id ? "agrupador_id" : "id", lockKey)
+            .not("homefin_id_oportunidade", "is", null)
+            .limit(1)
             .maybeSingle();
 
           if (retrySim?.homefin_id_oportunidade) {
@@ -809,9 +831,9 @@ export async function enviarSimulacaoImpl({
         .update({
           homefin_id_oportunidade: idOportunidade,
           codigo_oportunidade_homefin: op.codigoOportunidade ?? null,
-          oportunidade_lock_em: null, // Limpa o lock para permitir reenvios futuros
+          oportunidade_lock_em: null, 
         } as any)
-        .eq("id", simulacaoId);
+        .eq(sim.agrupador_id ? "agrupador_id" : "id", sim.agrupador_id || simulacaoId);
     }
 
     if (idOportunidade) {
