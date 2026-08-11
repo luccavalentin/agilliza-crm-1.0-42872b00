@@ -1003,6 +1003,8 @@ export async function enviarSimulacaoImpl({
                 simPayload,
               );
           const idSimulacao = String(simResp?.idSimulacao ?? simResp?.id ?? b.homefin_id_simulacao_banco ?? "");
+          console.log(`[enviar.server] Banco ${b.nome_banco} (ID: ${b.id}) recebeu ID de simulação integration: ${idSimulacao}`);
+
 
           // PUT completo da simulação: garante que a integração persista os campos de
           // despesas financiadas ANTES da integração bancária. Enviamos o payload
