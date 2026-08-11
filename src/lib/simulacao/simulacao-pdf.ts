@@ -332,8 +332,8 @@ function drawInfoFinanciamento(
           if (e != null && Number(e) > 0) return e;
           const vi = Number(d?.valorImovel ?? s.valor_imovel ?? 0);
           const vf = Number(
-            d?.financiamentoTotal ?? d?.valorFinanciamento ?? s.valor_financiamento ?? 0,
-          );
+    d?.valorTotalFinanciamento ?? d?.financiamentoTotal ?? d?.valorFinanciamento ?? s.valor_financiamento ?? 0,
+  );
           const df = Number(d?.despesasFinanciadas ?? s.valor_despesas_financiadas ?? 0);
           const calc = vi - (vf - df);
           return vi > 0 && vf > 0 && calc > 0 ? calc : null;
