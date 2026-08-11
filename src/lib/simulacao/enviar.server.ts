@@ -392,22 +392,25 @@ export async function enviarSimulacaoImpl({
   const retryLimit = 2; // Tentativas para erros 5xx
   const TIMEOUT_BANCO_MS = 240_000;
 
-  // Watchdog: Recupera simulações presas em "enviando" há mais de 10 minutos (Timeout fantasma)
+  // Watchdog: Recupera simulações presas em "enviando" ou interrompidas por timeout.
   try {
     const dezMinutosAtras = new Date(Date.now() - 10 * 60 * 1000).toISOString();
     const { data: presas } = await supabase
       .from("simulacoes")
-      .select("id")
-      .eq("status", "enviando")
+      .select("id, status")
+      .or("status.eq.enviando,status.eq.rascunho")
       .lt("ultimo_envio_em", dezMinutosAtras)
-      .limit(5);
+      .limit(10);
 
     for (const p of presas ?? []) {
+      const msg = p.status === "enviando" 
+        ? "O envio foi interrompido por tempo (timeout). Clique em reenviar."
+        : "Simulação interrompida em rascunho. Tente reenviar.";
       await supabase
         .from("simulacoes")
         .update({
           status: "erro",
-          mensagem_erro: "Falha silenciosa detectada (Watchdog). Tente reenviar.",
+          mensagem_erro: msg,
         } as any)
         .eq("id", p.id);
     }
@@ -785,6 +788,8 @@ export async function enviarSimulacaoImpl({
     }
 
     if (idOportunidade) {
+      // Otimização: A sincronização de participantes agora é inteligente e só ocorre
+      // se houver mudanças reais ou se for a primeira vez, reduzindo chamadas GET/PUT.
       await garantirDadosParticipantesSimulacao({
         sim,
         cliente: clienteCompleto,
