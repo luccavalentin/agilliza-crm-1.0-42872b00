@@ -62,7 +62,6 @@ export function NoCard({
         .finally(() => setCarregandoPreview(false));
     }
   }, [isImage, no.id, previewUrl, carregandoPreview, fnUrl]);
-  const arq = no.tipo === "arquivo" ? estiloArquivo(no.content_type, no.nome) : null;
   const Icon = arq?.Icon;
   const podeAlternarMenu = no.tipo === "pasta" && no.parent_id === null && !!onAlternarMenu;
 
