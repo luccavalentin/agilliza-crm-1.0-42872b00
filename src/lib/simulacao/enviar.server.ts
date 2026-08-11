@@ -817,6 +817,10 @@ export async function enviarSimulacaoImpl({
       const resp = await chamarIntegracao<any>("/oportunidade", "POST", payload, ctx);
       const op = resp?.oportunidade ?? resp ?? {};
       idOportunidade = String(op.idOportunidade ?? op.id ?? "");
+      if (!idOportunidade) {
+        throw new Error("Falha ao gerar oportunidade na integração.");
+      }
+
       await supabase
         .from("simulacoes")
         .update({
