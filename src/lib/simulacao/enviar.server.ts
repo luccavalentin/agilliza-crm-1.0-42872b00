@@ -1169,9 +1169,13 @@ export async function enviarSimulacaoImpl({
           const apiData = raw?.simulacao ?? raw?.data ?? raw;
           const descBco = apiData?.descricaoRespostaBanco;
           
+          const { extrairDetalheBanco } = await import("./detalhe-banco");
+          const detalhe = extrairDetalheBanco(raw);
+          
           // REGRA 1: PERSISTIR O VALOR DO BANCO (Problema 1)
           const rendaMinimaApi = num(descBco?.valorRendaLiquidaMinimaExigida) || num(descBco?.rendaMinimaExigida) || num(apiData?.rendaMinimaExigida);
           const rendaMinimaFonte = rendaMinimaApi > 0 ? "banco" : "estimativa";
+
           
           // Se não veio do banco, calcula localmente para persistir
           let rendaMinimaPersistir = rendaMinimaApi;
@@ -1195,9 +1199,11 @@ export async function enviarSimulacaoImpl({
               raw_response: raw,
               renda_minima_banco: rendaMinimaPersistir || null,
               renda_minima_fonte: rendaMinimaFonte,
+              taxa_cet_ano: num(detalhe?.cet) || null,
               simulado_em: new Date().toISOString(),
               valor_parcela: apiData?.valorParcelaBanco ?? apiData?.valorParcelaSimulacao ?? null,
               taxa_juros_ano: apiData?.taxa_juros_ano_banco ?? apiData?.taxaJurosAnoBanco ?? null,
+
               prazo_pagamento_max:
                 apiData?.prazoPagamentoBancoMax ??
                 apiData?.prazoPagamentoBanco ??

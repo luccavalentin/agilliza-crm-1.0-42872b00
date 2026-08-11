@@ -212,8 +212,9 @@ export function DetalheBancoDialog({
                 />
                 <Destaque
                   icone={<Percent className="h-4 w-4" />}
-                  rotulo="CET"
-                  valor={pct(detalhe!.cet)}
+                   rotulo="CET a.a."
+                   valor={banco.taxa_cet_ano != null ? `${Number(banco.taxa_cet_ano).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 4 })}% a.a.` : pct(detalhe!.cet)}
+
                   cor={cor}
                 />
                 <Destaque
