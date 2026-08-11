@@ -3,7 +3,7 @@
  * logo abaixo do campo de renda familiar. A cor reflete a folga da renda
  * informada em relação à renda mínima estimada (verde/amarelo/vermelho).
  */
-import { AlertTriangle, CheckCircle2, Info, TriangleAlert } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Info, TriangleAlert, ShieldCheck } from "lucide-react";
 import { formatBRL } from "@/lib/simulacao/format";
 import {
   avaliarRendaMinima,
