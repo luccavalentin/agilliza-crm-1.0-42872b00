@@ -728,7 +728,8 @@ export async function enviarSimulacaoImpl({
       fgFinanciarDespesas,
       valorDespesasFinanciadas,
       valorTotalFinanciamento,
-      codigoSistemaAmortizacaoBanco: { id: sim.sistema_amortizacao ?? "S" },
+      // codigoSistemaAmortizacaoBanco removido daqui — ele pertence à /simulacao, não à /oportunidade.
+
     };
 
     if (!idOportunidade && !usaRotaSantanderHomeEquity) {
@@ -789,7 +790,7 @@ export async function enviarSimulacaoImpl({
           ? { usuarioParceiro: { idUsuarioParceiro: auth.idUsuarioParceiro } }
           : {}),
         ...dadosOportunidade,
-        bancos: bancos.map((b: any) => bancoPayloadOportunidade(sim, b)),
+        bancos: (bancosSelecionados ?? []).map((b: any) => bancoPayloadOportunidade(sim, b)),
         cpfCnpj: soDigitos(sim.cpf_cnpj),
         nome: sim.nome_cliente,
         rendaTotal: rendaTotalCalculada,
