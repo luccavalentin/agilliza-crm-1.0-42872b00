@@ -1258,26 +1258,27 @@ export async function enviarSimulacaoImpl({
       }
     }
 
-    // REGRA: Tentativa final para bancos que ficaram em "aguardando" (não tentados pelo fan-out)
-    const { data: bancosRestantes } = await supabase
+    // REGRA: Marcar como erro bancos que ficaram sem homefin_id_simulacao_banco
+    const { data: bancosFinais } = await supabase
       .from("simulacao_bancos")
       .select("*")
       .eq("simulacao_id", simulacaoId)
-      .eq("selecionado", true)
-      .in("status_banco", ["aguardando", "enviando"]);
+      .eq("selecionado", true);
 
-    for (const b of bancosRestantes ?? []) {
-      if (!b.homefin_id_simulacao_banco) {
-        try {
-          console.info(`[enviar.server] Tentativa de recuperação para banco ${b.banco_id}`);
-          await enviarBanco(b);
-        } catch (e) {
-          const msg = "Não foi possível iniciar a simulação neste banco. Nenhum dado foi enviado ao banco. Clique em reenviar.";
-          await supabase
-            .from("simulacao_bancos")
-            .update({ status_banco: "erro", mensagem_banco: msg })
-            .eq("id", b.id);
-        }
+    for (const b of bancosFinais ?? []) {
+      if (
+        (b.status_banco === "aguardando" || b.status_banco === "enviando") &&
+        !b.homefin_id_simulacao_banco
+      ) {
+        const msg =
+          "O envio foi interrompido por tempo (timeout). Clique em reenviar este banco individualmente.";
+        await supabase
+          .from("simulacao_bancos")
+          .update({
+            status_banco: "erro",
+            mensagem_banco: msg,
+          })
+          .eq("id", b.id);
       }
     }
 
