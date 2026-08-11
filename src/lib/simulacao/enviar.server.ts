@@ -920,12 +920,18 @@ export async function enviarSimulacaoImpl({
             fgAutorizacaoDados: true,
           };
           console.log("Payload enviado para criar simulação bancária:", JSON.stringify(simPayload));
-          const simResp = await chamarComRetry<any>(
-            `/oportunidade/${idOportunidade}/simulacao`,
-            "POST",
-            simPayload,
-          );
-          const idSimulacao = String(simResp?.idSimulacao ?? "");
+          const simResp = b.homefin_id_simulacao_banco
+            ? await chamarComRetry<any>(
+                `/oportunidade/${idOportunidade}/simulacao/${b.homefin_id_simulacao_banco}`,
+                "PUT",
+                simPayload,
+              )
+            : await chamarComRetry<any>(
+                `/oportunidade/${idOportunidade}/simulacao`,
+                "POST",
+                simPayload,
+              );
+          const idSimulacao = String(simResp?.idSimulacao ?? simResp?.id ?? b.homefin_id_simulacao_banco ?? "");
 
           // PUT completo da simulação: garante que a integração persista os campos de
           // despesas financiadas ANTES da integração bancária. Enviamos o payload
