@@ -260,6 +260,11 @@ export function ComparativoBancos({
                     valor={b.taxa_juros_ano != null ? formatTaxa(b.taxa_juros_ano) : "—"}
                   />
                   <MobileStat
+                    rotulo="CET a.a."
+                    valor={b.taxa_cet_ano != null ? formatTaxa(b.taxa_cet_ano) : "—"}
+                  />
+                  <MobileStat
+
                     rotulo="Prazo"
                     valor={
                       b.prazo_pagamento_max != null
