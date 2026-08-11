@@ -728,7 +728,7 @@ export async function enviarSimulacaoImpl({
       fgFinanciarDespesas,
       valorDespesasFinanciadas,
       valorTotalFinanciamento,
-      // codigoSistemaAmortizacaoBanco removido daqui — ele pertence à /simulacao, não à /oportunidade.
+      codigoSistemaAmortizacaoBanco: { id: sim.sistema_amortizacao ?? "S" },
 
     };
 
@@ -1259,7 +1259,12 @@ export async function enviarSimulacaoImpl({
     };
 
     for (const b of bancos as any[]) {
-      resultados.push(await enviarBanco(b));
+      try {
+        resultados.push(await enviarBanco(b));
+      } catch (e: any) {
+        console.error(`[enviar.server] Falha isolada no banco ${b.id}:`, e);
+        resultados.push({ banco_id: b.banco_id, status: "erro", mensagem: String(e?.message ?? e) });
+      }
     }
 
     // REGRA: Marcar como erro bancos que ficaram sem homefin_id_simulacao_banco
@@ -1349,13 +1354,17 @@ export async function enviarSimulacaoImpl({
     const msg = sanitizarMensagemErro(bruto);
 
     // Garante status terminal para TODOS os bancos desta chamada em caso de erro global antes do loop.
-    const idsLote = (bancos as any[]).map((b) => b.id);
-    if (idsLote.length > 0) {
-      await supabase
-        .from("simulacao_bancos")
-        .update({ status_banco: "erro", mensagem_banco: msg })
-        .in("id", idsLote)
-        .or("status_banco.eq.aguardando,status_banco.eq.enviando");
+    try {
+      const idsLote = (bancos as any[]).map((b) => b.id);
+      if (idsLote.length > 0) {
+        await supabase
+          .from("simulacao_bancos")
+          .update({ status_banco: "erro", mensagem_banco: msg })
+          .in("id", idsLote)
+          .or("status_banco.eq.aguardando,status_banco.eq.enviando");
+      }
+    } catch (err) {
+      console.error("[enviar.server] Erro ao marcar falha no lote:", err);
     }
 
     await supabase
