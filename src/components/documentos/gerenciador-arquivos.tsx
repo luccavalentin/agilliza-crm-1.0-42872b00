@@ -523,44 +523,9 @@ export function GerenciadorArquivos({
                 variante={vista}
                 onAbrir={abrirNo}
                 onRenomear={setRenomeando}
-                onExcluir={setExcluirNo} // Corrigir nome se necessário, no arquivo original era setExcluindo
+                onExcluir={setExcluindo}
                 onMover={setMovendo}
                 onAlternarMenu={n.tipo === "pasta" && !n.parent_id ? alternarMostrarNoMenu : undefined}
-              />
-            ))}
-          </div>
-        )}
-        ) : filtrados.length === 0 ? (
-          <Card className="border-dashed">
-            <CardContent className="flex flex-col items-center gap-2 py-16 text-center text-muted-foreground">
-              <span className="flex size-14 items-center justify-center rounded-2xl bg-muted/60 text-muted-foreground/70">
-                <FolderOpen className="h-7 w-7" />
-              </span>
-              <p className="text-sm font-medium text-foreground">Esta pasta está vazia.</p>
-              <p className="text-xs">
-                Arraste arquivos aqui ou use <span className="font-medium">Nova pasta</span> /{" "}
-                <span className="font-medium">Enviar arquivos</span>.
-              </p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div
-            className={cn(
-              vista === "grade"
-                ? "grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-                : "flex flex-col gap-2",
-            )}
-          >
-            {filtrados.map((n) => (
-              <NoCard
-                key={n.id}
-                no={n}
-                variante={vista}
-                onAbrir={abrirNo}
-                onRenomear={setRenomeando}
-                onMover={setMovendo}
-                onExcluir={setExcluindo}
-                onAlternarMenu={alternarMostrarNoMenu}
               />
             ))}
           </div>
