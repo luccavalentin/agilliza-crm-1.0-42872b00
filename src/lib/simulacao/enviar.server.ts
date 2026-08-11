@@ -1284,9 +1284,9 @@ export async function enviarSimulacaoImpl({
       }
     };
 
-    for (const b of bancos as any[]) {
-      resultados.push(await enviarBanco(b));
-    }
+    // REGRA 4: FEEDBACK INDIVIDUAL
+    // Usamos Promise.all para enviar os bancos em paralelo e obter feedback imediato
+    resultados.push(...(await Promise.all((bancos as any[]).map(b => enviarBanco(b)))));
 
     // REGRA 3d: Marcar como erro bancos que ficaram sem homefin_id_simulacao_banco
     const { data: bancosFinais } = await supabase
