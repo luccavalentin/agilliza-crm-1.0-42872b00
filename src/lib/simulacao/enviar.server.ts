@@ -287,8 +287,12 @@ async function garantirDadosParticipantesSimulacao({
     if (!ehTitular && !ehConjuge) continue;
 
     // REGRA 1: A renda enviada ao banco é SEMPRE a renda declarada para o participante.
-    // O sistema NUNCA substitui esse valor.
-    const rendaDeclarada = ehConjuge ? num(sim.renda_conjuge) : num(sim.renda_total);
+    // No caso de composição de renda, enviamos a soma das rendas para ambos os proponentes
+    // para garantir que a comparação de taxas seja válida (mesma base de cálculo).
+    const rendaTotalCalculada = num(
+      sim.compoe_renda_conjuge ? num(sim.renda_total) + num(sim.renda_conjuge) : sim.renda_total,
+    );
+    const rendaDeclarada = sim.compoe_renda ? rendaTotalCalculada : (ehConjuge ? num(sim.renda_conjuge) : num(sim.renda_total));
 
     const payload: Record<string, unknown> = {
       tipoSituacao: part?.tipoSituacao ?? "A",
