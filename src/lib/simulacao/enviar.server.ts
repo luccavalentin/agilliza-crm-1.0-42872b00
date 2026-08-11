@@ -837,6 +837,8 @@ export async function enviarSimulacaoImpl({
     }
 
     if (!idOportunidade) {
+      console.log(`[enviar.server] Líder eleito para lock ${sim.agrupador_id || simulacaoId}. Criando oportunidade...`);
+
       // Líder ou Santander Home Equity: executa a criação da oportunidade
       // (Embora o loop de bancos agora seja sequencial, o ID da oportunidade deve ser persistido antes).
       const rendaTotalCalculada = num(
