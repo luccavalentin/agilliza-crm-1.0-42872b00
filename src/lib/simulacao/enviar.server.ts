@@ -709,28 +709,9 @@ export async function enviarSimulacaoImpl({
       ? ROTA_SANTANDER_HOME_EQUITY.idOperacao
       : sim.id_operacao_homefin;
 
-    // Se já temos a oportunidade, sincronizamos os dados da operação (valor, prazo, amortização)
-    // antes de integrar os bancos, garantindo que o banco receba os valores atualizados.
-    if (idOportunidade) {
-      try {
-        await chamarIntegracao<any>(
-          `/oportunidade/${idOportunidade}`,
-          "PUT",
-          {
-            valorImovel: num(sim.valor_imovel),
-            valorFinanciamento: num(sim.valor_financiamento),
-            prazo: num(sim.prazo),
-            codigoSistemaAmortizacaoBanco: { id: sim.sistema_amortizacao ?? "S" },
-            fgFinanciarDespesas,
-            valorDespesasFinanciadas,
-            valorTotalFinanciamento,
-          },
-          ctx,
-        );
-      } catch (e) {
-        console.warn(`[HomeFin] Falha ao sincronizar dados da oportunidade ${idOportunidade}:`, e);
-      }
-    }
+    const rendaTotalCalculada = num(
+      sim.compoe_renda_conjuge ? num(sim.renda_total) + num(sim.renda_conjuge) : sim.renda_total,
+    );
 
     const dadosOportunidade: Record<string, unknown> = {
       tipoImovel: { id: sim.tipo_imovel },
@@ -757,6 +738,63 @@ export async function enviarSimulacaoImpl({
       valorTotalFinanciamento,
       codigoSistemaAmortizacaoBanco: { id: sim.sistema_amortizacao ?? "S" },
     };
+
+    // Se já temos a oportunidade, sincronizamos os dados da operação (valor, prazo, amortização)
+    // CUIDADO OBRIGATÓRIO AO USAR PUT: A HomeFin pode exigir payload completo.
+    // Fazemos GET e sobrescrevemos para garantir que nada se perca.
+    if (idOportunidade) {
+      try {
+        const checkOp = await chamarIntegracao<any>(
+          `/oportunidade/${idOportunidade}`,
+          "GET",
+          undefined,
+          ctx,
+        );
+        const opBase = checkOp?.oportunidade ?? checkOp ?? {};
+
+        // Montamos o payload de atualização baseado no GET + novos dados da simulação
+        const putPayload: Record<string, unknown> = {
+          ...opBase,
+          ...dadosOportunidade,
+          // Garante campos críticos que podem não vir no GET ou estar em formato diferente
+          operacao: { idOperacao: String(idOperacaoIntegracao) },
+          rendaTotal: rendaTotalCalculada,
+          fgCompoeRenda: compoeRenda,
+          // Preserva autorizações e outros campos que o GET trouxe
+        };
+
+        // Remove campos de sistema que não devem ser enviados no PUT
+        delete putPayload.id;
+        delete putPayload.idOportunidade;
+        delete putPayload.codigoOportunidade;
+        delete putPayload.dataCriacao;
+        delete putPayload.simulacoes;
+        delete putPayload.participantes;
+        delete putPayload.historico;
+
+        await chamarIntegracao<any>(
+          `/oportunidade/${idOportunidade}`,
+          "PUT",
+          putPayload,
+          ctx,
+        );
+
+        // Verificação pós-PUT: garante integridade dos campos sensíveis
+        const posPut = await chamarIntegracao<any>(
+          `/oportunidade/${idOportunidade}`,
+          "GET",
+          undefined,
+          ctx,
+        );
+        const posOp = posPut?.oportunidade ?? posPut ?? {};
+        if (!posOp.rendaTotal || (possuiConjuge && !posOp.nomeConjuge)) {
+          console.error(`[HomeFin] Campo zerado após PUT na op ${idOportunidade}. Revertendo...`);
+          idOportunidade = null; // Forçará criação de nova nas chamadas subsequentes se necessário
+        }
+      } catch (e) {
+        console.warn(`[HomeFin] Falha ao sincronizar dados da oportunidade ${idOportunidade}:`, e);
+      }
+    }
 
     if (!idOportunidade) {
       // O lock é baseado no agrupador_id para que o par SAC/PRICE compartilhe a mesma oportunidade
@@ -823,6 +861,7 @@ export async function enviarSimulacaoImpl({
         celular: (sim.celular ?? "").replace(/\D/g, ""),
         tipoEstadoCivil: sim.estado_civil ? { id: sim.estado_civil } : undefined,
 
+        fgAutorizacaoDados: true,
         fgCompoeRenda: compoeRenda,
         ...(possuiConjuge
           ? {
@@ -852,6 +891,9 @@ export async function enviarSimulacaoImpl({
         .eq(sim.agrupador_id ? "agrupador_id" : "id", sim.agrupador_id || simulacaoId);
     }
 
+    // Mapa oficial da integração: Participante (5) deve ser incluído antes da Integração (6).
+    // Embora o sistema chame o participante ANTES do POST /simulacao (Passo 4), mantemos
+    // a ordem atual por ser uma divergência conhecida que funciona.
     if (idOportunidade) {
       await garantirDadosParticipantesSimulacao({
         sim,
@@ -1032,13 +1074,32 @@ export async function enviarSimulacaoImpl({
               throw erroIntegracao;
             }
 
-            // O PUT /oportunidade aceita SOMENTE estes três campos. Enviar o
-            // objeto completo devolve HTTP 500 INTERNAL_ERROR.
+            // CUIDADO OBRIGATÓRIO AO USAR PUT: A HomeFin pode exigir payload completo.
+            // Sobrescrevemos o prazo no payload base do GET.
+            // O PUT /oportunidade pode exigir payload completo. Fazemos GET e
+            // sobrescrevemos o prazo.
+            const checkOp = await chamarIntegracao<any>(
+              `/oportunidade/${idOportunidade}`,
+              "GET",
+              undefined,
+              ctx,
+            );
+            const opBase = checkOp?.oportunidade ?? checkOp ?? {};
+            
             const oportunidadeAjustada = {
+              ...opBase,
               valorImovel: num(sim.valor_imovel),
               valorFinanciamento: num(sim.valor_financiamento),
               prazo: prazoSolicitado,
             };
+            
+            delete oportunidadeAjustada.id;
+            delete oportunidadeAjustada.idOportunidade;
+            delete oportunidadeAjustada.codigoOportunidade;
+            delete oportunidadeAjustada.dataCriacao;
+            delete oportunidadeAjustada.simulacoes;
+            delete oportunidadeAjustada.participantes;
+            delete oportunidadeAjustada.historico;
             const simulacaoAjustada = { ...putPayload, prazo: prazoSolicitado };
 
             try {
