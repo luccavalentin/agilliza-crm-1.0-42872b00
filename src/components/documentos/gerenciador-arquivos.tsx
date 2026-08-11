@@ -89,7 +89,7 @@ export function GerenciadorArquivos({
   const [excluindo, setExcluindo] = useState<ArquivoNo | null>(null);
   const [movendo, setMovendo] = useState<ArquivoNo | null>(null);
   const [dragging, setDragging] = useState(false);
-  const [visualizando, setVisualizando] = useState<{ url: string; nome: string } | null>(null);
+  const [visualizando, setVisualizando] = useState<{ url: string; nome: string; id?: string } | null>(null);
   const [vista, setVista] = useState<"grade" | "lista">("grade");
   const [buscaGlobalAberta, setBuscaGlobalAberta] = useState(false);
   const [termoGlobal, setTermoGlobal] = useState("");
@@ -221,7 +221,7 @@ export function GerenciadorArquivos({
       }
       try {
         const { url, nome } = await fnUrl({ data: { id: no.id } });
-        setVisualizando({ url, nome });
+        setVisualizando({ url, nome, id: no.id });
       } catch (e: any) {
         toast.error(e?.message ?? "Não foi possível abrir o arquivo.");
       }
@@ -309,7 +309,7 @@ export function GerenciadorArquivos({
       setPasta(r.parent_id);
       try {
         const { url, nome } = await fnUrl({ data: { id: r.id } });
-        setVisualizando({ url, nome });
+        setVisualizando({ url, nome, id: r.id });
       } catch (e: any) {
         toast.error(e?.message ?? "Não foi possível abrir o arquivo.");
       }
@@ -493,11 +493,43 @@ export function GerenciadorArquivos({
         )}
       >
         {nos.isLoading ? (
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {Array.from({ length: 8 }).map((_, i) => (
-              <Skeleton key={i} className="h-[76px] w-full rounded-xl" />
+              <Skeleton key={i} className="h-[120px] w-full rounded-2xl" />
             ))}
           </div>
+        ) : filtrados.length === 0 ? (
+          <div className="flex min-h-[300px] flex-col items-center justify-center rounded-2xl border-2 border-dashed border-border/40 bg-muted/20 p-8 text-center">
+            <div className="mb-4 rounded-full bg-muted p-4">
+               <FolderOpen className="h-10 w-10 text-muted-foreground/60" />
+            </div>
+            <h3 className="text-lg font-semibold text-foreground">Nenhum item encontrado</h3>
+            <p className="max-w-xs text-sm text-muted-foreground">
+              Esta pasta está vazia ou nenhum item corresponde à sua busca.
+            </p>
+          </div>
+        ) : (
+          <div
+            className={cn(
+              vista === "grade"
+                ? "grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+                : "flex flex-col gap-2",
+            )}
+          >
+            {filtrados.map((n) => (
+              <NoCard
+                key={n.id}
+                no={n}
+                variante={vista}
+                onAbrir={abrirNo}
+                onRenomear={setRenomeando}
+                onExcluir={setExcluirNo} // Corrigir nome se necessário, no arquivo original era setExcluindo
+                onMover={setMovendo}
+                onAlternarMenu={n.tipo === "pasta" && !n.parent_id ? alternarMostrarNoMenu : undefined}
+              />
+            ))}
+          </div>
+        )}
         ) : filtrados.length === 0 ? (
           <Card className="border-dashed">
             <CardContent className="flex flex-col items-center gap-2 py-16 text-center text-muted-foreground">
