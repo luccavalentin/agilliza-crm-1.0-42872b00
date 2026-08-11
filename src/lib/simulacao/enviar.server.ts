@@ -1259,7 +1259,11 @@ export async function enviarSimulacaoImpl({
     };
 
     for (const b of bancos as any[]) {
-      resultados.push(await enviarBanco(b));
+      try {
+        resultados.push(await enviarBanco(b));
+      } catch (e) {
+        console.error(`[enviar.server] Falha crítica ao enviar banco ${b.id}:`, e);
+      }
     }
 
     // REGRA: Marcar como erro bancos que ficaram sem homefin_id_simulacao_banco
