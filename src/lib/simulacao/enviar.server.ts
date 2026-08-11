@@ -905,6 +905,8 @@ export async function enviarSimulacaoImpl({
     // Embora o sistema chame o participante ANTES do POST /simulacao (Passo 4), mantemos
     // a ordem atual por ser uma divergência conhecida que funciona.
     if (idOportunidade) {
+      console.log(`[enviar.server] Garantindo dados dos participantes na oportunidade ${idOportunidade}`);
+
       await garantirDadosParticipantesSimulacao({
         sim,
         cliente: clienteCompleto,
