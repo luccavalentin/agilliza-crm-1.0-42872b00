@@ -1193,9 +1193,8 @@ export async function enviarSimulacaoImpl({
 
             while (vazio(dadosApi) && Date.now() - iniciouPolling < ORCAMENTO_MS) {
               await new Promise((r) => setTimeout(r, intervaloFixo));
-
-
               tentativas++;
+
               try {
                 const op = await chamarIntegracao<any>(
                   `/oportunidade/${idOportunidade}`,
