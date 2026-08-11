@@ -1215,10 +1215,10 @@ export async function enviarSimulacaoImpl({
                 num(sim.prazo) ??
                 null,
               valor_financiamento_max:
-                apiData?.valorFinanciamentoBancoMax ??
-                apiData?.valorFinanciamentoBanco ??
-                apiData?.valorTotalFinanciamento ??
-                apiData?.valorFinanciamentoSimulacao ??
+                num(apiData?.valorTotalFinanciamento) ??
+                num(apiData?.valorFinanciamentoBancoMax) ??
+                num(apiData?.valorFinanciamentoBanco) ??
+                num(apiData?.valorFinanciamentoSimulacao) ??
                 num(sim.valor_financiamento) ??
                 null,
               valor_parcela_max: apiData?.valorParcelaBancoMax ?? null,
