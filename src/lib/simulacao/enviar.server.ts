@@ -1228,6 +1228,8 @@ export async function enviarSimulacaoImpl({
             }
 
             const duracao = Math.round((Date.now() - iniciouPolling) / 1000);
+            console.log(`[enviar.server] Polling para ${b.nome_banco} encerrado em ${duracao}s. Motivo: ${motivoFim}`);
+
             try {
               await supabase.from("simulacao_historico").insert({
                 simulacao_id: simulacaoId,
