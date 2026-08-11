@@ -6247,6 +6247,7 @@ export type Database = {
           simulado_em: string | null
           sistema_amortizacao_banco: string | null
           status_banco: Database["public"]["Enums"]["simulacao_banco_status"]
+          taxa_cet_ano: number | null
           taxa_juros_ano: number | null
           updated_at: string
           valor_financiamento_max: number | null
@@ -6275,6 +6276,7 @@ export type Database = {
           simulado_em?: string | null
           sistema_amortizacao_banco?: string | null
           status_banco?: Database["public"]["Enums"]["simulacao_banco_status"]
+          taxa_cet_ano?: number | null
           taxa_juros_ano?: number | null
           updated_at?: string
           valor_financiamento_max?: number | null
@@ -6303,6 +6305,7 @@ export type Database = {
           simulado_em?: string | null
           sistema_amortizacao_banco?: string | null
           status_banco?: Database["public"]["Enums"]["simulacao_banco_status"]
+          taxa_cet_ano?: number | null
           taxa_juros_ano?: number | null
           updated_at?: string
           valor_financiamento_max?: number | null
