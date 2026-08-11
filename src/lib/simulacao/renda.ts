@@ -28,10 +28,24 @@ import { calcularSimulacao, type SistemaAmortizacao } from "./simulacao-rapida";
  */
 export const MARGEM_SEGURANCA_RENDA = 0.1;
 
-/** Percentual máximo da renda que pode ser comprometido com a parcela. */
+/** Percentual máximo da renda que pode ser comprometido com a parcela (SAC). */
 export const COMPROMETIMENTO_MAX = 0.3;
-/** Comprometimento máx no PRICE (SFH/SFI exige mais margem para juros sobre saldo). */
+/** Comprometimento máx no PRICE. Mantido 15% para Bradesco; demais IFs usam 30%. */
 export const COMPROMETIMENTO_MAX_PRICE = 0.15;
+
+/** 
+ * Mapa de comprometimento máximo por banco e sistema. 
+ * Itaú e Santander usam 30% em ambos por padrão (sem evidência de 15% no PRICE).
+ */
+export const COMPROMETIMENTO_BANCOS: Record<string, { SAC: number; PRICE: number }> = {
+  default: { SAC: 0.3, PRICE: 0.3 },
+  "237": { SAC: 0.3, PRICE: 0.15 }, // Bradesco
+  bradesco: { SAC: 0.3, PRICE: 0.15 },
+  "033": { SAC: 0.3, PRICE: 0.3 }, // Santander
+  santander: { SAC: 0.3, PRICE: 0.3 },
+  "341": { SAC: 0.3, PRICE: 0.3 }, // Itaú
+  itau: { SAC: 0.3, PRICE: 0.3 },
+};
 
 /**
  * Encargos mensais obrigatórios que os bancos SOMAM à parcela ao verificar o
