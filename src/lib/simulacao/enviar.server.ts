@@ -1165,44 +1165,56 @@ export async function enviarSimulacaoImpl({
             return { banco_id: b.banco_id, status: "erro" as const, mensagem: msg };
           }
 
+          const raw = integ ?? simResp;
+          const apiData = raw?.simulacao ?? raw?.data ?? raw;
+          const descBco = apiData?.descricaoRespostaBanco;
+          
+          // REGRA 1: PERSISTIR O VALOR DO BANCO (Problema 1)
+          const rendaMinimaApi = num(descBco?.valorRendaLiquidaMinimaExigida) || num(descBco?.rendaMinimaExigida) || num(apiData?.rendaMinimaExigida);
+          const rendaMinimaFonte = rendaMinimaApi > 0 ? "banco" : "estimativa";
+          
+          // Se não veio do banco, calcula localmente para persistir
+          let rendaMinimaPersistir = rendaMinimaApi;
+          if (rendaMinimaFonte === "estimativa") {
+            const parcela = num(apiData?.valorParcelaBanco ?? apiData?.valorParcelaSimulacao);
+            if (parcela > 0) {
+              // Importa dinamicamente para evitar ciclos
+              const { tetoDoBanco, rendaMinimaParaParcela } = await import("./renda");
+              const teto = tetoDoBanco({ ...b, raw_response: raw });
+              rendaMinimaPersistir = Math.ceil(rendaMinimaParaParcela(parcela, teto) / 1000) * 1000;
+            }
+          }
+
           await supabase
             .from("simulacao_bancos")
             .update({
               homefin_id_simulacao_banco: idSimulacao,
               status_banco: "simulada",
-              mensagem_banco: null, // Limpa qualquer erro residual de tentativa anterior
-              // Marca a ORIGEM dos campos que têm fallback para o valor
-              // solicitado: a tela só exibe como resposta do banco o que o banco
-              // realmente informou (ver src/lib/simulacao/origem-dados.ts).
-              raw_response:
-                dados && typeof dados === "object"
-                  ? { ...(dados as any), _origem_dados: marcarOrigemDados(dadosApi) }
-                  : dados,
-
+              mensagem_banco: null,
+              raw_response: raw,
+              renda_minima_banco: rendaMinimaPersistir || null,
+              renda_minima_fonte: rendaMinimaFonte,
               simulado_em: new Date().toISOString(),
-              valor_parcela: dadosApi?.valorParcelaBanco ?? dadosApi?.valorParcelaSimulacao ?? null,
-              taxa_juros_ano: dadosApi?.taxa_juros_ano_banco ?? dadosApi?.taxaJurosAnoBanco ?? null,
+              valor_parcela: apiData?.valorParcelaBanco ?? apiData?.valorParcelaSimulacao ?? null,
+              taxa_juros_ano: apiData?.taxa_juros_ano_banco ?? apiData?.taxaJurosAnoBanco ?? null,
               prazo_pagamento_max:
-                dadosApi?.prazoPagamentoBancoMax ??
-                dadosApi?.prazoPagamentoBanco ??
-                dadosApi?.prazoPagamentoSimulacao ??
+                apiData?.prazoPagamentoBancoMax ??
+                apiData?.prazoPagamentoBanco ??
+                apiData?.prazoPagamentoSimulacao ??
                 num(sim.prazo) ??
                 null,
               valor_financiamento_max:
-                dadosApi?.valorFinanciamentoBancoMax ??
-                dadosApi?.valorFinanciamentoBanco ??
-                dadosApi?.valorTotalFinanciamento ??
-                dadosApi?.valorFinanciamentoSimulacao ??
+                apiData?.valorFinanciamentoBancoMax ??
+                apiData?.valorFinanciamentoBanco ??
+                apiData?.valorTotalFinanciamento ??
+                apiData?.valorFinanciamentoSimulacao ??
                 num(sim.valor_financiamento) ??
                 null,
-              valor_parcela_max: dadosApi?.valorParcelaBancoMax ?? null,
-              codigo_indexador: dadosApi?.codigoIndexadorBanco ?? null,
-              valor_iof: dadosApi?.valorIofBanco ?? null,
-              // A API devolve `codigoSistemaAmortizacaoBanco` ora como string
-              // ("S"/"P"), ora como objeto `{ id: "S" }` — normalizamos para
-              // string curta antes de persistir na coluna texto.
+              valor_parcela_max: apiData?.valorParcelaBancoMax ?? null,
+              codigo_indexador: apiData?.codigoIndexadorBanco ?? null,
+              valor_iof: apiData?.valorIofBanco ?? null,
               sistema_amortizacao_banco: (() => {
-                const v = dadosApi?.codigoSistemaAmortizacaoBanco;
+                const v = apiData?.codigoSistemaAmortizacaoBanco;
                 if (v == null) return null;
                 if (typeof v === "string") return v;
                 if (typeof v === "object" && "id" in (v as any))
