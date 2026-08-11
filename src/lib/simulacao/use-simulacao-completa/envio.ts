@@ -289,42 +289,34 @@ export async function executarEnvioSimples(ctx: CtxBase): Promise<void> {
     sessionStorage.removeItem("simulacao_wizard");
     const idsBancos = f.bancos_ids.length > 0 ? f.bancos_ids : [];
 
-    // Envio para a simulação principal
-    const promises = [];
-    if (idsBancos.length === 0) {
-      promises.push(enviarSimulacaoBanco({ data: { simulacao_id: id } }));
-    } else {
-      for (const bid of idsBancos) {
-        promises.push(enviarSimulacaoBanco({ data: { simulacao_id: id, banco_ids: [bid] } }));
-      }
-    }
-
-    // Se houver simulação secundária (comparação automática de CPFs), envia também
-    if (id_secundario) {
-      if (idsBancos.length === 0) {
-        promises.push(enviarSimulacaoBanco({ data: { simulacao_id: id_secundario } }));
-      } else {
-        for (const bid of idsBancos) {
-          promises.push(
-            enviarSimulacaoBanco({ data: { simulacao_id: id_secundario, banco_ids: [bid] } }),
-          );
-        }
-      }
-    }
-
+    // Envio para a simulação principal - Sequencial por lotes de 2 para evitar saturação
+    const idsBancos = f.bancos_ids.length > 0 ? f.bancos_ids : [];
+    const bancosParaEnviar = idsBancos.length > 0 ? [...idsBancos] : [null];
     let feitos = 0;
-    await Promise.allSettled(
-      promises.map((p) =>
-        p
-          .catch((e) => {
-            console.error("[Envio Banco]", e);
-          })
-          .finally(() => {
+
+    while (bancosParaEnviar.length > 0) {
+      const lote = bancosParaEnviar.splice(0, 2);
+      await Promise.allSettled(
+        lote.map(async (bid) => {
+          try {
+            await enviarSimulacaoBanco({
+              data: { simulacao_id: id, banco_ids: bid ? [bid] : undefined },
+            });
+            // Se houver simulação secundária (comparação automática de CPFs), envia também
+            if (id_secundario) {
+              await enviarSimulacaoBanco({
+                data: { simulacao_id: id_secundario, banco_ids: bid ? [bid] : undefined },
+              });
+            }
+          } catch (e) {
+            console.error(`[Envio Simples] Falha no banco ${bid}:`, e);
+          } finally {
             feitos++;
             setConcluidos(Math.min(feitos, idsBancos.length > 0 ? idsBancos.length : 1));
-          }),
-      ),
-    );
+          }
+        }),
+      );
+    }
 
     // Fluxo "Nova Proposta": após simular, cria a proposta e redireciona.
     if (modoProposta) {
