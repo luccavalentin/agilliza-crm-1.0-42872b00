@@ -72,7 +72,7 @@ export interface AvaliacaoRenda {
   /** Banco usado quando o cálculo vem do retorno real da integração bancária. */
   bancoNome?: string | null;
   /** Origem do cálculo exibido. */
-  fonte?: "api_banco" | "estimativa_local";
+  fonte?: "banco" | "estimativa";
 }
 
 export interface BancoRendaApi {
@@ -178,20 +178,22 @@ export function rendaMinimaDoBanco(banco: BancoRendaApi): number | null {
 export function rendaMinimaPelosBancos(
   bancos: BancoRendaApi[] | null | undefined,
   rendaInformada?: number | null,
-): AvaliacaoRenda | null {
+): (AvaliacaoRenda & { renda_minima_fonte?: string }) | null {
   const candidatos = (bancos ?? [])
     .filter((b) => !b.status_banco || b.status_banco === "simulada" || b.status_banco === "erro")
     .map((b) => {
       const parcela = parcelaExigidaPeloBanco(b);
       const rendaMinima = rendaMinimaDoBanco(b);
+      const fonte = b.raw_response?.renda_minima_fonte ?? (b as any).renda_minima_fonte ?? "estimativa";
       if (!parcela || !rendaMinima) return null;
       return {
         bancoNome: b.nome_banco ?? null,
         primeiraParcela: parcela,
         rendaMinima,
+        fonte: fonte as "banco" | "estimativa",
       };
     })
-    .filter((v): v is { bancoNome: string | null; primeiraParcela: number; rendaMinima: number } =>
+    .filter((v): v is { bancoNome: string | null; primeiraParcela: number; rendaMinima: number; fonte: "banco" | "estimativa" } =>
       Boolean(v),
     )
     .sort((a, b) => b.rendaMinima - a.rendaMinima);
@@ -203,7 +205,7 @@ export function rendaMinimaPelosBancos(
     ...maior,
     comprometimento: renda ? maior.primeiraParcela / renda : null,
     suficiente: renda == null ? null : renda >= maior.rendaMinima,
-    fonte: "api_banco",
+    renda_minima_fonte: maior.fonte,
   };
 }
 
@@ -294,7 +296,7 @@ export function avaliarRendaMinima(params: {
     rendaMinima,
     comprometimento: renda ? prestacaoTotal / renda : null,
     suficiente: renda == null ? null : renda >= rendaMinima,
-    fonte: "estimativa_local",
+    fonte: "estimativa",
   };
 }
 
