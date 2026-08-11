@@ -1201,7 +1201,7 @@ export async function enviarSimulacaoImpl({
                 const { data: sac } = await supabase
                   .from("simulacao_bancos")
                   .select("valor_parcela, taxa_juros_ano")
-                  .eq("banco_id", banco.id)
+                  .eq("banco_id", b.banco_id)
                   .eq("status_banco", "simulada")
                   .eq("sistema_amortizacao_banco", "SAC")
                   .order("simulado_em", { ascending: false })
