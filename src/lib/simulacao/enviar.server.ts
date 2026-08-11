@@ -899,7 +899,7 @@ export async function enviarSimulacaoImpl({
 
     // 2 + 3) Simulação + integração por banco.
     // REGRA 3: A simulação só sai de "enviando" quando todos os bancos tiverem desfecho.
-    // O loop de bancos é SEQUENCIAL para evitar condições de corrida na oportunidade.
+    // O loop de bancos é PARALELO para feedback individual e rapidez.
     const resultados: EnviarResultado["bancos"] = [];
     const enviarBanco = async (b: any): Promise<EnviarResultado["bancos"][number]> => {
       // Registrar início do envio para este banco
