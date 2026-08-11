@@ -287,28 +287,8 @@ async function garantirDadosParticipantesSimulacao({
     if (!ehTitular && !ehConjuge) continue;
 
     // REGRA 1: A renda enviada ao banco é SEMPRE a renda declarada para o participante.
-    // No caso de composição de renda, enviamos a SOMA das rendas do titular e do cônjuge
-    // para ambos os proponentes, garantindo que a comparação de taxas seja baseada
-    // na mesma capacidade financeira (renda familiar).
-
-    // Garantia de isolamento: as variáveis de renda são extraídas do registro
-    // da simulação lido especificamente para este envio (sim), garantindo que
-    // valores de outras execuções ou objetos mutados não vazem.
-    const rendaTitular = num(sim.renda_total);
-    const rendaConjuge = num(sim.renda_conjuge);
-    const compoeRenda = Boolean(sim.compoe_renda);
-
-    // Validação crítica antes de montar o payload: se compoe_renda está ativo,
-    // a renda enviada não pode ser apenas a renda_total se houver renda_conjuge > 0.
-    if (compoeRenda && rendaConjuge > 0 && num(sim.renda_total + rendaConjuge) === rendaTitular) {
-      console.error(`[enviar.server] Erro de integridade: compoe_renda=true mas soma resultou no valor individual para sim ${sim.id}`);
-    }
-
-    const rendaDeclarada = compoeRenda
-      ? num(rendaTitular + rendaConjuge)
-      : ehConjuge
-        ? rendaConjuge
-        : rendaTitular;
+    // O sistema NUNCA substitui esse valor.
+    const rendaDeclarada = ehConjuge ? num(sim.renda_conjuge) : num(sim.renda_total);
 
     const payload: Record<string, unknown> = {
       tipoSituacao: part?.tipoSituacao ?? "A",
@@ -662,12 +642,13 @@ export async function enviarSimulacaoImpl({
       bancos.length === 1 && usarRotaSantanderHomeEquity(sim, bancos[0]);
 
     // 1) Oportunidade (idempotência: reutiliza se já existe)
-    console.log(`[enviar.server] Analisando oportunidade para simulação ${sim.numero_simulacao} (ID: ${simulacaoId})`);
-    let idOportunidade = (sim.homefin_id_oportunidade as string | null);
+    // Santander em Home Equity usa a rota operacional Somahome; oportunidades
+    // antigas criadas como Home Equity comum ficam sem retorno. Para reenvio,
+    // criamos uma nova oportunidade na operação correta.
+    let idOportunidade = usaRotaSantanderHomeEquity
+      ? null
+      : (sim.homefin_id_oportunidade as string | null);
 
-
-    // Se a oportunidade estiver cancelada, forçamos a criação de uma nova
-    // (Bancos não aceitam reenvio em oportunidade 'C').
     if (idOportunidade) {
       try {
         const checkOp = await chamarIntegracao<any>(
@@ -700,21 +681,15 @@ export async function enviarSimulacaoImpl({
         console.warn(`[HomeFin] Falha ao validar estado da oportunidade ${idOportunidade}:`, e);
         idOportunidade = null;
       }
-      console.log(`[enviar.server] Oportunidade existente ${idOportunidade} validada.`);
-    } else {
-      console.log(`[enviar.server] Nenhuma oportunidade prévia encontrada na simulação ${simulacaoId}.`);
     }
 
-
     // Campos que dependem da simulação atual e podem ter mudado desde a
-    // primeira criação da oportunidade.
+    // primeira criação da oportunidade (ex.: usuário marcou "financiar despesas"
+    // e reenviou). Precisam ser sincronizados também no reenvio, senão o banco
+    // continua recebendo os valores antigos.
     const idOperacaoIntegracao = usaRotaSantanderHomeEquity
       ? ROTA_SANTANDER_HOME_EQUITY.idOperacao
       : sim.id_operacao_homefin;
-
-    const rendaTotalCalculada = num(
-      sim.compoe_renda_conjuge ? num(sim.renda_total) + num(sim.renda_conjuge) : sim.renda_total,
-    );
 
     const dadosOportunidade: Record<string, unknown> = {
       tipoImovel: { id: sim.tipo_imovel },
@@ -742,75 +717,20 @@ export async function enviarSimulacaoImpl({
       codigoSistemaAmortizacaoBanco: { id: sim.sistema_amortizacao ?? "S" },
     };
 
-    // Se já temos a oportunidade, sincronizamos os dados da operação (valor, prazo, amortização)
-    // CUIDADO OBRIGATÓRIO AO USAR PUT: A HomeFin pode exigir payload completo.
-    // Fazemos GET e sobrescrevemos para garantir que nada se perca.
-    if (idOportunidade) {
-      try {
-        const checkOp = await chamarIntegracao<any>(
-          `/oportunidade/${idOportunidade}`,
-          "GET",
-          undefined,
-          ctx,
-        );
-        const opBase = checkOp?.oportunidade ?? checkOp ?? {};
-
-        // Montamos o payload de atualização baseado no GET + novos dados da simulação
-        const putPayload: Record<string, unknown> = {
-          ...opBase,
-          ...dadosOportunidade,
-          // Garante campos críticos que podem não vir no GET ou estar em formato diferente
-          operacao: { idOperacao: String(idOperacaoIntegracao) },
-          rendaTotal: rendaTotalCalculada,
-          fgCompoeRenda: compoeRenda,
-          // Preserva autorizações e outros campos que o GET trouxe
-        };
-
-        // Remove campos de sistema que não devem ser enviados no PUT
-        delete putPayload.id;
-        delete putPayload.idOportunidade;
-        delete putPayload.codigoOportunidade;
-        delete putPayload.dataCriacao;
-        delete putPayload.simulacoes;
-        delete putPayload.participantes;
-        delete putPayload.historico;
-
-        await chamarIntegracao<any>(
-          `/oportunidade/${idOportunidade}`,
-          "PUT",
-          putPayload,
-          ctx,
-        );
-
-        // Verificação pós-PUT: garante integridade dos campos sensíveis
-        const posPut = await chamarIntegracao<any>(
-          `/oportunidade/${idOportunidade}`,
-          "GET",
-          undefined,
-          ctx,
-        );
-        const posOp = posPut?.oportunidade ?? posPut ?? {};
-        if (!posOp.rendaTotal || (possuiConjuge && !posOp.nomeConjuge)) {
-          console.error(`[HomeFin] Campo zerado após PUT na op ${idOportunidade}. Revertendo...`);
-          idOportunidade = null; // Forçará criação de nova nas chamadas subsequentes se necessário
-        }
-      } catch (e) {
-        console.warn(`[HomeFin] Falha ao sincronizar dados da oportunidade ${idOportunidade}:`, e);
-      }
-    }
-
-    if (!idOportunidade) {
-      // O lock é baseado no agrupador_id para que o par SAC/PRICE compartilhe a mesma oportunidade
-      const lockKey = sim.agrupador_id || simulacaoId;
+    if (!idOportunidade && !usaRotaSantanderHomeEquity) {
+      // Eleição de líder: tenta obter o lock no Postgres para evitar race condition entre requisições paralelas.
+      // O lock expira em 90s se a requisição líder morrer sem completar.
       const noventaSegundosAtras = new Date(Date.now() - 90 * 1000).toISOString();
-      const { data: liderEleito } = await supabase.rpc("eleger_lider_oportunidade", {
-        p_simulacao_id: lockKey,
-        p_lock_timeout: noventaSegundosAtras,
-      });
+      const { data: liderEleito } = await supabase
+        .from("simulacoes")
+        .update({ oportunidade_lock_em: new Date().toISOString() } as any)
+        .match({ id: simulacaoId })
+        .is("homefin_id_oportunidade", null)
+        .or(`oportunidade_lock_em.is.null,oportunidade_lock_em.lt.${noventaSegundosAtras}`)
+        .select("id")
+        .maybeSingle();
 
       if (!liderEleito) {
-        console.log(`[enviar.server] Seguindo execução líder para lock ${lockKey}. Aguardando oportunidade...`);
-
         // Seguidor: aguarda o líder criar a oportunidade (polling curto)
         const maxWait = 60_000;
         const start = Date.now();
@@ -818,9 +738,7 @@ export async function enviarSimulacaoImpl({
           const { data: retrySim } = await supabase
             .from("simulacoes")
             .select("homefin_id_oportunidade")
-            .eq(sim.agrupador_id ? "agrupador_id" : "id", lockKey)
-            .not("homefin_id_oportunidade", "is", null)
-            .limit(1)
+            .eq("id", simulacaoId)
             .maybeSingle();
 
           if (retrySim?.homefin_id_oportunidade) {
@@ -832,7 +750,6 @@ export async function enviarSimulacaoImpl({
 
         if (!idOportunidade) {
           // Timeout no polling: falha apenas esta requisição.
-          console.error(`[enviar.server] Saindo por timeout aguardando líder criar oportunidade para lock ${lockKey}`);
           throw new Error(
             "Não foi possível iniciar a simulação neste banco. Nenhum dado foi enviado ao banco. Clique em reenviar.",
           );
@@ -841,8 +758,6 @@ export async function enviarSimulacaoImpl({
     }
 
     if (!idOportunidade) {
-      console.log(`[enviar.server] Líder eleito para lock ${sim.agrupador_id || simulacaoId}. Criando oportunidade...`);
-
       // Líder ou Santander Home Equity: executa a criação da oportunidade
       // (Embora o loop de bancos agora seja sequencial, o ID da oportunidade deve ser persistido antes).
       const rendaTotalCalculada = num(
@@ -869,7 +784,6 @@ export async function enviarSimulacaoImpl({
         celular: (sim.celular ?? "").replace(/\D/g, ""),
         tipoEstadoCivil: sim.estado_civil ? { id: sim.estado_civil } : undefined,
 
-        fgAutorizacaoDados: true,
         fgCompoeRenda: compoeRenda,
         ...(possuiConjuge
           ? {
@@ -889,24 +803,17 @@ export async function enviarSimulacaoImpl({
       const resp = await chamarIntegracao<any>("/oportunidade", "POST", payload, ctx);
       const op = resp?.oportunidade ?? resp ?? {};
       idOportunidade = String(op.idOportunidade ?? op.id ?? "");
-      console.log(`[enviar.server] POST /oportunidade concluído. Novo ID: ${idOportunidade}`);
-
       await supabase
         .from("simulacoes")
         .update({
           homefin_id_oportunidade: idOportunidade,
           codigo_oportunidade_homefin: op.codigoOportunidade ?? null,
-          oportunidade_lock_em: null, 
+          oportunidade_lock_em: null, // Limpa o lock para permitir reenvios futuros
         } as any)
-        .eq(sim.agrupador_id ? "agrupador_id" : "id", sim.agrupador_id || simulacaoId);
+        .eq("id", simulacaoId);
     }
 
-    // Mapa oficial da integração: Participante (5) deve ser incluído antes da Integração (6).
-    // Embora o sistema chame o participante ANTES do POST /simulacao (Passo 4), mantemos
-    // a ordem atual por ser uma divergência conhecida que funciona.
     if (idOportunidade) {
-      console.log(`[enviar.server] Garantindo dados dos participantes na oportunidade ${idOportunidade}`);
-
       await garantirDadosParticipantesSimulacao({
         sim,
         cliente: clienteCompleto,
@@ -953,7 +860,7 @@ export async function enviarSimulacaoImpl({
 
     // 2 + 3) Simulação + integração por banco.
     // REGRA 3: A simulação só sai de "enviando" quando todos os bancos tiverem desfecho.
-    // O loop de bancos é PARALELO para feedback individual e rapidez.
+    // O loop de bancos é SEQUENCIAL para evitar condições de corrida na oportunidade.
     const resultados: EnviarResultado["bancos"] = [];
     const enviarBanco = async (b: any): Promise<EnviarResultado["bancos"][number]> => {
       // Registrar início do envio para este banco
@@ -978,8 +885,6 @@ export async function enviarSimulacaoImpl({
         // Enviamos o prazo já validado pela idade, limitado a até 420 meses.
         const prazoBanco = num(sim.prazo);
         try {
-          console.log(`[enviar.server] Iniciando processo para banco ${b.nome_banco} (ID: ${b.id}) na oportunidade ${idOportunidade}`);
-
           const simPayload = {
             valorImovel: num(sim.valor_imovel),
             valorFinanciamento: num(sim.valor_financiamento),
@@ -991,22 +896,13 @@ export async function enviarSimulacaoImpl({
             valorTotalFinanciamento,
             fgAutorizacaoDados: true,
           };
-          console.log(`[enviar.server] POST /oportunidade/${idOportunidade}/simulacao para ${b.nome_banco}:`, JSON.stringify(simPayload));
-
-          const simResp = b.homefin_id_simulacao_banco
-            ? await chamarComRetry<any>(
-                `/oportunidade/${idOportunidade}/simulacao/${b.homefin_id_simulacao_banco}`,
-                "PUT",
-                simPayload,
-              )
-            : await chamarComRetry<any>(
-                `/oportunidade/${idOportunidade}/simulacao`,
-                "POST",
-                simPayload,
-              );
-          const idSimulacao = String(simResp?.idSimulacao ?? simResp?.id ?? b.homefin_id_simulacao_banco ?? "");
-          console.log(`[enviar.server] Banco ${b.nome_banco} (ID: ${b.id}) recebeu ID de simulação integration: ${idSimulacao}`);
-
+          console.log("Payload enviado para criar simulação bancária:", JSON.stringify(simPayload));
+          const simResp = await chamarComRetry<any>(
+            `/oportunidade/${idOportunidade}/simulacao`,
+            "POST",
+            simPayload,
+          );
+          const idSimulacao = String(simResp?.idSimulacao ?? "");
 
           // PUT completo da simulação: garante que a integração persista os campos de
           // despesas financiadas ANTES da integração bancária. Enviamos o payload
@@ -1051,8 +947,6 @@ export async function enviarSimulacaoImpl({
           }
 
           // A resposta da integração traz os valores retornados pelo banco.
-          console.log(`[enviar.server] POST /integracao para ${b.nome_banco} (Simulação: ${idSimulacao})`);
-
           // Em terreno, o Bradesco pode calcular e devolver um prazo mínimo para
           // aquela operação (por exemplo, 180), embora esse piso não seja
           // documentado como constante. Quando isso ocorrer, adotamos exatamente
@@ -1093,32 +987,13 @@ export async function enviarSimulacaoImpl({
               throw erroIntegracao;
             }
 
-            // CUIDADO OBRIGATÓRIO AO USAR PUT: A HomeFin pode exigir payload completo.
-            // Sobrescrevemos o prazo no payload base do GET.
-            // O PUT /oportunidade pode exigir payload completo. Fazemos GET e
-            // sobrescrevemos o prazo.
-            const checkOp = await chamarIntegracao<any>(
-              `/oportunidade/${idOportunidade}`,
-              "GET",
-              undefined,
-              ctx,
-            );
-            const opBase = checkOp?.oportunidade ?? checkOp ?? {};
-            
+            // O PUT /oportunidade aceita SOMENTE estes três campos. Enviar o
+            // objeto completo devolve HTTP 500 INTERNAL_ERROR.
             const oportunidadeAjustada = {
-              ...opBase,
               valorImovel: num(sim.valor_imovel),
               valorFinanciamento: num(sim.valor_financiamento),
               prazo: prazoSolicitado,
             };
-            
-            delete oportunidadeAjustada.id;
-            delete oportunidadeAjustada.idOportunidade;
-            delete oportunidadeAjustada.codigoOportunidade;
-            delete oportunidadeAjustada.dataCriacao;
-            delete oportunidadeAjustada.simulacoes;
-            delete oportunidadeAjustada.participantes;
-            delete oportunidadeAjustada.historico;
             const simulacaoAjustada = { ...putPayload, prazo: prazoSolicitado };
 
             try {
@@ -1181,20 +1056,27 @@ export async function enviarSimulacaoImpl({
           // possui webhook, então consultamos a oportunidade algumas vezes para
           // capturar o retorno assim que ele chegar. Bancos que já respondem
           // com valores no POST não entram neste laço.
+          // Alguns bancos (Itaú, principalmente) processam a integração de forma
+          // assíncrona: a resposta do POST /integracao volta ainda "em
+          // processamento" (tipoSituacao "P") e sem valores. A integração não
+          // possui webhook, então consultamos a oportunidade algumas vezes para
+          // capturar o retorno assim que ele chegar. Aumentamos o polling para o
+          // Itaú (20 tentativas a cada 10s) para garantir o retorno.
           if (vazio(dadosApi)) {
-            console.log(`[enviar.server] Banco ${b.nome_banco} retornou sem valores. Iniciando polling...`);
-            // 1. BACKOFF PROGRESSIVO: intervalo crescente (2s, 4s, 8s, 15s, 30s...)
-            const ORCAMENTO_MS = TIMEOUT_BANCO_MS; // Teto de 240s para polling real
+            // Backoff progressivo (3s, 6s, 12s, 24s… teto 30s) com orçamento
+            // total de tempo. Encerra imediatamente em desfecho definitivo
+            // (situação diferente de "em processamento") para não gastar os
+            // ~100s que o laço fixo consumia.
+            const ORCAMENTO_MS = 60_000;
             const iniciouPolling = Date.now();
-            let intervaloFixo = 4_000; // Voltamos ao intervalo fixo de 4s que funcionava
-
+            let espera = 3_000;
             let tentativas = 0;
-            let motivoFim = "timeout";
+            let motivoFim = "orcamento_esgotado";
 
             while (vazio(dadosApi) && Date.now() - iniciouPolling < ORCAMENTO_MS) {
-              await new Promise((r) => setTimeout(r, intervaloFixo));
+              await new Promise((r) => setTimeout(r, espera));
+              espera = Math.min(espera * 2, 30_000);
               tentativas++;
-
               try {
                 const op = await chamarIntegracao<any>(
                   `/oportunidade/${idOportunidade}`,
@@ -1206,37 +1088,32 @@ export async function enviarSimulacaoImpl({
                 const achado = lista.find(
                   (s: any) => String(s?.idSimulacao ?? "") === String(idSimulacao),
                 );
-
-                // 2. ENCERRAR O POLLING ASSIM QUE HOUVER DESFECHO
-                if (achado) {
-                  const situacao = String(achado?.tipoSituacao ?? achado?.situacao ?? "").toUpperCase();
-                  const temValores = !vazio(achado);
-
-                  if (temValores) {
-                    dados = achado;
-                    dadosApi = achado;
-                    motivoFim = "retorno_recebido";
-                    break;
-                  }
-
-                  // Desfecho definitivo sem valores (Erro ou Recusada)
-                  if (situacao && situacao !== "P" && situacao !== "A") {
-                    motivoFim = `situacao_definitiva_${situacao}`;
-                    break;
-                  }
+                if (achado && !vazio(achado)) {
+                  dados = achado;
+                  dadosApi = achado;
+                  motivoFim = "retorno_recebido";
+                  break;
+                }
+                // Desfecho definitivo sem valores: o banco já concluiu e não vai
+                // devolver nada. Continuar consultando é desperdício.
+                const situacao = String(
+                  achado?.tipoSituacao ?? achado?.situacao ?? "",
+                ).toUpperCase();
+                if (situacao && situacao !== "P" && situacao !== "A") {
+                  motivoFim = `situacao_definitiva_${situacao}`;
+                  break;
                 }
               } catch (e) {
+                motivoFim = "falha_consulta";
                 console.warn(
                   "Falha ao consultar retorno da simulação (polling).",
                   e instanceof Error ? e.message : String(e),
                 );
-                // No caso de erro na chamada GET, mantemos o loop até o timeout
+                break;
               }
             }
 
             const duracao = Math.round((Date.now() - iniciouPolling) / 1000);
-            console.log(`[enviar.server] Polling para ${b.nome_banco} encerrado em ${duracao}s. Motivo: ${motivoFim}`);
-
             try {
               await supabase.from("simulacao_historico").insert({
                 simulacao_id: simulacaoId,
@@ -1271,23 +1148,7 @@ export async function enviarSimulacaoImpl({
                 simulado_em: new Date().toISOString(),
               })
               .eq("id", b.id);
-            return {
-              banco_id: b.banco_id,
-              status: "erro" as const,
-              mensagem: msg,
-              sac_comparativo: sim.sistema_amortizacao === "P" ? await (async () => {
-                const { data: sac } = await supabase
-                  .from("simulacao_bancos")
-                  .select("valor_parcela, taxa_juros_ano")
-                  .eq("banco_id", b.banco_id)
-                  .eq("status_banco", "simulada")
-                  .eq("sistema_amortizacao_banco", "SAC")
-                  .order("simulado_em", { ascending: false })
-                  .limit(1)
-                  .maybeSingle();
-                return sac;
-              })() : null
-            };
+            return { banco_id: b.banco_id, status: "erro" as const, mensagem: msg };
           }
 
           await supabase
@@ -1359,9 +1220,9 @@ export async function enviarSimulacaoImpl({
       }
     };
 
-    // REGRA 4: FEEDBACK INDIVIDUAL
-    // Usamos Promise.all para enviar os bancos em paralelo e obter feedback imediato
-    resultados.push(...(await Promise.all((bancos as any[]).map(b => enviarBanco(b)))));
+    for (const b of bancos as any[]) {
+      resultados.push(await enviarBanco(b));
+    }
 
     // REGRA 3d: Marcar como erro bancos que ficaram sem homefin_id_simulacao_banco
     const { data: bancosFinais } = await supabase
@@ -1371,10 +1232,7 @@ export async function enviarSimulacaoImpl({
       .eq("selecionado", true);
 
     for (const b of bancosFinais ?? []) {
-      // Se o banco ainda está aguardando ou enviando mas não tem ID, algo falhou no fluxo.
-      // O líder garante que idOportunidade existe, e o processamento paralelo cuida de cada banco.
-      if ((b.status_banco === "aguardando" || b.status_banco === "enviando") && !b.homefin_id_simulacao_banco) {
-        console.error(`[enviar.server] Saindo para banco ${b.nome_banco} (ID: ${b.id}) pois não possui ID de simulação após processamento.`);
+      if (b.status_banco === "aguardando" && !b.homefin_id_simulacao_banco) {
         const msg =
           "Não foi possível iniciar a simulação neste banco. Nenhum dado foi enviado ao banco. Clique em reenviar.";
         await supabase

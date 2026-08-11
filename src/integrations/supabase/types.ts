@@ -7257,10 +7257,6 @@ export type Database = {
       }
       dm_get_or_create_1on1: { Args: { _other: string }; Returns: string }
       domingo_de_pascoa: { Args: { ano: number }; Returns: string }
-      eleger_lider_oportunidade: {
-        Args: { p_lock_timeout: string; p_simulacao_id: string }
-        Returns: boolean
-      }
       emitir_notificacao: {
         Args: {
           _corpo: string

@@ -20,11 +20,6 @@ import { corDoBanco } from "@/lib/bancos/cores";
 import { DetalheBancoDialog } from "@/components/simulacao/detalhe-banco-dialog";
 import { ErroBancoDetalhe } from "@/components/simulacao/erro-banco-detalhe";
 
-function num(v: unknown): number {
-  const n = Number(v);
-  return Number.isFinite(n) ? n : 0;
-}
-
 interface Props {
   simulacaoIdA: string;
   simulacaoIdB: string;
@@ -67,16 +62,11 @@ export function TabelaComparativaCPFs({ simulacaoIdA, simulacaoIdB }: Props) {
 
   const nomeA = simA?.nome_cliente ?? "Titular A";
   const cpfA = simA?.cpf_cnpj ?? "";
-  const compoeA = Boolean(simA?.compoe_renda);
-  const rendaA = compoeA ? (num(simA?.renda_total) + num(simA?.renda_conjuge)) : num(simA?.renda_total);
+  const rendaA = simA?.renda_total ?? 0;
 
   const nomeB = simB?.nome_cliente ?? "Titular B";
   const cpfB = simB?.cpf_cnpj ?? "";
-  const compoeB = Boolean(simB?.compoe_renda);
-  const rendaB = compoeB ? (num(simB?.renda_total) + num(simB?.renda_conjuge)) : num(simB?.renda_total);
-
-  // Validação de rendas divergentes em comparação composta
-  const rendasDivergentes = (compoeA || compoeB) && Math.abs(rendaA - rendaB) > 0.01;
+  const rendaB = simB?.renda_total ?? 0;
 
   const bancosA = (resA.bancos as any[]) ?? [];
   const bancosB = (resB.bancos as any[]) ?? [];
@@ -123,18 +113,6 @@ export function TabelaComparativaCPFs({ simulacaoIdA, simulacaoIdB }: Props) {
           </div>
         )}
       </div>
-
-      {rendasDivergentes ? (
-        <div className="flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-xs text-destructive border border-destructive/20 mb-2">
-          <AlertCircle className="h-4 w-4" />
-          As duas simulações usaram rendas diferentes — a comparação de taxas não é válida.
-        </div>
-      ) : (compoeA || compoeB) && (
-        <div className="flex items-center gap-2 rounded-lg bg-primary/5 p-2 text-[10px] text-primary/80 border border-primary/10 mb-2 italic">
-          <Info className="h-3.5 w-3.5" />
-          Renda considerada: {formatBRL(rendaA)} (composta)
-        </div>
-      )}
 
       <div className="overflow-hidden rounded-xl border border-border/60 bg-card shadow-sm">
         <Table>

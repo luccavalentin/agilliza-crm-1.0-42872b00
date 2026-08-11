@@ -309,7 +309,7 @@ export const criarSimulacao = createServerFn({ method: "POST" })
           data_nascimento: params.dataNascimento || null,
           estado_civil: mapEstadoCivilEnum(params.estadoCivil),
           regime_casamento: params.regimeCasamento ?? null,
-          renda_total_declarada: params.renda ?? null, // Sempre individual do titular
+          renda_total_declarada: params.renda ?? null,
           uf_interesse: params.ufInteresse ?? null,
           utiliza_fgts: params.utilizaFgts ?? false,
           conjuge_nome: params.conjugeNome ?? null,
@@ -484,7 +484,7 @@ export const criarSimulacao = createServerFn({ method: "POST" })
         regime_casamento: dd.regime_casamento ?? null,
         produto: dd.produto ?? null,
         id_operacao_homefin: dd.id_operacao_homefin ?? null,
-        agrupador_id: (dd as any).agrupador_id ?? (crypto.randomUUID?.() ?? `${Date.now().toString(16)}-${Math.random().toString(16).slice(2)}`),
+        agrupador_id: (dd as any).agrupador_id ?? null,
         tipo_imovel: dd.tipo_imovel ?? null,
         uso_imovel: dd.uso_imovel ?? null,
         situacao_imovel: dd.situacao_imovel ?? null,
@@ -565,7 +565,7 @@ export const criarSimulacao = createServerFn({ method: "POST" })
           email: dd.email_conjuge || null,
           celular: dd.celular_conjuge || null,
           data_nascimento: dd.data_nascimento_conjuge || null,
-          renda_total: dd.renda_conjuge ?? 0, // Agora armazena a renda individual do Lucca (titular B)
+          renda_total: dd.renda_total ?? 0, // Ambos usam a mesma renda individual (ajustado para soma na integração)
           estado_civil: dd.estado_civil_conjuge || dd.estado_civil,
 
           nome_conjuge: dd.nome_cliente || null,
@@ -577,15 +577,14 @@ export const criarSimulacao = createServerFn({ method: "POST" })
           estado_civil_conjuge: dd.estado_civil ?? null,
 
           // Mantém vínculo via agrupador para que a UI saiba que são parte da mesma "comparação"
-          agrupador_id: (insert as any).agrupador_id,
+          agrupador_id: insert.agrupador_id || sim.id,
         };
 
-
-        // Se composição de renda ativa, padronizamos: renda_total é sempre a renda do titular daquela simulação.
-        // A soma será feita apenas no momento do envio ao banco (enviar.server.ts).
+        // Se composição de renda ativa, garante que ambos levem a MESMA renda somada
         if (dd.compoe_renda) {
-          insert.renda_total = dd.renda_total ?? 0; 
-          insertInvertido.renda_total = dd.renda_conjuge ?? 0;
+          insert.renda_total = rendaTotalSoma;
+          // O cônjuge na simulação 1 mantém sua renda original para registro
+          insertInvertido.renda_total = rendaTotalSoma;
         }
 
         const { data: simSec, error: errorSec } = await supabaseAdmin

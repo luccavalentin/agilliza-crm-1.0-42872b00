@@ -400,27 +400,19 @@ export function SecaoOperacaoImovel({ ctx }: { ctx: SimulacaoCompletaCtx }) {
               const sugeridaCentavos = Math.round(entradaMinima * 100);
 
               return (
-                <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground">
-                    Entrada sugerida ({pctEntradaSugerida}%):{" "}
-                    <span className="font-medium text-foreground">{formatBRL(entradaMinima)}</span>
-                    {atualCentavos !== sugeridaCentavos && (
-                      <button
-                        type="button"
-                        onClick={aplicarEntradaSugerida}
-                        className="ml-2 font-medium text-primary underline-offset-2 hover:underline"
-                      >
-                        Aplicar
-                      </button>
-                    )}
-                  </p>
-                  {f.compoe_renda && f.renda_conjuge > 0 && !f.compoe_renda_conjuge && (
-                    <p className="text-[10px] text-amber-600 font-medium italic">
-                      Atenção: O cônjuge tem R$ {formatBRL(f.renda_conjuge)} cadastrados que não estão sendo somados. 
-                      Ative a composição de renda na seção abaixo para aumentar o potencial de crédito (Total: {formatBRL(f.renda_total + f.renda_conjuge)}).
-                    </p>
+                <p className="text-xs text-muted-foreground">
+                  Entrada sugerida ({pctEntradaSugerida}%):{" "}
+                  <span className="font-medium text-foreground">{formatBRL(entradaMinima)}</span>
+                  {atualCentavos !== sugeridaCentavos && (
+                    <button
+                      type="button"
+                      onClick={aplicarEntradaSugerida}
+                      className="ml-2 font-medium text-primary underline-offset-2 hover:underline"
+                    >
+                      Aplicar
+                    </button>
                   )}
-                </div>
+                </p>
               );
             })()}
           {financiamentoExcedido && (
