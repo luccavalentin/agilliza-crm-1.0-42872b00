@@ -20,6 +20,11 @@ import { corDoBanco } from "@/lib/bancos/cores";
 import { DetalheBancoDialog } from "@/components/simulacao/detalhe-banco-dialog";
 import { ErroBancoDetalhe } from "@/components/simulacao/erro-banco-detalhe";
 
+function num(v: unknown): number {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : 0;
+}
+
 interface Props {
   simulacaoIdA: string;
   simulacaoIdB: string;

@@ -584,8 +584,8 @@ export const criarSimulacao = createServerFn({ method: "POST" })
         // Se composição de renda ativa, padronizamos: renda_total é sempre a renda do titular daquela simulação.
         // A soma será feita apenas no momento do envio ao banco (enviar.server.ts).
         if (dd.compoe_renda) {
-          insert.renda_total = dd.renda_total; 
-          insertInvertido.renda_total = dd.renda_conjuge;
+          insert.renda_total = dd.renda_total ?? 0; 
+          insertInvertido.renda_total = dd.renda_conjuge ?? 0;
         }
 
         const { data: simSec, error: errorSec } = await supabaseAdmin
