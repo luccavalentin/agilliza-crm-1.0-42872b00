@@ -126,34 +126,33 @@ export async function executarEnvioAmbos(ctx: CtxBase): Promise<void> {
         },
       });
       idsGerados.push(id);
-      // Envio paralelo aos bancos SAC — reduz drasticamente o tempo total
-      // (antes: N × latência sequencial). Cada falha isolada é tratada, sem
-      // bloquear o envio aos demais bancos.
-      await Promise.allSettled(
-        f.bancos_sac_ids.map((bid: string) =>
-          enviarSimulacaoBanco({ data: { simulacao_id: id, banco_ids: [bid] } })
-            .then((resp: any) => {
-              if (resp?.status === "simulada") {
-                bancosSimulados.push({
-                  idSimulacao: id,
-                  banco_id: bid,
-                  nome_banco: resp.nome_banco || bid,
-                });
-              }
-            })
-            .catch((e) => {
-              toast.error(
-                e instanceof Error
-                  ? e.message
-                  : "Falha ao enviar a um banco (SAC). Você pode reenviar na tela da simulação.",
-              );
-            })
-            .finally(() => {
-              done++;
-              setConcluidos(done);
-            }),
-        ),
-      );
+      // Envio sequencial/controlado aos bancos SAC para evitar saturação da API
+      // e garantir que falhas em uma simulação não abortem o lote.
+      const bancosSac = [...f.bancos_sac_ids];
+      while (bancosSac.length > 0) {
+        const lote = bancosSac.splice(0, 2); // Processa de 2 em 2 para maior estabilidade
+        await Promise.allSettled(
+          lote.map((bid: string) =>
+            enviarSimulacaoBanco({ data: { simulacao_id: id, banco_ids: [bid] } })
+              .then((resp: any) => {
+                if (resp?.status === "simulada") {
+                  bancosSimulados.push({
+                    idSimulacao: id,
+                    banco_id: bid,
+                    nome_banco: resp.nome_banco || bid,
+                  });
+                }
+              })
+              .catch((e) => {
+                console.error(`[Envio SAC] Falha no banco ${bid}:`, e);
+              })
+              .finally(() => {
+                done++;
+                setConcluidos(done);
+              }),
+          ),
+        );
+      }
     }
 
     // Simulação PRICE (usa a renda específica para PRICE como renda_total)
@@ -186,32 +185,32 @@ export async function executarEnvioAmbos(ctx: CtxBase): Promise<void> {
         },
       });
       idsGerados.push(id);
-      // Envio paralelo aos bancos PRICE — idem SAC.
-      await Promise.allSettled(
-        f.bancos_price_ids.map((bid: string) =>
-          enviarSimulacaoBanco({ data: { simulacao_id: id, banco_ids: [bid] } })
-            .then((resp: any) => {
-              if (resp?.status === "simulada") {
-                bancosSimulados.push({
-                  idSimulacao: id,
-                  banco_id: bid,
-                  nome_banco: resp.nome_banco || bid,
-                });
-              }
-            })
-            .catch((e) => {
-              toast.error(
-                e instanceof Error
-                  ? e.message
-                  : "Falha ao enviar a um banco (PRICE). Você pode reenviar na tela da simulação.",
-              );
-            })
-            .finally(() => {
-              done++;
-              setConcluidos(done);
-            }),
-        ),
-      );
+      // Envio sequencial/controlado aos bancos PRICE.
+      const bancosPrice = [...f.bancos_price_ids];
+      while (bancosPrice.length > 0) {
+        const lote = bancosPrice.splice(0, 2);
+        await Promise.allSettled(
+          lote.map((bid: string) =>
+            enviarSimulacaoBanco({ data: { simulacao_id: id, banco_ids: [bid] } })
+              .then((resp: any) => {
+                if (resp?.status === "simulada") {
+                  bancosSimulados.push({
+                    idSimulacao: id,
+                    banco_id: bid,
+                    nome_banco: resp.nome_banco || bid,
+                  });
+                }
+              })
+              .catch((e) => {
+                console.error(`[Envio PRICE] Falha no banco ${bid}:`, e);
+              })
+              .finally(() => {
+                done++;
+                setConcluidos(done);
+              }),
+          ),
+        );
+      }
     }
 
     sessionStorage.removeItem("simulacao_wizard");
@@ -288,44 +287,34 @@ export async function executarEnvioSimples(ctx: CtxBase): Promise<void> {
       },
     });
     sessionStorage.removeItem("simulacao_wizard");
+    // Envio para a simulação principal - Sequencial por lotes de 2 para evitar saturação
     const idsBancos = f.bancos_ids.length > 0 ? f.bancos_ids : [];
-
-    // Envio para a simulação principal
-    const promises = [];
-    if (idsBancos.length === 0) {
-      promises.push(enviarSimulacaoBanco({ data: { simulacao_id: id } }));
-    } else {
-      for (const bid of idsBancos) {
-        promises.push(enviarSimulacaoBanco({ data: { simulacao_id: id, banco_ids: [bid] } }));
-      }
-    }
-
-    // Se houver simulação secundária (comparação automática de CPFs), envia também
-    if (id_secundario) {
-      if (idsBancos.length === 0) {
-        promises.push(enviarSimulacaoBanco({ data: { simulacao_id: id_secundario } }));
-      } else {
-        for (const bid of idsBancos) {
-          promises.push(
-            enviarSimulacaoBanco({ data: { simulacao_id: id_secundario, banco_ids: [bid] } }),
-          );
-        }
-      }
-    }
-
+    const bancosParaEnviar = idsBancos.length > 0 ? [...idsBancos] : [null];
     let feitos = 0;
-    await Promise.allSettled(
-      promises.map((p) =>
-        p
-          .catch((e) => {
-            console.error("[Envio Banco]", e);
-          })
-          .finally(() => {
+
+    while (bancosParaEnviar.length > 0) {
+      const lote = bancosParaEnviar.splice(0, 2);
+      await Promise.allSettled(
+        lote.map(async (bid) => {
+          try {
+            await enviarSimulacaoBanco({
+              data: { simulacao_id: id, banco_ids: bid ? [bid] : undefined },
+            });
+            // Se houver simulação secundária (comparação automática de CPFs), envia também
+            if (id_secundario) {
+              await enviarSimulacaoBanco({
+                data: { simulacao_id: id_secundario, banco_ids: bid ? [bid] : undefined },
+              });
+            }
+          } catch (e) {
+            console.error(`[Envio Simples] Falha no banco ${bid}:`, e);
+          } finally {
             feitos++;
             setConcluidos(Math.min(feitos, idsBancos.length > 0 ? idsBancos.length : 1));
-          }),
-      ),
-    );
+          }
+        }),
+      );
+    }
 
     // Fluxo "Nova Proposta": após simular, cria a proposta e redireciona.
     if (modoProposta) {
