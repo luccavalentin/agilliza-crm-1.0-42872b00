@@ -1262,7 +1262,8 @@ export async function enviarSimulacaoImpl({
       try {
         resultados.push(await enviarBanco(b));
       } catch (e) {
-        console.error(`[enviar.server] Falha crítica ao enviar banco ${b.id}:`, e);
+        console.error(`[enviar.server] Falha isolada no banco ${b.id}:`, e);
+        resultados.push({ banco_id: b.banco_id, status: "erro", mensagem: String(e?.message ?? e) });
       }
     }
 
@@ -1353,13 +1354,17 @@ export async function enviarSimulacaoImpl({
     const msg = sanitizarMensagemErro(bruto);
 
     // Garante status terminal para TODOS os bancos desta chamada em caso de erro global antes do loop.
-    const idsLote = (bancos as any[]).map((b) => b.id);
-    if (idsLote.length > 0) {
-      await supabase
-        .from("simulacao_bancos")
-        .update({ status_banco: "erro", mensagem_banco: msg })
-        .in("id", idsLote)
-        .or("status_banco.eq.aguardando,status_banco.eq.enviando");
+    try {
+      const idsLote = (bancos as any[]).map((b) => b.id);
+      if (idsLote.length > 0) {
+        await supabase
+          .from("simulacao_bancos")
+          .update({ status_banco: "erro", mensagem_banco: msg })
+          .in("id", idsLote)
+          .or("status_banco.eq.aguardando,status_banco.eq.enviando");
+      }
+    } catch (err) {
+      console.error("[enviar.server] Erro ao marcar falha no lote:", err);
     }
 
     await supabase
