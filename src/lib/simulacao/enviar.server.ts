@@ -829,6 +829,7 @@ export async function enviarSimulacaoImpl({
 
         if (!idOportunidade) {
           // Timeout no polling: falha apenas esta requisição.
+          console.error(`[enviar.server] Saindo por timeout aguardando líder criar oportunidade para lock ${lockKey}`);
           throw new Error(
             "Não foi possível iniciar a simulação neste banco. Nenhum dado foi enviado ao banco. Clique em reenviar.",
           );
