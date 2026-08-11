@@ -144,48 +144,31 @@ export function parcelaExigidaPeloBanco(banco: BancoRendaApi): number | null {
 }
 
 /**
- * Renda mínima exigida pelo banco, aplicando o teto correto por sistema:
- *   SAC   → parcela / 30%
- *   PRICE → parcela / 15%  (regra padrão para todas as IFs que ofertam PRICE)
- *
- * Em PRICE a renda devolvida pela API do banco é frequentemente calculada
- * em SAC pela HomeFin; sempre recomputamos com o teto de 15% sobre a parcela.
+ * Renda mínima exigida pelo banco.
+ * Prioriza o valor real devolvido pela API (Bradesco) via valorRendaLiquidaMinimaExigida.
+ * Se ausente, calcula localmente usando a parcela e o teto específico do banco.
  */
 export function rendaMinimaDoBanco(banco: BancoRendaApi): number | null {
-  const parcela = parcelaExigidaPeloBanco(banco);
-  const price = isBancoPrice(banco);
-  const teto = price ? COMPROMETIMENTO_MAX_PRICE : COMPROMETIMENTO_MAX;
-
   const raw = unwrapApiResponse(banco.raw_response);
-  const detalhe = extrairDetalheBanco(raw ?? banco.raw_response);
+  const descBco = raw?.descricaoRespostaBanco;
+  
+  // 1. PERSISTIR VALOR DO BANCO (Problema 1)
+  // Bradesco devolve explicitamente valorRendaLiquidaMinimaExigida no JSON
+  const rendaApi = numeroPositivo(descBco?.valorRendaLiquidaMinimaExigida) ??
+                   numeroPositivo(descBco?.rendaMinimaExigida) ??
+                   numeroPositivo(raw?.rendaMinimaExigida);
 
-  // Extração da renda mínima da mensagem de recusa (Problema 1c)
-  let rendaMensagemRecusa: number | null = null;
-  const msg = String(banco.raw_response?.mensagem_banco ?? raw?.mensagem_banco ?? "").toLowerCase();
-  if (msg.includes("renda")) {
-    // Tenta encontrar um valor numérico na mensagem (ex: "exigência de 15.000")
-    const match = msg.match(/(\d{1,3}(\.\d{3})*(,\d{2})?)/);
-    if (match) {
-      const valStr = match[0].replace(/\./g, "").replace(",", ".");
-      const val = parseFloat(valStr);
-      if (val > 1000) rendaMensagemRecusa = val;
-    }
-  }
+  if (rendaApi) return rendaApi;
 
-  // Problema 1b: prefere Math.max(apiRenda, estimativa local baseada na parcela do banco)
-  let apiRenda = numeroPositivo(detalhe?.rendaMinimaExigida) ?? rendaMensagemRecusa;
+  // 2. CÁLCULO LOCAL (Estimativa)
+  const parcela = parcelaExigidaPeloBanco(banco);
+  if (!parcela) return null;
 
-  if (!parcela && !apiRenda) return null;
+  const teto = tetoDoBanco(banco);
+  const rendaEstimada = rendaMinimaParaParcela(parcela, teto);
 
-  let rendaMinima = 0;
-  if (parcela) {
-    const rendaPelaParcela = rendaMinimaParaParcela(parcela, teto);
-    rendaMinima = apiRenda ? Math.max(apiRenda, rendaPelaParcela) : rendaPelaParcela;
-  } else {
-    rendaMinima = apiRenda!;
-  }
-
-  return Math.ceil(rendaMinima / 100) * 100;
+  // Arredonda estimativas para cima no milhar seguindo padrão Agilliza
+  return Math.ceil(rendaEstimada / 1000) * 1000;
 }
 
 /**
