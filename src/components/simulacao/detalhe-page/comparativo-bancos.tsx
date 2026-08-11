@@ -425,6 +425,10 @@ export function ComparativoBancos({
                       {b.taxa_juros_ano != null ? formatTaxa(b.taxa_juros_ano) : "—"}
                     </TableCell>
                     <TableCell className="py-3 text-right text-sm tabular-nums whitespace-nowrap">
+                      {b.taxa_cet_ano != null ? formatTaxa(b.taxa_cet_ano) : "—"}
+                    </TableCell>
+
+                    <TableCell className="py-3 text-right text-sm tabular-nums whitespace-nowrap">
                       {b.prazo_pagamento_max ?? s.prazo ?? "—"}
                       {b.prazo_pagamento_max || s.prazo ? "m" : ""}
                     </TableCell>
