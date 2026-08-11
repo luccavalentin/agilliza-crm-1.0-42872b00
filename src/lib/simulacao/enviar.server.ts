@@ -728,7 +728,7 @@ export async function enviarSimulacaoImpl({
       fgFinanciarDespesas,
       valorDespesasFinanciadas,
       valorTotalFinanciamento,
-      // codigoSistemaAmortizacaoBanco removido daqui — ele pertence à /simulacao, não à /oportunidade.
+      codigoSistemaAmortizacaoBanco: { id: sim.sistema_amortizacao ?? "S" },
 
     };
 
