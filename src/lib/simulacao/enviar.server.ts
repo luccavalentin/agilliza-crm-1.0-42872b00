@@ -1238,7 +1238,7 @@ export async function enviarSimulacaoImpl({
       resultados.push(await enviarBanco(b));
     }
 
-    // REGRA 3d: Marcar como erro bancos que ficaram sem homefin_id_simulacao_banco
+    // REGRA: Marcar como erro bancos que ficaram sem homefin_id_simulacao_banco
     const { data: bancosFinais } = await supabase
       .from("simulacao_bancos")
       .select("*")
@@ -1246,7 +1246,10 @@ export async function enviarSimulacaoImpl({
       .eq("selecionado", true);
 
     for (const b of bancosFinais ?? []) {
-      if (b.status_banco === "aguardando" && !b.homefin_id_simulacao_banco) {
+      if (
+        (b.status_banco === "aguardando" || b.status_banco === "enviando") &&
+        !b.homefin_id_simulacao_banco
+      ) {
         const msg =
           "Não foi possível iniciar a simulação neste banco. Nenhum dado foi enviado ao banco. Clique em reenviar.";
         await supabase
