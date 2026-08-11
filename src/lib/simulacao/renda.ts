@@ -152,14 +152,16 @@ export function rendaMinimaDoBanco(banco: BancoRendaApi): number | null {
   }
 
   // Problema 1b: prefere Math.max(apiRenda, estimativa local baseada na parcela do banco)
-  let apiRenda = numeroPositivo(detalhe?.rendaMinimaExigida) ?? rendaMensagemRecusa;
+  const apiRenda = numeroPositivo(detalhe?.rendaMinimaExigida) ?? rendaMensagemRecusa;
 
   if (!parcela && !apiRenda) return null;
 
   let rendaMinima = 0;
   if (parcela) {
     const rendaPelaParcela = rendaMinimaParaParcela(parcela, teto);
-    rendaMinima = apiRenda ? Math.max(apiRenda, rendaPelaParcela) : rendaPelaParcela;
+    // Margem de segurança de 10% aplicada sobre a estimativa baseada na parcela (Regra 4)
+    const rendaComMargem = rendaPelaParcela * (1 + MARGEM_SEGURANCA_RENDA);
+    rendaMinima = apiRenda ? Math.max(apiRenda, rendaComMargem) : rendaComMargem;
   } else {
     rendaMinima = apiRenda!;
   }
@@ -324,7 +326,7 @@ export function rendaMinimaSugerida(params: {
 
   // 2. Estimativa local PRICE (se houver bancos que aceitem ou for o selecionado)
   const price = avaliarRendaMinima({ ...params, sistema: "P" });
-  if (price) fontes.push({ ...price, detalhe_fonte: "Estimativa local (PRICE 18%)" });
+  if (price) fontes.push({ ...price, detalhe_fonte: "Estimativa local (PRICE 15%)" });
 
   // 3 e 4. Retornos da API e Mensagens de recusa
   if (bancos_simulados && bancos_simulados.length > 0) {
