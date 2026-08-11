@@ -97,119 +97,128 @@ export async function executarEnvioAmbos(ctx: CtxBase): Promise<void> {
         `${Date.now().toString(16)}-${Math.random().toString(16).slice(2)}`)
       : null;
   try {
-    // Simulação SAC
+    // 1. Simulação SAC
     if (f.bancos_sac_ids.length > 0) {
-      const parsedS = completaSchema.safeParse({
-        ...f,
-        sistema_amortizacao: "S",
-        bancos_ids: f.bancos_sac_ids,
-        id_operacao_homefin: idOperacao,
-      });
-      if (!parsedS.success) {
-        const novos: Record<string, string> = {};
-        for (const issue of parsedS.error.issues) novos[String(issue.path[0])] = issue.message;
-        setErros(novos);
-        toast.error(mensagemCamposPendentes(Object.keys(novos)));
-        setEnviando(false);
-        setConcluidos(0);
-        return;
-      }
-      const { id } = await criarSimulacao({
-        data: {
-          modo: "completa",
-          dados: {
-            ...parsedS.data,
-            id_operacao_homefin: idOperacao,
-            email_verificado_em: f.email_verificado_em,
-            agrupador_id,
-          } as any,
-        },
-      });
-      idsGerados.push(id);
-      // Envio sequencial/controlado aos bancos SAC para evitar saturação da API
-      // e garantir que falhas em uma simulação não abortem o lote.
-      const bancosSac = [...f.bancos_sac_ids];
-      while (bancosSac.length > 0) {
-        const lote = bancosSac.splice(0, 2); // Processa de 2 em 2 para maior estabilidade
-        await Promise.allSettled(
-          lote.map((bid: string) =>
-            enviarSimulacaoBanco({ data: { simulacao_id: id, banco_ids: [bid] } })
-              .then((resp: any) => {
-                if (resp?.status === "simulada") {
-                  bancosSimulados.push({
-                    idSimulacao: id,
-                    banco_id: bid,
-                    nome_banco: resp.nome_banco || bid,
-                  });
-                }
-              })
-              .catch((e) => {
-                console.error(`[Envio SAC] Falha no banco ${bid}:`, e);
-              })
-              .finally(() => {
-                done++;
-                setConcluidos(done);
-              }),
-          ),
-        );
+      try {
+        const parsedS = completaSchema.safeParse({
+          ...f,
+          sistema_amortizacao: "S",
+          bancos_ids: f.bancos_sac_ids,
+          id_operacao_homefin: idOperacao,
+        });
+
+        if (!parsedS.success) {
+          const novos: Record<string, string> = {};
+          for (const issue of parsedS.error.issues) novos[String(issue.path[0])] = issue.message;
+          setErros(novos);
+          toast.error(`SAC: ${mensagemCamposPendentes(Object.keys(novos))}`);
+        } else {
+          const { id } = await criarSimulacao({
+            data: {
+              modo: "completa",
+              dados: {
+                ...parsedS.data,
+                id_operacao_homefin: idOperacao,
+                email_verificado_em: f.email_verificado_em,
+                agrupador_id,
+              } as any,
+            },
+          });
+          idsGerados.push(id);
+
+          // Envio controlado aos bancos SAC (lote de 2 em 2, mas serializado por simulação)
+          const bancosSac = [...f.bancos_sac_ids];
+          while (bancosSac.length > 0) {
+            const lote = bancosSac.splice(0, 2);
+            await Promise.allSettled(
+              lote.map((bid: string) =>
+                enviarSimulacaoBanco({ data: { simulacao_id: id, banco_ids: [bid] } })
+                  .then((resp: any) => {
+                    if (resp?.status === "simulada") {
+                      bancosSimulados.push({
+                        idSimulacao: id,
+                        banco_id: bid,
+                        nome_banco: resp.nome_banco || bid,
+                      });
+                    }
+                  })
+                  .catch((e) => {
+                    console.error(`[Envio SAC] Falha no banco ${bid}:`, e);
+                  })
+                  .finally(() => {
+                    done++;
+                    setConcluidos(done);
+                  }),
+              ),
+            );
+          }
+        }
+      } catch (e) {
+        console.error("[executarEnvioAmbos] Erro crítico na simulação SAC:", e);
+        toast.error("Erro ao gerar simulação SAC. O processo continuará com PRICE.");
       }
     }
 
-    // Simulação PRICE (usa a renda específica para PRICE como renda_total)
+    // 2. Simulação PRICE (try/catch isolado garante que falha na SAC não aborta PRICE)
     if (f.bancos_price_ids.length > 0) {
-      const parsedP = completaSchema.safeParse({
-        ...f,
-        sistema_amortizacao: "P",
-        bancos_ids: f.bancos_price_ids,
-        renda_total: Number(f.renda_price),
-        id_operacao_homefin: idOperacao,
-      });
-      if (!parsedP.success) {
-        const novos: Record<string, string> = {};
-        for (const issue of parsedP.error.issues) novos[String(issue.path[0])] = issue.message;
-        setErros(novos);
-        toast.error(mensagemCamposPendentes(Object.keys(novos)));
-        setEnviando(false);
-        setConcluidos(0);
-        return;
-      }
-      const { id } = await criarSimulacao({
-        data: {
-          modo: "completa",
-          dados: {
-            ...parsedP.data,
-            id_operacao_homefin: idOperacao,
-            email_verificado_em: f.email_verificado_em,
-            agrupador_id,
-          } as any,
-        },
-      });
-      idsGerados.push(id);
-      // Envio sequencial/controlado aos bancos PRICE.
-      const bancosPrice = [...f.bancos_price_ids];
-      while (bancosPrice.length > 0) {
-        const lote = bancosPrice.splice(0, 2);
-        await Promise.allSettled(
-          lote.map((bid: string) =>
-            enviarSimulacaoBanco({ data: { simulacao_id: id, banco_ids: [bid] } })
-              .then((resp: any) => {
-                if (resp?.status === "simulada") {
-                  bancosSimulados.push({
-                    idSimulacao: id,
-                    banco_id: bid,
-                    nome_banco: resp.nome_banco || bid,
-                  });
-                }
-              })
-              .catch((e) => {
-                console.error(`[Envio PRICE] Falha no banco ${bid}:`, e);
-              })
-              .finally(() => {
-                done++;
-                setConcluidos(done);
-              }),
-          ),
-        );
+      try {
+        const parsedP = completaSchema.safeParse({
+          ...f,
+          sistema_amortizacao: "P",
+          bancos_ids: f.bancos_price_ids,
+          renda_total: Number(f.renda_price),
+          id_operacao_homefin: idOperacao,
+        });
+
+        if (!parsedP.success) {
+          const novos: Record<string, string> = {};
+          for (const issue of parsedP.error.issues) novos[String(issue.path[0])] = issue.message;
+          setErros(novos);
+          toast.error(`PRICE: ${mensagemCamposPendentes(Object.keys(novos))}`);
+        } else {
+          const { id } = await criarSimulacao({
+            data: {
+              modo: "completa",
+              dados: {
+                ...parsedP.data,
+                id_operacao_homefin: idOperacao,
+                email_verificado_em: f.email_verificado_em,
+                agrupador_id,
+              } as any,
+            },
+          });
+          idsGerados.push(id);
+
+          // Envio controlado aos bancos PRICE
+          const bancosPrice = [...f.bancos_price_ids];
+          while (bancosPrice.length > 0) {
+            const lote = bancosPrice.splice(0, 2);
+            await Promise.allSettled(
+              lote.map((bid: string) =>
+                enviarSimulacaoBanco({ data: { simulacao_id: id, banco_ids: [bid] } })
+                  .then((resp: any) => {
+                    if (resp?.status === "simulada") {
+                      bancosSimulados.push({
+                        idSimulacao: id,
+                        banco_id: bid,
+                        nome_banco: resp.nome_banco || bid,
+                      });
+                    }
+                  })
+                  .catch((e) => {
+                    console.error(`[Envio PRICE] Falha no banco ${bid}:`, e);
+                  })
+                  .finally(() => {
+                    done++;
+                    setConcluidos(done);
+                  }),
+              ),
+            );
+          }
+        }
+      } catch (e) {
+        console.error("[executarEnvioAmbos] Erro crítico na simulação PRICE:", e);
+        toast.error("Erro ao gerar simulação PRICE.");
       }
     }
 
