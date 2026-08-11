@@ -1261,7 +1261,7 @@ export async function enviarSimulacaoImpl({
     for (const b of bancos as any[]) {
       try {
         resultados.push(await enviarBanco(b));
-      } catch (e) {
+      } catch (e: any) {
         console.error(`[enviar.server] Falha isolada no banco ${b.id}:`, e);
         resultados.push({ banco_id: b.banco_id, status: "erro", mensagem: String(e?.message ?? e) });
       }
