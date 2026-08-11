@@ -19,6 +19,8 @@ import { formatBRL, formatPercent, formatTaxa } from "@/lib/simulacao/format";
 import { rendaMinimaPelosBancos } from "@/lib/simulacao/renda";
 import { ErroBancoDetalhe } from "@/components/simulacao/erro-banco-detalhe";
 import { AmortizacaoTag, MobileStat, ResumoCelula } from "@/components/simulacao/detalhe-page/ui";
+import { ShieldCheck, Info } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { totalFinanciadoBanco } from "@/lib/simulacao/origem-dados";
 
 /**
@@ -95,14 +97,58 @@ export function ComparativoBancos({
             {rendaSac && (
               <ResumoCelula
                 rotulo="Renda exigida — SAC"
-                valor={formatBRL(rendaSac.rendaMinima)}
+                valor={
+                  <div className="flex flex-col items-end">
+                    <span>{formatBRL(rendaSac.rendaMinima)}</span>
+                    <div className="flex items-center gap-1 mt-0.5">
+                      {rendaSac.renda_minima_fonte === "banco" ? (
+                        <span className="text-[9px] text-emerald-600 font-medium flex items-center gap-0.5">
+                          <ShieldCheck className="h-2.5 w-2.5" /> banco
+                        </span>
+                      ) : (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger className="text-[9px] text-muted-foreground/70 flex items-center gap-0.5 cursor-help">
+                              estimativa <Info className="h-2 w-2" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p className="text-[10px] max-w-[200px]">O banco não informa renda mínima nesta simulação. Valor calculado pela Agilliza a partir da parcela retornada.</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
+                    </div>
+                  </div>
+                }
                 destaque
               />
             )}
             {rendaPrice && (
               <ResumoCelula
                 rotulo="Renda exigida — PRICE"
-                valor={formatBRL(rendaPrice.rendaMinima)}
+                valor={
+                  <div className="flex flex-col items-end">
+                    <span>{formatBRL(rendaPrice.rendaMinima)}</span>
+                    <div className="flex items-center gap-1 mt-0.5">
+                      {rendaPrice.renda_minima_fonte === "banco" ? (
+                        <span className="text-[9px] text-emerald-600 font-medium flex items-center gap-0.5">
+                          <ShieldCheck className="h-2.5 w-2.5" /> banco
+                        </span>
+                      ) : (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger className="text-[9px] text-muted-foreground/70 flex items-center gap-0.5 cursor-help">
+                              estimativa <Info className="h-2 w-2" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p className="text-[10px] max-w-[200px]">O banco não informa renda mínima nesta simulação. Valor calculado pela Agilliza a partir da parcela retornada.</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
+                    </div>
+                  </div>
+                }
                 destaque
               />
             )}
@@ -111,7 +157,29 @@ export function ComparativoBancos({
           rendaBancos && (
             <ResumoCelula
               rotulo="Renda exigida"
-              valor={formatBRL(rendaBancos.rendaMinima)}
+              valor={
+                <div className="flex flex-col items-end">
+                  <span>{formatBRL(rendaBancos.rendaMinima)}</span>
+                  <div className="flex items-center gap-1 mt-0.5">
+                    {rendaBancos.renda_minima_fonte === "banco" ? (
+                      <span className="text-[9px] text-emerald-600 font-medium flex items-center gap-0.5">
+                        <ShieldCheck className="h-2.5 w-2.5" /> banco
+                      </span>
+                    ) : (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger className="text-[9px] text-muted-foreground/70 flex items-center gap-0.5 cursor-help">
+                            estimativa <Info className="h-2 w-2" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className="text-[10px] max-w-[200px]">O banco não informa renda mínima nesta simulação. Valor calculado pela Agilliza a partir da parcela retornada.</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    )}
+                  </div>
+                </div>
+              }
               destaque
             />
           )

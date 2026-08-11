@@ -6240,6 +6240,8 @@ export type Database = {
           prazo_pagamento_max: number | null
           raw_request: Json | null
           raw_response: Json | null
+          renda_minima_banco: number | null
+          renda_minima_fonte: string | null
           selecionado: boolean
           simulacao_id: string
           simulado_em: string | null
@@ -6266,6 +6268,8 @@ export type Database = {
           prazo_pagamento_max?: number | null
           raw_request?: Json | null
           raw_response?: Json | null
+          renda_minima_banco?: number | null
+          renda_minima_fonte?: string | null
           selecionado?: boolean
           simulacao_id: string
           simulado_em?: string | null
@@ -6292,6 +6296,8 @@ export type Database = {
           prazo_pagamento_max?: number | null
           raw_request?: Json | null
           raw_response?: Json | null
+          renda_minima_banco?: number | null
+          renda_minima_fonte?: string | null
           selecionado?: boolean
           simulacao_id?: string
           simulado_em?: string | null
