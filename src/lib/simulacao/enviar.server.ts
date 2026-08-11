@@ -1049,6 +1049,8 @@ export async function enviarSimulacaoImpl({
           }
 
           // A resposta da integração traz os valores retornados pelo banco.
+          console.log(`[enviar.server] POST /integracao para ${b.nome_banco} (Simulação: ${idSimulacao})`);
+
           // Em terreno, o Bradesco pode calcular e devolver um prazo mínimo para
           // aquela operação (por exemplo, 180), embora esse piso não seja
           // documentado como constante. Quando isso ocorrer, adotamos exatamente
