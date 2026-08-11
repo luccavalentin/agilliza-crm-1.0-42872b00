@@ -26,6 +26,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { ShieldCheck } from "lucide-react";
 import { BancoStatusBadge } from "@/components/simulacao/status-badge";
 import { extrairDetalheBanco, normalizarSistemaAmortizacao } from "@/lib/simulacao/detalhe-banco";
 import { formatBRL } from "@/lib/simulacao/format";
@@ -259,6 +261,26 @@ export function DetalheBancoDialog({
                     rotulo="Somatório das parcelas"
                     valor={formatBRL(detalhe!.somatorioParcelas)}
                   />
+                  {banco.renda_minima_banco && (
+                    <div className="flex items-center justify-between gap-4 py-2">
+                      <span className="text-sm text-muted-foreground">Renda mínima exigida</span>
+                      <div className="flex flex-col items-end">
+                        <span className="text-sm font-semibold tabular-nums text-foreground">
+                          {formatBRL(banco.renda_minima_banco)}
+                        </span>
+                        <div className="flex items-center gap-1 mt-0.5">
+                          {banco.renda_minima_fonte === "banco" ? (
+                            <>
+                              <ShieldCheck className="h-3 w-3 text-emerald-500" />
+                              <span className="text-[10px] text-emerald-600 font-medium">Informado pelo banco</span>
+                            </>
+                          ) : (
+                            <span className="text-[10px] text-muted-foreground/70 italic">Estimativa Agilliza</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </Grupo>
               </div>
 
