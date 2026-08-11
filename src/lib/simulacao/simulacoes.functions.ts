@@ -484,7 +484,7 @@ export const criarSimulacao = createServerFn({ method: "POST" })
         regime_casamento: dd.regime_casamento ?? null,
         produto: dd.produto ?? null,
         id_operacao_homefin: dd.id_operacao_homefin ?? null,
-        agrupador_id: (dd as any).agrupador_id ?? null,
+        agrupador_id: (dd as any).agrupador_id ?? (crypto.randomUUID?.() ?? `${Date.now().toString(16)}-${Math.random().toString(16).slice(2)}`),
         tipo_imovel: dd.tipo_imovel ?? null,
         uso_imovel: dd.uso_imovel ?? null,
         situacao_imovel: dd.situacao_imovel ?? null,
@@ -577,14 +577,9 @@ export const criarSimulacao = createServerFn({ method: "POST" })
           estado_civil_conjuge: dd.estado_civil ?? null,
 
           // Mantém vínculo via agrupador para que a UI saiba que são parte da mesma "comparação"
-          agrupador_id: sim.id,
+          agrupador_id: (insert as any).agrupador_id,
         };
 
-        // Atualiza a primeira simulação para também ter o agrupador_id
-        await supabaseAdmin
-          .from("simulacoes")
-          .update({ agrupador_id: sim.id })
-          .eq("id", sim.id);
 
         // Se composição de renda ativa, padronizamos: renda_total é sempre a renda do titular daquela simulação.
         // A soma será feita apenas no momento do envio ao banco (enviar.server.ts).

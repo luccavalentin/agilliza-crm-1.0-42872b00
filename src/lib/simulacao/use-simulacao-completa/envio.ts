@@ -91,11 +91,7 @@ export async function executarEnvioAmbos(ctx: CtxBase): Promise<void> {
   const idsGerados: string[] = [];
   const bancosSimulados: any[] = [];
   let done = 0;
-  const agrupador_id =
-    f.bancos_sac_ids.length > 0 && f.bancos_price_ids.length > 0
-      ? (crypto.randomUUID?.() ??
-        `${Date.now().toString(16)}-${Math.random().toString(16).slice(2)}`)
-      : null;
+  let agrupador_id: string | null = null;
   try {
     // Simulação SAC
     if (f.bancos_sac_ids.length > 0) {
