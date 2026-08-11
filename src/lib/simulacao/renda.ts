@@ -152,23 +152,22 @@ export function rendaMinimaDoBanco(banco: BancoRendaApi): number | null {
   const raw = unwrapApiResponse(banco.raw_response);
   const descBco = raw?.descricaoRespostaBanco;
   
-  // 1. PERSISTIR VALOR DO BANCO (Problema 1)
-  // Bradesco devolve explicitamente valorRendaLiquidaMinimaExigida no JSON
+  // 1. PRIORIZAR VALOR DO BANCO
   const rendaApi = numeroPositivo(descBco?.valorRendaLiquidaMinimaExigida) ??
                    numeroPositivo(descBco?.rendaMinimaExigida) ??
                    numeroPositivo(raw?.rendaMinimaExigida);
 
   if (rendaApi) return rendaApi;
 
-  // 2. CÁLCULO LOCAL (Estimativa)
+  // 2. CÁLCULO LOCAL (Estimativa baseada na parcela real do banco)
   const parcela = parcelaExigidaPeloBanco(banco);
   if (!parcela) return null;
 
   const teto = tetoDoBanco(banco);
-  const rendaEstimada = rendaMinimaParaParcela(parcela, teto);
-
-  // Arredonda estimativas para cima no milhar seguindo padrão Agilliza
-  return Math.ceil(rendaEstimada / 1000) * 1000;
+  // REGRA: Renda mínima estimada SEMPRE deriva da parcela retornada.
+  // Não arredondamos para o milhar quando a fonte é estimativa por banco,
+  // para manter a precisão do comprometimento solicitado.
+  return rendaMinimaParaParcela(parcela, teto);
 }
 
 /**
