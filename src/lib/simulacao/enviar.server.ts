@@ -364,14 +364,16 @@ async function garantirDadosParticipantesSimulacao({
     );
 
     try {
-      // Deduplicação básica para evitar chamadas repetidas desnecessárias se os dados não mudaram significativamente
-      // mas mantemos o PUT por participante para garantir integridade conforme a simulação atual.
-      await chamarIntegracao<any>(
-        `/oportunidade/${idOportunidade}/participante/${part.idParticipante}`,
-        "PUT",
-        cleanedPayload,
-        ctx,
-      );
+      // REGRA: Cada participante deve receber um PUT por envio.
+      // Verificamos se há idParticipante antes de chamar a integração.
+      if (part.idParticipante) {
+        await chamarIntegracao<any>(
+          `/oportunidade/${idOportunidade}/participante/${part.idParticipante}`,
+          "PUT",
+          cleanedPayload,
+          ctx,
+        );
+      }
     } catch (e) {
       console.warn(`[enviar.server] Falha ao atualizar proponente ${part.idParticipante}:`, e);
     }
