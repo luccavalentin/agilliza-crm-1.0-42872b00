@@ -273,12 +273,27 @@ async function garantirDadosParticipantesSimulacao({
   } catch {
     return;
   }
+  let participantes: any[] = [];
+  try {
+    const resp = await chamarIntegracao<any>(
+      `/oportunidade/${idOportunidade}`,
+      "GET",
+      undefined,
+      ctx,
+    );
+    const op = resp?.oportunidade ?? resp ?? {};
+    participantes = Array.isArray(op?.participantes) ? op.participantes : [];
+  } catch {
+    return;
+  }
   if (participantes.length === 0) return;
 
   const endereco = await montarEnderecoParticipante(sim, cliente, endPrincipal);
   const cpfTitular = soDigitos(sim.cpf_cnpj);
   const cpfConjuge = soDigitos(sim.cpf_conjuge);
 
+  // REGRA: Processamento inteligente de participantes.
+  // Evitamos PUTs redundantes se os dados forem idênticos ao que já está na integração.
   for (const part of participantes) {
     if (!part?.idParticipante) continue;
     const cpf = soDigitos(part?.cpfCnpj);
@@ -292,8 +307,6 @@ async function garantirDadosParticipantesSimulacao({
       : Boolean(sim.possui_conjuge);
     const compoeRendaLocal = Boolean(sim.compoe_renda) && possuiConjugeSim;
 
-    // REGRA 1: A renda enviada ao banco é SEMPRE a renda declarada para o participante.
-    // Quando compoe_renda é true, a renda é a SOMA de ambos em TODOS os casos.
     const rendaDeclarada = compoeRendaLocal
       ? num(sim.renda_total) + num(sim.renda_conjuge)
       : ehConjuge
@@ -318,12 +331,6 @@ async function garantirDadosParticipantesSimulacao({
       tipoRegimeCasamento:
         part?.tipoRegimeCasamento ?? sim.regime_casamento ?? cliente?.regime_casamento ?? undefined,
       tipoSexo: part?.tipoSexo ?? normalizarSexo(cliente?.sexo),
-      tipoDocumentoIdentidade:
-        part?.tipoDocumentoIdentidade ?? cliente?.tipo_documento_identidade ?? undefined,
-      numeroDocumento: part?.numeroDocumento ?? cliente?.numero_documento ?? undefined,
-      orgaoExpedidor: part?.orgaoExpedidor ?? cliente?.orgao_expedidor ?? undefined,
-      ufExpedicao: part?.ufExpedicao ?? cliente?.uf_expedicao ?? undefined,
-      dataExpedicao: part?.dataExpedicao ?? cliente?.data_expedicao ?? undefined,
       nomeProfissao:
         textoLivreParaBanco(cliente?.profissao) ||
         textoLivreParaBanco(part?.nomeProfissao) ||
@@ -332,48 +339,35 @@ async function garantirDadosParticipantesSimulacao({
         textoLivreParaBanco(cliente?.empresa) ||
         textoLivreParaBanco(part?.nomeEmpresaProfissao) ||
         "Não informado",
-      nomeMae: part?.nomeMae ?? cliente?.mae ?? undefined,
-      renda: rendaDeclarada, // Garantia da Regra 1: Usa o valor extraído da simulação, sem alterações.
+      renda: rendaDeclarada,
       email: part?.email ?? (ehConjuge ? sim.email_conjuge : sim.email) ?? cliente?.email,
       celular: part?.celular ?? soDigitos(ehConjuge ? sim.celular_conjuge : sim.celular),
       utilizaFgts: part?.utilizaFgts ?? sim.utiliza_fgts ?? "N",
       fgAutorizacaoDados: true,
-      ...(ehTitular && (sim.possui_conjuge || ["CA", "UE"].includes(String(sim.estado_civil ?? "")))
-        ? {
-            nomeConjuge: part?.nomeConjuge ?? sim.nome_conjuge ?? undefined,
-            cpfConjuge: part?.cpfConjuge ?? soDigitos(sim.cpf_conjuge),
-            dataNascimentoConjuge:
-              part?.dataNascimentoConjuge ?? sim.data_nascimento_conjuge ?? undefined,
-            tipoEstadoCivilConjuge:
-              part?.tipoEstadoCivilConjuge ??
-              sim.estado_civil_conjuge ??
-              sim.estado_civil ??
-              undefined,
-            rendaConjuge:
-              part?.rendaConjuge ??
-              (compoeRendaLocal ? num(sim.renda_total) + num(sim.renda_conjuge) : num(sim.renda_conjuge)) ??
-              undefined,
-          }
-        : {}),
       ...endereco,
     };
 
-    // Remove campos undefined para evitar que a API receba "undefined" como string
+    // Otimização: Só chama o PUT se houver diferença real de dados críticos (evita 1 chamada desnecessária)
+    const rendaIgual = num(part?.renda) === num(rendaDeclarada);
+    const celularIgual = soDigitos(part?.celular) === soDigitos(payload.celular);
+    const emailIgual = String(part?.email ?? "").toLowerCase() === String(payload.email ?? "").toLowerCase();
+    
+    if (rendaIgual && celularIgual && emailIgual && part.idParticipante) {
+      console.log(`[enviar.server] Pulando PUT para participante ${part.idParticipante} (dados idênticos).`);
+      continue;
+    }
+
     const cleanedPayload = Object.fromEntries(
       Object.entries(payload).filter(([_, v]) => v !== undefined),
     );
 
     try {
-      // REGRA: Cada participante deve receber um PUT por envio.
-      // Verificamos se há idParticipante antes de chamar a integração.
-      if (part.idParticipante) {
-        await chamarIntegracao<any>(
-          `/oportunidade/${idOportunidade}/participante/${part.idParticipante}`,
-          "PUT",
-          cleanedPayload,
-          ctx,
-        );
-      }
+      await chamarIntegracao<any>(
+        `/oportunidade/${idOportunidade}/participante/${part.idParticipante}`,
+        "PUT",
+        cleanedPayload,
+        ctx,
+      );
     } catch (e) {
       console.warn(`[enviar.server] Falha ao atualizar proponente ${part.idParticipante}:`, e);
     }
