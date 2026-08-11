@@ -1181,7 +1181,8 @@ export async function enviarSimulacaoImpl({
               // Importa dinamicamente para evitar ciclos
               const { tetoDoBanco, rendaMinimaParaParcela } = await import("./renda");
               const teto = tetoDoBanco({ ...b, raw_response: raw });
-              rendaMinimaPersistir = Math.ceil(rendaMinimaParaParcela(parcela, teto) / 1000) * 1000;
+              // REGRA: A renda mínima estimada SEMPRE deriva da parcela retornada. Sem arredondamento fixo.
+              rendaMinimaPersistir = rendaMinimaParaParcela(parcela, teto);
             }
           }
 
