@@ -806,6 +806,8 @@ export async function enviarSimulacaoImpl({
       });
 
       if (!liderEleito) {
+        console.log(`[enviar.server] Seguindo execução líder para lock ${lockKey}. Aguardando oportunidade...`);
+
         // Seguidor: aguarda o líder criar a oportunidade (polling curto)
         const maxWait = 60_000;
         const start = Date.now();
