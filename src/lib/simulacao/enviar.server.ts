@@ -891,6 +891,9 @@ export async function enviarSimulacaoImpl({
         .eq(sim.agrupador_id ? "agrupador_id" : "id", sim.agrupador_id || simulacaoId);
     }
 
+    // Mapa oficial da integração: Participante (5) deve ser incluído antes da Integração (6).
+    // Embora o sistema chame o participante ANTES do POST /simulacao (Passo 4), mantemos
+    // a ordem atual por ser uma divergência conhecida que funciona.
     if (idOportunidade) {
       await garantirDadosParticipantesSimulacao({
         sim,
