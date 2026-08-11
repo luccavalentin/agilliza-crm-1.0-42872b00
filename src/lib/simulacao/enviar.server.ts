@@ -1070,8 +1070,8 @@ export async function enviarSimulacaoImpl({
               throw erroIntegracao;
             }
 
-            // O PUT /oportunidade aceita SOMENTE estes três campos. Enviar o
-            // objeto completo devolve HTTP 500 INTERNAL_ERROR.
+            // CUIDADO OBRIGATÓRIO AO USAR PUT: A HomeFin pode exigir payload completo.
+            // Sobrescrevemos o prazo no payload base do GET.
             // O PUT /oportunidade pode exigir payload completo. Fazemos GET e
             // sobrescrevemos o prazo.
             const checkOp = await chamarIntegracao<any>(
