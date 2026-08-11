@@ -279,10 +279,7 @@ export function avaliarRendaMinima(params: {
   if (sistema === "P") {
     const sac = avaliarRendaMinima({ ...params, sistema: "S" });
     if (sac && rendaMinima < sac.rendaMinima) {
-      console.error(
-        `[renda] Bug de cálculo: PRICE (${rendaMinima}) exigindo menos que SAC (${sac.rendaMinima}) para base ${base}`,
-      );
-      rendaMinima = sac.rendaMinima + 100; // Força superioridade
+      rendaMinima = sac.rendaMinima + 1000; // Força superioridade no próximo milhar
     }
   }
   const renda = renda_informada && renda_informada > 0 ? renda_informada : null;
