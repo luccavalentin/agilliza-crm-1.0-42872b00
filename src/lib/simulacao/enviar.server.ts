@@ -293,7 +293,7 @@ async function garantirDadosParticipantesSimulacao({
     const compoeRendaLocal = Boolean(sim.compoe_renda) && possuiConjugeSim;
 
     // REGRA 1: A renda enviada ao banco é SEMPRE a renda declarada para o participante.
-    // Quando compoe_renda é true, a renda é a SOMA de ambos.
+    // Quando compoe_renda é true, a renda é a SOMA de ambos em TODOS os casos.
     const rendaDeclarada = compoeRendaLocal
       ? num(sim.renda_total) + num(sim.renda_conjuge)
       : ehConjuge
@@ -536,8 +536,8 @@ export async function enviarSimulacaoImpl({
   const correspondente_id = sim.correspondente_id;
 
   // Garantia de sanitização de CPFs para evitar erros silenciosos na API (500)
-  sim.cpf_cnpj = (sim.cpf_cnpj ?? "").replace(/\D/g, "");
-  if (sim.cpf_conjuge) sim.cpf_conjuge = (sim.cpf_conjuge ?? "").replace(/\D/g, "");
+  sim.cpf_cnpj = soDigitos(sim.cpf_cnpj) || null;
+  if (sim.cpf_conjuge) sim.cpf_conjuge = soDigitos(sim.cpf_conjuge) || null;
 
   // Se o cliente (titular) tiver um cônjuge cadastrado e a simulação não tiver os dados dele,
   // mas o estado civil for casado/UE, forçamos o preenchimento para garantir que a proposta
@@ -790,21 +790,21 @@ export async function enviarSimulacaoImpl({
           : {}),
         ...dadosOportunidade,
         bancos: bancos.map((b: any) => bancoPayloadOportunidade(sim, b)),
-        cpfCnpj: (sim.cpf_cnpj ?? "").replace(/\D/g, ""),
+        cpfCnpj: soDigitos(sim.cpf_cnpj),
         nome: sim.nome_cliente,
         rendaTotal: rendaTotalCalculada,
         dataNascimento: sim.data_nascimento,
         email: sim.email,
-        celular: (sim.celular ?? "").replace(/\D/g, ""),
+        celular: soDigitos(sim.celular),
         tipoEstadoCivil: sim.estado_civil ? { id: sim.estado_civil } : undefined,
 
         fgCompoeRenda: compoeRenda,
         ...(possuiConjuge
           ? {
               nomeConjuge: sim.nome_conjuge,
-              cpfConjuge: (sim.cpf_conjuge ?? "").replace(/\D/g, ""),
+              cpfConjuge: soDigitos(sim.cpf_conjuge),
               emailConjuge: sim.email_conjuge,
-              celularConjuge: (sim.celular_conjuge ?? "").replace(/\D/g, ""),
+              celularConjuge: soDigitos(sim.celular_conjuge),
               rendaConjuge: num(sim.renda_conjuge),
               dataNascimentoConjuge: sim.data_nascimento_conjuge,
               tipoEstadoCivilConjuge: sim.estado_civil_conjuge

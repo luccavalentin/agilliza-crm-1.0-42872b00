@@ -583,7 +583,6 @@ export const criarSimulacao = createServerFn({ method: "POST" })
         // Se composição de renda ativa, garante que ambos levem a MESMA renda somada
         if (dd.compoe_renda) {
           insert.renda_total = rendaTotalSoma;
-          // O cônjuge na simulação 1 mantém sua renda original para registro
           insertInvertido.renda_total = rendaTotalSoma;
         }
 
