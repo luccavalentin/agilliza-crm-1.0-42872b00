@@ -647,34 +647,6 @@ export async function enviarSimulacaoImpl({
     if (idOportunidade) {
       // Otimização Crítica: Não validamos o estado da oportunidade via GET no reenvio
       // se já tivermos o ID persistido. Confiamos no ID atual para economizar 1 chamada HTTP global.
-      /*
-      try {
-        const checkOp = await chamarIntegracao<any>(
-          `/oportunidade/${idOportunidade}`,
-          "GET",
-          undefined,
-          ctx,
-        );
-        // ... lógica de verificação de C/T ...
-      } catch (e) {
-        idOportunidade = null;
-      }
-      */
-    }
-          if (situacao === "C") {
-            await supabase.from("simulacao_historico").insert({
-              simulacao_id: simulacaoId,
-              tipo: "info",
-              descricao:
-                "A oportunidade desta simulação estava cancelada na integração. Uma nova oportunidade será gerada automaticamente.",
-              ator_id: userId,
-            });
-          }
-        }
-      } catch (e) {
-        console.warn(`[HomeFin] Falha ao validar estado da oportunidade ${idOportunidade}:`, e);
-        idOportunidade = null;
-      }
     }
 
     // Campos que dependem da simulação atual e podem ter mudado desde a
