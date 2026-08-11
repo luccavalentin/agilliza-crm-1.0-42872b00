@@ -287,8 +287,6 @@ export async function executarEnvioSimples(ctx: CtxBase): Promise<void> {
       },
     });
     sessionStorage.removeItem("simulacao_wizard");
-    const idsBancos = f.bancos_ids.length > 0 ? f.bancos_ids : [];
-
     // Envio para a simulação principal - Sequencial por lotes de 2 para evitar saturação
     const idsBancos = f.bancos_ids.length > 0 ? f.bancos_ids : [];
     const bancosParaEnviar = idsBancos.length > 0 ? [...idsBancos] : [null];
