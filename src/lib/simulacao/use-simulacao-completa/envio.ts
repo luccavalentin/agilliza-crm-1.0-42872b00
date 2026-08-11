@@ -301,28 +301,51 @@ export async function executarEnvioSimples(ctx: CtxBase): Promise<void> {
     const bancosParaEnviar = idsBancos.length > 0 ? [...idsBancos] : [null];
     let feitos = 0;
 
-    while (bancosParaEnviar.length > 0) {
-      const lote = bancosParaEnviar.splice(0, 2);
-      await Promise.allSettled(
-        lote.map(async (bid) => {
-          try {
-            await enviarSimulacaoBanco({
-              data: { simulacao_id: id, banco_ids: bid ? [bid] : undefined },
-            });
-            // Se houver simulação secundária (comparação automática de CPFs), envia também
-            if (id_secundario) {
+    // 1. Envio Simulação Principal
+    try {
+      const fila = [...bancosParaEnviar];
+      while (fila.length > 0) {
+        const lote = fila.splice(0, 2);
+        await Promise.allSettled(
+          lote.map(async (bid) => {
+            try {
               await enviarSimulacaoBanco({
-                data: { simulacao_id: id_secundario, banco_ids: bid ? [bid] : undefined },
+                data: { simulacao_id: id, banco_ids: bid ? [bid] : undefined },
               });
+            } catch (e) {
+              console.error(`[Envio Simples] Falha na principal, banco ${bid}:`, e);
+            } finally {
+              feitos++;
+              setConcluidos(Math.min(feitos, idsBancos.length > 0 ? idsBancos.length : 1));
             }
-          } catch (e) {
-            console.error(`[Envio Simples] Falha no banco ${bid}:`, e);
-          } finally {
-            feitos++;
-            setConcluidos(Math.min(feitos, idsBancos.length > 0 ? idsBancos.length : 1));
-          }
-        }),
-      );
+          }),
+        );
+      }
+    } catch (e) {
+      console.error("[executarEnvioSimples] Erro na simulação principal:", e);
+    }
+
+    // 2. Envio Simulação Secundária (Comparativo de CPFs) - Independente
+    if (id_secundario) {
+      try {
+        const filaSec = [...bancosParaEnviar];
+        while (filaSec.length > 0) {
+          const lote = filaSec.splice(0, 2);
+          await Promise.allSettled(
+            lote.map(async (bid) => {
+              try {
+                await enviarSimulacaoBanco({
+                  data: { simulacao_id: id_secundario, banco_ids: bid ? [bid] : undefined },
+                });
+              } catch (e) {
+                console.error(`[Envio Simples] Falha na secundária, banco ${bid}:`, e);
+              }
+            }),
+          );
+        }
+      } catch (e) {
+        console.error("[executarEnvioSimples] Erro na simulação secundária:", e);
+      }
     }
 
     // Fluxo "Nova Proposta": após simular, cria a proposta e redireciona.
