@@ -368,6 +368,7 @@ export async function enviarSimulacaoImpl({
   supabase,
   bancoIds,
 }: EnviarArgs): Promise<EnviarResultado> {
+  console.log(`[enviar.server] Execução iniciada para simulação ${simulacaoId} (Usuário: ${userId})`);
   // Validação legítima antes de qualquer envio
   const { data: simPreCheck } = await supabase
     .from("simulacoes")
