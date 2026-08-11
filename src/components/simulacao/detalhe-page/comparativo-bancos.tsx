@@ -67,25 +67,36 @@ export function ComparativoBancos({
   const rendaBancos = rendaMinimaPelosBancos(bancos, rendaInformada || null);
   const rendaSac = isMista ? rendaMinimaPelosBancos(bancosSac, rendaInformada || null) : null;
   const rendaPrice = isMista ? rendaMinimaPelosBancos(bancosPrice, rendaInformada || null) : null;
-  const bancosComTaxa = bancos
-    .filter((b: any) => b.status_banco === "simulada" && b.valor_parcela != null)
-    .sort((a: any, b: any) => (a.valor_parcela ?? 0) - (b.valor_parcela ?? 0));
-  const melhorSacId = bancosSac
+  const bancosComSimulacao = bancos.filter(
+    (b: any) => b.status_banco === "simulada" && b.valor_parcela != null,
+  );
+
+  // Selos independentes: Menor Parcela e Menor CET
+  const melhorParcelaId = [...bancosComSimulacao].sort(
+    (a: any, b: any) => (a.valor_parcela ?? 0) - (b.valor_parcela ?? 0),
+  )[0]?.id;
+
+  const melhorCetId = [...bancosComSimulacao]
+    .filter((b) => b.taxa_cet_ano != null)
+    .sort((a: any, b: any) => (a.taxa_cet_ano ?? 0) - (b.taxa_cet_ano ?? 0))[0]?.id;
+
+  const melhorSacParcelaId = bancosSac
     .filter((b: any) => b.status_banco === "simulada" && b.valor_parcela != null)
     .sort((a: any, b: any) => (a.valor_parcela ?? 0) - (b.valor_parcela ?? 0))[0]?.id;
-  const melhorPriceId = bancosPrice
+
+  const melhorPriceParcelaId = bancosPrice
     .filter((b: any) => b.status_banco === "simulada" && b.valor_parcela != null)
     .sort((a: any, b: any) => (a.valor_parcela ?? 0) - (b.valor_parcela ?? 0))[0]?.id;
-  const melhorId = isMista
-    ? undefined
-    : bancosComTaxa.length > 1
-      ? bancosComTaxa[0]?.id
-      : undefined;
+
   const bancosExibicao: any[] = isMista ? [...bancosSac, ...bancosPrice] : bancos;
-  const ehMelhor = (b: any) => {
-    if (!isMista) return b.id === melhorId;
-    return (b._sistema === "PRICE" ? melhorPriceId : melhorSacId) === b.id;
+
+  const ehMelhorParcela = (b: any) => {
+    if (!isMista) return b.id === melhorParcelaId;
+    return (b._sistema === "PRICE" ? melhorPriceParcelaId : melhorSacParcelaId) === b.id;
   };
+
+  const ehMelhorCet = (b: any) => b.id === melhorCetId;
+
 
   return (
     <>
@@ -226,7 +237,9 @@ export function ComparativoBancos({
                       >
                         {b.nome_banco}
                       </span>
-                      {ehMelhor(b) && <ToneBadge tone="success">Melhor taxa</ToneBadge>}
+                      {ehMelhorParcela(b) && <ToneBadge tone="success">Menor parcela</ToneBadge>}
+                      {ehMelhorCet(b) && <ToneBadge tone="info">Menor CET</ToneBadge>}
+
                     </div>
                     <div className="mt-1">
                       <BancoStatusBadge status={b.status_banco} />
@@ -321,6 +334,24 @@ export function ComparativoBancos({
                 Taxa a.a.
               </TableHead>
               <TableHead className="text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                <div className="flex items-center justify-end gap-1">
+                  CET a.a.
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger className="cursor-help">
+                        <Info className="h-3 w-3" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="text-[10px] max-w-[200px]">
+                          Custo Efetivo Total informado pelo banco. Inclui juros, seguros, tarifas e IOF. É o valor correto para comparar propostas entre bancos.
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+              </TableHead>
+
+              <TableHead className="text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 Prazo
               </TableHead>
               <TableHead className="text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -337,7 +368,9 @@ export function ComparativoBancos({
             {bancosExibicao.map((b: any, idx: number) => {
               const primeiroDoGrupo =
                 isMista && (idx === 0 || bancosExibicao[idx - 1]._sistema !== b._sistema);
-              const melhor = ehMelhor(b);
+              const melhorParcela = ehMelhorParcela(b);
+              const melhorCet = ehMelhorCet(b);
+
               return (
                 <Fragment key={b.id}>
                   {primeiroDoGrupo && (
@@ -357,15 +390,20 @@ export function ComparativoBancos({
                   <TableRow
                     className={cn(
                       "border-border/50 transition-colors odd:bg-card even:bg-muted/20 hover:bg-primary/5",
-                      melhor &&
+                      melhorParcela &&
                         "bg-success/5 even:bg-success/5 hover:bg-success/10 [box-shadow:inset_3px_0_0_var(--success)]",
+                      melhorCet && !melhorParcela &&
+                        "bg-info/5 even:bg-info/5 hover:bg-info/10 [box-shadow:inset_3px_0_0_var(--info)]",
+
                     )}
                   >
                     <TableCell className="py-3 text-sm font-semibold">
                       <div className="flex items-center gap-2.5">
                         <BancoLogo nome={b.nome_banco} size="lg" />
                         <span style={{ color: corDoBanco(b.nome_banco) }}>{b.nome_banco}</span>
-                        {b.id === melhorId && <ToneBadge tone="success">Melhor taxa</ToneBadge>}
+                        {melhorParcela && <ToneBadge tone="success">Menor parcela</ToneBadge>}
+                        {melhorCet && <ToneBadge tone="info">Menor CET</ToneBadge>}
+
                       </div>
                       {b.status_banco === "erro" && b.mensagem_banco && (
                         <div className="mt-1">
