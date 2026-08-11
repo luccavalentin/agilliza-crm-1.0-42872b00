@@ -1193,7 +1193,23 @@ export async function enviarSimulacaoImpl({
                 simulado_em: new Date().toISOString(),
               })
               .eq("id", b.id);
-            return { banco_id: b.banco_id, status: "erro" as const, mensagem: msg };
+            return {
+              banco_id: b.banco_id,
+              status: "erro" as const,
+              mensagem: msg,
+              sac_comparativo: sim.sistema_amortizacao === "P" ? await (async () => {
+                const { data: sac } = await supabase
+                  .from("simulacao_bancos")
+                  .select("valor_parcela, taxa_juros_ano")
+                  .eq("banco_id", banco.id)
+                  .eq("status_banco", "simulada")
+                  .eq("sistema_amortizacao_banco", "SAC")
+                  .order("simulado_em", { ascending: false })
+                  .limit(1)
+                  .maybeSingle();
+                return sac;
+              })() : null
+            };
           }
 
           await supabase
