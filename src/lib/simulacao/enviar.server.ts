@@ -1297,7 +1297,7 @@ export async function enviarSimulacaoImpl({
 
     for (const b of bancosFinais ?? []) {
       // Se o banco ainda está aguardando ou enviando mas não tem ID, algo falhou no fluxo.
-      // O líder garante que idOportunidade existe, e o loop sequencial processa cada banco.
+      // O líder garante que idOportunidade existe, e o processamento paralelo cuida de cada banco.
       if ((b.status_banco === "aguardando" || b.status_banco === "enviando") && !b.homefin_id_simulacao_banco) {
         const msg =
           "Não foi possível iniciar a simulação neste banco. Nenhum dado foi enviado ao banco. Clique em reenviar.";
