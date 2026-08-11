@@ -277,7 +277,7 @@ export function ComparativoBancos({
                           : "—"
                     }
                   />
-                  <MobileStat rotulo="Total fin. (banco)" valor={totalBancoTexto(b)} />
+                  <MobileStat rotulo="Financiado" valor={totalBancoTexto(b)} />
                   <MobileStat
                     rotulo="IOF (banco)"
                     valor={b.valor_iof != null ? formatBRL(b.valor_iof) : "—"}
@@ -285,9 +285,9 @@ export function ComparativoBancos({
                 </dl>
 
                 <div className="mt-3 flex items-center justify-end gap-2">
-                  <DetalheBancoDialog banco={b} simulacao={s} />
                   {b.status_banco === "erro" ? (
-                    <>
+                    <div className="mt-3 flex items-center justify-end gap-2">
+                      <DetalheBancoDialog banco={b} simulacao={s} />
                       <Button
                         size="sm"
                         variant="outline"
@@ -306,16 +306,19 @@ export function ComparativoBancos({
                         <RefreshCw className="mr-1 h-4 w-4" />
                         {reenviandoBanco === b.banco_id ? "Reenviando…" : "Reenviar"}
                       </Button>
-                    </>
+                    </div>
                   ) : (
-                    <Button
-                      size="sm"
-                      className="bg-gradient-to-b from-primary to-primary/90 shadow-sm transition-all duration-200 hover:-translate-y-px hover:shadow-md hover:brightness-105 active:translate-y-0 active:scale-[0.98]"
-                      disabled={b.status_banco !== "simulada" || criandoBanco !== null}
-                      onClick={() => onCriar(b.id, b.banco_id)}
-                    >
-                      {criandoBanco === b.id ? "Enviando…" : "Enviar Aprovação"}
-                    </Button>
+                    <div className="mt-3 flex items-center justify-end gap-2">
+                      <DetalheBancoDialog banco={b} simulacao={s} />
+                      <Button
+                        size="sm"
+                        className="bg-gradient-to-b from-primary to-primary/90 shadow-sm transition-all duration-200 hover:-translate-y-px hover:shadow-md hover:brightness-105 active:translate-y-0 active:scale-[0.98]"
+                        disabled={b.status_banco !== "simulada" || criandoBanco !== null}
+                        onClick={() => onCriar(b.id, b.banco_id)}
+                      >
+                        {criandoBanco === b.id ? "Enviando…" : "Enviar Aprovação"}
+                      </Button>
+                    </div>
                   )}
                 </div>
               </div>
@@ -363,7 +366,7 @@ export function ComparativoBancos({
                 Prazo
               </TableHead>
               <TableHead className="text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Total fin. (banco)
+                Financiado
               </TableHead>
               <TableHead className="text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 IOF (banco)
@@ -450,42 +453,32 @@ export function ComparativoBancos({
                     <TableCell className="py-3 text-right text-sm tabular-nums whitespace-nowrap text-muted-foreground">
                       {b.valor_iof != null ? formatBRL(b.valor_iof) : "—"}
                     </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        <DetalheBancoDialog banco={b} simulacao={s} />
-                        {b.status_banco === "erro" ? (
-                          <>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={onEditar}
-                              title="Abrir simulação para alterar dados"
-                            >
-                              <Pencil className="mr-1 h-4 w-4" />
-                              Editar
-                            </Button>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <DetalheBancoDialog banco={b} simulacao={s} />
+                          {b.status_banco === "erro" ? (
                             <Button
                               size="sm"
                               variant="secondary"
+                              className="h-8 px-3 text-[11px]"
                               disabled={reenviandoBanco !== null}
                               onClick={() => onReenviarBanco(b.banco_id)}
                             >
-                              <RefreshCw className="mr-1 h-4 w-4" />
+                              <RefreshCw className="mr-1.5 h-3 w-3" />
                               {reenviandoBanco === b.banco_id ? "Reenviando…" : "Reenviar"}
                             </Button>
-                          </>
-                        ) : (
-                          <Button
-                            size="sm"
-                            className="bg-gradient-to-b from-primary to-primary/90 shadow-sm transition-all duration-200 hover:-translate-y-px hover:shadow-md hover:brightness-105 active:translate-y-0 active:scale-[0.98]"
-                            disabled={b.status_banco !== "simulada" || criandoBanco !== null}
-                            onClick={() => onCriar(b.id, b.banco_id)}
-                          >
-                            {criandoBanco === b.id ? "Enviando…" : "Enviar Aprovação"}
-                          </Button>
-                        )}
-                      </div>
-                    </TableCell>
+                          ) : (
+                            <Button
+                              size="sm"
+                              className="h-8 px-4 text-[11px] font-semibold bg-gradient-to-b from-primary to-primary/90 shadow-sm transition-all hover:-translate-y-px hover:shadow-md active:translate-y-0"
+                              disabled={b.status_banco !== "simulada" || criandoBanco !== null}
+                              onClick={() => onCriar(b.id, b.banco_id)}
+                            >
+                              {criandoBanco === b.id ? "Enviando…" : "Enviar Aprovação"}
+                            </Button>
+                          )}
+                        </div>
+                      </TableCell>
                   </TableRow>
                 </Fragment>
               );

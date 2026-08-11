@@ -47,11 +47,12 @@ function Pagina() {
     refetchInterval: (query) => {
       const d = query.state.data as any;
       if (!d) return 3000;
-      const simProcessando = ["enviando", "rascunho"].includes(d.simulacao?.status);
-      const bancoProcessando = (d.bancos ?? []).some(
-        (b: any) => b.status_banco === "aguardando" || b.status_banco === "enviando",
+      const simFinal = ["simulada", "parcialmente_simulada", "erro_banco", "expirada", "cancelada"].includes(d.simulacao?.status);
+      const bancosPendentes = (d.bancos ?? []).some(
+        (b: any) => !["simulada", "erro", "expirada"].includes(b.status_banco),
       );
-      return simProcessando || bancoProcessando ? 6000 : false;
+      // Se algum banco ainda não terminou, mantemos o polling ativo
+      return !simFinal || bancosPendentes ? 3000 : false;
     },
   });
 
