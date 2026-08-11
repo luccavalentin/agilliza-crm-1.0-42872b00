@@ -1072,11 +1072,30 @@ export async function enviarSimulacaoImpl({
 
             // O PUT /oportunidade aceita SOMENTE estes três campos. Enviar o
             // objeto completo devolve HTTP 500 INTERNAL_ERROR.
+            // O PUT /oportunidade pode exigir payload completo. Fazemos GET e
+            // sobrescrevemos o prazo.
+            const checkOp = await chamarIntegracao<any>(
+              `/oportunidade/${idOportunidade}`,
+              "GET",
+              undefined,
+              ctx,
+            );
+            const opBase = checkOp?.oportunidade ?? checkOp ?? {};
+            
             const oportunidadeAjustada = {
+              ...opBase,
               valorImovel: num(sim.valor_imovel),
               valorFinanciamento: num(sim.valor_financiamento),
               prazo: prazoSolicitado,
             };
+            
+            delete oportunidadeAjustada.id;
+            delete oportunidadeAjustada.idOportunidade;
+            delete oportunidadeAjustada.codigoOportunidade;
+            delete oportunidadeAjustada.dataCriacao;
+            delete oportunidadeAjustada.simulacoes;
+            delete oportunidadeAjustada.participantes;
+            delete oportunidadeAjustada.historico;
             const simulacaoAjustada = { ...putPayload, prazo: prazoSolicitado };
 
             try {
