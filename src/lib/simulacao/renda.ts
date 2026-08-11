@@ -118,9 +118,16 @@ export function isBancoPrice(b: BancoRendaApi): boolean {
   return false;
 }
 
-/** Teto de comprometimento de renda aplicável ao banco (30% SAC / 15% PRICE). */
+/** Teto de comprometimento de renda aplicável ao banco conforme mapa de regras. */
 export function tetoDoBanco(b: BancoRendaApi): number {
-  return isBancoPrice(b) ? COMPROMETIMENTO_MAX_PRICE : COMPROMETIMENTO_MAX;
+  const nome = String(b.nome_banco ?? "").toLowerCase();
+  const cod = String(b.raw_response?.codigoBanco ?? b.raw_response?.simulacao?.banco?.codigoBanco ?? "").replace(/^0+/, "");
+  
+  const regra = COMPROMETIMENTO_BANCOS[cod] || 
+                COMPROMETIMENTO_BANCOS[nome.split(" ")[0]] || 
+                COMPROMETIMENTO_BANCOS.default;
+                
+  return isBancoPrice(b) ? regra.PRICE : regra.SAC;
 }
 
 /** Parcela que a integração retornou para o banco, já com os encargos do banco. */
