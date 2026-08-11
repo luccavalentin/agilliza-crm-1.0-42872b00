@@ -720,15 +720,12 @@ export async function enviarSimulacaoImpl({
     if (!idOportunidade && !usaRotaSantanderHomeEquity) {
       // Eleição de líder: tenta obter o lock no Postgres para evitar race condition entre requisições paralelas.
       // O lock expira em 90s se a requisição líder morrer sem completar.
+      // Usamos um UPDATE condicional para garantir atomicidade.
       const noventaSegundosAtras = new Date(Date.now() - 90 * 1000).toISOString();
-      const { data: liderEleito } = await supabase
-        .from("simulacoes")
-        .update({ oportunidade_lock_em: new Date().toISOString() } as any)
-        .match({ id: simulacaoId })
-        .is("homefin_id_oportunidade", null)
-        .or(`oportunidade_lock_em.is.null,oportunidade_lock_em.lt.${noventaSegundosAtras}`)
-        .select("id")
-        .maybeSingle();
+      const { data: liderEleito } = await supabase.rpc("eleger_lider_oportunidade", {
+        p_simulacao_id: simulacaoId,
+        p_lock_timeout: noventaSegundosAtras,
+      });
 
       if (!liderEleito) {
         // Seguidor: aguarda o líder criar a oportunidade (polling curto)
@@ -1232,7 +1229,9 @@ export async function enviarSimulacaoImpl({
       .eq("selecionado", true);
 
     for (const b of bancosFinais ?? []) {
-      if (b.status_banco === "aguardando" && !b.homefin_id_simulacao_banco) {
+      // Se o banco ainda está aguardando ou enviando mas não tem ID, algo falhou no fluxo.
+      // O líder garante que idOportunidade existe, e o loop sequencial processa cada banco.
+      if ((b.status_banco === "aguardando" || b.status_banco === "enviando") && !b.homefin_id_simulacao_banco) {
         const msg =
           "Não foi possível iniciar a simulação neste banco. Nenhum dado foi enviado ao banco. Clique em reenviar.";
         await supabase
