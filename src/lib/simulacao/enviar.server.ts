@@ -861,6 +861,7 @@ export async function enviarSimulacaoImpl({
         celular: (sim.celular ?? "").replace(/\D/g, ""),
         tipoEstadoCivil: sim.estado_civil ? { id: sim.estado_civil } : undefined,
 
+        fgAutorizacaoDados: true,
         fgCompoeRenda: compoeRenda,
         ...(possuiConjuge
           ? {
